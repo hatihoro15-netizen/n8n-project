@@ -1,0 +1,1485 @@
+{
+  "name": "전용 (개선판 - 이미지 매칭)",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1248,
+        240
+      ],
+      "id": "8f502797-6a67-41ab-93ba-95daeb9f4509",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag",
+          "mode": "list",
+          "cachedResultName": "n8n LUMIX",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "루믹스",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Status",
+              "lookupValue": "준비"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1024,
+        240
+      ],
+      "id": "98f16765-6138-4b21-98bf-0b64eecbf487",
+      "name": "Get row(s) in sheet"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -144,
+        272
+      ],
+      "id": "b979ec33-4f89-4768-ba01-f8e5f7d9d0d5",
+      "name": "Wait",
+      "webhookId": "f248eae2-f685-4c70-9d8f-be2245052c38"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=주어진 나레이션 파트에 정확히 매칭되는 시네마틱 이미지 프롬프트를 1개 생성해 주세요.\n\n핵심 규칙:\n1. 이 나레이션 파트가 말하는 구체적인 내용을 직접적으로 시각화할 것\n2. 추상적 비주얼이 아닌, 나레이션이 설명하는 실제 상황/장면을 보여줄 것\n3. 하나의 강렬한 비주얼 컨셉에 집중할 것\n4. 프롬프트는 영어로 작성, 150~200자\n5. 큰따옴표(\"\")는 사용하지 않음\n6. illustration, cartoon, 2D, anime, drawing 스타일은 절대 금지\n7. 프롬프트는 A vertical video. 로 시작할 것\n8. 프롬프트 끝에 필수: no text, no letters, no words, no watermark\n\n비주얼 장르 (이번 영상 전체 톤):\n{{ ['사이버펑크 네온 — neon glow cyberpunk futuristic dark city', '자연 다큐멘터리 — nature documentary organic earthy warm tones', '미니멀 흑백 — minimal monochrome high contrast black white', '레트로 필름그레인 — retro film grain vintage 70s warm analog', '하이테크 미래 — high-tech futuristic holographic clean blue', '다크 시네마틱 — dark cinematic dramatic shadows moody', '팝아트 컬러풀 — pop art vibrant saturated bold colors', '수중/우주 판타지 — underwater space fantasy ethereal floating', '동양풍 — oriental asian aesthetic ink wash dramatic', '고딕 다크판타지 — gothic dark fantasy mystical ancient'][Math.floor(Math.random() * 10)] }}\n\n이 장르의 느낌을 반영하되, 나레이션 내용을 정확히 시각화하는 것이 최우선입니다.\n\n카메라/촬영 스타일 (이 파트용):\n{{ ['extreme close-up with shallow depth of field', 'close-up with dramatic rim lighting', 'medium shot with cinematic composition', 'wide establishing shot with atmospheric depth', 'aerial drone perspective with sweeping motion'][($json.index || 1) - 1] }}\n\n금지 패턴:\n- 창문 앞 인물 실루엣, 골든아워 역광, 양복 남자가 도시 내려다보는 장면\n- 악수 장면, 단순 사무실\n- shield/lock/key, arrow/graph/chart, rocket/lightning, puzzle, hourglass/clock\n\n비주얼 생성 가이드:\n- 나레이션이 말하는 내용을 시청자가 바로 이해할 수 있는 구체적 장면\n- 예시: 서버 관리 → 서버룸, 자동화 → 대시보드, 수익 → 금화/돈, 모바일 → 스마트폰 UI\n- 마치 고급 브랜드 광고 감독이 이 한 장면의 스토리보드를 짜는 것처럼\n\n출력 형식 (번호 없이 프롬프트만 1개 출력):\nA vertical video. ..., no text, no letters, no words, no watermark\n\n나레이션 파트 (이 파트만 시각화하세요):\n{{ $json.text }}\n\n시드: {{ Math.floor(Math.random() * 99999) }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -480,
+        464
+      ],
+      "id": "cddd3fdf-f8dd-4b4a-8b5f-d57c0cc52c77",
+      "name": "이미지 프롬프트",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "options": {
+          "numberOfItems": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserItemList",
+      "typeVersion": 1,
+      "position": [
+        -560,
+        640
+      ],
+      "id": "add2c25b-38bc-43b6-af1e-8b5b5ebeea27",
+      "name": "Item List Output Parser"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -720,
+        640
+      ],
+      "id": "f1607c0a-bcd0-446e-b0b7-b29fdc491d0b",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        464
+      ],
+      "id": "49c97369-a3e5-4193-96df-18148aeb0386",
+      "name": "Wait1",
+      "webhookId": "cf64da24-072b-4ed0-a93d-ac819d6fda36"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.status_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        0,
+        464
+      ],
+      "id": "e8534d41-dd1e-4095-b40f-78355de0a000",
+      "name": "이미지 출력"
+    },
+    {
+      "parameters": {
+        "amount": 200
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        928
+      ],
+      "id": "78a1205b-a3db-43fc-a6a5-76654182b508",
+      "name": "Wait2",
+      "webhookId": "c4025dc9-a45f-4999-9c9b-0fe8336462a9"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/kling-video/v1.6/standard/image-to-video",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $('이미지 결과 확인').item.json.prompt }}\",\n  \"image_url\": \"{{ $json.image.url }}\",\n  \"duration\": \"5\",\n  \"aspect_ratio\": \"9:16\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -240,
+        928
+      ],
+      "id": "4ed0f470-74ac-4a94-ac16-5bf7064d07a2",
+      "name": "영상 입력"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.response_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        928
+      ],
+      "id": "205903be-5ecb-4342-a33c-93286a2060e5",
+      "name": "영상출력"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/elevenlabs/tts/turbo-v2.5",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"{{ $json.text }}\",\n  \"language_code\": \"ko\",\n  \"voice\": \"FQ3MuLxZh0jHcZmA5vW1\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -368,
+        272
+      ],
+      "id": "4089f006-6765-418b-a6ce-b970616459a4",
+      "name": "나레이션 음성 입력"
+    },
+    {
+      "parameters": {
+        "url": "=https://queue.fal.run/fal-ai/elevenlabs/requests/{{ $json.request_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        64,
+        272
+      ],
+      "id": "fd61c4e8-f882-4904-9a14-6541abc749db",
+      "name": "나레이션 음성 출력"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/flux-pro",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $json.text }}\",\n  \"image_size\": {\n    \"width\": 1080,\n    \"height\": 1920\n  },\n  \"style\": \"realistic_image\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -368,
+        464
+      ],
+      "id": "7c12fbf5-32ce-4887-a080-f24cc2e59a9c",
+      "name": "이미지 입력"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -368,
+        80
+      ],
+      "id": "490ab864-b7f2-463b-9171-52369e788d75",
+      "name": "Wait3",
+      "webhookId": "2a72926e-f3ef-48de-a87d-66d33d302e69"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        288,
+        96
+      ],
+      "id": "149880c0-3eaf-4d35-bc46-31f52bbe6d87",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        528,
+        112
+      ],
+      "id": "af99e558-375d-4914-a946-d935bb3609ca",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"scene1\": \"{{ $('영상출력').all()[0].json.video.url }}\",\n  \"scene2\": \"{{ $('영상출력').all()[1].json.video.url }}\",\n  \"scene3\": \"{{ $('영상출력').all()[2].json.video.url }}\",\n  \"scene4\": \"{{ $('영상출력').all()[3].json.video.url }}\",\n  \"scene5\": \"{{ $('영상출력').all()[4].json.video.url }}\",\n  \"narration1\": \"{{ $('나레이션 음성 출력').all()[0].json.audio.url }}\",\n  \"narration2\": \"{{ $('나레이션 음성 출력').all()[1].json.audio.url }}\",\n  \"narration3\": \"{{ $('나레이션 음성 출력').all()[2].json.audio.url }}\",\n  \"narration4\": \"{{ $('나레이션 음성 출력').all()[3].json.audio.url }}\",\n  \"narration5\": \"{{ $('나레이션 음성 출력').all()[4].json.audio.url }}\",\n  \"narration1Size\": \"{{ $('나레이션 음성 출력').all()[0].json.audio.file_size }}\",\n  \"narration2Size\": \"{{ $('나레이션 음성 출력').all()[1].json.audio.file_size }}\",\n  \"narration3Size\": \"{{ $('나레이션 음성 출력').all()[2].json.audio.file_size }}\",\n  \"narration4Size\": \"{{ $('나레이션 음성 출력').all()[3].json.audio.file_size }}\",\n  \"narration5Size\": \"{{ $('나레이션 음성 출력').all()[4].json.audio.file_size }}\",\n  \"subtitleText1\": \"{{ $('Code in JavaScript2').all()[0].json.text }}\",\n  \"subtitleText2\": \"{{ $('Code in JavaScript2').all()[1].json.text }}\",\n  \"subtitleText3\": \"{{ $('Code in JavaScript2').all()[2].json.text }}\",\n  \"subtitleText4\": \"{{ $('Code in JavaScript2').all()[3].json.text }}\",\n  \"subtitleText5\": \"{{ $('Code in JavaScript2').all()[4].json.text }}\",\n  \"sound1\": \"{{ $('Wait3').first().json.audio.url }}\",\n  \"row_number\": \"{{ $('Get row(s) in sheet').first().json.row_number }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        112
+      ],
+      "id": "6cbe267a-94f7-4ede-8f65-378cad962787",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.Creatomate.com/v1/renders",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"template_id\": \"056a9082-710f-4345-b964-c6384103fbf6\",\n  \"output_format\": \"mp4\",\n  \"h264_profile\": \"high\",\n  \"h264_level\": \"5.2\",\n  \"h264_crf\": 16,\n  \"h264_bitrate\": 12000000,\n  \"frame_rate\": 30,\n  \"duration\": \"{{ $json.totalDuration }}\",\n  \"modifications\": {\n    \"Composition-1.duration\": \"{{ $json.duration1 }}\",\n    \"Composition-2.duration\": \"{{ $json.duration2 }}\",\n    \"Composition-3.duration\": \"{{ $json.duration3 }}\",\n    \"Composition-4.duration\": \"{{ $json.duration4 }}\",\n    \"Composition-5.duration\": \"{{ $json.duration5 }}\",\n    \"Video-1.source\": \"{{ $json.scene1 }}\",\n    \"Video-1.speed\": \"{{ $json.speed1 }}\",\n    \"Video-2.source\": \"{{ $json.scene2 }}\",\n    \"Video-2.speed\": \"{{ $json.speed2 }}\",\n    \"Video-3.source\": \"{{ $json.scene3 }}\",\n    \"Video-3.speed\": \"{{ $json.speed3 }}\",\n    \"Video-4.source\": \"{{ $json.scene4 }}\",\n    \"Video-4.speed\": \"{{ $json.speed4 }}\",\n    \"Video-5.source\": \"{{ $json.scene5 }}\",\n    \"Video-5.speed\": \"{{ $json.speed5 }}\",\n    \"Narration-1.source\": \"{{ $json.narration1 }}\",\n    \"Narration-2.source\": \"{{ $json.narration2 }}\",\n    \"Narration-3.source\": \"{{ $json.narration3 }}\",\n    \"Narration-4.source\": \"{{ $json.narration4 }}\",\n    \"Narration-5.source\": \"{{ $json.narration5 }}\",\n    \"Text-1.text\": \"{{ $json.subtitleText1 }}\",\n    \"Text-2.text\": \"{{ $json.subtitleText2 }}\",\n    \"Text-3.text\": \"{{ $json.subtitleText3 }}\",\n    \"Text-4.text\": \"{{ $json.subtitleText4 }}\",\n    \"Text-5.text\": \"{{ $json.subtitleText5 }}\",\n    \"Video-T24.time\": \"{{ $json.videoT24Start }}\",\n    \"BGM.source\": \"{{ $json.sound1 }}\"\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        752,
+        352
+      ],
+      "id": "523c6cdf-72ff-4875-8886-502769e2cf9e",
+      "name": "영상 편집"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -640,
+        -160
+      ],
+      "id": "77f263dc-018a-47b7-b8d7-c9a4035ccbb1",
+      "name": "Schedule Trigger",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag",
+          "mode": "list",
+          "cachedResultName": "n8n LUMIX",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "시트1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "Publish",
+              "lookupValue": "대기중"
+            }
+          ]
+        },
+        "options": {
+          "returnFirstMatch": true
+        }
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -416,
+        -160
+      ],
+      "id": "cd5facd0-69f2-4ecb-b858-dc3206164ab1",
+      "name": "Get row(s) in sheet1"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json['업로드 URL'] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -192,
+        -160
+      ],
+      "id": "6f77fef3-6569-407c-85c7-6c28633ef410",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $json.Subject }}",
+        "regionCode": "KR",
+        "categoryId": "1",
+        "options": {
+          "description": "={{ $json.Caption }}",
+          "privacyStatus": "unlisted"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -160
+      ],
+      "id": "76aa6fad-b7e4-433e-81ab-39ede6c17c9d",
+      "name": "Upload a video"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://www.googleapis.com/youtube/v3/commentThreads?part=snippet",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "youTubeOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"snippet\": {\n    \"channelId\": \"브랜드채널ID\",\n    \"videoId\": \"{{ $('Upload a video').first().json.uploadId }}\",\n    \"topLevelComment\": {\n      \"snippet\": {\n        \"textOriginal\": \"{{ $('Get row(s) in sheet1').first().json['댓글'] }}\"\n      }\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        256,
+        -160
+      ],
+      "id": "285dbe15-c9d0-43b8-a8ba-d4e7d752b1cf",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag",
+          "mode": "list",
+          "cachedResultName": "n8n LUMIX",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "시트1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Get row(s) in sheet1').item.json.row_number }}",
+            "Publish": "발행 완료",
+            "업로드 URL": "=https://youtube.com/shorts/{{ $json.snippet.videoId }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Narration",
+              "displayName": "Narration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Publish",
+              "displayName": "Publish",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "영상 URL",
+              "displayName": "영상 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "효과음 URL",
+              "displayName": "효과음 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "나레이션 URL",
+              "displayName": "나레이션 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "업로드 URL",
+              "displayName": "업로드 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        480,
+        -160
+      ],
+      "id": "0d0028b1-c099-419a-8ea4-68ab1b4fc413",
+      "name": "Update row in sheet1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fal.run/beatoven/music-generation",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $json[\"BGM prompt\"] }}\",\n  \"duration\": 30,\n  \"refinement\": 100,\n  \"creativity\": 16\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -656,
+        80
+      ],
+      "id": "3ef4aa27-24ab-41e0-a136-64721b7321bc",
+      "name": "BGM 입력"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag",
+          "mode": "list",
+          "cachedResultName": "n8n LUMIX",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1525917080,
+          "mode": "list",
+          "cachedResultName": "루믹스 수동편집",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit#gid=1525917080"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "샘플 영상 URL1": "={{ $json.modifications['Video-1.source'] }}",
+            "샘플 영상 URL2": "={{ $json.modifications['Video-2.source'] }}",
+            "샘플 영상 URL3": "={{ $json.modifications['Video-3.source'] }}",
+            "샘플 영상 URL4": "={{ $json.modifications['Video-4.source'] }}",
+            "샘플 영상 URL5": "={{ $json.modifications['Video-5.source'] }}",
+            "Subject": "={{ $('Get row(s) in sheet').first().json.Subject }}",
+            "row_number": "={{ $('Get row(s) in sheet').first().json.row_number }}",
+            "나레이션 URL1": "={{ $json.modifications['Narration-1.source'] }}",
+            "나레이션 URL2": "={{ $json.modifications['Narration-2.source'] }}",
+            "나레이션 URL3": "={{ $json.modifications['Narration-3.source'] }}",
+            "나레이션 URL4": "={{ $json.modifications['Narration-4.source'] }}",
+            "나레이션 URL5": "={{ $json.modifications['Narration-5.source'] }}",
+            "BGM URL": "={{ $json.modifications['BGM.source'] }}",
+            "자막1": "={{ $json.modifications['Text-1.text'] }}",
+            "자막2": "={{ $json.modifications['Text-2.text'] }}",
+            "자막3": "={{ $json.modifications['Text-3.text'] }}",
+            "자막4": "={{ $json.modifications['Text-4.text'] }}",
+            "자막5": "={{ $json.modifications['Text-5.text'] }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "샘플 영상 URL1",
+              "displayName": "샘플 영상 URL1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "샘플 영상 URL2",
+              "displayName": "샘플 영상 URL2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "샘플 영상 URL3",
+              "displayName": "샘플 영상 URL3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "샘플 영상 URL4",
+              "displayName": "샘플 영상 URL4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "샘플 영상 URL5",
+              "displayName": "샘플 영상 URL5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "효과음 URL",
+              "displayName": "효과음 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "나레이션 URL1",
+              "displayName": "나레이션 URL1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "나레이션 URL2",
+              "displayName": "나레이션 URL2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "나레이션 URL3",
+              "displayName": "나레이션 URL3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "나레이션 URL4",
+              "displayName": "나레이션 URL4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "나레이션 URL5",
+              "displayName": "나레이션 URL5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "BGM URL",
+              "displayName": "BGM URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "자막1",
+              "displayName": "자막1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "자막2",
+              "displayName": "자막2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "자막3",
+              "displayName": "자막3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "자막4",
+              "displayName": "자막4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "자막5",
+              "displayName": "자막5",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        960,
+        528
+      ],
+      "id": "751b689a-3c19-47be-8313-24dc8ccfc2cd",
+      "name": "URL 영상 자동"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst videoDuration = 5;\nconst bitrate = 128000;\nlet totalDuration = 0;\n\nfor (let i = 1; i <= 5; i++) {\n  const fileSize = item[`narration${i}Size`];\n  const duration = Math.round((fileSize * 8 / bitrate) * 100) / 100;\n  if (duration > videoDuration) {\n    item[`duration${i}`] = duration;\n    item[`speed${i}`] = Math.round((videoDuration / duration) * 100) + \"%\";\n  } else {\n    item[`duration${i}`] = duration;\n    item[`speed${i}`] = \"100%\";\n  }\n  totalDuration += item[`duration${i}`];\n}\n\nitem['videoT24Start'] = totalDuration;\nitem['totalDuration'] = totalDuration + 8;\n\nreturn [{ json: item }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        352
+      ],
+      "id": "dcc5d744-6135-4928-a968-3519af8b0b99",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag",
+          "mode": "list",
+          "cachedResultName": "n8n LUMIX",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "루믹스",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Get row(s) in sheet').first().json.row_number }}",
+            "Status": "생성 완료",
+            "업로드 URL": "={{ $json.url }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Narration",
+              "displayName": "Narration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "댓글",
+              "displayName": "댓글",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Publish",
+              "displayName": "Publish",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "BGM prompt",
+              "displayName": "BGM prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "imagePrompt",
+              "displayName": "imagePrompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "업로드 URL",
+              "displayName": "업로드 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        960,
+        288
+      ],
+      "id": "7a6eef52-2264-4133-9a02-9124a5499ca5",
+      "name": "URL 영상 자동1"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  for (let i = 1; i <= 5; i++) {\n    const key = `caption${i}`;\n    if (item.json[key]) {\n      // 먼저 \\n 텍스트를 실제 줄바꿈으로 변환\n      item.json[key] = item.json[key].replace(/\\\\n/g, '\\n');\n      // 그 다음 실제 줄바꿈을 다시 \\n 텍스트로 (JSON용)\n      item.json[key] = item.json[key].replace(/\\n/g, '\\\\n');\n    }\n  }\n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        672
+      ],
+      "id": "829abef5-d6de-4fb2-9167-0ddce98f415e",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=다음 나레이션을 5개 문장으로 나눠줘.\n규칙:\n1. 문장의 의미 단위로 자연스럽게 나눠줘\n2. 각 문장은 비슷한 길이로 균등하게 배분해\n3. 절대 단어 중간에서 끊지 마\n4. 쉼표, 조사, 문장 끝에서만 끊어줘\n\n나레이션: {{ $json.Narration }}\n\n반드시 아래 JSON 형식으로만 응답해. 마크다운 코드블록(```) 없이 순수 JSON만 출력해.\n{\"narration1\": \"...\", \"narration2\": \"...\", \"narration3\": \"...\", \"narration4\": \"...\", \"narration5\": \"...\"}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -1104,
+        464
+      ],
+      "id": "9599470d-5b83-4f9c-ba72-c98bb0cbeb47",
+      "name": "Message a model1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $input.first().json.content.parts[0].text;\nconst data = JSON.parse(text);\n\nconst items = [];\nfor (let i = 1; i <= 5; i++) {\n  items.push({\n    json: {\n      text: data[`narration${i}`],\n      index: i\n    }\n  });\n}\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -672,
+        272
+      ],
+      "id": "60df0d37-723b-4ee0-9ff0-f429d1399df6",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.response_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        176,
+        464
+      ],
+      "id": "c1faee72-9756-4395-8f35-2e5c0363d7a3",
+      "name": "이미지 결과 확인"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://queue.fal.run/fal-ai/esrgan",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"image_url\": \"{{ $json.images[0].url }}\",\n  \"scale\": 2\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -256,
+        720
+      ],
+      "id": "2a0a8144-8f54-4960-b17e-b61ab95a5aaa",
+      "name": "업스케일 입력"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -32,
+        720
+      ],
+      "id": "30ef0325-28b7-4b47-b451-4cf37d979f2d",
+      "name": "Wait12",
+      "webhookId": "cf64da24-072b-4ed0-a93d-ac819d6fda36"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.response_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        208,
+        720
+      ],
+      "id": "781b5d9b-8cd0-41c8-b9e9-2bc6fe1ebd36",
+      "name": "업스케일 결과"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "BGM 입력",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Message a model1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "나레이션 음성 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Item List Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "이미지 프롬프트",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "이미지 프롬프트",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 프롬프트": {
+      "main": [
+        [
+          {
+            "node": "이미지 입력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "이미지 출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 출력": {
+      "main": [
+        [
+          {
+            "node": "이미지 결과 확인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "영상출력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상 입력": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "나레이션 음성 입력": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "나레이션 음성 출력": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "이미지 입력": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상출력": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Wait3": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상 편집": {
+      "main": [
+        [
+          {
+            "node": "URL 영상 자동",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "URL 영상 자동1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Upload a video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload a video": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BGM 입력": {
+      "main": [
+        [
+          {
+            "node": "Wait3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "영상 편집",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "나레이션 음성 입력",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "이미지 프롬프트",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 결과 확인": {
+      "main": [
+        [
+          {
+            "node": "업스케일 입력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "업스케일 입력": {
+      "main": [
+        [
+          {
+            "node": "Wait12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait12": {
+      "main": [
+        [
+          {
+            "node": "업스케일 결과",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "업스케일 결과": {
+      "main": [
+        [
+          {
+            "node": "영상 입력",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

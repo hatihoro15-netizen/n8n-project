@@ -1,0 +1,964 @@
+{
+  "name": "루믹스 솔루션 롱폼 (완전자동 v1)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -2400,
+        304
+      ],
+      "id": "009ce864-e210-437d-bd31-ef3a27615164",
+      "name": "스케줄 트리거"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "너는 루믹스 솔루션(웹/앱 개발 및 IT 솔루션 전문 기업)의 콘텐츠 기획자이자 영상 대본 작가야.\nYouTube 롱폼 영상(2~3분)용 대본을 작성해줘.\n\n타겟: IT 솔루션이 필요한 사업자, 스타트업, 중소기업 대표\n톤: 전문적이면서 쉽게 설명, 시청자가 끝까지 보게 만드는 스토리텔링\n구조: 훅(호기심) → 문제 제기 → 해결책 → 사례/근거 → CTA\n\n아래 주제 카테고리 중 하나를 랜덤으로 골라서 구체적인 주제를 만들어:\n1. 웹사이트/앱 제작의 숨겨진 비용과 진짜 가치\n2. IT 자동화로 월 100시간 절약하는 방법\n3. 성공적인 디지털 전환 실제 사례 분석\n4. AI 도입으로 매출 2배 올린 기업 이야기\n5. 보안 사고 실제 사례와 예방법\n6. 모바일 앱 하나로 매출 구조를 바꾼 사업자\n7. 커스텀 개발 vs SaaS: 어떤 게 맞는지 판단하는 법\n8. SEO가 광고보다 효과적인 이유 (데이터 기반)\n9. 클라우드 마이그레이션 실패하는 3가지 이유\n10. 2026년 꼭 알아야 할 IT 트렌드\n\n대본 규칙:\n- 자연스러운 구어체 (방송 진행자 톤)\n- 총 800~1200자 (한국어 기준, 2~3분 분량)\n- 10개 파트로 나눠서 작성 (각 파트 80~120자)\n- 각 파트에 Pexels 스톡영상 검색용 영어 키워드 포함\n\n반드시 아래 JSON 형식으로만 응답해. 마크다운 코드블록 없이 순수 JSON만:\n{\n  \"Subject\": \"영상 제목 (호기심 유발, 20자 이내)\",\n  \"Caption\": \"YouTube 설명 (해시태그 포함, 5줄)\",\n  \"Comment\": \"첫 번째 댓글 (질문 유도)\",\n  \"BGM_prompt\": \"BGM 분위기 영어 설명 (corporate, upbeat 등 15~25단어)\",\n  \"parts\": [\n    {\"text\": \"나레이션 텍스트 (80~120자)\", \"keyword\": \"pexels search keyword in english (2~4 words)\"},\n    {\"text\": \"...\", \"keyword\": \"...\"},\n    {\"text\": \"...\", \"keyword\": \"...\"},\n    {\"text\": \"...\", \"keyword\": \"...\"},\n    {\"text\": \"...\", \"keyword\": \"...\"},\n    {\"text\": \"...\", \"keyword\": \"...\"},\n    {\"text\": \"...\", \"keyword\": \"...\"},\n    {\"text\": \"...\", \"keyword\": \"...\"},\n    {\"text\": \"...\", \"keyword\": \"...\"},\n    {\"text\": \"...\", \"keyword\": \"...\"}\n  ]\n}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        -2096,
+        304
+      ],
+      "id": "6b247102-d5f2-4426-93b1-b00dc0524a4c",
+      "name": "AI 대본 생성"
+    },
+    {
+      "parameters": {
+        "jsCode": "const text = $input.first().json.content.parts[0].text;\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst data = JSON.parse(cleanText);\n\nreturn [{\n  json: {\n    Subject: data.Subject,\n    Caption: data.Caption,\n    Comment: data.Comment,\n    BGM_prompt: data.BGM_prompt,\n    parts: data.parts,\n    fullNarration: data.parts.map(p => p.text).join(' '),\n    Status: '준비',\n    generatedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1808,
+        304
+      ],
+      "id": "af08cb35-a30f-479b-99d4-65021bfb24c1",
+      "name": "대본 파싱"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag",
+          "mode": "list",
+          "cachedResultName": "n8n LUMIX",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "루믹스",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Subject": "={{ $json.Subject }}",
+            "Narration": "={{ $json.fullNarration }}",
+            "Caption": "={{ $json.Caption }}",
+            "댓글": "={{ $json.Comment }}",
+            "BGM prompt": "={{ $json.BGM_prompt }}",
+            "Status": "준비"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Narration",
+              "displayName": "Narration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "댓글",
+              "displayName": "댓글",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "BGM prompt",
+              "displayName": "BGM prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1504,
+        304
+      ],
+      "id": "9304be5b-8561-48eb-96cf-e863cf4d9e28",
+      "name": "시트 기록"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('대본 파싱').first().json;\n\nconst items = data.parts.map((part, i) => ({\n  json: {\n    text: part.text,\n    keyword: part.keyword,\n    index: i + 1,\n    subject: data.Subject,\n    bgmPrompt: data.BGM_prompt\n  }\n}));\n\nreturn items;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        304
+      ],
+      "id": "aa999c70-b939-4b05-9e28-0f532db5fca6",
+      "name": "파트 분리"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/elevenlabs/tts/turbo-v2.5",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": \"{{ $json.text }}\",\n  \"language_code\": \"ko\",\n  \"voice\": \"FQ3MuLxZh0jHcZmA5vW1\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -896,
+        112
+      ],
+      "id": "54ed1fe0-f266-434c-a29b-88f65b8da350",
+      "name": "TTS 요청",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "R0m2RD0rtE8IKRt6",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -608,
+        112
+      ],
+      "id": "3fbbfbad-44b4-4c54-afeb-622704929973",
+      "name": "TTS 대기",
+      "webhookId": "9f60e50c-5c98-4f61-9694-d69d1ec84d0c"
+    },
+    {
+      "parameters": {
+        "url": "=https://queue.fal.run/fal-ai/elevenlabs/requests/{{ $json.request_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -304,
+        112
+      ],
+      "id": "b18b6faa-62ec-4e39-95bb-65c881127219",
+      "name": "TTS 결과",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "R0m2RD0rtE8IKRt6",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pexels.com/videos/search?query={{ encodeURIComponent($json.keyword) }}&per_page=3&orientation=landscape&size=medium",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -896,
+        512
+      ],
+      "id": "4daa9dcb-69d7-47e3-82a5-1eebc7a2c96b",
+      "name": "Pexels 검색",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1vPRgFSX7u4ecIy4",
+          "name": "Pexels"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const result = $input.first().json;\nconst videos = result.videos || [];\n\nlet videoUrl = '';\nlet videoDuration = 0;\n\nif (videos.length > 0) {\n  // Pick a random video from top 3 results for variety\n  const video = videos[Math.floor(Math.random() * Math.min(3, videos.length))];\n  videoDuration = video.duration || 10;\n\n  // Find HD quality file (prefer 1920x1080)\n  const files = video.video_files || [];\n  const hdFile = files.find(f => f.width >= 1920 && f.quality === 'hd')\n    || files.find(f => f.width >= 1280)\n    || files.find(f => f.quality === 'hd')\n    || files[0];\n\n  if (hdFile) {\n    videoUrl = hdFile.link;\n  }\n}\n\n// Fallback: generic business/technology video\nif (!videoUrl) {\n  videoUrl = 'https://cdn.pixabay.com/video/2024/02/14/200717-913266610_large.mp4';\n  videoDuration = 15;\n}\n\nreturn [{\n  json: {\n    videoUrl: videoUrl,\n    videoDuration: videoDuration,\n    keyword: $('파트 분리').item.json.keyword,\n    index: $('파트 분리').item.json.index\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -608,
+        512
+      ],
+      "id": "454ef427-7c6c-4d94-be2f-3a7e4d0769a0",
+      "name": "영상 URL 추출"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://fal.run/beatoven/music-generation",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"prompt\": \"{{ $json.bgmPrompt || 'corporate technology upbeat inspiring background music' }}\",\n  \"duration\": 200,\n  \"refinement\": 100,\n  \"creativity\": 16\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -896,
+        -96
+      ],
+      "id": "df05ae1d-f683-408b-b407-4ab36ea8ae58",
+      "name": "BGM 생성",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "R0m2RD0rtE8IKRt6",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -608,
+        -96
+      ],
+      "id": "3ae8adf4-bbea-4a78-97bc-26a8d9b87f7a",
+      "name": "BGM 대기",
+      "webhookId": "801c2929-fee5-40f8-97fa-c5348e7b257f"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        304
+      ],
+      "id": "3c028dbf-7274-46de-a34f-43314698cd74",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        320,
+        320
+      ],
+      "id": "9d8e7969-88ff-4094-93e2-23ae64d89efa",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// === Shotstack 롱폼 타임라인 빌더 (1920x1080 가로) ===\nconst bgmUrl = $('BGM 대기').first().json.audio?.url || '';\nconst bitrate = 128000;\nconst PART_COUNT = 10;\n\nlet scenes = [];\nlet currentStart = 0;\n\nfor (let i = 0; i < PART_COUNT; i++) {\n  // TTS 결과\n  const ttsResult = $('TTS 결과').all()[i]?.json;\n  const narrationUrl = ttsResult?.audio?.url || '';\n  const fileSize = ttsResult?.audio?.file_size || 50000;\n\n  // Duration from audio file size\n  let duration = Math.round((fileSize * 8 / bitrate) * 100) / 100;\n  if (duration < 5) duration = 10;\n\n  // Stock video URL\n  const stockResult = $('영상 URL 추출').all()[i]?.json;\n  const videoUrl = stockResult?.videoUrl || '';\n\n  // Subtitle\n  const subtitleText = $('파트 분리').all()[i]?.json?.text || '';\n\n  scenes.push({\n    start: currentStart,\n    duration: duration,\n    videoUrl: videoUrl,\n    narrationUrl: narrationUrl,\n    subtitleText: subtitleText\n  });\n\n  currentStart += duration;\n}\n\nconst totalDuration = currentStart;\n\n// === Shotstack Timeline (Landscape 1920x1080) ===\nconst timeline = {\n  soundtrack: {\n    src: bgmUrl,\n    effect: \"fadeOut\",\n    volume: 0.15\n  },\n  background: \"#000000\",\n  tracks: [\n    // Track 1: Stock video clips with transitions\n    {\n      clips: scenes.map((s, i) => ({\n        asset: {\n          type: \"video\",\n          src: s.videoUrl,\n          volume: 0,\n          trim: 0\n        },\n        start: s.start,\n        length: s.duration,\n        fit: \"cover\",\n        transition: i > 0 ? {\n          in: \"fade\",\n          out: i < scenes.length - 1 ? \"fade\" : undefined\n        } : undefined\n      }))\n    },\n    // Track 2: Narration audio\n    {\n      clips: scenes.map(s => ({\n        asset: {\n          type: \"audio\",\n          src: s.narrationUrl\n        },\n        start: s.start,\n        length: s.duration\n      }))\n    },\n    // Track 3: Subtitles (bottom bar style)\n    {\n      clips: scenes.map(s => ({\n        asset: {\n          type: \"html\",\n          html: '<div class=\"sub\"><p>' + s.subtitleText.replace(/'/g, \"\\\\'\") + '</p></div>',\n          css: \".sub { background: linear-gradient(transparent, rgba(0,0,0,0.7)); padding: 30px 60px 20px; } p { font-family: 'Noto Sans KR', sans-serif; font-size: 36px; color: #ffffff; text-align: center; line-height: 1.5; font-weight: 600; text-shadow: 1px 1px 4px rgba(0,0,0,0.8); }\",\n          width: 1920,\n          height: 200\n        },\n        start: s.start,\n        length: s.duration,\n        position: \"bottom\",\n        offset: { y: 0 }\n      }))\n    },\n    // Track 4: 채널 로고/워터마크 (선택사항)\n    {\n      clips: [{\n        asset: {\n          type: \"html\",\n          html: \"<p>LUMIX Solution</p>\",\n          css: \"p { font-family: 'Inter', sans-serif; font-size: 18px; color: rgba(255,255,255,0.5); letter-spacing: 2px; }\",\n          width: 300,\n          height: 40\n        },\n        start: 0,\n        length: totalDuration,\n        position: \"topRight\",\n        offset: { x: -0.02, y: 0.02 }\n      }]\n    }\n  ]\n};\n\n// Intro fade-in (first scene)\nif (timeline.tracks[0].clips.length > 0) {\n  timeline.tracks[0].clips[0].transition = { in: \"fade\" };\n}\n\nconst payload = {\n  timeline: timeline,\n  output: {\n    format: \"mp4\",\n    resolution: \"hd\",\n    aspectRatio: \"16:9\",\n    fps: 30,\n    quality: \"high\"\n  }\n};\n\nreturn [{\n  json: {\n    shotstack_payload: payload,\n    totalDuration: totalDuration,\n    sceneCount: scenes.length,\n    subject: $('대본 파싱').first().json.Subject,\n    caption: $('대본 파싱').first().json.Caption,\n    comment: $('대본 파싱').first().json.Comment\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        608,
+        320
+      ],
+      "id": "e4141ff5-eb33-4319-b0fa-068ada08aba3",
+      "name": "Shotstack 타임라인"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.shotstack.io/edit/stage/render",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.shotstack_payload) }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        0,
+        608
+      ],
+      "id": "e19df696-44cb-4128-9bb8-70798f2e9601",
+      "name": "Shotstack 렌더",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3oEYwvtDnmFeylkp",
+          "name": "Shotstack"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 180
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        608
+      ],
+      "id": "a778cf29-acfb-4ec7-b5ec-0e37a7150ee0",
+      "name": "렌더 대기",
+      "webhookId": "d6b7ddc9-e402-42b3-8e8c-d6634001319b"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.shotstack.io/edit/stage/render/{{ $json.response.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        608,
+        608
+      ],
+      "id": "77dafad3-c4f1-43ca-8099-1107ea07c384",
+      "name": "렌더 결과",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3oEYwvtDnmFeylkp",
+          "name": "Shotstack"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "bf6d5571-7b55-4657-ac20-2d44ff71d424",
+              "leftValue": "={{ $json.response.status }}",
+              "rightValue": "done",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        960,
+        608
+      ],
+      "id": "caf00511-a70a-45d7-a84d-c274dfe22fd7",
+      "name": "렌더 완료 확인"
+    },
+    {
+      "parameters": {
+        "amount": 60
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1008,
+        816
+      ],
+      "id": "029749ac-4c4e-4f62-884a-cf8052a16567",
+      "name": "추가 대기",
+      "webhookId": "a4a00f55-fc10-4748-849c-82f50f3fb2a1"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.shotstack.io/edit/stage/render/{{ $('Shotstack 렌더').first().json.response.id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1264,
+        816
+      ],
+      "id": "6b15e27b-c193-416a-b0b2-b97ef07e0990",
+      "name": "렌더 재확인",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "3oEYwvtDnmFeylkp",
+          "name": "Shotstack"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag",
+          "mode": "list",
+          "cachedResultName": "n8n LUMIX"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "루믹스"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('시트 기록').first().json.row_number }}",
+            "Status": "생성 완료",
+            "업로드 URL": "={{ $json.response.url }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "업로드 URL",
+              "displayName": "업로드 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1264,
+        512
+      ],
+      "id": "e4b84a3f-7161-4032-a674-15547a7e6aa7",
+      "name": "상태 업데이트"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.response.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1264,
+        704
+      ],
+      "id": "e1ed32fb-ab8d-4da2-af06-c74729633149",
+      "name": "영상 다운로드"
+    },
+    {
+      "parameters": {
+        "resource": "video",
+        "operation": "upload",
+        "title": "={{ $('대본 파싱').first().json.Subject }}",
+        "regionCode": "KR",
+        "categoryId": "28",
+        "options": {
+          "description": "={{ $('대본 파싱').first().json.Caption }}",
+          "privacyStatus": "public"
+        }
+      },
+      "type": "n8n-nodes-base.youTube",
+      "typeVersion": 1,
+      "position": [
+        1600,
+        688
+      ],
+      "id": "6b5eebcf-444e-402c-b260-9c6149fd304e",
+      "name": "YouTube 업로드"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://www.googleapis.com/youtube/v3/commentThreads?part=snippet",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "youTubeOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"snippet\": {\n    \"videoId\": \"{{ $json.id }}\",\n    \"topLevelComment\": {\n      \"snippet\": {\n        \"textOriginal\": \"{{ $('대본 파싱').first().json.Comment }}\"\n      }\n    }\n  }\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1904,
+        688
+      ],
+      "id": "7d3bf99d-4006-48f9-abaf-f8f320aa9d43",
+      "name": "첫 댓글"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag",
+          "mode": "list",
+          "cachedResultName": "n8n LUMIX"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "루믹스"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('시트 기록').first().json.row_number }}",
+            "Publish": "발행 완료",
+            "업로드 URL": "=https://youtube.com/watch?v={{ $('YouTube 업로드').first().json.id }}"
+          },
+          "matchingColumns": [
+            "row_number"
+          ],
+          "schema": [
+            {
+              "id": "Publish",
+              "displayName": "Publish",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "업로드 URL",
+              "displayName": "업로드 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2192,
+        688
+      ],
+      "id": "b21bd1e0-fd8c-483f-af36-3f3995d129e3",
+      "name": "발행 완료"
+    }
+  ],
+  "connections": {
+    "스케줄 트리거": {
+      "main": [
+        [
+          {
+            "node": "AI 대본 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 대본 생성": {
+      "main": [
+        [
+          {
+            "node": "대본 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "대본 파싱": {
+      "main": [
+        [
+          {
+            "node": "시트 기록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "시트 기록": {
+      "main": [
+        [
+          {
+            "node": "파트 분리",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "BGM 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "파트 분리": {
+      "main": [
+        [
+          {
+            "node": "TTS 요청",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Pexels 검색",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 요청": {
+      "main": [
+        [
+          {
+            "node": "TTS 대기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 대기": {
+      "main": [
+        [
+          {
+            "node": "TTS 결과",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 결과": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Pexels 검색": {
+      "main": [
+        [
+          {
+            "node": "영상 URL 추출",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상 URL 추출": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "BGM 생성": {
+      "main": [
+        [
+          {
+            "node": "BGM 대기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BGM 대기": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Shotstack 타임라인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shotstack 타임라인": {
+      "main": [
+        [
+          {
+            "node": "Shotstack 렌더",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shotstack 렌더": {
+      "main": [
+        [
+          {
+            "node": "렌더 대기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "렌더 대기": {
+      "main": [
+        [
+          {
+            "node": "렌더 결과",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "렌더 결과": {
+      "main": [
+        [
+          {
+            "node": "렌더 완료 확인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "렌더 완료 확인": {
+      "main": [
+        [
+          {
+            "node": "상태 업데이트",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "영상 다운로드",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "추가 대기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "추가 대기": {
+      "main": [
+        [
+          {
+            "node": "렌더 재확인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "렌더 재확인": {
+      "main": [
+        [
+          {
+            "node": "렌더 완료 확인",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상 다운로드": {
+      "main": [
+        [
+          {
+            "node": "YouTube 업로드",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube 업로드": {
+      "main": [
+        [
+          {
+            "node": "첫 댓글",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "첫 댓글": {
+      "main": [
+        [
+          {
+            "node": "발행 완료",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
