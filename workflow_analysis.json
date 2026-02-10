@@ -1,0 +1,413 @@
+{
+  "name": "채널 성과 분석 (매일 06:00)",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 21 * * *"
+            }
+          ]
+        }
+      },
+      "name": "매일 06시 KST",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -1800,
+        300
+      ],
+      "id": "ad38475f-fcfa-421d-8d78-b2ed896d2878"
+    },
+    {
+      "parameters": {
+        "path": "analysis-trigger",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "name": "Webhook 트리거",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1800,
+        100
+      ],
+      "id": "f8f84282-d752-4d35-b43a-91423fb0bb6b",
+      "webhookId": "a0085cf0-5aa0-4329-ba33-aec09a2b2e5a"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst channels = [{\"name\": \"루믹스\", \"channelId\": \"CHANNEL_ID_LUMIX\", \"keywords\": \"카지노 솔루션 온라인카지노 API\", \"niche\": \"카지노 솔루션/IT 솔루션\", \"docId\": \"1qPH9TG4M0Hv4V63_LqAb6X2gNl_ksbf2T_oIkJJ06Ag\"}, {\"name\": \"온카스터디\", \"channelId\": \"CHANNEL_ID_ONCA\", \"keywords\": \"먹튀검증 토토사이트 메이저사이트\", \"niche\": \"먹튀검증/온라인 안전\", \"docId\": \"1hnFCo4Mxnr4w57_zAFfYLMAgOsAB43ocgWhJW3szWK8\"}, {\"name\": \"슬롯\", \"channelId\": \"CHANNEL_ID_SLOT\", \"keywords\": \"슬롯 RTP 배팅전략 카지노게임\", \"niche\": \"슬롯/카지노 게임\", \"docId\": \"1cps-88TuhFld4qJlryQh2QHkKvxhQyxLSgeu5burA_A\"}, {\"name\": \"스포츠\", \"channelId\": \"CHANNEL_ID_SPORTS\", \"keywords\": \"스포츠분석 축구 야구 농구 UFC 배당률\", \"niche\": \"스포츠 분석/베팅 정보\", \"docId\": \"1NAVwKXLQOUzBoNckxxesIR_ZS3GoNVGepr8zkBFmz4M\"}];\n\nconst today = new Date();\nconst weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);\nconst publishedAfter = weekAgo.toISOString();\n\nreturn channels.map(ch => ({\n  json: {\n    ...ch,\n    publishedAfter,\n    analysisDate: today.toISOString().split('T')[0]\n  }\n}));\n"
+      },
+      "name": "채널 설정",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1500,
+        200
+      ],
+      "id": "f97053fe-46b1-4880-a861-8428ba7e757b"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "name": "채널별 처리",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -1200,
+        200
+      ],
+      "id": "594ff8c4-b3a1-4fda-8538-ad7b91eb470e"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/youtube/v3/search",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "youTubeOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "snippet"
+            },
+            {
+              "name": "type",
+              "value": "video"
+            },
+            {
+              "name": "videoDuration",
+              "value": "short"
+            },
+            {
+              "name": "order",
+              "value": "viewCount"
+            },
+            {
+              "name": "maxResults",
+              "value": "10"
+            },
+            {
+              "name": "q",
+              "value": "={{ $json.keywords }}"
+            },
+            {
+              "name": "publishedAfter",
+              "value": "={{ $json.publishedAfter }}"
+            },
+            {
+              "name": "regionCode",
+              "value": "KR"
+            },
+            {
+              "name": "relevanceLanguage",
+              "value": "ko"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "트렌드 검색",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -900,
+        200
+      ],
+      "id": "a2f42f5c-1f0c-413d-be56-22001dc23f3a",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "kRKBMYWf6cB72qUi",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $input.first().json;\nconst trendItems = (input.items || []).map(item => ({\n  title: item.snippet?.title || '',\n  channelTitle: item.snippet?.channelTitle || '',\n  publishedAt: item.snippet?.publishedAt || '',\n  videoId: item.id?.videoId || ''\n}));\n\nconst videoIds = trendItems.map(t => t.videoId).filter(Boolean).join(',');\n\n// 이전 노드의 채널 정보 유지\nconst channelInfo = $('채널별 처리').first().json;\n\nreturn [{\n  json: {\n    ...channelInfo,\n    trendVideos: trendItems,\n    trendVideoIds: videoIds\n  }\n}];\n"
+      },
+      "name": "트렌드 정리",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        200
+      ],
+      "id": "7f9d6671-24c2-4b02-85bb-c6cdd0e9333c"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://www.googleapis.com/youtube/v3/videos",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "youTubeOAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "part",
+              "value": "statistics,snippet"
+            },
+            {
+              "name": "id",
+              "value": "={{ $json.trendVideoIds }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "트렌드 통계",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -300,
+        200
+      ],
+      "id": "d7f12983-5167-4b13-845c-af703abda396",
+      "credentials": {
+        "youTubeOAuth2Api": {
+          "id": "kRKBMYWf6cB72qUi",
+          "name": "YouTube account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst channelInfo = $('트렌드 정리').first().json;\nconst statsResponse = $input.first().json;\n\n// 트렌드 영상 통계 정리\nconst trendStats = (statsResponse.items || []).map(v => ({\n  title: v.snippet?.title || '',\n  views: parseInt(v.statistics?.viewCount || '0'),\n  likes: parseInt(v.statistics?.likeCount || '0'),\n  comments: parseInt(v.statistics?.commentCount || '0')\n})).sort((a, b) => b.views - a.views);\n\nconst topTrends = trendStats.slice(0, 5).map((v, i) =>\n  `${i+1}. \"${v.title}\" (조회수: ${v.views.toLocaleString()}, 좋아요: ${v.likes.toLocaleString()})`\n).join('\\n');\n\nconst prompt = `너는 YouTube Shorts 콘텐츠 전략가야.\n아래 데이터를 분석하고 \"${channelInfo.name}\" 채널을 위한 리포트를 작성해.\n\n[채널 정보]\n- 채널명: ${channelInfo.name}\n- 니치: ${channelInfo.niche}\n\n[이번 주 인기 Shorts 트렌드 (${channelInfo.keywords} 관련)]\n${topTrends || '데이터 없음'}\n\n[분석 요청]\n위 데이터를 기반으로 아래 JSON 형식으로 분석 리포트를 작성해.\n마크다운 코드블록 없이 순수 JSON만 응답해:\n\n{\n  \"조회수_상위영상\": \"가장 조회수 높은 트렌드 영상 제목과 조회수\",\n  \"좋아요_상위영상\": \"가장 좋아요 많은 트렌드 영상 제목\",\n  \"트렌드_키워드\": \"이번 주 핵심 트렌드 키워드 3-5개 (쉼표 구분)\",\n  \"추천_주제1\": \"추천 주제 1 (제목 형식, 이유 포함)\",\n  \"추천_주제2\": \"추천 주제 2\",\n  \"추천_주제3\": \"추천 주제 3\",\n  \"피해야할_주제\": \"이번 주 피해야 할 주제/각도\",\n  \"효과적인_훅_팁\": \"효과적인 첫 3초 훅 팁\",\n  \"트렌드_각도\": \"현재 트렌드의 핵심 각도/방향\",\n  \"고성과_패턴\": \"고성과 영상들의 공통 패턴\",\n  \"AI_분석_요약\": \"전체 분석 요약 (3문장 이내)\"\n}`;\n\nreturn [{\n  json: {\n    ...channelInfo,\n    trendStats,\n    geminiPrompt: prompt\n  }\n}];\n"
+      },
+      "name": "프롬프트 생성",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "id": "e0634bd4-a7d7-4442-9fb2-4c01d90369e3"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3-flash-preview",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3-flash-preview"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.geminiPrompt }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "name": "AI 분석",
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        300,
+        200
+      ],
+      "id": "53386df0-9aa2-453f-a04a-56479be8eff3",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst channelInfo = $('프롬프트 생성').first().json;\nconst geminiResponse = $input.first().json;\n\n// Gemini 응답에서 JSON 추출\nlet reportText = '';\nif (geminiResponse.content && geminiResponse.content.parts) {\n  reportText = geminiResponse.content.parts[0].text || '';\n} else if (typeof geminiResponse === 'string') {\n  reportText = geminiResponse;\n} else {\n  reportText = JSON.stringify(geminiResponse);\n}\n\n// JSON 추출 ({ ~ } 사이)\nlet cleanText = reportText.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst firstBrace = cleanText.indexOf('{');\nconst lastBrace = cleanText.lastIndexOf('}');\nlet report = {};\nif (firstBrace !== -1 && lastBrace !== -1) {\n  try {\n    report = JSON.parse(cleanText.substring(firstBrace, lastBrace + 1));\n  } catch(e) {\n    report = { AI_분석_요약: \"파싱 실패: \" + cleanText.substring(0, 200) };\n  }\n}\n\nreturn [{\n  json: {\n    날짜: channelInfo.analysisDate,\n    채널명: channelInfo.name,\n    분석기간: \"최근 7일\",\n    조회수_상위영상: report.조회수_상위영상 || '',\n    좋아요_상위영상: report.좋아요_상위영상 || '',\n    트렌드_키워드: report.트렌드_키워드 || '',\n    추천_주제1: report.추천_주제1 || '',\n    추천_주제2: report.추천_주제2 || '',\n    추천_주제3: report.추천_주제3 || '',\n    피해야할_주제: report.피해야할_주제 || '',\n    효과적인_훅_팁: report.효과적인_훅_팁 || '',\n    트렌드_각도: report.트렌드_각도 || '',\n    고성과_패턴: report.고성과_패턴 || '',\n    AI_분석_요약: report.AI_분석_요약 || '',\n    _docId: channelInfo.docId\n  }\n}];\n"
+      },
+      "name": "리포트 파싱",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        200
+      ],
+      "id": "73bf3a6e-efb8-4deb-8971-42b11ccfb912"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://sheets.googleapis.com/v4/spreadsheets/{{ $json._docId }}/values/%EB%B6%84%EC%84%9D%EB%A6%AC%ED%8F%AC%ED%8A%B8:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "googleSheetsOAuth2Api",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"values\": [[{{ JSON.stringify($json.날짜) }}, {{ JSON.stringify($json.채널명) }}, {{ JSON.stringify($json.분석기간) }}, {{ JSON.stringify($json.조회수_상위영상) }}, {{ JSON.stringify($json.좋아요_상위영상) }}, {{ JSON.stringify($json.트렌드_키워드) }}, {{ JSON.stringify($json.추천_주제1) }}, {{ JSON.stringify($json.추천_주제2) }}, {{ JSON.stringify($json.추천_주제3) }}, {{ JSON.stringify($json.피해야할_주제) }}, {{ JSON.stringify($json.효과적인_훅_팁) }}, {{ JSON.stringify($json.트렌드_각도) }}, {{ JSON.stringify($json.고성과_패턴) }}, {{ JSON.stringify($json.AI_분석_요약) }}]]}",
+        "options": {}
+      },
+      "name": "시트 저장",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        900,
+        200
+      ],
+      "id": "8e4ffb4c-c1c4-41cb-9eea-8128017bc91b",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{json: {message: \"4채널 성과 분석 완료!\", timestamp: new Date().toISOString()}}];"
+      },
+      "name": "분석 완료",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        -100
+      ],
+      "id": "3ef3d374-983a-44a2-9e05-a73cdf325b19"
+    }
+  ],
+  "connections": {
+    "매일 06시 KST": {
+      "main": [
+        [
+          {
+            "node": "채널 설정",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook 트리거": {
+      "main": [
+        [
+          {
+            "node": "채널 설정",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "채널 설정": {
+      "main": [
+        [
+          {
+            "node": "채널별 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "채널별 처리": {
+      "main": [
+        [
+          {
+            "node": "분석 완료",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "트렌드 검색",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "트렌드 검색": {
+      "main": [
+        [
+          {
+            "node": "트렌드 정리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "트렌드 정리": {
+      "main": [
+        [
+          {
+            "node": "트렌드 통계",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "트렌드 통계": {
+      "main": [
+        [
+          {
+            "node": "프롬프트 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "프롬프트 생성": {
+      "main": [
+        [
+          {
+            "node": "AI 분석",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 분석": {
+      "main": [
+        [
+          {
+            "node": "리포트 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "리포트 파싱": {
+      "main": [
+        [
+          {
+            "node": "시트 저장",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "시트 저장": {
+      "main": [
+        [
+          {
+            "node": "채널별 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
