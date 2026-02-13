@@ -38,20 +38,32 @@ try {
     console.log('Could not get subtitles:', e.message);
 }
 
-function splitToTwoLines(text) {
-    if (!text || text.length <= 16) return { full: text || '', line1: text || '', line2: '' };
-    const mid = Math.floor(text.length / 2);
-    let splitIdx = -1;
-    for (let offset = 0; offset <= mid; offset++) {
-        const fwd = mid + offset;
-        const bwd = mid - offset;
-        if (fwd < text.length && text[fwd] === ' ') { splitIdx = fwd; break; }
-        if (bwd >= 0 && text[bwd] === ' ') { splitIdx = bwd; break; }
+function splitToLines(text) {
+    if (!text) return { full: '', line1: '', line2: '', line3: '' };
+    text = text.trim();
+    const words = text.split(/\s+/);
+    if (words.length <= 1 || text.length <= 10) return { full: text, line1: text, line2: '', line3: '' };
+    const cumChars = [0];
+    for (const w of words) cumChars.push(cumChars[cumChars.length - 1] + w.length);
+    const total = cumChars[cumChars.length - 1];
+    if (total <= 16 || words.length <= 2) {
+        const t = total / 2;
+        let bestI = 1, bestD = Infinity;
+        for (let i = 1; i < words.length; i++) {
+            const d = Math.abs(cumChars[i] - t);
+            if (d < bestD) { bestD = d; bestI = i; }
+        }
+        return { full: text, line1: words.slice(0, bestI).join(' '), line2: words.slice(bestI).join(' '), line3: '' };
     }
-    if (splitIdx === -1) return { full: text, line1: text, line2: '' };
-    const l1 = text.substring(0, splitIdx).trim();
-    const l2 = text.substring(splitIdx).trim();
-    return { full: text, line1: l1, line2: l2 };
+    let bestI = 1, bestJ = 2, bestScore = Infinity;
+    for (let i = 1; i < words.length - 1; i++) {
+        for (let j = i + 1; j < words.length; j++) {
+            const s1 = cumChars[i], s2 = cumChars[j] - cumChars[i], s3 = total - cumChars[j];
+            const score = Math.max(s1, s2, s3) - Math.min(s1, s2, s3);
+            if (score <= bestScore) { bestScore = score; bestI = i; bestJ = j; }
+        }
+    }
+    return { full: text, line1: words.slice(0, bestI).join(' '), line2: words.slice(bestI, bestJ).join(' '), line3: words.slice(bestJ).join(' ') };
 }
 
 const partCount = Math.min(narrations.length, videos.length, 5);
@@ -78,7 +90,7 @@ for (let i = 0; i < partCount; i++) {
         audioDuration: dur,
         audioStart: 0,
         subtitleText: fullText,
-        lines: splitToTwoLines(fullText),
+        lines: splitToLines(fullText),
         kbIndex: i,
         type: 'normal'
     });

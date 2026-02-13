@@ -32,7 +32,7 @@ const CENTER_X = Math.round(RES_X / 2);
 let assContent = '[Script Info]\n';
 assContent += 'Title: Lumix Subtitle\n';
 assContent += 'ScriptType: v4.00+\n';
-assContent += 'WrapStyle: 0\n';
+assContent += 'WrapStyle: 2\n';
 assContent += 'PlayResX: ' + RES_X + '\n';
 assContent += 'PlayResY: ' + RES_Y + '\n\n';
 assContent += '[V4+ Styles]\n';
@@ -55,13 +55,21 @@ for (const sub of subtitleData) {
     const startTime = sub.start;
     const endTime = sub.end;
 
-    if (lines.line2) {
+    if (lines.line3) {
+        const y1 = LINE2_Y - 2 * LINE_GAP;
+        const y2 = LINE2_Y - LINE_GAP;
+        const y3 = LINE2_Y;
+        const m1 = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + y1 + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
+        assContent += 'Dialogue: 0,' + fmt(startTime) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + m1 + lines.line1 + '\n';
+        const m2 = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + y2 + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
+        assContent += 'Dialogue: 0,' + fmt(startTime + LINE_DELAY) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + m2 + lines.line2 + '\n';
+        const m3 = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + y3 + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
+        assContent += 'Dialogue: 0,' + fmt(startTime + LINE_DELAY * 2) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + m3 + lines.line3 + '\n';
+    } else if (lines.line2) {
         const move1 = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + LINE1_Y + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
         assContent += 'Dialogue: 0,' + fmt(startTime) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + move1 + lines.line1 + '\n';
-
-        const line2Start = startTime + LINE_DELAY;
         const move2 = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + LINE2_Y + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
-        assContent += 'Dialogue: 0,' + fmt(line2Start) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + move2 + lines.line2 + '\n';
+        assContent += 'Dialogue: 0,' + fmt(startTime + LINE_DELAY) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + move2 + lines.line2 + '\n';
     } else {
         const singleY = LINE2_Y;
         const move = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + singleY + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
