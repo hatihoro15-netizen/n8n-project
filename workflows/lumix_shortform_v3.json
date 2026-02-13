@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-12T18:20:19.876Z",
+  "updatedAt": "2026-02-12T20:08:02.586Z",
   "createdAt": "2026-02-08T01:37:00.752Z",
   "id": "9YOHS8N1URWlzGWj",
   "name": "루믹스 솔루션 숏폼 (완전자동 v3)",
@@ -198,8 +198,8 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        160,
-        0
+        144,
+        -288
       ],
       "id": "ce63b524-daa2-46a6-8226-2df60c6d6285",
       "name": "나레이션 분할",
@@ -218,8 +218,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        496,
-        48
+        432,
+        112
       ],
       "id": "12c444ff-1bad-4d6c-a949-f3667e574a50",
       "name": "5파트 분리"
@@ -238,8 +238,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        768,
-        48
+        720,
+        112
       ],
       "id": "4dd3dc38-eacf-44f3-a63e-aaa3596c3db5",
       "name": "TTS 요청",
@@ -257,8 +257,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        992,
-        48
+        944,
+        112
       ],
       "id": "1bdf0dff-2c0c-43e9-9ba9-ae98a18ab65f",
       "name": "TTS 대기",
@@ -274,8 +274,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1216,
-        48
+        1168,
+        112
       ],
       "id": "5e6550c7-a3e9-406b-8c35-3e03edd043f4",
       "name": "TTS 결과",
@@ -295,8 +295,8 @@
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        176,
-        272
+        256,
+        336
       ],
       "id": "b234b187-43f7-43ea-af80-43e585ccc983",
       "name": "이미지 프롬프트 AI",
@@ -309,8 +309,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1,
       "position": [
-        240,
-        464
+        224,
+        560
       ],
       "id": "cd8c2205-42e9-4739-b118-84c8600bcc3e",
       "name": "Gemini Chat Model",
@@ -335,8 +335,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        576,
-        272
+        592,
+        336
       ],
       "id": "3b570b77-2ed6-4828-9e05-6252cefc7c95",
       "name": "이미지 생성",
@@ -354,8 +354,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        800,
-        272
+        816,
+        336
       ],
       "id": "78ec2753-e329-4974-90e4-bc820fad2e89",
       "name": "이미지 대기",
@@ -371,11 +371,73 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1024,
-        272
+        1040,
+        336
       ],
       "id": "82698431-6ca3-4ab3-beac-19f05cb7c8b0",
       "name": "이미지 결과",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PuGtmUb23v3qkRug",
+          "name": "fal.ai API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://queue.fal.run/fal-ai/aura-sr",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"image_url\": \"{{ $json.images[0].url }}\",\n  \"upscaling_factor\": 4\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        704,
+        -304
+      ],
+      "id": "3df10b23-8a38-460e-ab4f-de7bf41d6ea6",
+      "name": "업스케일 요청",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PuGtmUb23v3qkRug",
+          "name": "fal.ai API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 120
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        928,
+        -304
+      ],
+      "id": "9d3a38e9-b593-424b-900a-b9b98334286e",
+      "name": "업스케일 대기",
+      "webhookId": "3fa979be-79a0-4e4a-99ed-20582e1a3d4c"
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.response_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1152,
+        -304
+      ],
+      "id": "d479c47f-eddd-41a6-8714-d2d2723f3827",
+      "name": "업스케일 결과",
       "credentials": {
         "httpHeaderAuth": {
           "id": "PuGtmUb23v3qkRug",
@@ -1056,7 +1118,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// NCA 영상 제작 - BGM 루프 + 슬로우/루프/5초단위 장면분할 + 자막 + 아웃트로\nconst firstItem = $input.first().json;\nconst dataArray = firstItem.data || [];\n\nconst narrations = [];\nconst videos = [];\nlet bgmUrl = '';\n\nfor (const item of dataArray) {\n    if (item.video && item.video.url) {\n        videos.push(item.video.url);\n    } else if (item.audio && item.audio.url) {\n        if (item.metadata && item.metadata.duration) {\n            bgmUrl = item.audio.url;\n        } else {\n            const fileSize = item.audio.file_size || 0;\n            const estimatedDuration = Math.max(Math.round((fileSize * 8 / 128000) * 100) / 100, 3);\n            narrations.push({\n                url: item.audio.url,\n                duration: estimatedDuration + 2,\n            });\n        }\n    }\n}\n\n// 자막 텍스트 가져오기\nlet subtitleTexts = [];\nlet fullNarrationTexts = [];\ntry {\n    const partItems = $('5파트 분리').all();\n    subtitleTexts = partItems.map(item => item.json.subtitle || item.json.text || '');\n    fullNarrationTexts = partItems.map(item => item.json.text || '');\n} catch (e) {\n    console.log('Could not get subtitles:', e.message);\n}\n\n// 2줄 분리 헬퍼\nfunction splitToTwoLines(text) {\n    if (!text || text.length <= 16) return text || '';\n    const mid = Math.floor(text.length / 2);\n    let splitIdx = -1;\n    for (let offset = 0; offset <= mid; offset++) {\n        const fwd = mid + offset;\n        const bwd = mid - offset;\n        if (fwd < text.length && text[fwd] === ' ') { splitIdx = fwd; break; }\n        if (bwd >= 0 && text[bwd] === ' ') { splitIdx = bwd; break; }\n    }\n    if (splitIdx === -1) return text;\n    return text.substring(0, splitIdx).trim() + '\\\\N' + text.substring(splitIdx).trim();\n}\n\n// 나레이션 텍스트를 N개 세그먼트로 분할 (요약 없이 전체)\nfunction splitNarrationText(fullText, segCount) {\n    if (segCount <= 1) return [fullText];\n    const sentences = fullText.split(/(?<=[.!?])\\s*/).filter(s => s.trim().length > 0);\n    \n    if (sentences.length >= segCount) {\n        const result = [];\n        const perSeg = Math.floor(sentences.length / segCount);\n        let idx = 0;\n        for (let s = 0; s < segCount; s++) {\n            const end = (s === segCount - 1) ? sentences.length : idx + perSeg;\n            result.push(sentences.slice(idx, end).join(' ').trim());\n            idx = end;\n        }\n        return result;\n    } else {\n        const charPerSeg = Math.ceil(fullText.length / segCount);\n        const result = [];\n        let remaining = fullText;\n        for (let s = 0; s < segCount - 1; s++) {\n            let cutPos = Math.min(charPerSeg, remaining.length);\n            for (let j = cutPos; j >= cutPos - 10 && j >= 1; j--) {\n                if (remaining[j] === ' ' || remaining[j] === ',') { cutPos = j; break; }\n            }\n            result.push(remaining.substring(0, cutPos).trim());\n            remaining = remaining.substring(cutPos).trim();\n        }\n        result.push(remaining.trim());\n        return result;\n    }\n}\n\nconst partCount = Math.min(narrations.length, videos.length, 5);\nconst SCENE_DURATION = 5;      // 영상 기본 길이 (5초)\nconst MAX_SLOW_SECONDS = 6.5;  // 6.5초까지 슬로우, 이상이면 루프\nconst SPLIT_SECONDS = 8;       // 8초 이상이면 장면 분할\nconst OUTRO_URL = 'http://76.13.182.180:9000/nca-toolkit/assets/outro_lumix.mp4';\nconst OUTRO_DURATION = 5;\n\nconsole.log('Parts:', partCount, 'Videos:', videos.length, 'Narrations:', narrations.length, 'BGM:', bgmUrl ? 'YES' : 'NO');\n\n// === 세그먼트 구성 (5초 단위 분할, 나머지 < 5초면 5초로) ===\nconst segments = [];\nfor (let i = 0; i < partCount; i++) {\n    const dur = narrations[i].duration;\n    const videoUrl = videos[i];\n    const audioUrl = narrations[i].url;\n    const subText = subtitleTexts[i] || '';\n    const fullText = fullNarrationTexts[i] || '';\n\n    if (dur >= SPLIT_SECONDS) {\n        // 8초 이상: 5초 단위로 분할\n        const sceneDurations = [];\n        let remaining = dur;\n        while (remaining >= SPLIT_SECONDS) {\n            sceneDurations.push(SCENE_DURATION);\n            remaining = Math.round((remaining - SCENE_DURATION) * 100) / 100;\n        }\n        // 나머지: 5초 미만이면 5초로 (영상 길이에 맞춤), 아니면 그대로\n        const lastDur = remaining < SCENE_DURATION ? SCENE_DURATION : remaining;\n        sceneDurations.push(lastDur);\n\n        // 나레이션 텍스트를 세그먼트 수만큼 분할 (요약 없이)\n        const textParts = splitNarrationText(fullText, sceneDurations.length);\n        \n        // 오디오 구간 계산 (실제 나레이션 길이 기준)\n        const audioDurations = [];\n        let audioRemaining = dur;\n        for (let s = 0; s < sceneDurations.length - 1; s++) {\n            audioDurations.push(SCENE_DURATION);\n            audioRemaining = Math.round((audioRemaining - SCENE_DURATION) * 100) / 100;\n        }\n        audioDurations.push(audioRemaining); // 마지막은 실제 남은 오디오 길이\n\n        let audioOffset = 0;\n        for (let s = 0; s < sceneDurations.length; s++) {\n            segments.push({\n                videoUrl, audioUrl,\n                sceneDuration: sceneDurations[s],   // 장면 길이 (영상 기준)\n                audioDuration: audioDurations[s],    // 실제 오디오 길이\n                audioStart: audioOffset,\n                needsPad: sceneDurations[s] > audioDurations[s], // 오디오 패딩 필요\n                subtitleText: splitToTwoLines(textParts[s] || ''),\n                type: 'split', splitIndex: s\n            });\n            audioOffset = Math.round((audioOffset + audioDurations[s]) * 100) / 100;\n        }\n        console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, SPLIT -> [${sceneDurations.map(d => d.toFixed(1)+'s').join(', ')}] (audio: [${audioDurations.map(d => d.toFixed(1)+'s').join(', ')}])`);\n    } else {\n        // 8초 미만: 일반 (요약 자막)\n        segments.push({\n            videoUrl, audioUrl,\n            sceneDuration: dur,\n            audioDuration: dur,\n            audioStart: 0,\n            needsPad: false,\n            subtitleText: subText,\n            type: 'normal'\n        });\n        \n        if (dur > MAX_SLOW_SECONDS) {\n            console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, LOOP`);\n        } else {\n            const slow = Math.max(1, dur / SCENE_DURATION);\n            console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, slow=${slow.toFixed(2)}x`);\n        }\n    }\n}\n\n// === inputs 구성 ===\nconst inputs = [];\nconst segMeta = [];\n\nfor (const seg of segments) {\n    const vIdx = inputs.length;\n    inputs.push({ file_url: seg.videoUrl, options: [] });\n    const aIdx = inputs.length;\n    inputs.push({ file_url: seg.audioUrl, options: [] });\n    segMeta.push({ vIdx, aIdx });\n}\n\nif (bgmUrl) {\n    inputs.push({ file_url: bgmUrl, options: [{ option: \"-stream_loop\" }, { option: \"-1\" }] });\n}\ninputs.push({ file_url: OUTRO_URL, options: [] });\nconst outroIdx = inputs.length - 1;\n\n// === filter_complex 구성 ===\nlet filters = [];\nlet subtitleData = [];\nlet currentTime = 0;\n\nfor (let i = 0; i < segments.length; i++) {\n    const seg = segments[i];\n    const { vIdx, aIdx } = segMeta[i];\n    const dur = seg.sceneDuration;\n    const slowFactor = Math.max(1, dur / SCENE_DURATION);\n\n    // 비디오 필터\n    // Ken Burns for split segments (avoid repetition)\n    if (seg.type === 'split') {\n        const KB = 1.12;\n        const kbW = Math.round(1080 * KB);\n        const kbH = Math.round(1920 * KB);\n        const dx = kbW - 1080;\n        const dy = kbH - 1920;\n        const dxH = Math.round(dx / 2);\n        const dyH = Math.round(dy / 2);\n        const kbVariants = [\n            `scale=${kbW}:${kbH},crop=1080:1920:${dxH}*t/${dur.toFixed(2)}:${dyH}*t/${dur.toFixed(2)}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}-${dx}*t/${dur.toFixed(2)}:${dy}-${dy}*t/${dur.toFixed(2)}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}*t/${dur.toFixed(2)}:${dyH}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}-${dx}*t/${dur.toFixed(2)}:${dyH}`,\n        ];\n        const kbEffect = kbVariants[seg.splitIndex % kbVariants.length];\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,${kbEffect},trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS[v${i}]`);\n    } else if (dur > MAX_SLOW_SECONDS) {\n        // 루프 재생\n        inputs[vIdx].options = [{ option: \"-stream_loop\" }, { option: \"-1\" }];\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS[v${i}]`);\n    } else if (slowFactor > 1.01) {\n        // 슬로우모션\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*${slowFactor.toFixed(2)},tpad=stop_mode=clone:stop_duration=10,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS[v${i}]`);\n    } else {\n        // 원래 속도 (5초 장면)\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS[v${i}]`);\n    }\n\n    // 오디오 필터 (패딩 필요 시 apad로 무음 채움)\n    if (seg.audioStart > 0) {\n        if (seg.needsPad) {\n            filters.push(`[${aIdx}:a]atrim=start=${seg.audioStart.toFixed(2)}:duration=${seg.audioDuration.toFixed(2)},apad=whole_dur=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        } else {\n            filters.push(`[${aIdx}:a]atrim=start=${seg.audioStart.toFixed(2)}:duration=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        }\n    } else {\n        if (seg.needsPad) {\n            filters.push(`[${aIdx}:a]atrim=duration=${seg.audioDuration.toFixed(2)},apad=whole_dur=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        } else {\n            filters.push(`[${aIdx}:a]atrim=duration=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        }\n    }\n\n    subtitleData.push({\n        text: seg.subtitleText,\n        start: currentTime,\n        end: currentTime + dur,\n    });\n    currentTime += dur;\n}\n\n// 아웃트로\nfilters.push(`[${outroIdx}:v]scale=1080:2160,crop=1080:1920:0:0,trim=duration=${OUTRO_DURATION},setpts=PTS-STARTPTS[voutro]`);\nfilters.push(`anullsrc=r=44100:cl=mono,atrim=duration=${OUTRO_DURATION}[aoutro]`);\n\n// Crossfade transitions (0.4s fade)\nconst XFADE_DUR = 0.4;\nconst allV = [...Array(segments.length).keys()].map(i => `v${i}`).concat(['voutro']);\nconst allA = [...Array(segments.length).keys()].map(i => `a${i}`).concat(['aoutro']);\nconst allDur = segments.map(s => s.sceneDuration).concat([OUTRO_DURATION]);\n\nif (allV.length <= 1) {\n    filters.push(`[${allV[0]}]copy[outv]`);\n    filters.push(`[${allA[0]}]acopy[outa]`);\n} else {\n    // Video crossfade chain\n    let prevV = allV[0];\n    let cumDur = allDur[0];\n    for (let k = 0; k < allV.length - 1; k++) {\n        const xOffset = Math.max(0, cumDur - XFADE_DUR);\n        const vOut = k === allV.length - 2 ? 'outv' : `vx${k}`;\n        filters.push(`[${prevV}][${allV[k+1]}]xfade=transition=fade:duration=${XFADE_DUR}:offset=${xOffset.toFixed(2)}[${vOut}]`);\n        prevV = vOut;\n        cumDur += allDur[k+1] - XFADE_DUR;\n    }\n    // Audio crossfade chain\n    let prevA = allA[0];\n    for (let k = 0; k < allA.length - 1; k++) {\n        const aOut = k === allA.length - 2 ? 'outa' : `ax${k}`;\n        filters.push(`[${prevA}][${allA[k+1]}]acrossfade=d=${XFADE_DUR}:c1=tri:c2=tri[${aOut}]`);\n        prevA = aOut;\n    }\n}\n\nif (bgmUrl) {\n    const bgmIdx = segments.length * 2;\n    filters.push(`[${bgmIdx}:a]volume=0.10[bgm]`);\n    filters.push(`[outa][bgm]amix=inputs=2:duration=first:dropout_transition=2[finala]`);\n}\n\nconst filterComplex = filters.join('; ');\nconst audioMap = bgmUrl ? '[finala]' : '[outa]';\n\nconst outputOptions = [\n    { option: \"-filter_complex\" }, { option: filterComplex },\n    { option: \"-map\" }, { option: \"[outv]\" },\n    { option: \"-map\" }, { option: audioMap },\n    { option: \"-c:v\" }, { option: \"libx264\" },\n    { option: \"-preset\" }, { option: \"fast\" },\n    { option: \"-crf\" }, { option: \"23\" },\n    { option: \"-c:a\" }, { option: \"aac\" },\n    { option: \"-b:a\" }, { option: \"192k\" },\n    { option: \"-pix_fmt\" }, { option: \"yuv420p\" },\n    { option: \"-movflags\" }, { option: \"+faststart\" },\n];\n\nconsole.log(`Total segments: ${segments.length} (from ${partCount} parts), Duration: ${currentTime.toFixed(1)}s + ${OUTRO_DURATION}s outro`);\n\nreturn [{\n    json: {\n        nca_payload: {\n            inputs: inputs,\n            outputs: [{ options: outputOptions }],\n            global_options: [],\n        },\n        subtitle_data: subtitleData,\n        part_count: partCount,\n        segment_count: segments.length,\n        has_bgm: !!bgmUrl,\n        total_duration: currentTime + OUTRO_DURATION,\n    }\n}];"
+        "jsCode": "// NCA 영상 제작 - BGM 루프 + 슬로우/루프/5초단위 장면분할 + 자막 + 아웃트로\nconst firstItem = $input.first().json;\nconst dataArray = firstItem.data || [];\n\nconst narrations = [];\nconst videos = [];\nlet bgmUrl = '';\n\nfor (const item of dataArray) {\n    if (item.video && item.video.url) {\n        videos.push(item.video.url);\n    } else if (item.audio && item.audio.url) {\n        if (item.metadata && item.metadata.duration) {\n            bgmUrl = item.audio.url;\n        } else {\n            const fileSize = item.audio.file_size || 0;\n            const estimatedDuration = Math.max(Math.round((fileSize * 8 / 128000) * 100) / 100, 3);\n            narrations.push({\n                url: item.audio.url,\n                duration: estimatedDuration + 2,\n            });\n        }\n    }\n}\n\n// 자막 텍스트 가져오기\nlet subtitleTexts = [];\nlet fullNarrationTexts = [];\ntry {\n    const partItems = $('5파트 분리').all();\n    subtitleTexts = partItems.map(item => item.json.subtitle || item.json.text || '');\n    fullNarrationTexts = partItems.map(item => item.json.text || '');\n} catch (e) {\n    console.log('Could not get subtitles:', e.message);\n}\n\n// 2줄 분리 헬퍼\nfunction splitToTwoLines(text) {\n    if (!text || text.length <= 16) return text || '';\n    const mid = Math.floor(text.length / 2);\n    let splitIdx = -1;\n    for (let offset = 0; offset <= mid; offset++) {\n        const fwd = mid + offset;\n        const bwd = mid - offset;\n        if (fwd < text.length && text[fwd] === ' ') { splitIdx = fwd; break; }\n        if (bwd >= 0 && text[bwd] === ' ') { splitIdx = bwd; break; }\n    }\n    if (splitIdx === -1) return text;\n    return text.substring(0, splitIdx).trim() + '\\\\N' + text.substring(splitIdx).trim();\n}\n\n// 나레이션 텍스트를 N개 세그먼트로 분할 (요약 없이 전체)\nfunction splitNarrationText(fullText, segCount) {\n    if (segCount <= 1) return [fullText];\n    const sentences = fullText.split(/(?<=[.!?])\\s*/).filter(s => s.trim().length > 0);\n    \n    if (sentences.length >= segCount) {\n        const result = [];\n        const perSeg = Math.floor(sentences.length / segCount);\n        let idx = 0;\n        for (let s = 0; s < segCount; s++) {\n            const end = (s === segCount - 1) ? sentences.length : idx + perSeg;\n            result.push(sentences.slice(idx, end).join(' ').trim());\n            idx = end;\n        }\n        return result;\n    } else {\n        const charPerSeg = Math.ceil(fullText.length / segCount);\n        const result = [];\n        let remaining = fullText;\n        for (let s = 0; s < segCount - 1; s++) {\n            let cutPos = Math.min(charPerSeg, remaining.length);\n            for (let j = cutPos; j >= cutPos - 10 && j >= 1; j--) {\n                if (remaining[j] === ' ' || remaining[j] === ',') { cutPos = j; break; }\n            }\n            result.push(remaining.substring(0, cutPos).trim());\n            remaining = remaining.substring(cutPos).trim();\n        }\n        result.push(remaining.trim());\n        return result;\n    }\n}\n\nconst partCount = Math.min(narrations.length, videos.length, 5);\nconst SCENE_DURATION = 5;      // 영상 기본 길이 (5초)\nconst MAX_SLOW_SECONDS = 6.5;  // 6.5초까지 슬로우, 이상이면 루프\nconst SPLIT_SECONDS = 8;       // 8초 이상이면 장면 분할\nconst OUTRO_URL = 'http://76.13.182.180:9000/nca-toolkit/assets/outro_lumix.mp4';\nconst OUTRO_DURATION = 5;\n\nconsole.log('Parts:', partCount, 'Videos:', videos.length, 'Narrations:', narrations.length, 'BGM:', bgmUrl ? 'YES' : 'NO');\n\n// === 세그먼트 구성 (5초 단위 분할, 나머지 < 5초면 5초로) ===\nconst segments = [];\nfor (let i = 0; i < partCount; i++) {\n    const dur = narrations[i].duration;\n    const videoUrl = videos[i];\n    const audioUrl = narrations[i].url;\n    const subText = subtitleTexts[i] || '';\n    const fullText = fullNarrationTexts[i] || '';\n\n    if (dur >= SPLIT_SECONDS) {\n        // 8초 이상: 5초 단위로 분할\n        const sceneDurations = [];\n        let remaining = dur;\n        while (remaining >= SPLIT_SECONDS) {\n            sceneDurations.push(SCENE_DURATION);\n            remaining = Math.round((remaining - SCENE_DURATION) * 100) / 100;\n        }\n        // 나머지: 5초 미만이면 5초로 (영상 길이에 맞춤), 아니면 그대로\n        const lastDur = remaining < SCENE_DURATION ? SCENE_DURATION : remaining;\n        sceneDurations.push(lastDur);\n\n        // 나레이션 텍스트를 세그먼트 수만큼 분할 (요약 없이)\n        const textParts = splitNarrationText(fullText, sceneDurations.length);\n        \n        // 오디오 구간 계산 (실제 나레이션 길이 기준)\n        const audioDurations = [];\n        let audioRemaining = dur;\n        for (let s = 0; s < sceneDurations.length - 1; s++) {\n            audioDurations.push(SCENE_DURATION);\n            audioRemaining = Math.round((audioRemaining - SCENE_DURATION) * 100) / 100;\n        }\n        audioDurations.push(audioRemaining); // 마지막은 실제 남은 오디오 길이\n\n        let audioOffset = 0;\n        for (let s = 0; s < sceneDurations.length; s++) {\n            segments.push({\n                videoUrl, audioUrl,\n                sceneDuration: sceneDurations[s],   // 장면 길이 (영상 기준)\n                audioDuration: audioDurations[s],    // 실제 오디오 길이\n                audioStart: audioOffset,\n                needsPad: sceneDurations[s] > audioDurations[s], // 오디오 패딩 필요\n                subtitleText: splitToTwoLines(textParts[s] || ''),\n                type: 'split', splitIndex: s\n            });\n            audioOffset = Math.round((audioOffset + audioDurations[s]) * 100) / 100;\n        }\n        console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, SPLIT -> [${sceneDurations.map(d => d.toFixed(1)+'s').join(', ')}] (audio: [${audioDurations.map(d => d.toFixed(1)+'s').join(', ')}])`);\n    } else {\n        // 8초 미만: 일반 (요약 자막)\n        segments.push({\n            videoUrl, audioUrl,\n            sceneDuration: dur,\n            audioDuration: dur,\n            audioStart: 0,\n            needsPad: false,\n            subtitleText: subText,\n            type: 'normal'\n        });\n        \n        if (dur > MAX_SLOW_SECONDS) {\n            console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, LOOP`);\n        } else {\n            const slow = Math.max(1, dur / SCENE_DURATION);\n            console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, slow=${slow.toFixed(2)}x`);\n        }\n    }\n}\n\n// === inputs 구성 ===\nconst inputs = [];\nconst segMeta = [];\n\nfor (const seg of segments) {\n    const vIdx = inputs.length;\n    inputs.push({ file_url: seg.videoUrl, options: [] });\n    const aIdx = inputs.length;\n    inputs.push({ file_url: seg.audioUrl, options: [] });\n    segMeta.push({ vIdx, aIdx });\n}\n\nif (bgmUrl) {\n    inputs.push({ file_url: bgmUrl, options: [{ option: \"-stream_loop\" }, { option: \"-1\" }] });\n}\ninputs.push({ file_url: OUTRO_URL, options: [] });\nconst outroIdx = inputs.length - 1;\n\n// === filter_complex 구성 ===\nlet filters = [];\nlet subtitleData = [];\nlet currentTime = 0;\n\nfor (let i = 0; i < segments.length; i++) {\n    const seg = segments[i];\n    const { vIdx, aIdx } = segMeta[i];\n    const dur = seg.sceneDuration;\n    const slowFactor = Math.max(1, dur / SCENE_DURATION);\n\n    // 비디오 필터\n    // Ken Burns for split segments (avoid repetition)\n    if (seg.type === 'split') {\n        const KB = 1.12;\n        const kbW = Math.round(1080 * KB);\n        const kbH = Math.round(1920 * KB);\n        const dx = kbW - 1080;\n        const dy = kbH - 1920;\n        const dxH = Math.round(dx / 2);\n        const dyH = Math.round(dy / 2);\n        const kbVariants = [\n            `scale=${kbW}:${kbH},crop=1080:1920:${dxH}*t/${dur.toFixed(2)}:${dyH}*t/${dur.toFixed(2)}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}-${dx}*t/${dur.toFixed(2)}:${dy}-${dy}*t/${dur.toFixed(2)}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}*t/${dur.toFixed(2)}:${dyH}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}-${dx}*t/${dur.toFixed(2)}:${dyH}`,\n        ];\n        const kbEffect = kbVariants[seg.splitIndex % kbVariants.length];\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,${kbEffect},trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS,fps=24[v${i}]`);\n    } else if (dur > MAX_SLOW_SECONDS) {\n        // 루프 재생\n        inputs[vIdx].options = [{ option: \"-stream_loop\" }, { option: \"-1\" }];\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS,fps=24[v${i}]`);\n    } else if (slowFactor > 1.01) {\n        // 슬로우모션\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*${slowFactor.toFixed(2)},tpad=stop_mode=clone:stop_duration=10,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS,fps=24[v${i}]`);\n    } else {\n        // 원래 속도 (5초 장면)\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS,fps=24[v${i}]`);\n    }\n\n    // 오디오 필터 (패딩 필요 시 apad로 무음 채움)\n    if (seg.audioStart > 0) {\n        if (seg.needsPad) {\n            filters.push(`[${aIdx}:a]atrim=start=${seg.audioStart.toFixed(2)}:duration=${seg.audioDuration.toFixed(2)},apad=whole_dur=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        } else {\n            filters.push(`[${aIdx}:a]atrim=start=${seg.audioStart.toFixed(2)}:duration=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        }\n    } else {\n        if (seg.needsPad) {\n            filters.push(`[${aIdx}:a]atrim=duration=${seg.audioDuration.toFixed(2)},apad=whole_dur=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        } else {\n            filters.push(`[${aIdx}:a]atrim=duration=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        }\n    }\n\n    subtitleData.push({\n        text: seg.subtitleText,\n        start: currentTime,\n        end: currentTime + dur,\n    });\n    currentTime += dur;\n}\n\n// 아웃트로\nfilters.push(`[${outroIdx}:v]scale=1080:2160,crop=1080:1920:0:0,trim=duration=${OUTRO_DURATION},setpts=PTS-STARTPTS,fps=24[voutro]`);\nfilters.push(`anullsrc=r=44100:cl=mono,atrim=duration=${OUTRO_DURATION}[aoutro]`);\n\n// Fade transitions (concat 방식 - 싱크 보장)\nconst FADE_DUR = 0.3;\nfor (let k = 0; k < segments.length; k++) {\n    const d = segments[k].sceneDuration;\n    const vFadeIn = k > 0 ? `fade=t=in:d=${FADE_DUR},` : '';\n    const vFadeOut = `fade=t=out:st=${Math.max(0, d - FADE_DUR).toFixed(2)}:d=${FADE_DUR}`;\n    filters.push(`[v${k}]${vFadeIn}${vFadeOut}[vf${k}]`);\n    const aFadeIn = k > 0 ? `afade=t=in:d=${FADE_DUR},` : '';\n    const aFadeOut = `afade=t=out:st=${Math.max(0, d - FADE_DUR).toFixed(2)}:d=${FADE_DUR}`;\n    filters.push(`[a${k}]${aFadeIn}${aFadeOut}[af${k}]`);\n}\nfilters.push(`[voutro]fade=t=in:d=${FADE_DUR}[vfoutro]`);\nfilters.push(`[aoutro]acopy[afoutro]`);\nlet concatInputs = '';\nfor (let k = 0; k < segments.length; k++) {\n    concatInputs += `[vf${k}][af${k}]`;\n}\nconcatInputs += '[vfoutro][afoutro]';\nfilters.push(`${concatInputs}concat=n=${segments.length + 1}:v=1:a=1[outv][outa]`);\n\nif (bgmUrl) {\n    const bgmIdx = segments.length * 2;\n    filters.push(`[${bgmIdx}:a]volume=0.10[bgm]`);\n    filters.push(`[outa][bgm]amix=inputs=2:duration=first:dropout_transition=2[finala]`);\n}\n\nconst filterComplex = filters.join('; ');\nconst audioMap = bgmUrl ? '[finala]' : '[outa]';\n\nconst outputOptions = [\n    { option: \"-filter_complex\" }, { option: filterComplex },\n    { option: \"-map\" }, { option: \"[outv]\" },\n    { option: \"-map\" }, { option: audioMap },\n    { option: \"-c:v\" }, { option: \"libx264\" },\n    { option: \"-preset\" }, { option: \"fast\" },\n    { option: \"-crf\" }, { option: \"23\" },\n    { option: \"-c:a\" }, { option: \"aac\" },\n    { option: \"-b:a\" }, { option: \"192k\" },\n    { option: \"-pix_fmt\" }, { option: \"yuv420p\" },\n    { option: \"-movflags\" }, { option: \"+faststart\" },\n];\n\nconsole.log(`Total segments: ${segments.length} (from ${partCount} parts), Duration: ${currentTime.toFixed(1)}s + ${OUTRO_DURATION}s outro`);\n\nreturn [{\n    json: {\n        nca_payload: {\n            inputs: inputs,\n            outputs: [{ options: outputOptions }],\n            global_options: [],\n        },\n        subtitle_data: subtitleData,\n        part_count: partCount,\n        segment_count: segments.length,\n        has_bgm: !!bgmUrl,\n        total_duration: currentTime + OUTRO_DURATION,\n    }\n}];"
       },
       "name": "NCA 데이터 준비",
       "type": "n8n-nodes-base.code",
@@ -1321,6 +1383,33 @@
             "index": 0
           }
         ]
+      ]
+    },
+    "업스케일 요청": {
+      "main": [
+        [
+          {
+            "node": "업스케일 대기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "업스케일 대기": {
+      "main": [
+        [
+          {
+            "node": "업스케일 결과",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "업스케일 결과": {
+      "main": [
+        []
       ]
     },
     "영상 생성": {
@@ -1960,17 +2049,135 @@
         }
       }
     ],
-    "업스케일 대기": [
+    "AI 주제 생성": [
+      {
+        "json": {
+          "content": {
+            "parts": [
+              {
+                "text": "{\n  \"Subject\": \"대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천\",\n  \"Narration\": \"더 이상 복잡한 통합 작업으로 스트레스받지 마십시오. 루믹스 솔루션은 실시간 데이터와 자동화된 프로세스로 운영을 혁신합니다. 모든 과정이 투명하게 관리되어 불안감을 해소해 드립니다. 최고의 파트너십으로 귀사의 성장을 약속드립니다. 지금 바로 루믹스로 전환하여 차이를 경험하세요.\",\n  \"Caption\": \"대표님의 귀한 시간을 뺏는 비효율적인 운영은 이제 끝낼 때입니다. 복잡한 시스템 통합, 실시간 데이터 관리, 자동화된 운영까지, 루믹스는 이 모든 것을 원스톱으로 제공합니다. 더 이상 여러 벤더와 씨름하거나, 최신 기술 도입에 어려움을 겪지 마세요. 검증된 기술력과 독보적인 파트너십으로 귀사의 사업에 안정성과 보안을 더합니다. 100% 정품 API 인증과 다중 클라우드 인프라를 통해 24/7 무중단 운영을 보장하며, DDoS 공격에도 완벽하게 대비합니다. 즉시 대응 가능한 모니터링 시스템으로 예상치 못한 문제도 빠르게 해결하세요. 수익 증대와 성공적인 확장을 위한 최적의 솔루션을 찾고 계신다면, 지금 바로 루믹스의 라이브 데모를 신청하고 실제 운영 환경을 직접 확인해 보세요. 귀사의 비즈니스를 한 단계 업그레이드할 절호의 기회를 놓치지 마십시오. #루믹스 #LUMIX #카지노솔루션 #솔루션 #온라인카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천\",\n  \"Comment\": \"루믹스 통합 솔루션으로 복잡한 운영을 자동화하고 실시간으로 데이터를 관리하세요. 더 높은 수익과 안정성을 경험할 수 있습니다.\",\n  \"BGM_prompt\": \"modern corporate, sleek, minimal electronic, sophisticated, clean, professional\"\n}"
+              }
+            ],
+            "role": "model"
+          },
+          "finishReason": "STOP",
+          "index": 0
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "주제 파싱": [
+      {
+        "json": {
+          "Subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "Narration": "더 이상 복잡한 통합 작업으로 스트레스받지 마십시오. 루믹스 솔루션은 실시간 데이터와 자동화된 프로세스로 운영을 혁신합니다. 모든 과정이 투명하게 관리되어 불안감을 해소해 드립니다. 최고의 파트너십으로 귀사의 성장을 약속드립니다. 지금 바로 루믹스로 전환하여 차이를 경험하세요.",
+          "Caption": "대표님의 귀한 시간을 뺏는 비효율적인 운영은 이제 끝낼 때입니다. 복잡한 시스템 통합, 실시간 데이터 관리, 자동화된 운영까지, 루믹스는 이 모든 것을 원스톱으로 제공합니다. 더 이상 여러 벤더와 씨름하거나, 최신 기술 도입에 어려움을 겪지 마세요. 검증된 기술력과 독보적인 파트너십으로 귀사의 사업에 안정성과 보안을 더합니다. 100% 정품 API 인증과 다중 클라우드 인프라를 통해 24/7 무중단 운영을 보장하며, DDoS 공격에도 완벽하게 대비합니다. 즉시 대응 가능한 모니터링 시스템으로 예상치 못한 문제도 빠르게 해결하세요. 수익 증대와 성공적인 확장을 위한 최적의 솔루션을 찾고 계신다면, 지금 바로 루믹스의 라이브 데모를 신청하고 실제 운영 환경을 직접 확인해 보세요. 귀사의 비즈니스를 한 단계 업그레이드할 절호의 기회를 놓치지 마십시오. #루믹스 #LUMIX #카지노솔루션 #솔루션 #온라인카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "Comment": "루믹스 통합 솔루션으로 복잡한 운영을 자동화하고 실시간으로 데이터를 관리하세요. 더 높은 수익과 안정성을 경험할 수 있습니다.",
+          "BGM_prompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
+          "Status": "준비",
+          "Publish": "대기중",
+          "generatedAt": "2026-02-12T19:50:42.671Z"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "시트 기록": [
+      {
+        "json": {
+          "Subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "Narration": "더 이상 복잡한 통합 작업으로 스트레스받지 마십시오. 루믹스 솔루션은 실시간 데이터와 자동화된 프로세스로 운영을 혁신합니다. 모든 과정이 투명하게 관리되어 불안감을 해소해 드립니다. 최고의 파트너십으로 귀사의 성장을 약속드립니다. 지금 바로 루믹스로 전환하여 차이를 경험하세요.",
+          "Caption": "대표님의 귀한 시간을 뺏는 비효율적인 운영은 이제 끝낼 때입니다. 복잡한 시스템 통합, 실시간 데이터 관리, 자동화된 운영까지, 루믹스는 이 모든 것을 원스톱으로 제공합니다. 더 이상 여러 벤더와 씨름하거나, 최신 기술 도입에 어려움을 겪지 마세요. 검증된 기술력과 독보적인 파트너십으로 귀사의 사업에 안정성과 보안을 더합니다. 100% 정품 API 인증과 다중 클라우드 인프라를 통해 24/7 무중단 운영을 보장하며, DDoS 공격에도 완벽하게 대비합니다. 즉시 대응 가능한 모니터링 시스템으로 예상치 못한 문제도 빠르게 해결하세요. 수익 증대와 성공적인 확장을 위한 최적의 솔루션을 찾고 계신다면, 지금 바로 루믹스의 라이브 데모를 신청하고 실제 운영 환경을 직접 확인해 보세요. 귀사의 비즈니스를 한 단계 업그레이드할 절호의 기회를 놓치지 마십시오. #루믹스 #LUMIX #카지노솔루션 #솔루션 #온라인카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "댓글": "루믹스 통합 솔루션으로 복잡한 운영을 자동화하고 실시간으로 데이터를 관리하세요. 더 높은 수익과 안정성을 경험할 수 있습니다.",
+          "BGM prompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
+          "Status": "준비"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "5파트 분리": [
+      {
+        "json": {
+          "text": "더 이상 복잡한 통합 작업으로 스트레스받지 마십시오.",
+          "subtitle": "더 이상 복잡한 통합\\N작업으로 스트레스받지",
+          "index": 1,
+          "subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "bgmPrompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
+          "narration": "더 이상 복잡한 통합 작업으로 스트레스받지 마십시오. 루믹스 솔루션은 실시간 데이터와 자동화된 프로세스로 운영을 혁신합니다. 모든 과정이 투명하게 관리되어 불안감을 해소해 드립니다. 최고의 파트너십으로 귀사의 성장을 약속드립니다. 지금 바로 루믹스로 전환하여 차이를 경험하세요."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "text": "루믹스 솔루션은 실시간 데이터와 자동화된 프로세스로 운영을 혁신합니다.",
+          "subtitle": "루믹스 솔루션은 실시간\\N데이터와 자동화된",
+          "index": 2,
+          "subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "bgmPrompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
+          "narration": "더 이상 복잡한 통합 작업으로 스트레스받지 마십시오. 루믹스 솔루션은 실시간 데이터와 자동화된 프로세스로 운영을 혁신합니다. 모든 과정이 투명하게 관리되어 불안감을 해소해 드립니다. 최고의 파트너십으로 귀사의 성장을 약속드립니다. 지금 바로 루믹스로 전환하여 차이를 경험하세요."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "text": "모든 과정이 투명하게 관리되어 불안감을 해소해 드립니다.",
+          "subtitle": "모든 과정이 투명하게\\N관리되어 불안감을 해소해",
+          "index": 3,
+          "subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "bgmPrompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
+          "narration": "더 이상 복잡한 통합 작업으로 스트레스받지 마십시오. 루믹스 솔루션은 실시간 데이터와 자동화된 프로세스로 운영을 혁신합니다. 모든 과정이 투명하게 관리되어 불안감을 해소해 드립니다. 최고의 파트너십으로 귀사의 성장을 약속드립니다. 지금 바로 루믹스로 전환하여 차이를 경험하세요."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "text": "최고의 파트너십으로 귀사의 성장을 약속드립니다.",
+          "subtitle": "최고의 파트너십으로 귀사의 성장을",
+          "index": 4,
+          "subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "bgmPrompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
+          "narration": "더 이상 복잡한 통합 작업으로 스트레스받지 마십시오. 루믹스 솔루션은 실시간 데이터와 자동화된 프로세스로 운영을 혁신합니다. 모든 과정이 투명하게 관리되어 불안감을 해소해 드립니다. 최고의 파트너십으로 귀사의 성장을 약속드립니다. 지금 바로 루믹스로 전환하여 차이를 경험하세요."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "text": "지금 바로 루믹스로 전환하여 차이를 경험하세요.",
+          "subtitle": "지금 바로 루믹스로\\N전환하여 차이를",
+          "index": 5,
+          "subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "bgmPrompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
+          "narration": "더 이상 복잡한 통합 작업으로 스트레스받지 마십시오. 루믹스 솔루션은 실시간 데이터와 자동화된 프로세스로 운영을 혁신합니다. 모든 과정이 투명하게 관리되어 불안감을 해소해 드립니다. 최고의 파트너십으로 귀사의 성장을 약속드립니다. 지금 바로 루믹스로 전환하여 차이를 경험하세요."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "TTS 요청": [
       {
         "json": {
           "status": "IN_QUEUE",
-          "request_id": "ecc50c71-9fef-412f-97e0-d6f0f6ea1160",
-          "response_url": "https://queue.fal.run/fal-ai/aura-sr/requests/ecc50c71-9fef-412f-97e0-d6f0f6ea1160",
-          "status_url": "https://queue.fal.run/fal-ai/aura-sr/requests/ecc50c71-9fef-412f-97e0-d6f0f6ea1160/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/aura-sr/requests/ecc50c71-9fef-412f-97e0-d6f0f6ea1160/cancel",
+          "request_id": "86528d90-d548-4c74-b9ad-3c0a6b14c723",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/86528d90-d548-4c74-b9ad-3c0a6b14c723",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/86528d90-d548-4c74-b9ad-3c0a6b14c723/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/86528d90-d548-4c74-b9ad-3c0a6b14c723/cancel",
           "logs": null,
           "metrics": {},
-          "queue_position": 0
+          "queue_position": 2
         },
         "pairedItem": {
           "item": 0
@@ -1979,10 +2186,10 @@
       {
         "json": {
           "status": "IN_QUEUE",
-          "request_id": "61e3fab5-5fc7-4c96-83f5-99c085eca27c",
-          "response_url": "https://queue.fal.run/fal-ai/aura-sr/requests/61e3fab5-5fc7-4c96-83f5-99c085eca27c",
-          "status_url": "https://queue.fal.run/fal-ai/aura-sr/requests/61e3fab5-5fc7-4c96-83f5-99c085eca27c/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/aura-sr/requests/61e3fab5-5fc7-4c96-83f5-99c085eca27c/cancel",
+          "request_id": "f4ae3045-963c-4beb-a3a0-83faf3804f39",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/f4ae3045-963c-4beb-a3a0-83faf3804f39",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/f4ae3045-963c-4beb-a3a0-83faf3804f39/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/f4ae3045-963c-4beb-a3a0-83faf3804f39/cancel",
           "logs": null,
           "metrics": {},
           "queue_position": 0
@@ -1994,10 +2201,10 @@
       {
         "json": {
           "status": "IN_QUEUE",
-          "request_id": "5b8777e3-bf36-4c09-b795-f20df8c41362",
-          "response_url": "https://queue.fal.run/fal-ai/aura-sr/requests/5b8777e3-bf36-4c09-b795-f20df8c41362",
-          "status_url": "https://queue.fal.run/fal-ai/aura-sr/requests/5b8777e3-bf36-4c09-b795-f20df8c41362/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/aura-sr/requests/5b8777e3-bf36-4c09-b795-f20df8c41362/cancel",
+          "request_id": "ac3a72d5-ead8-4465-9131-b8e37815ddf6",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ac3a72d5-ead8-4465-9131-b8e37815ddf6",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ac3a72d5-ead8-4465-9131-b8e37815ddf6/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ac3a72d5-ead8-4465-9131-b8e37815ddf6/cancel",
           "logs": null,
           "metrics": {},
           "queue_position": 1
@@ -2009,13 +2216,13 @@
       {
         "json": {
           "status": "IN_QUEUE",
-          "request_id": "8c1bbf6d-9c29-4651-b9e4-96d50f561b31",
-          "response_url": "https://queue.fal.run/fal-ai/aura-sr/requests/8c1bbf6d-9c29-4651-b9e4-96d50f561b31",
-          "status_url": "https://queue.fal.run/fal-ai/aura-sr/requests/8c1bbf6d-9c29-4651-b9e4-96d50f561b31/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/aura-sr/requests/8c1bbf6d-9c29-4651-b9e4-96d50f561b31/cancel",
+          "request_id": "08df0b2c-93ee-4b68-a316-b152ddca22cf",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/08df0b2c-93ee-4b68-a316-b152ddca22cf",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/08df0b2c-93ee-4b68-a316-b152ddca22cf/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/08df0b2c-93ee-4b68-a316-b152ddca22cf/cancel",
           "logs": null,
           "metrics": {},
-          "queue_position": 0
+          "queue_position": 1
         },
         "pairedItem": {
           "item": 3
@@ -2024,13 +2231,358 @@
       {
         "json": {
           "status": "IN_QUEUE",
-          "request_id": "a82c2360-dc89-4833-973b-377a3694d6fe",
-          "response_url": "https://queue.fal.run/fal-ai/aura-sr/requests/a82c2360-dc89-4833-973b-377a3694d6fe",
-          "status_url": "https://queue.fal.run/fal-ai/aura-sr/requests/a82c2360-dc89-4833-973b-377a3694d6fe/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/aura-sr/requests/a82c2360-dc89-4833-973b-377a3694d6fe/cancel",
+          "request_id": "81101490-1c79-46dc-afb6-bc3b453a2a60",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/81101490-1c79-46dc-afb6-bc3b453a2a60",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/81101490-1c79-46dc-afb6-bc3b453a2a60/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/81101490-1c79-46dc-afb6-bc3b453a2a60/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 3
+        },
+        "pairedItem": {
+          "item": 4
+        }
+      }
+    ],
+    "TTS 대기": [
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "86528d90-d548-4c74-b9ad-3c0a6b14c723",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/86528d90-d548-4c74-b9ad-3c0a6b14c723",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/86528d90-d548-4c74-b9ad-3c0a6b14c723/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/86528d90-d548-4c74-b9ad-3c0a6b14c723/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 2
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "f4ae3045-963c-4beb-a3a0-83faf3804f39",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/f4ae3045-963c-4beb-a3a0-83faf3804f39",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/f4ae3045-963c-4beb-a3a0-83faf3804f39/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/f4ae3045-963c-4beb-a3a0-83faf3804f39/cancel",
           "logs": null,
           "metrics": {},
           "queue_position": 0
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "ac3a72d5-ead8-4465-9131-b8e37815ddf6",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ac3a72d5-ead8-4465-9131-b8e37815ddf6",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ac3a72d5-ead8-4465-9131-b8e37815ddf6/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ac3a72d5-ead8-4465-9131-b8e37815ddf6/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 1
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "08df0b2c-93ee-4b68-a316-b152ddca22cf",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/08df0b2c-93ee-4b68-a316-b152ddca22cf",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/08df0b2c-93ee-4b68-a316-b152ddca22cf/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/08df0b2c-93ee-4b68-a316-b152ddca22cf/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 1
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "81101490-1c79-46dc-afb6-bc3b453a2a60",
+          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/81101490-1c79-46dc-afb6-bc3b453a2a60",
+          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/81101490-1c79-46dc-afb6-bc3b453a2a60/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/81101490-1c79-46dc-afb6-bc3b453a2a60/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 3
+        },
+        "pairedItem": {
+          "item": 4
+        }
+      }
+    ],
+    "TTS 결과": [
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3b.fal.media/files/b/0a8e37e8/4GETtigG4YeuLFAEbh1zZ_output.mp3",
+            "content_type": "audio/mpeg",
+            "file_name": "output.mp3",
+            "file_size": 69844
+          },
+          "timestamps": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3b.fal.media/files/b/0a8e37e8/CabduLY3MsGkNn_HcX7QP_output.mp3",
+            "content_type": "audio/mpeg",
+            "file_name": "output.mp3",
+            "file_size": 109132
+          },
+          "timestamps": null
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3b.fal.media/files/b/0a8e37e8/8iJ_MCrIDNG3UzfwwtX9i_output.mp3",
+            "content_type": "audio/mpeg",
+            "file_name": "output.mp3",
+            "file_size": 80293
+          },
+          "timestamps": null
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3b.fal.media/files/b/0a8e37e8/U8Kra5jdhOlfLD1ner-yd_output.mp3",
+            "content_type": "audio/mpeg",
+            "file_name": "output.mp3",
+            "file_size": 69008
+          },
+          "timestamps": null
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      },
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3b.fal.media/files/b/0a8e37e8/U25mo13-wr1B0TQwUnnLw_output.mp3",
+            "content_type": "audio/mpeg",
+            "file_name": "output.mp3",
+            "file_size": 60231
+          },
+          "timestamps": null
+        },
+        "pairedItem": {
+          "item": 4
+        }
+      }
+    ],
+    "이미지 프롬프트 AI": [
+      {
+        "json": {
+          "text": "A vertical video. Extreme close-up of human fingers smoothly interacting with a sleek, minimalist holographic interface displaying vibrant neon data streams that flow effortlessly. The background is a soft blur of futuristic cyberpunk city lights, emphasizing precision and ease with a shallow depth of field, no text, no letters, no words, no watermark"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "text": "A vertical video. Close-up of a professional's hands interacting with a sleek, transparent holographic interface. The screen displays flowing real-time data streams and automated process indicators, with dramatic rim lighting accentuating the hands and digital display. Blurred modern corporate casino control room in background. no text, no letters, no words, no watermark"
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "text": "A vertical video. A dark cinematic medium shot with dramatic shadows, focusing on a professional casino dealer's hands meticulously dealing sleek playing cards onto a polished, dark gaming table. The precise, controlled movements convey absolute transparency and build trust, alleviating any anxiety. Moody, professional lighting with cinematic composition, no text, no letters, no words, no watermark"
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "text": "A vertical video. Wide establishing shot of two massive, neon-lit cyberpunk towers with merging peaks, rising above a dark city, signifying synergistic progress. Atmospheric depth, digital, no text, no letters, no words, no watermark"
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      },
+      {
+        "json": {
+          "text": "A vertical video. An aerial drone perspective with a sweeping motion over an ultra-modern, architecturally complex building at twilight. Precision lighting illuminates intricate geometric patterns, casting dramatic shadows. The dark cinematic scene emphasizes sharp, professional-grade detail against a moody backdrop, no text, no letters, no words, no watermark"
+        },
+        "pairedItem": {
+          "item": 4
+        }
+      }
+    ],
+    "이미지 생성": [
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "714d5567-9568-43da-8948-aae183d7edc7",
+          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/714d5567-9568-43da-8948-aae183d7edc7",
+          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/714d5567-9568-43da-8948-aae183d7edc7/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/714d5567-9568-43da-8948-aae183d7edc7/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 2
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "4ceb72cd-17ae-4949-8375-57c6199ea330",
+          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/4ceb72cd-17ae-4949-8375-57c6199ea330",
+          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/4ceb72cd-17ae-4949-8375-57c6199ea330/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/4ceb72cd-17ae-4949-8375-57c6199ea330/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 0
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "6f683406-2490-41aa-829d-5729b488c670",
+          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/6f683406-2490-41aa-829d-5729b488c670",
+          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/6f683406-2490-41aa-829d-5729b488c670/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/6f683406-2490-41aa-829d-5729b488c670/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 4
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "42ddbc62-87e6-47a3-b42d-a9cbc70641e8",
+          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/42ddbc62-87e6-47a3-b42d-a9cbc70641e8",
+          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/42ddbc62-87e6-47a3-b42d-a9cbc70641e8/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/42ddbc62-87e6-47a3-b42d-a9cbc70641e8/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 1
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "d8e7bdda-715e-455a-b518-0e053213c82c",
+          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/d8e7bdda-715e-455a-b518-0e053213c82c",
+          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/d8e7bdda-715e-455a-b518-0e053213c82c/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/d8e7bdda-715e-455a-b518-0e053213c82c/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 3
+        },
+        "pairedItem": {
+          "item": 4
+        }
+      }
+    ],
+    "이미지 대기": [
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "714d5567-9568-43da-8948-aae183d7edc7",
+          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/714d5567-9568-43da-8948-aae183d7edc7",
+          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/714d5567-9568-43da-8948-aae183d7edc7/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/714d5567-9568-43da-8948-aae183d7edc7/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 2
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "4ceb72cd-17ae-4949-8375-57c6199ea330",
+          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/4ceb72cd-17ae-4949-8375-57c6199ea330",
+          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/4ceb72cd-17ae-4949-8375-57c6199ea330/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/4ceb72cd-17ae-4949-8375-57c6199ea330/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 0
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "6f683406-2490-41aa-829d-5729b488c670",
+          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/6f683406-2490-41aa-829d-5729b488c670",
+          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/6f683406-2490-41aa-829d-5729b488c670/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/6f683406-2490-41aa-829d-5729b488c670/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 4
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "42ddbc62-87e6-47a3-b42d-a9cbc70641e8",
+          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/42ddbc62-87e6-47a3-b42d-a9cbc70641e8",
+          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/42ddbc62-87e6-47a3-b42d-a9cbc70641e8/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/42ddbc62-87e6-47a3-b42d-a9cbc70641e8/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 1
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      },
+      {
+        "json": {
+          "status": "IN_QUEUE",
+          "request_id": "d8e7bdda-715e-455a-b518-0e053213c82c",
+          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/d8e7bdda-715e-455a-b518-0e053213c82c",
+          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/d8e7bdda-715e-455a-b518-0e053213c82c/status",
+          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/d8e7bdda-715e-455a-b518-0e053213c82c/cancel",
+          "logs": null,
+          "metrics": {},
+          "queue_position": 3
         },
         "pairedItem": {
           "item": 4
@@ -2042,15 +2594,15 @@
         "json": {
           "images": [
             {
-              "url": "https://v3b.fal.media/files/b/0a8e35a8/u7kBN8IRxJY2UE6t0DxVD.jpg",
+              "url": "https://v3b.fal.media/files/b/0a8e37f1/6GRBA5P1hhRgehTNx1txg.jpg",
               "content_type": "image/jpeg",
-              "file_name": "u7kBN8IRxJY2UE6t0DxVD.jpg",
+              "file_name": "6GRBA5P1hhRgehTNx1txg.jpg",
               "file_size": null,
               "width": 1072,
               "height": 1920
             }
           ],
-          "seed": 1695738554
+          "seed": 677222815
         },
         "pairedItem": {
           "item": 0
@@ -2060,15 +2612,15 @@
         "json": {
           "images": [
             {
-              "url": "https://v3b.fal.media/files/b/0a8e35a8/gtC27bUXH0U_zpth_wlM7.jpg",
+              "url": "https://v3b.fal.media/files/b/0a8e37f1/mQSUdWCITFzBNIaDJ1aWV.jpg",
               "content_type": "image/jpeg",
-              "file_name": "gtC27bUXH0U_zpth_wlM7.jpg",
+              "file_name": "mQSUdWCITFzBNIaDJ1aWV.jpg",
               "file_size": null,
               "width": 1072,
               "height": 1920
             }
           ],
-          "seed": 1060134729
+          "seed": 1959391781
         },
         "pairedItem": {
           "item": 1
@@ -2078,25 +2630,7 @@
         "json": {
           "images": [
             {
-              "url": "https://v3b.fal.media/files/b/0a8e35a8/CSJR0sS6jJiJnMutKMRfM.jpg",
-              "content_type": "image/jpeg",
-              "file_name": "CSJR0sS6jJiJnMutKMRfM.jpg",
-              "file_size": null,
-              "width": 1072,
-              "height": 1920
-            }
-          ],
-          "seed": 895369686
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      },
-      {
-        "json": {
-          "images": [
-            {
-              "url": "https://v3b.fal.media/files/b/0a8e35aa/eB0BP11OQovAj83OIV2q-_s2zRr0bW.jpg",
+              "url": "https://v3b.fal.media/files/b/0a8e37f3/no-49F5LrvsHJgn4uCzPy_fF7dyB8R.jpg",
               "content_type": "image/jpeg",
               "file_name": null,
               "file_size": null,
@@ -2104,7 +2638,25 @@
               "height": 1920
             }
           ],
-          "seed": 1916384436
+          "seed": 1771195302
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "images": [
+            {
+              "url": "https://v3b.fal.media/files/b/0a8e37f1/OeIlvdX7RkM1IwRZeVKJ5.jpg",
+              "content_type": "image/jpeg",
+              "file_name": "OeIlvdX7RkM1IwRZeVKJ5.jpg",
+              "file_size": null,
+              "width": 1072,
+              "height": 1920
+            }
+          ],
+          "seed": 195748401
         },
         "pairedItem": {
           "item": 3
@@ -2114,32 +2666,30 @@
         "json": {
           "images": [
             {
-              "url": "https://v3b.fal.media/files/b/0a8e35a8/odY5vBwi_SOFCGiz8-zJh.jpg",
+              "url": "https://v3b.fal.media/files/b/0a8e37f1/XR0RfDWJ_ayyd4G4nsSJ_.jpg",
               "content_type": "image/jpeg",
-              "file_name": "odY5vBwi_SOFCGiz8-zJh.jpg",
+              "file_name": "XR0RfDWJ_ayyd4G4nsSJ_.jpg",
               "file_size": null,
               "width": 1072,
               "height": 1920
             }
           ],
-          "seed": 794532752
+          "seed": 1872041729
         },
         "pairedItem": {
           "item": 4
         }
       }
     ],
-    "이미지 대기": [
+    "영상 생성": [
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "39ae649f-d7eb-4b01-83f5-dcb71c468adc",
-          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/39ae649f-d7eb-4b01-83f5-dcb71c468adc",
-          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/39ae649f-d7eb-4b01-83f5-dcb71c468adc/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/39ae649f-d7eb-4b01-83f5-dcb71c468adc/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 1
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "481347acc9470a4919319247e3a607ca",
+            "recordId": "481347acc9470a4919319247e3a607ca"
+          }
         },
         "pairedItem": {
           "item": 0
@@ -2147,14 +2697,12 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "a7a6dfba-37ea-4de7-8308-113d804adc87",
-          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/a7a6dfba-37ea-4de7-8308-113d804adc87",
-          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/a7a6dfba-37ea-4de7-8308-113d804adc87/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/a7a6dfba-37ea-4de7-8308-113d804adc87/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 1
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "099320ac98dbc5ab1f3a307450c3220c",
+            "recordId": "099320ac98dbc5ab1f3a307450c3220c"
+          }
         },
         "pairedItem": {
           "item": 1
@@ -2162,14 +2710,12 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "f1282d30-784b-497b-821a-34bc744f4bad",
-          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/f1282d30-784b-497b-821a-34bc744f4bad",
-          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/f1282d30-784b-497b-821a-34bc744f4bad/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/f1282d30-784b-497b-821a-34bc744f4bad/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 2
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "b391924aa403a37d0695230851322166",
+            "recordId": "b391924aa403a37d0695230851322166"
+          }
         },
         "pairedItem": {
           "item": 2
@@ -2177,14 +2723,12 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "34b30c9d-e9ef-48de-8357-21fc272e39a8",
-          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/34b30c9d-e9ef-48de-8357-21fc272e39a8",
-          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/34b30c9d-e9ef-48de-8357-21fc272e39a8/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/34b30c9d-e9ef-48de-8357-21fc272e39a8/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "fc08e5bcbf41577526bf6094eb1c6cfc",
+            "recordId": "fc08e5bcbf41577526bf6094eb1c6cfc"
+          }
         },
         "pairedItem": {
           "item": 3
@@ -2192,31 +2736,27 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "15163a92-4586-4df6-b817-fbe5b6e1e576",
-          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/15163a92-4586-4df6-b817-fbe5b6e1e576",
-          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/15163a92-4586-4df6-b817-fbe5b6e1e576/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/15163a92-4586-4df6-b817-fbe5b6e1e576/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 1
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "9d1686aa16598203b36608b6e5d8d2db",
+            "recordId": "9d1686aa16598203b36608b6e5d8d2db"
+          }
         },
         "pairedItem": {
           "item": 4
         }
       }
     ],
-    "업스케일 요청": [
+    "영상 대기": [
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "ecc50c71-9fef-412f-97e0-d6f0f6ea1160",
-          "response_url": "https://queue.fal.run/fal-ai/aura-sr/requests/ecc50c71-9fef-412f-97e0-d6f0f6ea1160",
-          "status_url": "https://queue.fal.run/fal-ai/aura-sr/requests/ecc50c71-9fef-412f-97e0-d6f0f6ea1160/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/aura-sr/requests/ecc50c71-9fef-412f-97e0-d6f0f6ea1160/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "481347acc9470a4919319247e3a607ca",
+            "recordId": "481347acc9470a4919319247e3a607ca"
+          }
         },
         "pairedItem": {
           "item": 0
@@ -2224,14 +2764,12 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "61e3fab5-5fc7-4c96-83f5-99c085eca27c",
-          "response_url": "https://queue.fal.run/fal-ai/aura-sr/requests/61e3fab5-5fc7-4c96-83f5-99c085eca27c",
-          "status_url": "https://queue.fal.run/fal-ai/aura-sr/requests/61e3fab5-5fc7-4c96-83f5-99c085eca27c/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/aura-sr/requests/61e3fab5-5fc7-4c96-83f5-99c085eca27c/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "099320ac98dbc5ab1f3a307450c3220c",
+            "recordId": "099320ac98dbc5ab1f3a307450c3220c"
+          }
         },
         "pairedItem": {
           "item": 1
@@ -2239,14 +2777,12 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "5b8777e3-bf36-4c09-b795-f20df8c41362",
-          "response_url": "https://queue.fal.run/fal-ai/aura-sr/requests/5b8777e3-bf36-4c09-b795-f20df8c41362",
-          "status_url": "https://queue.fal.run/fal-ai/aura-sr/requests/5b8777e3-bf36-4c09-b795-f20df8c41362/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/aura-sr/requests/5b8777e3-bf36-4c09-b795-f20df8c41362/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 1
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "b391924aa403a37d0695230851322166",
+            "recordId": "b391924aa403a37d0695230851322166"
+          }
         },
         "pairedItem": {
           "item": 2
@@ -2254,14 +2790,12 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "8c1bbf6d-9c29-4651-b9e4-96d50f561b31",
-          "response_url": "https://queue.fal.run/fal-ai/aura-sr/requests/8c1bbf6d-9c29-4651-b9e4-96d50f561b31",
-          "status_url": "https://queue.fal.run/fal-ai/aura-sr/requests/8c1bbf6d-9c29-4651-b9e4-96d50f561b31/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/aura-sr/requests/8c1bbf6d-9c29-4651-b9e4-96d50f561b31/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "fc08e5bcbf41577526bf6094eb1c6cfc",
+            "recordId": "fc08e5bcbf41577526bf6094eb1c6cfc"
+          }
         },
         "pairedItem": {
           "item": 3
@@ -2269,31 +2803,35 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "a82c2360-dc89-4833-973b-377a3694d6fe",
-          "response_url": "https://queue.fal.run/fal-ai/aura-sr/requests/a82c2360-dc89-4833-973b-377a3694d6fe",
-          "status_url": "https://queue.fal.run/fal-ai/aura-sr/requests/a82c2360-dc89-4833-973b-377a3694d6fe/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/aura-sr/requests/a82c2360-dc89-4833-973b-377a3694d6fe/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "9d1686aa16598203b36608b6e5d8d2db",
+            "recordId": "9d1686aa16598203b36608b6e5d8d2db"
+          }
         },
         "pairedItem": {
           "item": 4
         }
       }
     ],
-    "이미지 생성": [
+    "영상 결과": [
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "39ae649f-d7eb-4b01-83f5-dcb71c468adc",
-          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/39ae649f-d7eb-4b01-83f5-dcb71c468adc",
-          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/39ae649f-d7eb-4b01-83f5-dcb71c468adc/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/39ae649f-d7eb-4b01-83f5-dcb71c468adc/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 1
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "481347acc9470a4919319247e3a607ca",
+            "model": "kling-2.6/image-to-video",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"duration\\\":\\\"5\\\",\\\"mode\\\":\\\"professional\\\",\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"sound\\\":false,\\\"image_urls\\\":[\\\"https://v3b.fal.media/files/b/0a8e37f1/6GRBA5P1hhRgehTNx1txg.jpg\\\"],\\\"prompt\\\":\\\"cinematic motion, slow camera movement, professional\\\"}\",\"model\":\"kling-2.6/image-to-video\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/h/481347acc9470a4919319247e3a607ca_1770926033.mp4\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 69,
+            "completeTime": 1770926036587,
+            "createTime": 1770925967303
+          }
         },
         "pairedItem": {
           "item": 0
@@ -2301,14 +2839,20 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "a7a6dfba-37ea-4de7-8308-113d804adc87",
-          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/a7a6dfba-37ea-4de7-8308-113d804adc87",
-          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/a7a6dfba-37ea-4de7-8308-113d804adc87/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/a7a6dfba-37ea-4de7-8308-113d804adc87/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 1
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "099320ac98dbc5ab1f3a307450c3220c",
+            "model": "kling-2.6/image-to-video",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"duration\\\":\\\"5\\\",\\\"mode\\\":\\\"professional\\\",\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"sound\\\":false,\\\"image_urls\\\":[\\\"https://v3b.fal.media/files/b/0a8e37f1/mQSUdWCITFzBNIaDJ1aWV.jpg\\\"],\\\"prompt\\\":\\\"cinematic motion, slow camera movement, professional\\\"}\",\"model\":\"kling-2.6/image-to-video\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/h/099320ac98dbc5ab1f3a307450c3220c_1770926042.mp4\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 79,
+            "completeTime": 1770926046025,
+            "createTime": 1770925967321
+          }
         },
         "pairedItem": {
           "item": 1
@@ -2316,14 +2860,20 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "f1282d30-784b-497b-821a-34bc744f4bad",
-          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/f1282d30-784b-497b-821a-34bc744f4bad",
-          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/f1282d30-784b-497b-821a-34bc744f4bad/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/f1282d30-784b-497b-821a-34bc744f4bad/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 2
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "b391924aa403a37d0695230851322166",
+            "model": "kling-2.6/image-to-video",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"duration\\\":\\\"5\\\",\\\"mode\\\":\\\"professional\\\",\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"sound\\\":false,\\\"image_urls\\\":[\\\"https://v3b.fal.media/files/b/0a8e37f3/no-49F5LrvsHJgn4uCzPy_fF7dyB8R.jpg\\\"],\\\"prompt\\\":\\\"cinematic motion, slow camera movement, professional\\\"}\",\"model\":\"kling-2.6/image-to-video\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/h/b391924aa403a37d0695230851322166_1770926022.mp4\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 58,
+            "completeTime": 1770926025414,
+            "createTime": 1770925967331
+          }
         },
         "pairedItem": {
           "item": 2
@@ -2331,14 +2881,20 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "34b30c9d-e9ef-48de-8357-21fc272e39a8",
-          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/34b30c9d-e9ef-48de-8357-21fc272e39a8",
-          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/34b30c9d-e9ef-48de-8357-21fc272e39a8/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/34b30c9d-e9ef-48de-8357-21fc272e39a8/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "fc08e5bcbf41577526bf6094eb1c6cfc",
+            "model": "kling-2.6/image-to-video",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"duration\\\":\\\"5\\\",\\\"mode\\\":\\\"professional\\\",\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"sound\\\":false,\\\"image_urls\\\":[\\\"https://v3b.fal.media/files/b/0a8e37f1/OeIlvdX7RkM1IwRZeVKJ5.jpg\\\"],\\\"prompt\\\":\\\"cinematic motion, slow camera movement, professional\\\"}\",\"model\":\"kling-2.6/image-to-video\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/h/fc08e5bcbf41577526bf6094eb1c6cfc_1770926044.mp4\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 81,
+            "completeTime": 1770926048123,
+            "createTime": 1770925967288
+          }
         },
         "pairedItem": {
           "item": 3
@@ -2346,291 +2902,86 @@
       },
       {
         "json": {
-          "status": "IN_QUEUE",
-          "request_id": "15163a92-4586-4df6-b817-fbe5b6e1e576",
-          "response_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/15163a92-4586-4df6-b817-fbe5b6e1e576",
-          "status_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/15163a92-4586-4df6-b817-fbe5b6e1e576/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/flux-2-pro/requests/15163a92-4586-4df6-b817-fbe5b6e1e576/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 1
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "9d1686aa16598203b36608b6e5d8d2db",
+            "model": "kling-2.6/image-to-video",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"duration\\\":\\\"5\\\",\\\"mode\\\":\\\"professional\\\",\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"sound\\\":false,\\\"image_urls\\\":[\\\"https://v3b.fal.media/files/b/0a8e37f1/XR0RfDWJ_ayyd4G4nsSJ_.jpg\\\"],\\\"prompt\\\":\\\"cinematic motion, slow camera movement, professional\\\"}\",\"model\":\"kling-2.6/image-to-video\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/h/9d1686aa16598203b36608b6e5d8d2db_1770926042.mp4\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 79,
+            "completeTime": 1770926046131,
+            "createTime": 1770925967270
+          }
         },
         "pairedItem": {
           "item": 4
         }
       }
     ],
-    "이미지 프롬프트 AI": [
-      {
-        "json": {
-          "text": "A vertical video. Extreme close-up on a businessman's hand hovering over a complex control panel, fingers slightly splayed, illuminated by multiple discolored retro neon digital displays and buttons. The background blurs into a vibrant night city urban glow. Shallow depth of field emphasizes the fragmented, overwhelming interface, conveying wasted effort in managing disparate systems. Cinematic, photorealistic, high detail. no text, no letters, no words, no watermark"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "text": "A vertical video. Close-up: professional hand, dramatic rim lighting, on sleek transparent touchscreen. Glowing data streams converge into a single holographic interface. Modern corporate environment. Unification. no text, no letters, no words, no watermark"
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "text": "A vertical video. Medium cinematic shot. Blue-lit data center. Cables link racks. Pulsating LEDs show automated real-time analysis, efficiency. no text, no letters, no words, no watermark"
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      },
-      {
-        "json": {
-          "text": "A vertical video. Wide establishing shot of a dark cinematic, professional casino floor. Opulent tables under moody shadows. A glowing interface conveys effortless operational freedom. No text, no letters, no words, no watermark."
-        },
-        "pairedItem": {
-          "item": 3
-        }
-      },
-      {
-        "json": {
-          "text": "A vertical video. Aerial drone sweeps over a retro neon casino city at night. Vibrant neon streams seamlessly connect futuristic high-rises, their urban glow symbolizing optimized operations. no text, no letters, no words, no watermark"
-        },
-        "pairedItem": {
-          "item": 4
-        }
-      }
-    ],
-    "5파트 분리": [
-      {
-        "json": {
-          "text": "대표님, 각기 다른 시스템 관리로 에너지를 낭비하고 있진 않습니까?",
-          "subtitle": "대표님, 각기 다른\\N시스템 관리로 에너지를",
-          "index": 1,
-          "subject": "지금도 놓치고 있는 수익, 통합 관리로 잡으세요. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "bgmPrompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
-          "narration": "대표님, 각기 다른 시스템 관리로 에너지를 낭비하고 있진 않습니까? 모든 운영을 단 하나의 플랫폼으로 통합할 때입니다. 실시간 데이터 분석과 자동화된 프로세스는 업무 효율을 극대화합니다. 이제 루믹스 솔루션으로 진정한 운영의 자유를 경험하세요. 다음 운영은 지금보다 훨씬 쉬워질 것입니다."
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "text": "모든 운영을 단 하나의 플랫폼으로 통합할 때입니다.",
-          "subtitle": "모든 운영을 단 하나의\\N플랫폼으로 통합할",
-          "index": 2,
-          "subject": "지금도 놓치고 있는 수익, 통합 관리로 잡으세요. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "bgmPrompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
-          "narration": "대표님, 각기 다른 시스템 관리로 에너지를 낭비하고 있진 않습니까? 모든 운영을 단 하나의 플랫폼으로 통합할 때입니다. 실시간 데이터 분석과 자동화된 프로세스는 업무 효율을 극대화합니다. 이제 루믹스 솔루션으로 진정한 운영의 자유를 경험하세요. 다음 운영은 지금보다 훨씬 쉬워질 것입니다."
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "text": "실시간 데이터 분석과 자동화된 프로세스는 업무 효율을 극대화합니다.",
-          "subtitle": "실시간 데이터 분석과\\N자동화된 프로세스는 업무",
-          "index": 3,
-          "subject": "지금도 놓치고 있는 수익, 통합 관리로 잡으세요. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "bgmPrompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
-          "narration": "대표님, 각기 다른 시스템 관리로 에너지를 낭비하고 있진 않습니까? 모든 운영을 단 하나의 플랫폼으로 통합할 때입니다. 실시간 데이터 분석과 자동화된 프로세스는 업무 효율을 극대화합니다. 이제 루믹스 솔루션으로 진정한 운영의 자유를 경험하세요. 다음 운영은 지금보다 훨씬 쉬워질 것입니다."
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "text": "이제 루믹스 솔루션으로 진정한 운영의 자유를 경험하세요.",
-          "subtitle": "이제 루믹스 솔루션으로\\N진정한 운영의 자유를",
-          "index": 4,
-          "subject": "지금도 놓치고 있는 수익, 통합 관리로 잡으세요. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "bgmPrompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
-          "narration": "대표님, 각기 다른 시스템 관리로 에너지를 낭비하고 있진 않습니까? 모든 운영을 단 하나의 플랫폼으로 통합할 때입니다. 실시간 데이터 분석과 자동화된 프로세스는 업무 효율을 극대화합니다. 이제 루믹스 솔루션으로 진정한 운영의 자유를 경험하세요. 다음 운영은 지금보다 훨씬 쉬워질 것입니다."
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "text": "다음 운영은 지금보다 훨씬 쉬워질 것입니다.",
-          "subtitle": "다음 운영은 지금보다\\N훨씬 쉬워질 것입니다.",
-          "index": 5,
-          "subject": "지금도 놓치고 있는 수익, 통합 관리로 잡으세요. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "bgmPrompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
-          "narration": "대표님, 각기 다른 시스템 관리로 에너지를 낭비하고 있진 않습니까? 모든 운영을 단 하나의 플랫폼으로 통합할 때입니다. 실시간 데이터 분석과 자동화된 프로세스는 업무 효율을 극대화합니다. 이제 루믹스 솔루션으로 진정한 운영의 자유를 경험하세요. 다음 운영은 지금보다 훨씬 쉬워질 것입니다."
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "TTS 요청": [
-      {
-        "json": {
-          "status": "IN_QUEUE",
-          "request_id": "ee549eef-58bd-454b-8757-df4c63867136",
-          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ee549eef-58bd-454b-8757-df4c63867136",
-          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ee549eef-58bd-454b-8757-df4c63867136/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ee549eef-58bd-454b-8757-df4c63867136/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "status": "IN_QUEUE",
-          "request_id": "aa01a53a-72ce-4fd0-bddd-813b9e2f514f",
-          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/aa01a53a-72ce-4fd0-bddd-813b9e2f514f",
-          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/aa01a53a-72ce-4fd0-bddd-813b9e2f514f/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/aa01a53a-72ce-4fd0-bddd-813b9e2f514f/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "status": "IN_QUEUE",
-          "request_id": "ec242216-e1c8-40e7-b92d-a6eda636a5b2",
-          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ec242216-e1c8-40e7-b92d-a6eda636a5b2",
-          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ec242216-e1c8-40e7-b92d-a6eda636a5b2/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ec242216-e1c8-40e7-b92d-a6eda636a5b2/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 3
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      },
-      {
-        "json": {
-          "status": "IN_QUEUE",
-          "request_id": "bbe4b908-5a52-4fb0-b474-5d0de4f25714",
-          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/bbe4b908-5a52-4fb0-b474-5d0de4f25714",
-          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/bbe4b908-5a52-4fb0-b474-5d0de4f25714/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/bbe4b908-5a52-4fb0-b474-5d0de4f25714/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
-        },
-        "pairedItem": {
-          "item": 3
-        }
-      },
-      {
-        "json": {
-          "status": "IN_QUEUE",
-          "request_id": "11d00ca3-b2e8-4653-a02d-8b44fee7e92e",
-          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/11d00ca3-b2e8-4653-a02d-8b44fee7e92e",
-          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/11d00ca3-b2e8-4653-a02d-8b44fee7e92e/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/11d00ca3-b2e8-4653-a02d-8b44fee7e92e/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 4
-        },
-        "pairedItem": {
-          "item": 4
-        }
-      }
-    ],
-    "TTS 대기": [
-      {
-        "json": {
-          "status": "IN_QUEUE",
-          "request_id": "ee549eef-58bd-454b-8757-df4c63867136",
-          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ee549eef-58bd-454b-8757-df4c63867136",
-          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ee549eef-58bd-454b-8757-df4c63867136/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ee549eef-58bd-454b-8757-df4c63867136/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "status": "IN_QUEUE",
-          "request_id": "aa01a53a-72ce-4fd0-bddd-813b9e2f514f",
-          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/aa01a53a-72ce-4fd0-bddd-813b9e2f514f",
-          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/aa01a53a-72ce-4fd0-bddd-813b9e2f514f/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/aa01a53a-72ce-4fd0-bddd-813b9e2f514f/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "status": "IN_QUEUE",
-          "request_id": "ec242216-e1c8-40e7-b92d-a6eda636a5b2",
-          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ec242216-e1c8-40e7-b92d-a6eda636a5b2",
-          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ec242216-e1c8-40e7-b92d-a6eda636a5b2/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/ec242216-e1c8-40e7-b92d-a6eda636a5b2/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 3
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      },
-      {
-        "json": {
-          "status": "IN_QUEUE",
-          "request_id": "bbe4b908-5a52-4fb0-b474-5d0de4f25714",
-          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/bbe4b908-5a52-4fb0-b474-5d0de4f25714",
-          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/bbe4b908-5a52-4fb0-b474-5d0de4f25714/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/bbe4b908-5a52-4fb0-b474-5d0de4f25714/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 0
-        },
-        "pairedItem": {
-          "item": 3
-        }
-      },
-      {
-        "json": {
-          "status": "IN_QUEUE",
-          "request_id": "11d00ca3-b2e8-4653-a02d-8b44fee7e92e",
-          "response_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/11d00ca3-b2e8-4653-a02d-8b44fee7e92e",
-          "status_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/11d00ca3-b2e8-4653-a02d-8b44fee7e92e/status",
-          "cancel_url": "https://queue.fal.run/fal-ai/elevenlabs/requests/11d00ca3-b2e8-4653-a02d-8b44fee7e92e/cancel",
-          "logs": null,
-          "metrics": {},
-          "queue_position": 4
-        },
-        "pairedItem": {
-          "item": 4
-        }
-      }
-    ],
-    "TTS 결과": [
+    "BGM 생성": [
       {
         "json": {
           "audio": {
-            "url": "https://v3b.fal.media/files/b/0a8e359f/JIO4sBu-pg8Sp_-CWVMTp_output.mp3",
+            "url": "https://v3b.fal.media/files/b/0a8e3819/iaF4DMk5pRBwHe6yCx9D9_music_CI2ZzO.wav",
+            "content_type": "audio/wav",
+            "file_name": "music_CI2ZzO.wav",
+            "file_size": 7056044
+          },
+          "prompt": "{\n    \"type\": \"music\",\n    \"description\": \"An optimistic and modern corporate track featuring bright synths, a gentle piano melody, and a clean electronic drum beat. The track maintains a steady, positive energy throughout, building subtly by layering electronic textures, making it ideal for technology-focused content with its clean, high-quality production.\",\n    \"bpm\": 120,\n    \"key_scale\": \"C Major\",\n    \"instrumentation\": {\n        \"sonic_identity\": \"Modern, clean, and polished.\",\n        \"instruments\": [\n            {\n                \"instrument\": \"Electronic Drum Machine\",\n                \"description\": \"Provides a steady, four-on-the-floor beat with crisp hi-hats and a punchy snare, driving the track forward with a positive feel.\"\n            },\n            {\n                \"instrument\": \"Synth Bass\",\n                \"description\": \"A clean, round sub-bass line providing a solid harmonic foundation without being obtrusive.\"\n            },\n            {\n                \"instrument\": \"Plucked Synth\",\n                \"description\": \"Plays a bright, rhythmic arpeggio that creates a sense of motion, innovation, and progress.\"\n            },\n            {\n                \"instrument\": \"Synth Pads\",\n                \"description\": \"Warm, evolving pads that add depth and a sense of optimism and spaciousness to the background.\"\n            },\n            {\n                \"instrument\": \"Acoustic Piano\",\n                \"description\": \"Plays a simple, uplifting chord progression and occasional melodic flourishes, adding an organic and human touch.\"\n            }\n        ]\n    },\n    \"genre\": [\n        \"Electronic\"\n    ],\n    \"subgenre\": [\n        \"Corporate\",\n        \"Uplifting Trance\"\n    ],\n    \"mood\": [\n        \"Optimistic\",\n        \"Uplifting\"\n    ],\n    \"energy\": \"high\",\n    \"vocal\": false,\n    \"video_context\": \"Technology product demos, corporate presentations, or explainer videos.\",\n    \"film_scene\": \"A montage showing a successful startup's growth or a team collaborating on a new invention.\",\n    \"audio_tags\": [\n        \"Arpeggiated\",\n        \"Polished Production\",\n        \"Bright\",\n        \"Rhythmic\"\n    ],\n    \"recommended_use_cases\": [\n        \"Technology reveal video\",\n        \"Corporate sizzle reel\"\n    ]\n}",
+          "metadata": {
+            "duration": 40,
+            "refinement": 100,
+            "creativity": 16,
+            "cfg_scale": 5,
+            "seed": 1802719650,
+            "track_title": "CI2ZzO",
+            "negative_prompt": "",
+            "sample_size": 6615000
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "BGM 대기": [
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3b.fal.media/files/b/0a8e3819/iaF4DMk5pRBwHe6yCx9D9_music_CI2ZzO.wav",
+            "content_type": "audio/wav",
+            "file_name": "music_CI2ZzO.wav",
+            "file_size": 7056044
+          },
+          "prompt": "{\n    \"type\": \"music\",\n    \"description\": \"An optimistic and modern corporate track featuring bright synths, a gentle piano melody, and a clean electronic drum beat. The track maintains a steady, positive energy throughout, building subtly by layering electronic textures, making it ideal for technology-focused content with its clean, high-quality production.\",\n    \"bpm\": 120,\n    \"key_scale\": \"C Major\",\n    \"instrumentation\": {\n        \"sonic_identity\": \"Modern, clean, and polished.\",\n        \"instruments\": [\n            {\n                \"instrument\": \"Electronic Drum Machine\",\n                \"description\": \"Provides a steady, four-on-the-floor beat with crisp hi-hats and a punchy snare, driving the track forward with a positive feel.\"\n            },\n            {\n                \"instrument\": \"Synth Bass\",\n                \"description\": \"A clean, round sub-bass line providing a solid harmonic foundation without being obtrusive.\"\n            },\n            {\n                \"instrument\": \"Plucked Synth\",\n                \"description\": \"Plays a bright, rhythmic arpeggio that creates a sense of motion, innovation, and progress.\"\n            },\n            {\n                \"instrument\": \"Synth Pads\",\n                \"description\": \"Warm, evolving pads that add depth and a sense of optimism and spaciousness to the background.\"\n            },\n            {\n                \"instrument\": \"Acoustic Piano\",\n                \"description\": \"Plays a simple, uplifting chord progression and occasional melodic flourishes, adding an organic and human touch.\"\n            }\n        ]\n    },\n    \"genre\": [\n        \"Electronic\"\n    ],\n    \"subgenre\": [\n        \"Corporate\",\n        \"Uplifting Trance\"\n    ],\n    \"mood\": [\n        \"Optimistic\",\n        \"Uplifting\"\n    ],\n    \"energy\": \"high\",\n    \"vocal\": false,\n    \"video_context\": \"Technology product demos, corporate presentations, or explainer videos.\",\n    \"film_scene\": \"A montage showing a successful startup's growth or a team collaborating on a new invention.\",\n    \"audio_tags\": [\n        \"Arpeggiated\",\n        \"Polished Production\",\n        \"Bright\",\n        \"Rhythmic\"\n    ],\n    \"recommended_use_cases\": [\n        \"Technology reveal video\",\n        \"Corporate sizzle reel\"\n    ]\n}",
+          "metadata": {
+            "duration": 40,
+            "refinement": 100,
+            "creativity": 16,
+            "cfg_scale": 5,
+            "seed": 1802719650,
+            "track_title": "CI2ZzO",
+            "negative_prompt": "",
+            "sample_size": 6615000
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Merge": [
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3b.fal.media/files/b/0a8e37e8/4GETtigG4YeuLFAEbh1zZ_output.mp3",
             "content_type": "audio/mpeg",
             "file_name": "output.mp3",
-            "file_size": 95757
+            "file_size": 69844
           },
           "timestamps": null
         },
@@ -2641,10 +2992,10 @@
       {
         "json": {
           "audio": {
-            "url": "https://v3b.fal.media/files/b/0a8e359f/e7vWaa-XZRSrDOUJEjwrp_output.mp3",
+            "url": "https://v3b.fal.media/files/b/0a8e37e8/CabduLY3MsGkNn_HcX7QP_output.mp3",
             "content_type": "audio/mpeg",
             "file_name": "output.mp3",
-            "file_size": 73605
+            "file_size": 109132
           },
           "timestamps": null
         },
@@ -2655,10 +3006,10 @@
       {
         "json": {
           "audio": {
-            "url": "https://v3b.fal.media/files/b/0a8e359f/nDobeBfAGLc_CqaOsZ8yf_output.mp3",
+            "url": "https://v3b.fal.media/files/b/0a8e37e8/8iJ_MCrIDNG3UzfwwtX9i_output.mp3",
             "content_type": "audio/mpeg",
             "file_name": "output.mp3",
-            "file_size": 104116
+            "file_size": 80293
           },
           "timestamps": null
         },
@@ -2669,10 +3020,10 @@
       {
         "json": {
           "audio": {
-            "url": "https://v3b.fal.media/files/b/0a8e359f/-zhQQVdze7qZ8uPSccP98_output.mp3",
+            "url": "https://v3b.fal.media/files/b/0a8e37e8/U8Kra5jdhOlfLD1ner-yd_output.mp3",
             "content_type": "audio/mpeg",
             "file_name": "output.mp3",
-            "file_size": 92831
+            "file_size": 69008
           },
           "timestamps": null
         },
@@ -2683,27 +3034,364 @@
       {
         "json": {
           "audio": {
-            "url": "https://v3b.fal.media/files/b/0a8e359f/KmmMWA2NdajDbSeHuxtwf_output.mp3",
+            "url": "https://v3b.fal.media/files/b/0a8e37e8/U25mo13-wr1B0TQwUnnLw_output.mp3",
             "content_type": "audio/mpeg",
             "file_name": "output.mp3",
-            "file_size": 63156
+            "file_size": 60231
           },
           "timestamps": null
         },
         "pairedItem": {
           "item": 4
         }
-      }
-    ],
-    "시트 기록": [
+      },
       {
         "json": {
-          "Subject": "지금도 놓치고 있는 수익, 통합 관리로 잡으세요. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "Narration": "대표님, 각기 다른 시스템 관리로 에너지를 낭비하고 있진 않습니까? 모든 운영을 단 하나의 플랫폼으로 통합할 때입니다. 실시간 데이터 분석과 자동화된 프로세스는 업무 효율을 극대화합니다. 이제 루믹스 솔루션으로 진정한 운영의 자유를 경험하세요. 다음 운영은 지금보다 훨씬 쉬워질 것입니다.",
-          "Caption": "하나의 플랫폼으로 모든 것을 관리하며 효율을 높이고 싶으신가요? 복잡한 시스템 통합과 실시간 데이터 분석, 그리고 자동화된 프로세스가 성공적인 운영의 핵심입니다. 루믹스 솔루션은 여러분의 비즈니스를 한 단계 업그레이드할 수 있는 최적의 선택입니다. 분산된 시스템으로 인한 문제점을 해결하고, 모든 운영 과정을 매끄럽게 만들어 드립니다. 실시간으로 데이터를 분석하고, 반복적인 업무는 자동화하여 소중한 시간을 절약하세요. 이는 단순히 시스템을 통합하는 것을 넘어, 운영 전략 전반을 강화하는 길입니다. 지금 바로 루믹스와 함께라면, 이전과는 차원이 다른 효율성과 성장을 경험할 수 있습니다. 데모를 통해 루믹스 솔루션의 놀라운 성능을 직접 확인해보세요. #루믹스 #LUMIX #카지노솔루션 #솔루션 #온라인카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "댓글": "루믹스 솔루션으로 통합 관리하고 실시간 데이터 분석과 자동화를 경험하세요. 운영의 효율성을 극대화할 수 있습니다.",
-          "BGM prompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
-          "Status": "준비"
+          "video": {
+            "url": "https://tempfile.aiquickdraw.com/h/481347acc9470a4919319247e3a607ca_1770926033.mp4"
+          },
+          "state": "success"
+        },
+        "pairedItem": {
+          "item": 0,
+          "input": 1
+        }
+      },
+      {
+        "json": {
+          "video": {
+            "url": "https://tempfile.aiquickdraw.com/h/099320ac98dbc5ab1f3a307450c3220c_1770926042.mp4"
+          },
+          "state": "success"
+        },
+        "pairedItem": {
+          "item": 1,
+          "input": 1
+        }
+      },
+      {
+        "json": {
+          "video": {
+            "url": "https://tempfile.aiquickdraw.com/h/b391924aa403a37d0695230851322166_1770926022.mp4"
+          },
+          "state": "success"
+        },
+        "pairedItem": {
+          "item": 2,
+          "input": 1
+        }
+      },
+      {
+        "json": {
+          "video": {
+            "url": "https://tempfile.aiquickdraw.com/h/fc08e5bcbf41577526bf6094eb1c6cfc_1770926044.mp4"
+          },
+          "state": "success"
+        },
+        "pairedItem": {
+          "item": 3,
+          "input": 1
+        }
+      },
+      {
+        "json": {
+          "video": {
+            "url": "https://tempfile.aiquickdraw.com/h/9d1686aa16598203b36608b6e5d8d2db_1770926042.mp4"
+          },
+          "state": "success"
+        },
+        "pairedItem": {
+          "item": 4,
+          "input": 1
+        }
+      },
+      {
+        "json": {
+          "audio": {
+            "url": "https://v3b.fal.media/files/b/0a8e3819/iaF4DMk5pRBwHe6yCx9D9_music_CI2ZzO.wav",
+            "content_type": "audio/wav",
+            "file_name": "music_CI2ZzO.wav",
+            "file_size": 7056044
+          },
+          "prompt": "{\n    \"type\": \"music\",\n    \"description\": \"An optimistic and modern corporate track featuring bright synths, a gentle piano melody, and a clean electronic drum beat. The track maintains a steady, positive energy throughout, building subtly by layering electronic textures, making it ideal for technology-focused content with its clean, high-quality production.\",\n    \"bpm\": 120,\n    \"key_scale\": \"C Major\",\n    \"instrumentation\": {\n        \"sonic_identity\": \"Modern, clean, and polished.\",\n        \"instruments\": [\n            {\n                \"instrument\": \"Electronic Drum Machine\",\n                \"description\": \"Provides a steady, four-on-the-floor beat with crisp hi-hats and a punchy snare, driving the track forward with a positive feel.\"\n            },\n            {\n                \"instrument\": \"Synth Bass\",\n                \"description\": \"A clean, round sub-bass line providing a solid harmonic foundation without being obtrusive.\"\n            },\n            {\n                \"instrument\": \"Plucked Synth\",\n                \"description\": \"Plays a bright, rhythmic arpeggio that creates a sense of motion, innovation, and progress.\"\n            },\n            {\n                \"instrument\": \"Synth Pads\",\n                \"description\": \"Warm, evolving pads that add depth and a sense of optimism and spaciousness to the background.\"\n            },\n            {\n                \"instrument\": \"Acoustic Piano\",\n                \"description\": \"Plays a simple, uplifting chord progression and occasional melodic flourishes, adding an organic and human touch.\"\n            }\n        ]\n    },\n    \"genre\": [\n        \"Electronic\"\n    ],\n    \"subgenre\": [\n        \"Corporate\",\n        \"Uplifting Trance\"\n    ],\n    \"mood\": [\n        \"Optimistic\",\n        \"Uplifting\"\n    ],\n    \"energy\": \"high\",\n    \"vocal\": false,\n    \"video_context\": \"Technology product demos, corporate presentations, or explainer videos.\",\n    \"film_scene\": \"A montage showing a successful startup's growth or a team collaborating on a new invention.\",\n    \"audio_tags\": [\n        \"Arpeggiated\",\n        \"Polished Production\",\n        \"Bright\",\n        \"Rhythmic\"\n    ],\n    \"recommended_use_cases\": [\n        \"Technology reveal video\",\n        \"Corporate sizzle reel\"\n    ]\n}",
+          "metadata": {
+            "duration": 40,
+            "refinement": 100,
+            "creativity": 16,
+            "cfg_scale": 5,
+            "seed": 1802719650,
+            "track_title": "CI2ZzO",
+            "negative_prompt": "",
+            "sample_size": 6615000
+          }
+        },
+        "pairedItem": {
+          "item": 0,
+          "input": 2
+        }
+      }
+    ],
+    "Aggregate": [
+      {
+        "json": {
+          "data": [
+            {
+              "audio": {
+                "url": "https://v3b.fal.media/files/b/0a8e37e8/4GETtigG4YeuLFAEbh1zZ_output.mp3",
+                "content_type": "audio/mpeg",
+                "file_name": "output.mp3",
+                "file_size": 69844
+              },
+              "timestamps": null
+            },
+            {
+              "audio": {
+                "url": "https://v3b.fal.media/files/b/0a8e37e8/CabduLY3MsGkNn_HcX7QP_output.mp3",
+                "content_type": "audio/mpeg",
+                "file_name": "output.mp3",
+                "file_size": 109132
+              },
+              "timestamps": null
+            },
+            {
+              "audio": {
+                "url": "https://v3b.fal.media/files/b/0a8e37e8/8iJ_MCrIDNG3UzfwwtX9i_output.mp3",
+                "content_type": "audio/mpeg",
+                "file_name": "output.mp3",
+                "file_size": 80293
+              },
+              "timestamps": null
+            },
+            {
+              "audio": {
+                "url": "https://v3b.fal.media/files/b/0a8e37e8/U8Kra5jdhOlfLD1ner-yd_output.mp3",
+                "content_type": "audio/mpeg",
+                "file_name": "output.mp3",
+                "file_size": 69008
+              },
+              "timestamps": null
+            },
+            {
+              "audio": {
+                "url": "https://v3b.fal.media/files/b/0a8e37e8/U25mo13-wr1B0TQwUnnLw_output.mp3",
+                "content_type": "audio/mpeg",
+                "file_name": "output.mp3",
+                "file_size": 60231
+              },
+              "timestamps": null
+            },
+            {
+              "video": {
+                "url": "https://tempfile.aiquickdraw.com/h/481347acc9470a4919319247e3a607ca_1770926033.mp4"
+              },
+              "state": "success"
+            },
+            {
+              "video": {
+                "url": "https://tempfile.aiquickdraw.com/h/099320ac98dbc5ab1f3a307450c3220c_1770926042.mp4"
+              },
+              "state": "success"
+            },
+            {
+              "video": {
+                "url": "https://tempfile.aiquickdraw.com/h/b391924aa403a37d0695230851322166_1770926022.mp4"
+              },
+              "state": "success"
+            },
+            {
+              "video": {
+                "url": "https://tempfile.aiquickdraw.com/h/fc08e5bcbf41577526bf6094eb1c6cfc_1770926044.mp4"
+              },
+              "state": "success"
+            },
+            {
+              "video": {
+                "url": "https://tempfile.aiquickdraw.com/h/9d1686aa16598203b36608b6e5d8d2db_1770926042.mp4"
+              },
+              "state": "success"
+            },
+            {
+              "audio": {
+                "url": "https://v3b.fal.media/files/b/0a8e3819/iaF4DMk5pRBwHe6yCx9D9_music_CI2ZzO.wav",
+                "content_type": "audio/wav",
+                "file_name": "music_CI2ZzO.wav",
+                "file_size": 7056044
+              },
+              "prompt": "{\n    \"type\": \"music\",\n    \"description\": \"An optimistic and modern corporate track featuring bright synths, a gentle piano melody, and a clean electronic drum beat. The track maintains a steady, positive energy throughout, building subtly by layering electronic textures, making it ideal for technology-focused content with its clean, high-quality production.\",\n    \"bpm\": 120,\n    \"key_scale\": \"C Major\",\n    \"instrumentation\": {\n        \"sonic_identity\": \"Modern, clean, and polished.\",\n        \"instruments\": [\n            {\n                \"instrument\": \"Electronic Drum Machine\",\n                \"description\": \"Provides a steady, four-on-the-floor beat with crisp hi-hats and a punchy snare, driving the track forward with a positive feel.\"\n            },\n            {\n                \"instrument\": \"Synth Bass\",\n                \"description\": \"A clean, round sub-bass line providing a solid harmonic foundation without being obtrusive.\"\n            },\n            {\n                \"instrument\": \"Plucked Synth\",\n                \"description\": \"Plays a bright, rhythmic arpeggio that creates a sense of motion, innovation, and progress.\"\n            },\n            {\n                \"instrument\": \"Synth Pads\",\n                \"description\": \"Warm, evolving pads that add depth and a sense of optimism and spaciousness to the background.\"\n            },\n            {\n                \"instrument\": \"Acoustic Piano\",\n                \"description\": \"Plays a simple, uplifting chord progression and occasional melodic flourishes, adding an organic and human touch.\"\n            }\n        ]\n    },\n    \"genre\": [\n        \"Electronic\"\n    ],\n    \"subgenre\": [\n        \"Corporate\",\n        \"Uplifting Trance\"\n    ],\n    \"mood\": [\n        \"Optimistic\",\n        \"Uplifting\"\n    ],\n    \"energy\": \"high\",\n    \"vocal\": false,\n    \"video_context\": \"Technology product demos, corporate presentations, or explainer videos.\",\n    \"film_scene\": \"A montage showing a successful startup's growth or a team collaborating on a new invention.\",\n    \"audio_tags\": [\n        \"Arpeggiated\",\n        \"Polished Production\",\n        \"Bright\",\n        \"Rhythmic\"\n    ],\n    \"recommended_use_cases\": [\n        \"Technology reveal video\",\n        \"Corporate sizzle reel\"\n    ]\n}",
+              "metadata": {
+                "duration": 40,
+                "refinement": 100,
+                "creativity": 16,
+                "cfg_scale": 5,
+                "seed": 1802719650,
+                "track_title": "CI2ZzO",
+                "negative_prompt": "",
+                "sample_size": 6615000
+              }
+            }
+          ]
+        },
+        "pairedItem": [
+          {
+            "item": 0
+          },
+          {
+            "item": 1
+          },
+          {
+            "item": 2
+          },
+          {
+            "item": 3
+          },
+          {
+            "item": 4
+          },
+          {
+            "item": 5
+          },
+          {
+            "item": 6
+          },
+          {
+            "item": 7
+          },
+          {
+            "item": 8
+          },
+          {
+            "item": 9
+          },
+          {
+            "item": 10
+          }
+        ]
+      }
+    ],
+    "상태 업데이트": [
+      {
+        "json": {
+          "Subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "Status": "생성 완료",
+          "업로드 URL": "http://76.13.182.180:9000/nca-toolkit/cf84e0d4-304b-46d0-86cc-e06d77a49cad_output_0.mp4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상 다운로드": [
+      {
+        "json": {
+          "Subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "Status": "생성 완료",
+          "업로드 URL": "http://76.13.182.180:9000/nca-toolkit/cf84e0d4-304b-46d0-86cc-e06d77a49cad_output_0.mp4"
+        },
+        "binary": {
+          "data": {
+            "mimeType": "binary/octet-stream",
+            "fileExtension": "mp4",
+            "data": "database",
+            "directory": "http://76.13.182.180:9000/nca-toolkit/cf84e0d4-304b-46d0-86cc-e06d77a49cad_output_0.mp4",
+            "fileName": "cf84e0d4-304b-46d0-86cc-e06d77a49cad_output_0.mp4",
+            "id": "database:c55f718e-24cd-42ba-a55f-b1fccd8c2ead",
+            "fileSize": "15.3 MB",
+            "bytes": 15278072
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상 URL 정리": [
+      {
+        "json": {
+          "video": {
+            "url": "https://tempfile.aiquickdraw.com/h/481347acc9470a4919319247e3a607ca_1770926033.mp4"
+          },
+          "state": "success"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "video": {
+            "url": "https://tempfile.aiquickdraw.com/h/099320ac98dbc5ab1f3a307450c3220c_1770926042.mp4"
+          },
+          "state": "success"
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "video": {
+            "url": "https://tempfile.aiquickdraw.com/h/b391924aa403a37d0695230851322166_1770926022.mp4"
+          },
+          "state": "success"
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "video": {
+            "url": "https://tempfile.aiquickdraw.com/h/fc08e5bcbf41577526bf6094eb1c6cfc_1770926044.mp4"
+          },
+          "state": "success"
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      },
+      {
+        "json": {
+          "video": {
+            "url": "https://tempfile.aiquickdraw.com/h/9d1686aa16598203b36608b6e5d8d2db_1770926042.mp4"
+          },
+          "state": "success"
+        },
+        "pairedItem": {
+          "item": 4
+        }
+      }
+    ],
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "분석 리포트 읽기": [
+      {
+        "json": {
+          "error": "Sheet with name 분석리포트 not found"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "AI 검증 1": [
+      {
+        "json": {
+          "content": {
+            "parts": [
+              {
+                "text": "{\n  \"hook_power\": 8,\n  \"topic_relevance\": 7,\n  \"narration_quality\": 9,\n  \"click_appeal\": 7,\n  \"target_fit\": 8,\n  \"differentiation\": 6,\n  \"total\": 45,\n  \"pass\": true,\n  \"feedback\": \"전반적으로 잘 구성되었으나, 훅 파워 강화 및 차별화 요소 강화 필요.\"\n}"
+              }
+            ],
+            "role": "model"
+          },
+          "finishReason": "STOP",
+          "index": 0
         },
         "pairedItem": {
           "item": 0
@@ -2721,98 +3409,311 @@
           "differentiation": 6,
           "total": 45,
           "pass": true,
-          "feedback": "평균 7.5점으로 통과 기준 6점 이상이며, 전반적으로 우수한 콘텐츠입니다. 다만, 훅 파워를 더욱 강화하고 독창성을 높일 방안을 고민하면 좋겠습니다.",
-          "Subject": "지금도 놓치고 있는 수익, 통합 관리로 잡으세요. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "Narration": "대표님, 각기 다른 시스템 관리로 에너지를 낭비하고 있진 않습니까? 모든 운영을 단 하나의 플랫폼으로 통합할 때입니다. 실시간 데이터 분석과 자동화된 프로세스는 업무 효율을 극대화합니다. 이제 루믹스 솔루션으로 진정한 운영의 자유를 경험하세요. 다음 운영은 지금보다 훨씬 쉬워질 것입니다.",
-          "Caption": "하나의 플랫폼으로 모든 것을 관리하며 효율을 높이고 싶으신가요? 복잡한 시스템 통합과 실시간 데이터 분석, 그리고 자동화된 프로세스가 성공적인 운영의 핵심입니다. 루믹스 솔루션은 여러분의 비즈니스를 한 단계 업그레이드할 수 있는 최적의 선택입니다. 분산된 시스템으로 인한 문제점을 해결하고, 모든 운영 과정을 매끄럽게 만들어 드립니다. 실시간으로 데이터를 분석하고, 반복적인 업무는 자동화하여 소중한 시간을 절약하세요. 이는 단순히 시스템을 통합하는 것을 넘어, 운영 전략 전반을 강화하는 길입니다. 지금 바로 루믹스와 함께라면, 이전과는 차원이 다른 효율성과 성장을 경험할 수 있습니다. 데모를 통해 루믹스 솔루션의 놀라운 성능을 직접 확인해보세요. #루믹스 #LUMIX #카지노솔루션 #솔루션 #온라인카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "Comment": "루믹스 솔루션으로 통합 관리하고 실시간 데이터 분석과 자동화를 경험하세요. 운영의 효율성을 극대화할 수 있습니다.",
+          "feedback": "전반적으로 잘 구성되었으나, 훅 파워 강화 및 차별화 요소 강화 필요.",
+          "Subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "Narration": "더 이상 복잡한 통합 작업으로 스트레스받지 마십시오. 루믹스 솔루션은 실시간 데이터와 자동화된 프로세스로 운영을 혁신합니다. 모든 과정이 투명하게 관리되어 불안감을 해소해 드립니다. 최고의 파트너십으로 귀사의 성장을 약속드립니다. 지금 바로 루믹스로 전환하여 차이를 경험하세요.",
+          "Caption": "대표님의 귀한 시간을 뺏는 비효율적인 운영은 이제 끝낼 때입니다. 복잡한 시스템 통합, 실시간 데이터 관리, 자동화된 운영까지, 루믹스는 이 모든 것을 원스톱으로 제공합니다. 더 이상 여러 벤더와 씨름하거나, 최신 기술 도입에 어려움을 겪지 마세요. 검증된 기술력과 독보적인 파트너십으로 귀사의 사업에 안정성과 보안을 더합니다. 100% 정품 API 인증과 다중 클라우드 인프라를 통해 24/7 무중단 운영을 보장하며, DDoS 공격에도 완벽하게 대비합니다. 즉시 대응 가능한 모니터링 시스템으로 예상치 못한 문제도 빠르게 해결하세요. 수익 증대와 성공적인 확장을 위한 최적의 솔루션을 찾고 계신다면, 지금 바로 루믹스의 라이브 데모를 신청하고 실제 운영 환경을 직접 확인해 보세요. 귀사의 비즈니스를 한 단계 업그레이드할 절호의 기회를 놓치지 마십시오. #루믹스 #LUMIX #카지노솔루션 #솔루션 #온라인카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "Comment": "루믹스 통합 솔루션으로 복잡한 운영을 자동화하고 실시간으로 데이터를 관리하세요. 더 높은 수익과 안정성을 경험할 수 있습니다.",
           "BGM_prompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
           "Status": "준비",
           "Publish": "",
-          "generatedAt": "2026-02-12T18:13:09.793Z"
+          "generatedAt": "2026-02-12T19:50:43.567Z"
         },
         "pairedItem": {
           "item": 0
         }
       }
     ],
-    "AI 검증 1": [
+    "NCA 데이터 준비": [
       {
         "json": {
-          "content": {
-            "parts": [
+          "nca_payload": {
+            "inputs": [
               {
-                "text": "{\n  \"hook_power\": 8,\n  \"topic_relevance\": 7,\n  \"narration_quality\": 9,\n  \"click_appeal\": 7,\n  \"target_fit\": 8,\n  \"differentiation\": 6,\n  \"total\": 45,\n  \"pass\": true,\n  \"feedback\": \"평균 7.5점으로 통과 기준 6점 이상이며, 전반적으로 우수한 콘텐츠입니다. 다만, 훅 파워를 더욱 강화하고 독창성을 높일 방안을 고민하면 좋겠습니다.\"\n}"
+                "file_url": "https://tempfile.aiquickdraw.com/h/481347acc9470a4919319247e3a607ca_1770926033.mp4",
+                "options": []
+              },
+              {
+                "file_url": "https://v3b.fal.media/files/b/0a8e37e8/4GETtigG4YeuLFAEbh1zZ_output.mp3",
+                "options": []
+              },
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/h/099320ac98dbc5ab1f3a307450c3220c_1770926042.mp4",
+                "options": []
+              },
+              {
+                "file_url": "https://v3b.fal.media/files/b/0a8e37e8/CabduLY3MsGkNn_HcX7QP_output.mp3",
+                "options": []
+              },
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/h/099320ac98dbc5ab1f3a307450c3220c_1770926042.mp4",
+                "options": []
+              },
+              {
+                "file_url": "https://v3b.fal.media/files/b/0a8e37e8/CabduLY3MsGkNn_HcX7QP_output.mp3",
+                "options": []
+              },
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/h/b391924aa403a37d0695230851322166_1770926022.mp4",
+                "options": [
+                  {
+                    "option": "-stream_loop"
+                  },
+                  {
+                    "option": "-1"
+                  }
+                ]
+              },
+              {
+                "file_url": "https://v3b.fal.media/files/b/0a8e37e8/8iJ_MCrIDNG3UzfwwtX9i_output.mp3",
+                "options": []
+              },
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/h/fc08e5bcbf41577526bf6094eb1c6cfc_1770926044.mp4",
+                "options": []
+              },
+              {
+                "file_url": "https://v3b.fal.media/files/b/0a8e37e8/U8Kra5jdhOlfLD1ner-yd_output.mp3",
+                "options": []
+              },
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/h/9d1686aa16598203b36608b6e5d8d2db_1770926042.mp4",
+                "options": []
+              },
+              {
+                "file_url": "https://v3b.fal.media/files/b/0a8e37e8/U25mo13-wr1B0TQwUnnLw_output.mp3",
+                "options": []
+              },
+              {
+                "file_url": "https://v3b.fal.media/files/b/0a8e3819/iaF4DMk5pRBwHe6yCx9D9_music_CI2ZzO.wav",
+                "options": [
+                  {
+                    "option": "-stream_loop"
+                  },
+                  {
+                    "option": "-1"
+                  }
+                ]
+              },
+              {
+                "file_url": "http://76.13.182.180:9000/nca-toolkit/assets/outro_lumix.mp4",
+                "options": []
               }
             ],
-            "role": "model"
-          },
-          "finishReason": "STOP",
-          "index": 0
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "주제 파싱": [
-      {
-        "json": {
-          "Subject": "지금도 놓치고 있는 수익, 통합 관리로 잡으세요. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "Narration": "대표님, 각기 다른 시스템 관리로 에너지를 낭비하고 있진 않습니까? 모든 운영을 단 하나의 플랫폼으로 통합할 때입니다. 실시간 데이터 분석과 자동화된 프로세스는 업무 효율을 극대화합니다. 이제 루믹스 솔루션으로 진정한 운영의 자유를 경험하세요. 다음 운영은 지금보다 훨씬 쉬워질 것입니다.",
-          "Caption": "하나의 플랫폼으로 모든 것을 관리하며 효율을 높이고 싶으신가요? 복잡한 시스템 통합과 실시간 데이터 분석, 그리고 자동화된 프로세스가 성공적인 운영의 핵심입니다. 루믹스 솔루션은 여러분의 비즈니스를 한 단계 업그레이드할 수 있는 최적의 선택입니다. 분산된 시스템으로 인한 문제점을 해결하고, 모든 운영 과정을 매끄럽게 만들어 드립니다. 실시간으로 데이터를 분석하고, 반복적인 업무는 자동화하여 소중한 시간을 절약하세요. 이는 단순히 시스템을 통합하는 것을 넘어, 운영 전략 전반을 강화하는 길입니다. 지금 바로 루믹스와 함께라면, 이전과는 차원이 다른 효율성과 성장을 경험할 수 있습니다. 데모를 통해 루믹스 솔루션의 놀라운 성능을 직접 확인해보세요. #루믹스 #LUMIX #카지노솔루션 #솔루션 #온라인카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
-          "Comment": "루믹스 솔루션으로 통합 관리하고 실시간 데이터 분석과 자동화를 경험하세요. 운영의 효율성을 극대화할 수 있습니다.",
-          "BGM_prompt": "modern corporate, sleek, minimal electronic, sophisticated, clean, professional",
-          "Status": "준비",
-          "Publish": "대기중",
-          "generatedAt": "2026-02-12T18:13:08.626Z"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "AI 주제 생성": [
-      {
-        "json": {
-          "content": {
-            "parts": [
+            "outputs": [
               {
-                "text": "{\n  \"Subject\": \"지금도 놓치고 있는 수익, 통합 관리로 잡으세요. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천\",\n  \"Narration\": \"대표님, 각기 다른 시스템 관리로 에너지를 낭비하고 있진 않습니까? 모든 운영을 단 하나의 플랫폼으로 통합할 때입니다. 실시간 데이터 분석과 자동화된 프로세스는 업무 효율을 극대화합니다. 이제 루믹스 솔루션으로 진정한 운영의 자유를 경험하세요. 다음 운영은 지금보다 훨씬 쉬워질 것입니다.\",\n  \"Caption\": \"하나의 플랫폼으로 모든 것을 관리하며 효율을 높이고 싶으신가요? 복잡한 시스템 통합과 실시간 데이터 분석, 그리고 자동화된 프로세스가 성공적인 운영의 핵심입니다. 루믹스 솔루션은 여러분의 비즈니스를 한 단계 업그레이드할 수 있는 최적의 선택입니다. 분산된 시스템으로 인한 문제점을 해결하고, 모든 운영 과정을 매끄럽게 만들어 드립니다. 실시간으로 데이터를 분석하고, 반복적인 업무는 자동화하여 소중한 시간을 절약하세요. 이는 단순히 시스템을 통합하는 것을 넘어, 운영 전략 전반을 강화하는 길입니다. 지금 바로 루믹스와 함께라면, 이전과는 차원이 다른 효율성과 성장을 경험할 수 있습니다. 데모를 통해 루믹스 솔루션의 놀라운 성능을 직접 확인해보세요. #루믹스 #LUMIX #카지노솔루션 #솔루션 #온라인카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천\",\n  \"Comment\": \"루믹스 솔루션으로 통합 관리하고 실시간 데이터 분석과 자동화를 경험하세요. 운영의 효율성을 극대화할 수 있습니다.\",\n  \"BGM_prompt\": \"modern corporate, sleek, minimal electronic, sophisticated, clean, professional\"\n}"
+                "options": [
+                  {
+                    "option": "-filter_complex"
+                  },
+                  {
+                    "option": "[0:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*1.27,tpad=stop_mode=clone:stop_duration=10,trim=duration=6.37,setpts=PTS-STARTPTS,fps=24[v0]; [1:a]atrim=duration=6.37,asetpts=PTS-STARTPTS[a0]; [2:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,scale=1210:2150,crop=1080:1920:65*t/5.00:115*t/5.00,trim=duration=5.00,setpts=PTS-STARTPTS,fps=24[v1]; [3:a]atrim=duration=5.00,asetpts=PTS-STARTPTS[a1]; [4:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,scale=1210:2150,crop=1080:1920:130-130*t/5.00:230-230*t/5.00,trim=duration=5.00,setpts=PTS-STARTPTS,fps=24[v2]; [5:a]atrim=start=5.00:duration=3.82,apad=whole_dur=5.00,asetpts=PTS-STARTPTS[a2]; [6:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=7.02,setpts=PTS-STARTPTS,fps=24[v3]; [7:a]atrim=duration=7.02,asetpts=PTS-STARTPTS[a3]; [8:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*1.26,tpad=stop_mode=clone:stop_duration=10,trim=duration=6.31,setpts=PTS-STARTPTS,fps=24[v4]; [9:a]atrim=duration=6.31,asetpts=PTS-STARTPTS[a4]; [10:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*1.15,tpad=stop_mode=clone:stop_duration=10,trim=duration=5.76,setpts=PTS-STARTPTS,fps=24[v5]; [11:a]atrim=duration=5.76,asetpts=PTS-STARTPTS[a5]; [13:v]scale=1080:2160,crop=1080:1920:0:0,trim=duration=5,setpts=PTS-STARTPTS,fps=24[voutro]; anullsrc=r=44100:cl=mono,atrim=duration=5[aoutro]; [v0][v1]xfade=transition=fade:duration=0.4:offset=5.97[vx0]; [vx0][v2]xfade=transition=fade:duration=0.4:offset=10.57[vx1]; [vx1][v3]xfade=transition=fade:duration=0.4:offset=15.17[vx2]; [vx2][v4]xfade=transition=fade:duration=0.4:offset=21.79[vx3]; [vx3][v5]xfade=transition=fade:duration=0.4:offset=27.70[vx4]; [vx4][voutro]xfade=transition=fade:duration=0.4:offset=33.06[outv]; [a0][a1]acrossfade=d=0.4:c1=tri:c2=tri[ax0]; [ax0][a2]acrossfade=d=0.4:c1=tri:c2=tri[ax1]; [ax1][a3]acrossfade=d=0.4:c1=tri:c2=tri[ax2]; [ax2][a4]acrossfade=d=0.4:c1=tri:c2=tri[ax3]; [ax3][a5]acrossfade=d=0.4:c1=tri:c2=tri[ax4]; [ax4][aoutro]acrossfade=d=0.4:c1=tri:c2=tri[outa]; [12:a]volume=0.10[bgm]; [outa][bgm]amix=inputs=2:duration=first:dropout_transition=2[finala]"
+                  },
+                  {
+                    "option": "-map"
+                  },
+                  {
+                    "option": "[outv]"
+                  },
+                  {
+                    "option": "-map"
+                  },
+                  {
+                    "option": "[finala]"
+                  },
+                  {
+                    "option": "-c:v"
+                  },
+                  {
+                    "option": "libx264"
+                  },
+                  {
+                    "option": "-preset"
+                  },
+                  {
+                    "option": "fast"
+                  },
+                  {
+                    "option": "-crf"
+                  },
+                  {
+                    "option": "23"
+                  },
+                  {
+                    "option": "-c:a"
+                  },
+                  {
+                    "option": "aac"
+                  },
+                  {
+                    "option": "-b:a"
+                  },
+                  {
+                    "option": "192k"
+                  },
+                  {
+                    "option": "-pix_fmt"
+                  },
+                  {
+                    "option": "yuv420p"
+                  },
+                  {
+                    "option": "-movflags"
+                  },
+                  {
+                    "option": "+faststart"
+                  }
+                ]
               }
             ],
-            "role": "model"
+            "global_options": []
           },
-          "finishReason": "STOP",
-          "index": 0
+          "subtitle_data": [
+            {
+              "text": "더 이상 복잡한 통합\\N작업으로 스트레스받지",
+              "start": 0,
+              "end": 6.37
+            },
+            {
+              "text": "루믹스 솔루션은\\N실시간 데이터와",
+              "start": 6.37,
+              "end": 11.370000000000001
+            },
+            {
+              "text": "자동화된 프로세스로\\N운영을 혁신합니다.",
+              "start": 11.370000000000001,
+              "end": 16.37
+            },
+            {
+              "text": "모든 과정이 투명하게\\N관리되어 불안감을 해소해",
+              "start": 16.37,
+              "end": 23.39
+            },
+            {
+              "text": "최고의 파트너십으로 귀사의 성장을",
+              "start": 23.39,
+              "end": 29.7
+            },
+            {
+              "text": "지금 바로 루믹스로\\N전환하여 차이를",
+              "start": 29.7,
+              "end": 35.46
+            }
+          ],
+          "part_count": 5,
+          "segment_count": 6,
+          "has_bgm": true,
+          "total_duration": 40.46
         },
         "pairedItem": {
           "item": 0
         }
       }
     ],
-    "분석 리포트 읽기": [
+    "NCA 자막 추가": [
       {
         "json": {
-          "error": "Sheet with name 분석리포트 not found"
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "cf84e0d4-304b-46d0-86cc-e06d77a49cad",
+          "message": "success",
+          "pid": 8,
+          "queue_id": 123775937709632,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/cf84e0d4-304b-46d0-86cc-e06d77a49cad_output_0.mp4"
+            }
+          ],
+          "run_time": 66.858,
+          "total_time": 66.858
         },
         "pairedItem": {
           "item": 0
         }
       }
     ],
-    "When clicking ‘Execute workflow’": [
+    "NCA 최종 결과": [
       {
-        "json": {},
+        "json": {
+          "video_url": "http://76.13.182.180:9000/nca-toolkit/cf84e0d4-304b-46d0-86cc-e06d77a49cad_output_0.mp4",
+          "has_caption": true
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "NCA 영상 제작": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "d6d18ff1-7eeb-404f-b17f-03632f6d9924",
+          "message": "success",
+          "pid": 8,
+          "queue_id": 123775937709632,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/d6d18ff1-7eeb-404f-b17f-03632f6d9924_output_0.mp4"
+            }
+          ],
+          "run_time": 88.318,
+          "total_time": 88.318
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "NCA 제작 결과": [
+      {
+        "json": {
+          "video_url": "http://76.13.182.180:9000/nca-toolkit/d6d18ff1-7eeb-404f-b17f-03632f6d9924_output_0.mp4",
+          "ass_url": "http://76.13.182.180:9000/nca-toolkit/subtitles/sub_d6d18ff1-7eeb-404f-b17f-03632f6d9924.ass",
+          "has_subtitles": true
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "MIME 타입 수정": [
+      {
+        "json": {
+          "Subject": "대표님이 잠든 시간에도 수익은 멈추지 않습니다. LUMIX #카지노솔루션 #토토솔루션 #루믹스솔루션 #카지노솔루션추천",
+          "Status": "생성 완료",
+          "업로드 URL": "http://76.13.182.180:9000/nca-toolkit/cf84e0d4-304b-46d0-86cc-e06d77a49cad_output_0.mp4"
+        },
+        "binary": {
+          "data": {
+            "mimeType": "video/mp4",
+            "fileExtension": "mp4",
+            "data": "database",
+            "directory": "http://76.13.182.180:9000/nca-toolkit/cf84e0d4-304b-46d0-86cc-e06d77a49cad_output_0.mp4",
+            "fileName": "lumix_shorts.mp4",
+            "id": "database:c55f718e-24cd-42ba-a55f-b1fccd8c2ead",
+            "fileSize": "15.3 MB",
+            "bytes": 15278072,
+            "contentType": "video/mp4"
+          }
+        },
         "pairedItem": {
           "item": 0
         }
       }
     ]
   },
-  "versionId": "71216579-f6b7-45fe-8047-8016ed2d3154",
-  "activeVersionId": "71216579-f6b7-45fe-8047-8016ed2d3154",
-  "versionCounter": 878,
+  "versionId": "90b3a109-2655-4bdd-9669-85934d79dec4",
+  "activeVersionId": "90b3a109-2655-4bdd-9669-85934d79dec4",
+  "versionCounter": 958,
   "triggerCount": 2,
   "shared": [
     {
@@ -2837,7 +3738,7 @@
             "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
             "projectId": "W6LETsSnBzw4J5Aa",
             "user": {
-              "updatedAt": "2026-02-12T12:26:56.079Z",
+              "updatedAt": "2026-02-12T23:03:05.008Z",
               "createdAt": "2026-02-07T19:04:09.331Z",
               "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
               "email": "hatihoro15@gmail.com",
@@ -2856,7 +3757,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-02-11",
+              "lastActiveAt": "2026-02-12",
               "isPending": false
             }
           }
@@ -2866,9 +3767,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-12T18:20:19.878Z",
-    "createdAt": "2026-02-12T18:20:19.878Z",
-    "versionId": "71216579-f6b7-45fe-8047-8016ed2d3154",
+    "updatedAt": "2026-02-12T20:08:02.588Z",
+    "createdAt": "2026-02-12T20:08:02.588Z",
+    "versionId": "90b3a109-2655-4bdd-9669-85934d79dec4",
     "workflowId": "9YOHS8N1URWlzGWj",
     "nodes": [
       {
@@ -3062,8 +3963,8 @@
         "type": "@n8n/n8n-nodes-langchain.googleGemini",
         "typeVersion": 1.1,
         "position": [
-          160,
-          0
+          144,
+          -288
         ],
         "id": "ce63b524-daa2-46a6-8226-2df60c6d6285",
         "name": "나레이션 분할",
@@ -3082,8 +3983,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          496,
-          48
+          432,
+          112
         ],
         "id": "12c444ff-1bad-4d6c-a949-f3667e574a50",
         "name": "5파트 분리"
@@ -3102,8 +4003,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          768,
-          48
+          720,
+          112
         ],
         "id": "4dd3dc38-eacf-44f3-a63e-aaa3596c3db5",
         "name": "TTS 요청",
@@ -3121,8 +4022,8 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          992,
-          48
+          944,
+          112
         ],
         "id": "1bdf0dff-2c0c-43e9-9ba9-ae98a18ab65f",
         "name": "TTS 대기",
@@ -3138,8 +4039,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          1216,
-          48
+          1168,
+          112
         ],
         "id": "5e6550c7-a3e9-406b-8c35-3e03edd043f4",
         "name": "TTS 결과",
@@ -3159,8 +4060,8 @@
         "type": "@n8n/n8n-nodes-langchain.chainLlm",
         "typeVersion": 1.9,
         "position": [
-          176,
-          272
+          256,
+          336
         ],
         "id": "b234b187-43f7-43ea-af80-43e585ccc983",
         "name": "이미지 프롬프트 AI",
@@ -3173,8 +4074,8 @@
         "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
         "typeVersion": 1,
         "position": [
-          240,
-          464
+          224,
+          560
         ],
         "id": "cd8c2205-42e9-4739-b118-84c8600bcc3e",
         "name": "Gemini Chat Model",
@@ -3199,8 +4100,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          576,
-          272
+          592,
+          336
         ],
         "id": "3b570b77-2ed6-4828-9e05-6252cefc7c95",
         "name": "이미지 생성",
@@ -3218,8 +4119,8 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          800,
-          272
+          816,
+          336
         ],
         "id": "78ec2753-e329-4974-90e4-bc820fad2e89",
         "name": "이미지 대기",
@@ -3235,11 +4136,73 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          1024,
-          272
+          1040,
+          336
         ],
         "id": "82698431-6ca3-4ab3-beac-19f05cb7c8b0",
         "name": "이미지 결과",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "PuGtmUb23v3qkRug",
+            "name": "fal.ai API Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://queue.fal.run/fal-ai/aura-sr",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"image_url\": \"{{ $json.images[0].url }}\",\n  \"upscaling_factor\": 4\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          704,
+          -304
+        ],
+        "id": "3df10b23-8a38-460e-ab4f-de7bf41d6ea6",
+        "name": "업스케일 요청",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "PuGtmUb23v3qkRug",
+            "name": "fal.ai API Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 120
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          928,
+          -304
+        ],
+        "id": "9d3a38e9-b593-424b-900a-b9b98334286e",
+        "name": "업스케일 대기",
+        "webhookId": "3fa979be-79a0-4e4a-99ed-20582e1a3d4c"
+      },
+      {
+        "parameters": {
+          "url": "={{ $json.response_url }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          1152,
+          -304
+        ],
+        "id": "d479c47f-eddd-41a6-8714-d2d2723f3827",
+        "name": "업스케일 결과",
         "credentials": {
           "httpHeaderAuth": {
             "id": "PuGtmUb23v3qkRug",
@@ -3920,7 +4883,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// NCA 영상 제작 - BGM 루프 + 슬로우/루프/5초단위 장면분할 + 자막 + 아웃트로\nconst firstItem = $input.first().json;\nconst dataArray = firstItem.data || [];\n\nconst narrations = [];\nconst videos = [];\nlet bgmUrl = '';\n\nfor (const item of dataArray) {\n    if (item.video && item.video.url) {\n        videos.push(item.video.url);\n    } else if (item.audio && item.audio.url) {\n        if (item.metadata && item.metadata.duration) {\n            bgmUrl = item.audio.url;\n        } else {\n            const fileSize = item.audio.file_size || 0;\n            const estimatedDuration = Math.max(Math.round((fileSize * 8 / 128000) * 100) / 100, 3);\n            narrations.push({\n                url: item.audio.url,\n                duration: estimatedDuration + 2,\n            });\n        }\n    }\n}\n\n// 자막 텍스트 가져오기\nlet subtitleTexts = [];\nlet fullNarrationTexts = [];\ntry {\n    const partItems = $('5파트 분리').all();\n    subtitleTexts = partItems.map(item => item.json.subtitle || item.json.text || '');\n    fullNarrationTexts = partItems.map(item => item.json.text || '');\n} catch (e) {\n    console.log('Could not get subtitles:', e.message);\n}\n\n// 2줄 분리 헬퍼\nfunction splitToTwoLines(text) {\n    if (!text || text.length <= 16) return text || '';\n    const mid = Math.floor(text.length / 2);\n    let splitIdx = -1;\n    for (let offset = 0; offset <= mid; offset++) {\n        const fwd = mid + offset;\n        const bwd = mid - offset;\n        if (fwd < text.length && text[fwd] === ' ') { splitIdx = fwd; break; }\n        if (bwd >= 0 && text[bwd] === ' ') { splitIdx = bwd; break; }\n    }\n    if (splitIdx === -1) return text;\n    return text.substring(0, splitIdx).trim() + '\\\\N' + text.substring(splitIdx).trim();\n}\n\n// 나레이션 텍스트를 N개 세그먼트로 분할 (요약 없이 전체)\nfunction splitNarrationText(fullText, segCount) {\n    if (segCount <= 1) return [fullText];\n    const sentences = fullText.split(/(?<=[.!?])\\s*/).filter(s => s.trim().length > 0);\n    \n    if (sentences.length >= segCount) {\n        const result = [];\n        const perSeg = Math.floor(sentences.length / segCount);\n        let idx = 0;\n        for (let s = 0; s < segCount; s++) {\n            const end = (s === segCount - 1) ? sentences.length : idx + perSeg;\n            result.push(sentences.slice(idx, end).join(' ').trim());\n            idx = end;\n        }\n        return result;\n    } else {\n        const charPerSeg = Math.ceil(fullText.length / segCount);\n        const result = [];\n        let remaining = fullText;\n        for (let s = 0; s < segCount - 1; s++) {\n            let cutPos = Math.min(charPerSeg, remaining.length);\n            for (let j = cutPos; j >= cutPos - 10 && j >= 1; j--) {\n                if (remaining[j] === ' ' || remaining[j] === ',') { cutPos = j; break; }\n            }\n            result.push(remaining.substring(0, cutPos).trim());\n            remaining = remaining.substring(cutPos).trim();\n        }\n        result.push(remaining.trim());\n        return result;\n    }\n}\n\nconst partCount = Math.min(narrations.length, videos.length, 5);\nconst SCENE_DURATION = 5;      // 영상 기본 길이 (5초)\nconst MAX_SLOW_SECONDS = 6.5;  // 6.5초까지 슬로우, 이상이면 루프\nconst SPLIT_SECONDS = 8;       // 8초 이상이면 장면 분할\nconst OUTRO_URL = 'http://76.13.182.180:9000/nca-toolkit/assets/outro_lumix.mp4';\nconst OUTRO_DURATION = 5;\n\nconsole.log('Parts:', partCount, 'Videos:', videos.length, 'Narrations:', narrations.length, 'BGM:', bgmUrl ? 'YES' : 'NO');\n\n// === 세그먼트 구성 (5초 단위 분할, 나머지 < 5초면 5초로) ===\nconst segments = [];\nfor (let i = 0; i < partCount; i++) {\n    const dur = narrations[i].duration;\n    const videoUrl = videos[i];\n    const audioUrl = narrations[i].url;\n    const subText = subtitleTexts[i] || '';\n    const fullText = fullNarrationTexts[i] || '';\n\n    if (dur >= SPLIT_SECONDS) {\n        // 8초 이상: 5초 단위로 분할\n        const sceneDurations = [];\n        let remaining = dur;\n        while (remaining >= SPLIT_SECONDS) {\n            sceneDurations.push(SCENE_DURATION);\n            remaining = Math.round((remaining - SCENE_DURATION) * 100) / 100;\n        }\n        // 나머지: 5초 미만이면 5초로 (영상 길이에 맞춤), 아니면 그대로\n        const lastDur = remaining < SCENE_DURATION ? SCENE_DURATION : remaining;\n        sceneDurations.push(lastDur);\n\n        // 나레이션 텍스트를 세그먼트 수만큼 분할 (요약 없이)\n        const textParts = splitNarrationText(fullText, sceneDurations.length);\n        \n        // 오디오 구간 계산 (실제 나레이션 길이 기준)\n        const audioDurations = [];\n        let audioRemaining = dur;\n        for (let s = 0; s < sceneDurations.length - 1; s++) {\n            audioDurations.push(SCENE_DURATION);\n            audioRemaining = Math.round((audioRemaining - SCENE_DURATION) * 100) / 100;\n        }\n        audioDurations.push(audioRemaining); // 마지막은 실제 남은 오디오 길이\n\n        let audioOffset = 0;\n        for (let s = 0; s < sceneDurations.length; s++) {\n            segments.push({\n                videoUrl, audioUrl,\n                sceneDuration: sceneDurations[s],   // 장면 길이 (영상 기준)\n                audioDuration: audioDurations[s],    // 실제 오디오 길이\n                audioStart: audioOffset,\n                needsPad: sceneDurations[s] > audioDurations[s], // 오디오 패딩 필요\n                subtitleText: splitToTwoLines(textParts[s] || ''),\n                type: 'split', splitIndex: s\n            });\n            audioOffset = Math.round((audioOffset + audioDurations[s]) * 100) / 100;\n        }\n        console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, SPLIT -> [${sceneDurations.map(d => d.toFixed(1)+'s').join(', ')}] (audio: [${audioDurations.map(d => d.toFixed(1)+'s').join(', ')}])`);\n    } else {\n        // 8초 미만: 일반 (요약 자막)\n        segments.push({\n            videoUrl, audioUrl,\n            sceneDuration: dur,\n            audioDuration: dur,\n            audioStart: 0,\n            needsPad: false,\n            subtitleText: subText,\n            type: 'normal'\n        });\n        \n        if (dur > MAX_SLOW_SECONDS) {\n            console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, LOOP`);\n        } else {\n            const slow = Math.max(1, dur / SCENE_DURATION);\n            console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, slow=${slow.toFixed(2)}x`);\n        }\n    }\n}\n\n// === inputs 구성 ===\nconst inputs = [];\nconst segMeta = [];\n\nfor (const seg of segments) {\n    const vIdx = inputs.length;\n    inputs.push({ file_url: seg.videoUrl, options: [] });\n    const aIdx = inputs.length;\n    inputs.push({ file_url: seg.audioUrl, options: [] });\n    segMeta.push({ vIdx, aIdx });\n}\n\nif (bgmUrl) {\n    inputs.push({ file_url: bgmUrl, options: [{ option: \"-stream_loop\" }, { option: \"-1\" }] });\n}\ninputs.push({ file_url: OUTRO_URL, options: [] });\nconst outroIdx = inputs.length - 1;\n\n// === filter_complex 구성 ===\nlet filters = [];\nlet subtitleData = [];\nlet currentTime = 0;\n\nfor (let i = 0; i < segments.length; i++) {\n    const seg = segments[i];\n    const { vIdx, aIdx } = segMeta[i];\n    const dur = seg.sceneDuration;\n    const slowFactor = Math.max(1, dur / SCENE_DURATION);\n\n    // 비디오 필터\n    // Ken Burns for split segments (avoid repetition)\n    if (seg.type === 'split') {\n        const KB = 1.12;\n        const kbW = Math.round(1080 * KB);\n        const kbH = Math.round(1920 * KB);\n        const dx = kbW - 1080;\n        const dy = kbH - 1920;\n        const dxH = Math.round(dx / 2);\n        const dyH = Math.round(dy / 2);\n        const kbVariants = [\n            `scale=${kbW}:${kbH},crop=1080:1920:${dxH}*t/${dur.toFixed(2)}:${dyH}*t/${dur.toFixed(2)}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}-${dx}*t/${dur.toFixed(2)}:${dy}-${dy}*t/${dur.toFixed(2)}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}*t/${dur.toFixed(2)}:${dyH}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}-${dx}*t/${dur.toFixed(2)}:${dyH}`,\n        ];\n        const kbEffect = kbVariants[seg.splitIndex % kbVariants.length];\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,${kbEffect},trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS[v${i}]`);\n    } else if (dur > MAX_SLOW_SECONDS) {\n        // 루프 재생\n        inputs[vIdx].options = [{ option: \"-stream_loop\" }, { option: \"-1\" }];\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS[v${i}]`);\n    } else if (slowFactor > 1.01) {\n        // 슬로우모션\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*${slowFactor.toFixed(2)},tpad=stop_mode=clone:stop_duration=10,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS[v${i}]`);\n    } else {\n        // 원래 속도 (5초 장면)\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS[v${i}]`);\n    }\n\n    // 오디오 필터 (패딩 필요 시 apad로 무음 채움)\n    if (seg.audioStart > 0) {\n        if (seg.needsPad) {\n            filters.push(`[${aIdx}:a]atrim=start=${seg.audioStart.toFixed(2)}:duration=${seg.audioDuration.toFixed(2)},apad=whole_dur=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        } else {\n            filters.push(`[${aIdx}:a]atrim=start=${seg.audioStart.toFixed(2)}:duration=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        }\n    } else {\n        if (seg.needsPad) {\n            filters.push(`[${aIdx}:a]atrim=duration=${seg.audioDuration.toFixed(2)},apad=whole_dur=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        } else {\n            filters.push(`[${aIdx}:a]atrim=duration=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        }\n    }\n\n    subtitleData.push({\n        text: seg.subtitleText,\n        start: currentTime,\n        end: currentTime + dur,\n    });\n    currentTime += dur;\n}\n\n// 아웃트로\nfilters.push(`[${outroIdx}:v]scale=1080:2160,crop=1080:1920:0:0,trim=duration=${OUTRO_DURATION},setpts=PTS-STARTPTS[voutro]`);\nfilters.push(`anullsrc=r=44100:cl=mono,atrim=duration=${OUTRO_DURATION}[aoutro]`);\n\n// Crossfade transitions (0.4s fade)\nconst XFADE_DUR = 0.4;\nconst allV = [...Array(segments.length).keys()].map(i => `v${i}`).concat(['voutro']);\nconst allA = [...Array(segments.length).keys()].map(i => `a${i}`).concat(['aoutro']);\nconst allDur = segments.map(s => s.sceneDuration).concat([OUTRO_DURATION]);\n\nif (allV.length <= 1) {\n    filters.push(`[${allV[0]}]copy[outv]`);\n    filters.push(`[${allA[0]}]acopy[outa]`);\n} else {\n    // Video crossfade chain\n    let prevV = allV[0];\n    let cumDur = allDur[0];\n    for (let k = 0; k < allV.length - 1; k++) {\n        const xOffset = Math.max(0, cumDur - XFADE_DUR);\n        const vOut = k === allV.length - 2 ? 'outv' : `vx${k}`;\n        filters.push(`[${prevV}][${allV[k+1]}]xfade=transition=fade:duration=${XFADE_DUR}:offset=${xOffset.toFixed(2)}[${vOut}]`);\n        prevV = vOut;\n        cumDur += allDur[k+1] - XFADE_DUR;\n    }\n    // Audio crossfade chain\n    let prevA = allA[0];\n    for (let k = 0; k < allA.length - 1; k++) {\n        const aOut = k === allA.length - 2 ? 'outa' : `ax${k}`;\n        filters.push(`[${prevA}][${allA[k+1]}]acrossfade=d=${XFADE_DUR}:c1=tri:c2=tri[${aOut}]`);\n        prevA = aOut;\n    }\n}\n\nif (bgmUrl) {\n    const bgmIdx = segments.length * 2;\n    filters.push(`[${bgmIdx}:a]volume=0.10[bgm]`);\n    filters.push(`[outa][bgm]amix=inputs=2:duration=first:dropout_transition=2[finala]`);\n}\n\nconst filterComplex = filters.join('; ');\nconst audioMap = bgmUrl ? '[finala]' : '[outa]';\n\nconst outputOptions = [\n    { option: \"-filter_complex\" }, { option: filterComplex },\n    { option: \"-map\" }, { option: \"[outv]\" },\n    { option: \"-map\" }, { option: audioMap },\n    { option: \"-c:v\" }, { option: \"libx264\" },\n    { option: \"-preset\" }, { option: \"fast\" },\n    { option: \"-crf\" }, { option: \"23\" },\n    { option: \"-c:a\" }, { option: \"aac\" },\n    { option: \"-b:a\" }, { option: \"192k\" },\n    { option: \"-pix_fmt\" }, { option: \"yuv420p\" },\n    { option: \"-movflags\" }, { option: \"+faststart\" },\n];\n\nconsole.log(`Total segments: ${segments.length} (from ${partCount} parts), Duration: ${currentTime.toFixed(1)}s + ${OUTRO_DURATION}s outro`);\n\nreturn [{\n    json: {\n        nca_payload: {\n            inputs: inputs,\n            outputs: [{ options: outputOptions }],\n            global_options: [],\n        },\n        subtitle_data: subtitleData,\n        part_count: partCount,\n        segment_count: segments.length,\n        has_bgm: !!bgmUrl,\n        total_duration: currentTime + OUTRO_DURATION,\n    }\n}];"
+          "jsCode": "// NCA 영상 제작 - BGM 루프 + 슬로우/루프/5초단위 장면분할 + 자막 + 아웃트로\nconst firstItem = $input.first().json;\nconst dataArray = firstItem.data || [];\n\nconst narrations = [];\nconst videos = [];\nlet bgmUrl = '';\n\nfor (const item of dataArray) {\n    if (item.video && item.video.url) {\n        videos.push(item.video.url);\n    } else if (item.audio && item.audio.url) {\n        if (item.metadata && item.metadata.duration) {\n            bgmUrl = item.audio.url;\n        } else {\n            const fileSize = item.audio.file_size || 0;\n            const estimatedDuration = Math.max(Math.round((fileSize * 8 / 128000) * 100) / 100, 3);\n            narrations.push({\n                url: item.audio.url,\n                duration: estimatedDuration + 2,\n            });\n        }\n    }\n}\n\n// 자막 텍스트 가져오기\nlet subtitleTexts = [];\nlet fullNarrationTexts = [];\ntry {\n    const partItems = $('5파트 분리').all();\n    subtitleTexts = partItems.map(item => item.json.subtitle || item.json.text || '');\n    fullNarrationTexts = partItems.map(item => item.json.text || '');\n} catch (e) {\n    console.log('Could not get subtitles:', e.message);\n}\n\n// 2줄 분리 헬퍼\nfunction splitToTwoLines(text) {\n    if (!text || text.length <= 16) return text || '';\n    const mid = Math.floor(text.length / 2);\n    let splitIdx = -1;\n    for (let offset = 0; offset <= mid; offset++) {\n        const fwd = mid + offset;\n        const bwd = mid - offset;\n        if (fwd < text.length && text[fwd] === ' ') { splitIdx = fwd; break; }\n        if (bwd >= 0 && text[bwd] === ' ') { splitIdx = bwd; break; }\n    }\n    if (splitIdx === -1) return text;\n    return text.substring(0, splitIdx).trim() + '\\\\N' + text.substring(splitIdx).trim();\n}\n\n// 나레이션 텍스트를 N개 세그먼트로 분할 (요약 없이 전체)\nfunction splitNarrationText(fullText, segCount) {\n    if (segCount <= 1) return [fullText];\n    const sentences = fullText.split(/(?<=[.!?])\\s*/).filter(s => s.trim().length > 0);\n    \n    if (sentences.length >= segCount) {\n        const result = [];\n        const perSeg = Math.floor(sentences.length / segCount);\n        let idx = 0;\n        for (let s = 0; s < segCount; s++) {\n            const end = (s === segCount - 1) ? sentences.length : idx + perSeg;\n            result.push(sentences.slice(idx, end).join(' ').trim());\n            idx = end;\n        }\n        return result;\n    } else {\n        const charPerSeg = Math.ceil(fullText.length / segCount);\n        const result = [];\n        let remaining = fullText;\n        for (let s = 0; s < segCount - 1; s++) {\n            let cutPos = Math.min(charPerSeg, remaining.length);\n            for (let j = cutPos; j >= cutPos - 10 && j >= 1; j--) {\n                if (remaining[j] === ' ' || remaining[j] === ',') { cutPos = j; break; }\n            }\n            result.push(remaining.substring(0, cutPos).trim());\n            remaining = remaining.substring(cutPos).trim();\n        }\n        result.push(remaining.trim());\n        return result;\n    }\n}\n\nconst partCount = Math.min(narrations.length, videos.length, 5);\nconst SCENE_DURATION = 5;      // 영상 기본 길이 (5초)\nconst MAX_SLOW_SECONDS = 6.5;  // 6.5초까지 슬로우, 이상이면 루프\nconst SPLIT_SECONDS = 8;       // 8초 이상이면 장면 분할\nconst OUTRO_URL = 'http://76.13.182.180:9000/nca-toolkit/assets/outro_lumix.mp4';\nconst OUTRO_DURATION = 5;\n\nconsole.log('Parts:', partCount, 'Videos:', videos.length, 'Narrations:', narrations.length, 'BGM:', bgmUrl ? 'YES' : 'NO');\n\n// === 세그먼트 구성 (5초 단위 분할, 나머지 < 5초면 5초로) ===\nconst segments = [];\nfor (let i = 0; i < partCount; i++) {\n    const dur = narrations[i].duration;\n    const videoUrl = videos[i];\n    const audioUrl = narrations[i].url;\n    const subText = subtitleTexts[i] || '';\n    const fullText = fullNarrationTexts[i] || '';\n\n    if (dur >= SPLIT_SECONDS) {\n        // 8초 이상: 5초 단위로 분할\n        const sceneDurations = [];\n        let remaining = dur;\n        while (remaining >= SPLIT_SECONDS) {\n            sceneDurations.push(SCENE_DURATION);\n            remaining = Math.round((remaining - SCENE_DURATION) * 100) / 100;\n        }\n        // 나머지: 5초 미만이면 5초로 (영상 길이에 맞춤), 아니면 그대로\n        const lastDur = remaining < SCENE_DURATION ? SCENE_DURATION : remaining;\n        sceneDurations.push(lastDur);\n\n        // 나레이션 텍스트를 세그먼트 수만큼 분할 (요약 없이)\n        const textParts = splitNarrationText(fullText, sceneDurations.length);\n        \n        // 오디오 구간 계산 (실제 나레이션 길이 기준)\n        const audioDurations = [];\n        let audioRemaining = dur;\n        for (let s = 0; s < sceneDurations.length - 1; s++) {\n            audioDurations.push(SCENE_DURATION);\n            audioRemaining = Math.round((audioRemaining - SCENE_DURATION) * 100) / 100;\n        }\n        audioDurations.push(audioRemaining); // 마지막은 실제 남은 오디오 길이\n\n        let audioOffset = 0;\n        for (let s = 0; s < sceneDurations.length; s++) {\n            segments.push({\n                videoUrl, audioUrl,\n                sceneDuration: sceneDurations[s],   // 장면 길이 (영상 기준)\n                audioDuration: audioDurations[s],    // 실제 오디오 길이\n                audioStart: audioOffset,\n                needsPad: sceneDurations[s] > audioDurations[s], // 오디오 패딩 필요\n                subtitleText: splitToTwoLines(textParts[s] || ''),\n                type: 'split', splitIndex: s\n            });\n            audioOffset = Math.round((audioOffset + audioDurations[s]) * 100) / 100;\n        }\n        console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, SPLIT -> [${sceneDurations.map(d => d.toFixed(1)+'s').join(', ')}] (audio: [${audioDurations.map(d => d.toFixed(1)+'s').join(', ')}])`);\n    } else {\n        // 8초 미만: 일반 (요약 자막)\n        segments.push({\n            videoUrl, audioUrl,\n            sceneDuration: dur,\n            audioDuration: dur,\n            audioStart: 0,\n            needsPad: false,\n            subtitleText: subText,\n            type: 'normal'\n        });\n        \n        if (dur > MAX_SLOW_SECONDS) {\n            console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, LOOP`);\n        } else {\n            const slow = Math.max(1, dur / SCENE_DURATION);\n            console.log(`Part ${i+1}: dur=${dur.toFixed(1)}s, slow=${slow.toFixed(2)}x`);\n        }\n    }\n}\n\n// === inputs 구성 ===\nconst inputs = [];\nconst segMeta = [];\n\nfor (const seg of segments) {\n    const vIdx = inputs.length;\n    inputs.push({ file_url: seg.videoUrl, options: [] });\n    const aIdx = inputs.length;\n    inputs.push({ file_url: seg.audioUrl, options: [] });\n    segMeta.push({ vIdx, aIdx });\n}\n\nif (bgmUrl) {\n    inputs.push({ file_url: bgmUrl, options: [{ option: \"-stream_loop\" }, { option: \"-1\" }] });\n}\ninputs.push({ file_url: OUTRO_URL, options: [] });\nconst outroIdx = inputs.length - 1;\n\n// === filter_complex 구성 ===\nlet filters = [];\nlet subtitleData = [];\nlet currentTime = 0;\n\nfor (let i = 0; i < segments.length; i++) {\n    const seg = segments[i];\n    const { vIdx, aIdx } = segMeta[i];\n    const dur = seg.sceneDuration;\n    const slowFactor = Math.max(1, dur / SCENE_DURATION);\n\n    // 비디오 필터\n    // Ken Burns for split segments (avoid repetition)\n    if (seg.type === 'split') {\n        const KB = 1.12;\n        const kbW = Math.round(1080 * KB);\n        const kbH = Math.round(1920 * KB);\n        const dx = kbW - 1080;\n        const dy = kbH - 1920;\n        const dxH = Math.round(dx / 2);\n        const dyH = Math.round(dy / 2);\n        const kbVariants = [\n            `scale=${kbW}:${kbH},crop=1080:1920:${dxH}*t/${dur.toFixed(2)}:${dyH}*t/${dur.toFixed(2)}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}-${dx}*t/${dur.toFixed(2)}:${dy}-${dy}*t/${dur.toFixed(2)}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}*t/${dur.toFixed(2)}:${dyH}`,\n            `scale=${kbW}:${kbH},crop=1080:1920:${dx}-${dx}*t/${dur.toFixed(2)}:${dyH}`,\n        ];\n        const kbEffect = kbVariants[seg.splitIndex % kbVariants.length];\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,${kbEffect},trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS,fps=24[v${i}]`);\n    } else if (dur > MAX_SLOW_SECONDS) {\n        // 루프 재생\n        inputs[vIdx].options = [{ option: \"-stream_loop\" }, { option: \"-1\" }];\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS,fps=24[v${i}]`);\n    } else if (slowFactor > 1.01) {\n        // 슬로우모션\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*${slowFactor.toFixed(2)},tpad=stop_mode=clone:stop_duration=10,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS,fps=24[v${i}]`);\n    } else {\n        // 원래 속도 (5초 장면)\n        filters.push(`[${vIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=${dur.toFixed(2)},setpts=PTS-STARTPTS,fps=24[v${i}]`);\n    }\n\n    // 오디오 필터 (패딩 필요 시 apad로 무음 채움)\n    if (seg.audioStart > 0) {\n        if (seg.needsPad) {\n            filters.push(`[${aIdx}:a]atrim=start=${seg.audioStart.toFixed(2)}:duration=${seg.audioDuration.toFixed(2)},apad=whole_dur=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        } else {\n            filters.push(`[${aIdx}:a]atrim=start=${seg.audioStart.toFixed(2)}:duration=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        }\n    } else {\n        if (seg.needsPad) {\n            filters.push(`[${aIdx}:a]atrim=duration=${seg.audioDuration.toFixed(2)},apad=whole_dur=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        } else {\n            filters.push(`[${aIdx}:a]atrim=duration=${dur.toFixed(2)},asetpts=PTS-STARTPTS[a${i}]`);\n        }\n    }\n\n    subtitleData.push({\n        text: seg.subtitleText,\n        start: currentTime,\n        end: currentTime + dur,\n    });\n    currentTime += dur;\n}\n\n// 아웃트로\nfilters.push(`[${outroIdx}:v]scale=1080:2160,crop=1080:1920:0:0,trim=duration=${OUTRO_DURATION},setpts=PTS-STARTPTS,fps=24[voutro]`);\nfilters.push(`anullsrc=r=44100:cl=mono,atrim=duration=${OUTRO_DURATION}[aoutro]`);\n\n// Fade transitions (concat 방식 - 싱크 보장)\nconst FADE_DUR = 0.3;\nfor (let k = 0; k < segments.length; k++) {\n    const d = segments[k].sceneDuration;\n    const vFadeIn = k > 0 ? `fade=t=in:d=${FADE_DUR},` : '';\n    const vFadeOut = `fade=t=out:st=${Math.max(0, d - FADE_DUR).toFixed(2)}:d=${FADE_DUR}`;\n    filters.push(`[v${k}]${vFadeIn}${vFadeOut}[vf${k}]`);\n    const aFadeIn = k > 0 ? `afade=t=in:d=${FADE_DUR},` : '';\n    const aFadeOut = `afade=t=out:st=${Math.max(0, d - FADE_DUR).toFixed(2)}:d=${FADE_DUR}`;\n    filters.push(`[a${k}]${aFadeIn}${aFadeOut}[af${k}]`);\n}\nfilters.push(`[voutro]fade=t=in:d=${FADE_DUR}[vfoutro]`);\nfilters.push(`[aoutro]acopy[afoutro]`);\nlet concatInputs = '';\nfor (let k = 0; k < segments.length; k++) {\n    concatInputs += `[vf${k}][af${k}]`;\n}\nconcatInputs += '[vfoutro][afoutro]';\nfilters.push(`${concatInputs}concat=n=${segments.length + 1}:v=1:a=1[outv][outa]`);\n\nif (bgmUrl) {\n    const bgmIdx = segments.length * 2;\n    filters.push(`[${bgmIdx}:a]volume=0.10[bgm]`);\n    filters.push(`[outa][bgm]amix=inputs=2:duration=first:dropout_transition=2[finala]`);\n}\n\nconst filterComplex = filters.join('; ');\nconst audioMap = bgmUrl ? '[finala]' : '[outa]';\n\nconst outputOptions = [\n    { option: \"-filter_complex\" }, { option: filterComplex },\n    { option: \"-map\" }, { option: \"[outv]\" },\n    { option: \"-map\" }, { option: audioMap },\n    { option: \"-c:v\" }, { option: \"libx264\" },\n    { option: \"-preset\" }, { option: \"fast\" },\n    { option: \"-crf\" }, { option: \"23\" },\n    { option: \"-c:a\" }, { option: \"aac\" },\n    { option: \"-b:a\" }, { option: \"192k\" },\n    { option: \"-pix_fmt\" }, { option: \"yuv420p\" },\n    { option: \"-movflags\" }, { option: \"+faststart\" },\n];\n\nconsole.log(`Total segments: ${segments.length} (from ${partCount} parts), Duration: ${currentTime.toFixed(1)}s + ${OUTRO_DURATION}s outro`);\n\nreturn [{\n    json: {\n        nca_payload: {\n            inputs: inputs,\n            outputs: [{ options: outputOptions }],\n            global_options: [],\n        },\n        subtitle_data: subtitleData,\n        part_count: partCount,\n        segment_count: segments.length,\n        has_bgm: !!bgmUrl,\n        total_duration: currentTime + OUTRO_DURATION,\n    }\n}];"
         },
         "name": "NCA 데이터 준비",
         "type": "n8n-nodes-base.code",
@@ -4185,6 +5148,33 @@
               "index": 0
             }
           ]
+        ]
+      },
+      "업스케일 요청": {
+        "main": [
+          [
+            {
+              "node": "업스케일 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "업스케일 대기": {
+        "main": [
+          [
+            {
+              "node": "업스케일 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "업스케일 결과": {
+        "main": [
+          []
         ]
       },
       "영상 생성": {
@@ -4571,10 +5561,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-12T18:20:20.042Z",
-        "id": 256,
+        "createdAt": "2026-02-12T20:08:02.701Z",
+        "id": 265,
         "workflowId": "9YOHS8N1URWlzGWj",
-        "versionId": "71216579-f6b7-45fe-8047-8016ed2d3154",
+        "versionId": "90b3a109-2655-4bdd-9669-85934d79dec4",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
