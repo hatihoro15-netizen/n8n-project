@@ -60,7 +60,7 @@ const SCENE_DURATION = 6;
 const MAX_SLOW_SECONDS = 7;
 const OUTRO_URL = 'http://76.13.182.180:9000/nca-toolkit/assets/outro_lumix.mp4';
 const OUTRO_DURATION = 5;
-const XFADE_DUR = 0.5;
+const XFADE_DUR = 0.15;
 
 console.log('Parts:', partCount, 'Videos:', videos.length, 'Narrations:', narrations.length, 'BGM:', bgmUrl ? 'YES' : 'NO');
 

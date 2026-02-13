@@ -26,7 +26,7 @@ const LINE2_Y = RES_Y - 150;
 const LINE1_Y = LINE2_Y - LINE_GAP;
 const START_Y = RES_Y + 80;
 const SLIDE_MS = 300;
-const LINE_DELAY = 0.35;
+const LINE_DELAY = 1.0;
 const CENTER_X = Math.round(RES_X / 2);
 
 let assContent = '[Script Info]\n';
