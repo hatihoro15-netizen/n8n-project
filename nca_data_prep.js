@@ -106,7 +106,7 @@ for (let i = 0; i < partCount; i++) {
     });
 
     if (dur >= MAX_SLOW_SECONDS) {
-        console.log('Part ' + (i+1) + ': dur=' + dur.toFixed(1) + 's, LOOP + Ken Burns');
+        console.log('Part ' + (i+1) + ': dur=' + dur.toFixed(1) + 's, PINGPONG loop');
     } else {
         const slow = Math.max(1, dur / SOURCE_DURATION);
         console.log('Part ' + (i+1) + ': dur=' + dur.toFixed(1) + 's, slow=' + slow.toFixed(2) + 'x + Ken Burns');
@@ -164,8 +164,25 @@ for (let i = 0; i < segments.length; i++) {
     const kbEffect = '';
 
     if (dur >= MAX_SLOW_SECONDS) {
-        inputs[vIdx].options = [{ option: "-stream_loop" }, { option: "-1" }];
-        filters.push('[' + vIdx + ':v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=' + dur.toFixed(2) + ',setpts=PTS-STARTPTS,' + (useKB ? kbEffect + ',setpts=PTS-STARTPTS,' : '') + 'fps=24[v' + i + ']');
+        const SLOW_X = 1.2;
+        const pingDur = (SOURCE_DURATION * SLOW_X * 2).toFixed(2); // 12s pingpong
+        const needDouble = dur > SOURCE_DURATION * SLOW_X * 2; // >12s → 24s
+        const pp = 'pp' + i;
+        const ppA = pp + 'a';
+        const ppB = pp + 'b';
+        const ppRev = pp + 'r';
+        filters.push('[' + vIdx + ':v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*' + SLOW_X + ',fps=24[' + pp + 'slow]');
+        filters.push('[' + pp + 'slow]split[' + ppA + '][' + ppB + ']');
+        filters.push('[' + ppB + ']reverse[' + ppRev + ']');
+        if (needDouble) {
+            filters.push('[' + ppA + '][' + ppRev + ']concat=n=2:v=1:a=0[' + pp + 'x1]');
+            filters.push('[' + pp + 'x1]split[' + pp + 'c][' + pp + 'd]');
+            filters.push('[' + pp + 'c][' + pp + 'd]concat=n=2:v=1:a=0[' + pp + 'x2]');
+            filters.push('[' + pp + 'x2]trim=duration=' + dur.toFixed(2) + ',setpts=PTS-STARTPTS[v' + i + ']');
+        } else {
+            filters.push('[' + ppA + '][' + ppRev + ']concat=n=2:v=1:a=0,trim=duration=' + dur.toFixed(2) + ',setpts=PTS-STARTPTS[v' + i + ']');
+        }
+        console.log('Part ' + (i+1) + ': pingpong loop, dur=' + dur.toFixed(1) + 's' + (needDouble ? ' (double)' : ''));
     } else if (slowFactor > 1.01) {
         filters.push('[' + vIdx + ':v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*' + slowFactor.toFixed(2) + ',tpad=stop_mode=clone:stop_duration=10,trim=duration=' + dur.toFixed(2) + ',setpts=PTS-STARTPTS,' + (useKB ? kbEffect + ',setpts=PTS-STARTPTS,' : '') + 'fps=24[v' + i + ']');
     } else {
