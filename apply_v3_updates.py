@@ -57,6 +57,16 @@ for node in wf['nodes']:
         p['jsonBody'] = NCA_SUB_BODY
         print("  Set NCA 자막 추가: jsonBody")
     
+    elif name == 'MIME 타입 수정':
+        p['jsCode'] = """for (const item of items) {
+  if (item.binary && item.binary.data) {
+    item.binary.data.mimeType = 'video/mp4';
+    item.binary.data.fileName = item.binary.data.fileName || 'video.mp4';
+  }
+}
+return items;"""
+        print("  Set MIME 타입 수정: video/mp4")
+
     elif 'BGM 생성' in name and 'jsonBody' in p:
         old = p['jsonBody']
         p['jsonBody'] = old.replace('"refinement": 100', '"refinement": 60')
