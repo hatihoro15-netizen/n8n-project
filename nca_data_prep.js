@@ -189,7 +189,7 @@ for (let i = 0; i < segments.length; i++) {
     currentTime += dur - XFADE_DUR;
 }
 
-filters.push('[' + outroIdx + ':v]scale=1080:2160,crop=1080:1920:0:0,trim=duration=' + OUTRO_DURATION + ',setpts=PTS-STARTPTS,fps=24[voutro]');
+filters.push('[' + outroIdx + ':v]fps=24,scale=1080:2160,crop=1080:1920:0:0,trim=duration=' + OUTRO_DURATION + ',setpts=PTS-STARTPTS,fps=24[voutro]');
 filters.push('anullsrc=r=44100:cl=mono,atrim=duration=' + OUTRO_DURATION + '[aoutro]');
 
 const totalParts = segments.length + 1;
