@@ -1,4 +1,4 @@
-// NCA 제작 결과 + ASS 자막 (Noto Sans KR 110pt + 줄별 슬라이드업)
+// NCA 제작 결과 + ASS 자막 (Noto Sans KR 60pt + 순차 1줄씩 + 왼→오 + 페이드아웃)
 const result = $input.first().json;
 const prevData = $('NCA 데이터 준비').first().json;
 
@@ -20,13 +20,10 @@ const subtitleData = prevData.subtitle_data || [];
 
 const RES_X = 1080;
 const RES_Y = 1920;
-const FONT_SIZE = 110;
-const LINE_GAP = Math.round(FONT_SIZE * 1.3);
-const LINE2_Y = RES_Y - 150;
-const LINE1_Y = LINE2_Y - LINE_GAP;
-const START_Y = RES_Y + 80;
-const SLIDE_MS = 300;
-const LINE_DELAY = 1.0;
+const FONT_SIZE = 60;
+const SUB_Y = RES_Y - 200;
+const REVEAL_MS = 400;
+const FADE_MS = 300;
 const CENTER_X = Math.round(RES_X / 2);
 
 let assContent = '[Script Info]\n';
@@ -49,36 +46,13 @@ const fmt = (totalSec) => {
 };
 
 for (const sub of subtitleData) {
-    if (!sub.text && (!sub.lines || !sub.lines.line1)) continue;
-
-    const lines = sub.lines || { line1: sub.text || '', line2: '' };
-    const startTime = sub.start;
-    const endTime = sub.end;
-
-    if (lines.line3) {
-        const y1 = LINE2_Y - 2 * LINE_GAP;
-        const y2 = LINE2_Y - LINE_GAP;
-        const y3 = LINE2_Y;
-        const m1 = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + y1 + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
-        assContent += 'Dialogue: 0,' + fmt(startTime) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + m1 + lines.line1 + '\n';
-        const m2 = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + y2 + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
-        assContent += 'Dialogue: 0,' + fmt(startTime + LINE_DELAY) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + m2 + lines.line2 + '\n';
-        const m3 = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + y3 + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
-        assContent += 'Dialogue: 0,' + fmt(startTime + LINE_DELAY * 2) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + m3 + lines.line3 + '\n';
-    } else if (lines.line2) {
-        const move1 = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + LINE1_Y + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
-        assContent += 'Dialogue: 0,' + fmt(startTime) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + move1 + lines.line1 + '\n';
-        const move2 = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + LINE2_Y + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
-        assContent += 'Dialogue: 0,' + fmt(startTime + LINE_DELAY) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + move2 + lines.line2 + '\n';
-    } else {
-        const singleY = LINE2_Y;
-        const move = '{\\an5\\move(' + CENTER_X + ',' + START_Y + ',' + CENTER_X + ',' + singleY + ',0,' + SLIDE_MS + ')\\fad(0,200)}';
-        assContent += 'Dialogue: 0,' + fmt(startTime) + ',' + fmt(endTime) + ',Default,,0,0,0,,' + move + lines.line1 + '\n';
-    }
+    if (!sub.text) continue;
+    const fx = '{\\an5\\pos(' + CENTER_X + ',' + SUB_Y + ')\\clip(0,0,0,' + RES_Y + ')\\t(0,' + REVEAL_MS + ',\\clip(0,0,' + RES_X + ',' + RES_Y + '))\\fad(0,' + FADE_MS + ')}';
+    assContent += 'Dialogue: 0,' + fmt(sub.start) + ',' + fmt(sub.end) + ',Default,,0,0,0,,' + fx + sub.text + '\n';
 }
 
 console.log('ASS content length:', assContent.length);
-console.log('Subtitle entries:', subtitleData.filter(s => s.text || (s.lines && s.lines.line1)).length);
+console.log('Subtitle entries:', subtitleData.filter(s => s.text).length);
 
 const jobId = result.job_id || Date.now().toString();
 const assFileName = 'subtitles/sub_' + jobId + '.ass';
@@ -102,6 +76,6 @@ return [{
     json: {
         video_url: videoUrl,
         ass_url: assUrl,
-        has_subtitles: subtitleData.filter(s => s.text || (s.lines && s.lines.line1)).length > 0,
+        has_subtitles: subtitleData.filter(s => s.text).length > 0,
     }
 }];

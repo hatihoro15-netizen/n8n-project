@@ -112,9 +112,8 @@ for node in vwf['nodes']:
     elif name == 'NCA 제작 결과':
         code = p.get('jsCode','')
         noto = 'Noto Sans KR' in code
-        s96 = 'FONT_SIZE = 96' in code
-        ld = 'LINE_DELAY' in code
-        print(f"  {name}: len={len(code)} Noto={noto} Size96={s96} LineDelay={ld}")
+        s60 = 'FONT_SIZE = 60' in code
+        print(f"  {name}: len={len(code)} Noto={noto} Size60={s60}")
     elif name == 'NCA 자막 추가':
         body = p.get('jsonBody','')
         fd = 'fontsdir' in body

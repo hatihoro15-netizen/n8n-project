@@ -38,32 +38,43 @@ try {
     console.log('Could not get subtitles:', e.message);
 }
 
-function splitToLines(text) {
-    if (!text) return { full: '', line1: '', line2: '', line3: '' };
+function splitToChunks(text, maxLen) {
+    if (!text) return [];
     text = text.trim();
-    const words = text.split(/\s+/);
-    if (words.length <= 1 || text.length <= 10) return { full: text, line1: text, line2: '', line3: '' };
-    const cumChars = [0];
-    for (const w of words) cumChars.push(cumChars[cumChars.length - 1] + w.length);
-    const total = cumChars[cumChars.length - 1];
-    if (total <= 16 || words.length <= 2) {
-        const t = total / 2;
-        let bestI = 1, bestD = Infinity;
-        for (let i = 1; i < words.length; i++) {
-            const d = Math.abs(cumChars[i] - t);
-            if (d < bestD) { bestD = d; bestI = i; }
+    if (!text) return [];
+    maxLen = maxLen || 14;
+    const MIN_BREAK = 7;
+    const nsLen = (s) => s.replace(/\s/g, '').length;
+    const segments = text.split(/(?<=[,\.!\?])\s*/);
+    const result = [];
+    for (const seg of segments) {
+        const trimmed = seg.trim();
+        if (!trimmed) continue;
+        if (nsLen(trimmed) <= maxLen) {
+            result.push(trimmed);
+            continue;
         }
-        return { full: text, line1: words.slice(0, bestI).join(' '), line2: words.slice(bestI).join(' '), line3: '' };
-    }
-    let bestI = 1, bestJ = 2, bestScore = Infinity;
-    for (let i = 1; i < words.length - 1; i++) {
-        for (let j = i + 1; j < words.length; j++) {
-            const s1 = cumChars[i], s2 = cumChars[j] - cumChars[i], s3 = total - cumChars[j];
-            const score = Math.max(s1, s2, s3) - Math.min(s1, s2, s3);
-            if (score <= bestScore) { bestScore = score; bestI = i; bestJ = j; }
+        const words = trimmed.split(/\s+/);
+        const n = words.length;
+        const isBreak = (w) => /[은는이가을를에로]$|에서$|으로$|[와과]$|면$/.test(w);
+        let start = 0;
+        while (start < n) {
+            if (start >= n - 1) { result.push(words[start]); break; }
+            const remNS = words.slice(start).reduce((a, w) => a + w.length, 0);
+            if (remNS <= maxLen) { result.push(words.slice(start).join(' ')); break; }
+            let len = 0, lastFit = start, bestBreak = -1;
+            for (let e = start; e < n; e++) {
+                len += (e > start ? 1 : 0) + words[e].length;
+                if (len > maxLen) break;
+                lastFit = e;
+                if (isBreak(words[e]) && len >= MIN_BREAK) bestBreak = e;
+            }
+            const endIdx = lastFit >= n - 1 ? n - 1 : bestBreak >= 0 ? bestBreak : lastFit;
+            result.push(words.slice(start, endIdx + 1).join(' '));
+            start = endIdx + 1;
         }
     }
-    return { full: text, line1: words.slice(0, bestI).join(' '), line2: words.slice(bestI, bestJ).join(' '), line3: words.slice(bestJ).join(' ') };
+    return result;
 }
 
 const partCount = Math.min(narrations.length, videos.length, 5);
@@ -90,7 +101,6 @@ for (let i = 0; i < partCount; i++) {
         audioDuration: dur,
         audioStart: 0,
         subtitleText: fullText,
-        lines: splitToLines(fullText),
         kbIndex: i,
         type: 'normal'
     });
@@ -150,8 +160,8 @@ for (let i = 0; i < segments.length; i++) {
     const { vIdx, aIdx } = segMeta[i];
     const dur = seg.sceneDuration;
     const slowFactor = Math.max(1, dur / SOURCE_DURATION);
-    const useKB = dur >= 6.25;
-    const kbEffect = useKB ? getKenBurnsEffect(seg.kbIndex, dur) : '';
+    const useKB = false;
+    const kbEffect = '';
 
     if (dur >= MAX_SLOW_SECONDS) {
         inputs[vIdx].options = [{ option: "-stream_loop" }, { option: "-1" }];
@@ -164,12 +174,18 @@ for (let i = 0; i < segments.length; i++) {
 
     filters.push('[' + aIdx + ':a]atrim=duration=' + dur.toFixed(2) + ',apad=whole_dur=' + dur.toFixed(2) + ',asetpts=PTS-STARTPTS[a' + i + ']');
 
-    subtitleData.push({
-        text: seg.subtitleText,
-        lines: seg.lines,
-        start: currentTime,
-        end: currentTime + dur - XFADE_DUR,
-    });
+    const chunks = splitToChunks(seg.subtitleText, 14);
+    const charCounts = chunks.map(c => c.replace(/\s/g, '').length);
+    const totalChars = charCounts.reduce((a, b) => a + b, 0);
+    const partStart = currentTime;
+    const partEnd = currentTime + dur - XFADE_DUR;
+    const partDur = partEnd - partStart;
+    let t = partStart;
+    for (let ci = 0; ci < chunks.length; ci++) {
+        const chunkDur = totalChars > 0 ? partDur * charCounts[ci] / totalChars : partDur / chunks.length;
+        subtitleData.push({ text: chunks[ci], start: t, end: t + chunkDur });
+        t += chunkDur;
+    }
     currentTime += dur - XFADE_DUR;
 }
 
