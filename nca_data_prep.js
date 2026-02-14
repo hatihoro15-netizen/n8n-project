@@ -165,7 +165,7 @@ for (let i = 0; i < segments.length; i++) {
 
     if (dur >= MAX_SLOW_SECONDS) {
         inputs[vIdx].options = [{ option: "-stream_loop" }, { option: "-1" }];
-        filters.push('[' + vIdx + ':v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,trim=duration=' + dur.toFixed(2) + ',setpts=PTS-STARTPTS,fps=24[v' + i + ']');
+        filters.push('[' + vIdx + ':v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*1.2,fps=24,trim=duration=' + dur.toFixed(2) + ',setpts=PTS-STARTPTS[v' + i + ']');
     } else if (slowFactor > 1.01) {
         filters.push('[' + vIdx + ':v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2,setpts=PTS*' + slowFactor.toFixed(2) + ',tpad=stop_mode=clone:stop_duration=10,trim=duration=' + dur.toFixed(2) + ',setpts=PTS-STARTPTS,' + (useKB ? kbEffect + ',setpts=PTS-STARTPTS,' : '') + 'fps=24[v' + i + ']');
     } else {
