@@ -188,10 +188,14 @@ for (let i = 0; i < segments.length; i++) {
         const slice = chunks.slice(ci, Math.min(ci + linesPerGroup, chunks.length));
         groups.push(slice.join('\\N'));
     }
-    const groupDur = groups.length > 0 ? partDur / groups.length : partDur;
-    for (const grp of groups) {
-        subtitleData.push({ text: grp, start: t, end: t + groupDur });
-        t += groupDur;
+    // Character-proportional timing (longer text = longer display)
+    const charCounts = groups.map(g => g.replace(/\\N/g, '').replace(/\s/g, '').length || 1);
+    const totalChars = charCounts.reduce((a, b) => a + b, 0);
+    for (let gi = 0; gi < groups.length; gi++) {
+        const groupDur = Math.max(MIN_GROUP_DUR, partDur * charCounts[gi] / totalChars);
+        const end = gi === groups.length - 1 ? partEnd : t + groupDur;
+        subtitleData.push({ text: groups[gi], start: t, end: end });
+        t = end;
     }
     currentTime += dur - XFADE_DUR;
 }
