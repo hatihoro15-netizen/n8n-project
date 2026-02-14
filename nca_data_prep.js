@@ -175,16 +175,19 @@ for (let i = 0; i < segments.length; i++) {
     filters.push('[' + aIdx + ':a]atrim=duration=' + dur.toFixed(2) + ',apad=whole_dur=' + dur.toFixed(2) + ',asetpts=PTS-STARTPTS[a' + i + ']');
 
     const chunks = splitToChunks(seg.subtitleText, 14);
-    const charCounts = chunks.map(c => c.replace(/\s/g, '').length);
-    const totalChars = charCounts.reduce((a, b) => a + b, 0);
     const partStart = currentTime;
     const partEnd = currentTime + dur - XFADE_DUR;
     const partDur = partEnd - partStart;
     let t = partStart;
-    for (let ci = 0; ci < chunks.length; ci++) {
-        const chunkDur = totalChars > 0 ? partDur * charCounts[ci] / totalChars : partDur / chunks.length;
-        subtitleData.push({ text: chunks[ci], start: t, end: t + chunkDur });
-        t += chunkDur;
+    const groups = [];
+    for (let ci = 0; ci < chunks.length; ci += 2) {
+        const hasNext = ci + 1 < chunks.length;
+        groups.push(hasNext ? chunks[ci] + '\\N' + chunks[ci + 1] : chunks[ci]);
+    }
+    const groupDur = groups.length > 0 ? partDur / groups.length : partDur;
+    for (const grp of groups) {
+        subtitleData.push({ text: grp, start: t, end: t + groupDur });
+        t += groupDur;
     }
     currentTime += dur - XFADE_DUR;
 }

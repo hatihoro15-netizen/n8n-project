@@ -1,4 +1,4 @@
-// NCA 제작 결과 + ASS 자막 (Noto Sans KR 60pt + 순차 1줄씩 + 왼→오 + 페이드아웃)
+// NCA 제작 결과 + ASS 자막 (Noto Sans KR 85pt + 순차 1줄씩 + 왼→오 + 페이드아웃)
 const result = $input.first().json;
 const prevData = $('NCA 데이터 준비').first().json;
 
@@ -20,8 +20,8 @@ const subtitleData = prevData.subtitle_data || [];
 
 const RES_X = 1080;
 const RES_Y = 1920;
-const FONT_SIZE = 60;
-const SUB_Y = RES_Y - 200;
+const FONT_SIZE = 85;
+const SUB_Y = RES_Y - 250;
 const REVEAL_MS = 400;
 const FADE_MS = 300;
 const CENTER_X = Math.round(RES_X / 2);
