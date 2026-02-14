@@ -83,7 +83,7 @@ return [{
         print("  Set MIME 타입 수정: httpRequest + prepareBinaryData (video/mp4)")
 
     elif name == '첫 댓글':
-        p['jsonBody'] = '={\n  "snippet": {\n    "videoId": "{{ $json.uploadId }}",\n    "topLevelComment": {\n      "snippet": {\n        "textOriginal": "루믹스솔루션"\n      }\n    }\n  }\n}'
+        p['jsonBody'] = '={\n  "snippet": {\n    "videoId": "{{ $json.uploadId }}",\n    "topLevelComment": {\n      "snippet": {\n        "textOriginal": "구글에 루믹스솔루션 검색"\n      }\n    }\n  }\n}'
         print("  Set 첫 댓글: 루믹스솔루션")
 
     elif 'BGM 생성' in name and 'jsonBody' in p:
