@@ -58,14 +58,29 @@ for node in wf['nodes']:
         print("  Set NCA 자막 추가: jsonBody")
     
     elif name == 'MIME 타입 수정':
-        p['jsCode'] = """for (const item of items) {
-  if (item.binary && item.binary.data) {
-    item.binary.data.mimeType = 'video/mp4';
-    item.binary.data.fileName = item.binary.data.fileName || 'video.mp4';
+        p['jsCode'] = """const url = $('NCA 최종 결과').first().json.video_url;
+
+const response = await this.helpers.httpRequest({
+  method: 'GET',
+  url: url,
+  encoding: 'arraybuffer',
+  json: false,
+  returnFullResponse: true,
+});
+
+const binaryData = await this.helpers.prepareBinaryData(
+  Buffer.from(response.body),
+  'video.mp4',
+  'video/mp4'
+);
+
+return [{
+  json: $input.first().json,
+  binary: {
+    data: binaryData
   }
-}
-return items;"""
-        print("  Set MIME 타입 수정: video/mp4")
+}];"""
+        print("  Set MIME 타입 수정: httpRequest + prepareBinaryData (video/mp4)")
 
     elif 'BGM 생성' in name and 'jsonBody' in p:
         old = p['jsonBody']
