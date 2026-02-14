@@ -179,10 +179,14 @@ for (let i = 0; i < segments.length; i++) {
     const partEnd = currentTime + dur - XFADE_DUR;
     const partDur = partEnd - partStart;
     let t = partStart;
+    const MIN_GROUP_DUR = 2.0;
+    // Calculate how many chunks per group to guarantee minimum display time
+    const maxGroups = Math.max(1, Math.floor(partDur / MIN_GROUP_DUR));
+    const linesPerGroup = Math.max(2, Math.ceil(chunks.length / maxGroups));
     const groups = [];
-    for (let ci = 0; ci < chunks.length; ci += 2) {
-        const hasNext = ci + 1 < chunks.length;
-        groups.push(hasNext ? chunks[ci] + '\\N' + chunks[ci + 1] : chunks[ci]);
+    for (let ci = 0; ci < chunks.length; ci += linesPerGroup) {
+        const slice = chunks.slice(ci, Math.min(ci + linesPerGroup, chunks.length));
+        groups.push(slice.join('\\N'));
     }
     const groupDur = groups.length > 0 ? partDur / groups.length : partDur;
     for (const grp of groups) {
