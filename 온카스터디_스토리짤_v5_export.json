@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-19T17:30:33.769Z",
+  "updatedAt": "2026-02-19T18:20:46.900Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -197,7 +197,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 참조 이미지 URL (캐릭터 일관성)\nconst refResults = $('참조 이미지 결과').all();\nconst refA_url = refResults[0]?.json?.images?.[0]?.url || '';\nconst refB_url = refResults[1]?.json?.images?.[0]?.url || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || 'A';\n  const isABScene = (scene.image_prompt || '').includes('sitting next to');\n\n  // Veo3용 프롬프트: 이미지 프롬프트 + 대사 포함 (립싱크용)\n  // 큰따옴표 제거 → JSON body 깨짐 방지\n  const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n  const veo3_prompt = cleanImagePrompt +\n    '. The person is naturally speaking in Korean, saying: ' +\n    cleanDialogue +\n    '. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl: (speaker === 'B') ? refB_url : refA_url,\n      imgStrength: isABScene ? 0.85 : 0.5,\n    }\n  };\n});"
+        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 참조 이미지 URL (캐릭터 일관성)\nconst refResults = $('참조 이미지 결과').all();\nconst refA_url = refResults[0]?.json?.images?.[0]?.url || '';\nconst refB_url = refResults[1]?.json?.images?.[0]?.url || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || 'A';\n  const isABScene = (scene.image_prompt || '').includes('two-shot');\n\n  // Veo3용 프롬프트: 이미지 프롬프트 + 대사 포함 (립싱크용)\n  // 큰따옴표 제거 → JSON body 깨짐 방지\n  const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n  const veo3_prompt = cleanImagePrompt +\n    '. The person is naturally speaking in Korean, saying: ' +\n    cleanDialogue +\n    '. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl: (speaker === 'B') ? refB_url : refA_url,\n      imgStrength: isABScene ? 0.85 : 0.5,\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -286,7 +286,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// NCA 스토리형 숏츠 - Veo3 Fast (audio on) - 가로(16:9) 버전\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\n// === 세그먼트 데이터 수집 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8초 클립\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoResult = $('영상 완료 체크').all()[i]?.json;\n  const videoUrl = videoResult?.video?.url || '';\n  const dialogueText = $('세그먼트 분리').all()[i]?.json?.dialogue || '';\n\n  if (!videoUrl) throw new Error('세그먼트 ' + (i+1) + ' 영상 URL 없음');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT 자막 생성 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (영상+오디오 concat만, drawtext 없음) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// 오디오 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
+        "jsCode": "// NCA 스토리형 숏츠 - Veo3 Fast (audio on) - 가로(16:9) 버전\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\n// === 세그먼트 데이터 수집 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8초 클립\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoResult = $('영상 완료 체크').all()[i]?.json;\n  let videoUrl = '';\n  if (videoResult?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(videoResult.data.resultJson);\n      videoUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { videoUrl = ''; }\n  }\n  if (!videoUrl) videoUrl = videoResult?.video?.url || videoResult?.data?.url || '';\n  const dialogueText = $('세그먼트 분리').all()[i]?.json?.dialogue || '';\n\n  if (!videoUrl) throw new Error('세그먼트 ' + (i+1) + ' 영상 URL 없음');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT 자막 생성 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (영상+오디오 concat만, drawtext 없음) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// 오디오 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -449,12 +449,12 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://queue.fal.run/fal-ai/veo3/fast/image-to-video",
+        "url": "https://api.kie.ai/api/v1/veo/generate",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"image_url\": \"{{ $json.images[0].url }}\",\n  \"prompt\": \"{{ $('세그먼트 분리').item.json.veo3_prompt }}\",\n  \"duration\": \"8s\",\n  \"aspect_ratio\": \"16:9\",\n  \"resolution\": \"1080p\",\n  \"generate_audio\": true\n}",
+        "jsonBody": "={\n  \"prompt\": \"{{ $('세그먼트 분리').item.json.veo3_prompt }}\",\n  \"imageUrls\": [\"{{ $json.images[0].url }}\"],\n  \"model\": \"veo3_fast\",\n  \"generationType\": \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n  \"aspect_ratio\": \"16:9\",\n  \"enableTranslation\": false\n}",
         "options": {
           "timeout": 30000
         }
@@ -469,8 +469,8 @@
       "name": "영상 변환",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "PuGtmUb23v3qkRug",
-          "name": "fal.ai API Key"
+          "id": "l77M6Gy6p1bUA86P",
+          "name": "Kie.ai API Key"
         }
       }
     },
@@ -490,12 +490,13 @@
     },
     {
       "parameters": {
-        "url": "={{ $('영상 변환').item.json.response_url }}",
+        "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('영상 변환').item.json.data.taskId }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {
           "timeout": 30000
-        }
+        },
+        "method": "GET"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -507,8 +508,8 @@
       "name": "영상 변환 결과",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "PuGtmUb23v3qkRug",
-          "name": "fal.ai API Key"
+          "id": "l77M6Gy6p1bUA86P",
+          "name": "Kie.ai API Key"
         }
       },
       "onError": "continueRegularOutput"
@@ -524,13 +525,12 @@
           },
           "conditions": [
             {
-              "id": "kling_check_condition",
-              "leftValue": "={{ $json.video.url }}",
-              "rightValue": "",
+              "id": "kie_check_condition",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "success",
               "operator": {
                 "type": "string",
-                "operation": "exists",
-                "singleValue": true
+                "operation": "equals"
               }
             }
           ],
@@ -4903,124 +4903,11 @@
           "item": 0
         }
       }
-    ],
-    "When clicking ‘Execute workflow’": [
-      {
-        "json": {},
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "AI 콘텐츠 생성": [
-      {
-        "json": {
-          "content": {
-            "parts": [
-              {
-                "text": "{\n  \"hook_title\": \"<y>99%</y>가 모르는 <y>먹튀</y> 사이트 판별법!\",\n  \"scenes\": [\n    {\n      \"dialogue\": \"요즘 젊은 것들은 말이야, 뭘 모르고 덤빈다니까. 특히 이런 데서는 말이야.\",\n      \"image_prompt\": \"elderly Korean grandfather, 72 years old, silver white hair neatly combed back, kind wrinkled face with warm smile, wearing a clean beige cardigan over white collared shirt, reading glasses hanging on neck chain, slim build, wise gentle eyes, slightly tanned skin, speaking with conviction pointing finger, cozy traditional Korean study room with wooden bookshelves and warm lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue\": \"에이~ 할배 또 시작이네. 요즘은 세상이 어떤데 그러세요.\",\n      \"image_prompt\": \"young Korean woman, 24 years old, long straight black hair with subtle brown highlights, bright expressive eyes, light natural makeup, wearing trendy oversized cream knit sweater, small gold hoop earrings, holding smartphone, cheerful energetic expression, fair skin, playfully dismissive expression, modern bright Korean cafe with large windows and plants, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    },\n    {\n      \"dialogue\": \"흥! 내가 40년을 이 바닥에서 굴렀는데! 이걸 보고도 모르겠느냐? 사이트 주소를 봐라, 주소를!\",\n      \"image_prompt\": \"elderly Korean grandfather, 72 years old, silver white hair neatly combed back, kind wrinkled face with warm smile, wearing a clean beige cardigan over white collared shirt, reading glasses hanging on neck chain, slim build, wise gentle eyes, slightly tanned skin, speaking emphatically gesturing towards an imaginary screen, cozy traditional Korean study room with wooden bookshelves and warm lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue\": \"주소요? 그러니까... .com 뒤에 뭐가 이상하게 붙어있거나, 너무 길면 의심하라는 말씀이시죠? 어? 할배 또 맞네?\",\n      \"image_prompt\": \"young Korean woman, 24 years old, long straight black hair with subtle brown highlights, bright expressive eyes, light natural makeup, wearing trendy oversized cream knit sweater, small gold hoop earrings, holding smartphone, cheerful energetic expression, fair skin, surprised and impressed expression, modern bright Korean cafe with large windows and plants, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    },\n    {\n      \"dialogue\": \"그렇지! 요즘은 이런 수상한 주소가 제일 흔해. 이걸로 먹튀 당하는 사람이 얼마나 많은 줄 알아?\",\n      \"image_prompt\": \"elderly Korean grandfather, 72 years old, silver white hair neatly combed back, kind wrinkled face with warm smile, wearing a clean beige cardigan over white collared shirt, reading glasses hanging on neck chain, slim build, wise gentle eyes, slightly tanned skin, nodding with satisfaction, cozy traditional Korean study room with wooden bookshelves and warm lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue\": \"정말요? 할배 말씀 들으니까 뭔가 딱 와닿는데요! 이런 자세한 정보는 온카스터디 같은 곳에서 미리 확인하는 게 좋겠네요.\",\n      \"image_prompt\": \"elderly Korean grandfather, 72 years old, silver white hair neatly combed back, kind wrinkled face with warm smile, wearing a clean beige cardigan over white collared shirt, reading glasses hanging on neck chain, slim build, wise gentle eyes, slightly tanned skin sitting next to young Korean woman, 24 years old, long straight black hair with subtle brown highlights, bright expressive eyes, light natural makeup, wearing trendy oversized cream knit sweater, small gold hoop earrings, holding smartphone, cheerful energetic expression, fair skin, warm family atmosphere, warm living room with traditional Korean elements and modern furniture, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"AB\"\n    }\n  ],\n  \"Subject\": \"제목 #온카스터디 #먹튀검증 #안전놀이터 #카지노\",\n  \"Caption\": \"설명문 #먹튀사이트 #안전사이트 #카지노정보 #온카스터디\",\n  \"Comment\": \"🎓 온카스터디에서 안전한 놀이터 정보를 확인하세요!\",\n  \"BGM_prompt\": \"warm friendly conversation light acoustic background music\"\n}"
-              }
-            ],
-            "role": "model"
-          },
-          "finishReason": "STOP",
-          "index": 0
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "콘텐츠 파싱": [
-      {
-        "json": {
-          "hook_title": "<y>99%</y>가 모르는 <y>먹튀</y> 사이트 판별법!",
-          "scenes": [
-            {
-              "dialogue": "요즘 젊은 것들은 말이야, 뭘 모르고 덤빈다니까. 특히 이런 데서는 말이야.",
-              "image_prompt": "elderly Korean grandfather, 72 years old, silver white hair neatly combed back, kind wrinkled face with warm smile, wearing a clean beige cardigan over white collared shirt, reading glasses hanging on neck chain, slim build, wise gentle eyes, slightly tanned skin, speaking with conviction pointing finger, cozy traditional Korean study room with wooden bookshelves and warm lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-              "speaker": "A"
-            },
-            {
-              "dialogue": "에이~ 할배 또 시작이네. 요즘은 세상이 어떤데 그러세요.",
-              "image_prompt": "young Korean woman, 24 years old, long straight black hair with subtle brown highlights, bright expressive eyes, light natural makeup, wearing trendy oversized cream knit sweater, small gold hoop earrings, holding smartphone, cheerful energetic expression, fair skin, playfully dismissive expression, modern bright Korean cafe with large windows and plants, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-              "speaker": "B"
-            },
-            {
-              "dialogue": "흥! 내가 40년을 이 바닥에서 굴렀는데! 이걸 보고도 모르겠느냐? 사이트 주소를 봐라, 주소를!",
-              "image_prompt": "elderly Korean grandfather, 72 years old, silver white hair neatly combed back, kind wrinkled face with warm smile, wearing a clean beige cardigan over white collared shirt, reading glasses hanging on neck chain, slim build, wise gentle eyes, slightly tanned skin, speaking emphatically gesturing towards an imaginary screen, cozy traditional Korean study room with wooden bookshelves and warm lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-              "speaker": "A"
-            },
-            {
-              "dialogue": "주소요? 그러니까... .com 뒤에 뭐가 이상하게 붙어있거나, 너무 길면 의심하라는 말씀이시죠? 어? 할배 또 맞네?",
-              "image_prompt": "young Korean woman, 24 years old, long straight black hair with subtle brown highlights, bright expressive eyes, light natural makeup, wearing trendy oversized cream knit sweater, small gold hoop earrings, holding smartphone, cheerful energetic expression, fair skin, surprised and impressed expression, modern bright Korean cafe with large windows and plants, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-              "speaker": "B"
-            },
-            {
-              "dialogue": "그렇지! 요즘은 이런 수상한 주소가 제일 흔해. 이걸로 먹튀 당하는 사람이 얼마나 많은 줄 알아?",
-              "image_prompt": "elderly Korean grandfather, 72 years old, silver white hair neatly combed back, kind wrinkled face with warm smile, wearing a clean beige cardigan over white collared shirt, reading glasses hanging on neck chain, slim build, wise gentle eyes, slightly tanned skin, nodding with satisfaction, cozy traditional Korean study room with wooden bookshelves and warm lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-              "speaker": "A"
-            },
-            {
-              "dialogue": "정말요? 할배 말씀 들으니까 뭔가 딱 와닿는데요! 이런 자세한 정보는 온카스터디 같은 곳에서 미리 확인하는 게 좋겠네요.",
-              "image_prompt": "elderly Korean grandfather, 72 years old, silver white hair neatly combed back, kind wrinkled face with warm smile, wearing a clean beige cardigan over white collared shirt, reading glasses hanging on neck chain, slim build, wise gentle eyes, slightly tanned skin sitting next to young Korean woman, 24 years old, long straight black hair with subtle brown highlights, bright expressive eyes, light natural makeup, wearing trendy oversized cream knit sweater, small gold hoop earrings, holding smartphone, cheerful energetic expression, fair skin, warm family atmosphere, warm living room with traditional Korean elements and modern furniture, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-              "speaker": "AB"
-            }
-          ],
-          "Subject": "제목 #온카스터디 #먹튀검증 #안전놀이터 #카지노",
-          "Caption": "설명문 #먹튀사이트 #안전사이트 #카지노정보 #온카스터디",
-          "Comment": "🎓 온카스터디에서 안전한 놀이터 정보를 확인하세요!",
-          "BGM_prompt": "warm friendly conversation light acoustic background music",
-          "fullDialogue": "요즘 젊은 것들은 말이야, 뭘 모르고 덤빈다니까. 특히 이런 데서는 말이야. 에이~ 할배 또 시작이네. 요즘은 세상이 어떤데 그러세요. 흥! 내가 40년을 이 바닥에서 굴렀는데! 이걸 보고도 모르겠느냐? 사이트 주소를 봐라, 주소를! 주소요? 그러니까... .com 뒤에 뭐가 이상하게 붙어있거나, 너무 길면 의심하라는 말씀이시죠? 어? 할배 또 맞네? 그렇지! 요즘은 이런 수상한 주소가 제일 흔해. 이걸로 먹튀 당하는 사람이 얼마나 많은 줄 알아? 정말요? 할배 말씀 들으니까 뭔가 딱 와닿는데요! 이런 자세한 정보는 온카스터디 같은 곳에서 미리 확인하는 게 좋겠네요.",
-          "segmentCount": 6,
-          "Status": "준비",
-          "generatedAt": "2026-02-19T14:28:38.935Z"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "시트 기록": [
-      {
-        "json": {
-          "Subject": "제목 #온카스터디 #먹튀검증 #안전놀이터 #카지노",
-          "Hook": "<y>99%</y>가 모르는 <y>먹튀</y> 사이트 판별법!",
-          "Narration": "요즘 젊은 것들은 말이야, 뭘 모르고 덤빈다니까. 특히 이런 데서는 말이야. 에이~ 할배 또 시작이네. 요즘은 세상이 어떤데 그러세요. 흥! 내가 40년을 이 바닥에서 굴렀는데! 이걸 보고도 모르겠느냐? 사이트 주소를 봐라, 주소를! 주소요? 그러니까... .com 뒤에 뭐가 이상하게 붙어있거나, 너무 길면 의심하라는 말씀이시죠? 어? 할배 또 맞네? 그렇지! 요즘은 이런 수상한 주소가 제일 흔해. 이걸로 먹튀 당하는 사람이 얼마나 많은 줄 알아? 정말요? 할배 말씀 들으니까 뭔가 딱 와닿는데요! 이런 자세한 정보는 온카스터디 같은 곳에서 미리 확인하는 게 좋겠네요.",
-          "Caption": "설명문 #먹튀사이트 #안전사이트 #카지노정보 #온카스터디",
-          "댓글": "🎓 온카스터디에서 안전한 놀이터 정보를 확인하세요!",
-          "BGM prompt": "warm friendly conversation light acoustic background music",
-          "Status": "준비"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "참조 이미지 프롬프트": [
-      {
-        "json": {
-          "prompt": "elderly Korean grandfather, 72 years old, silver white hair neatly combed back, kind wrinkled face with warm smile, wearing a clean beige cardigan over white collared shirt, reading glasses hanging on neck chain, slim build, wise gentle eyes, slightly tanned skin, neutral standing pose looking directly at camera, cozy traditional Korean study room with wooden bookshelves and warm lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "speaker": "A"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "prompt": "young Korean woman, 24 years old, long straight black hair with subtle brown highlights, bright expressive eyes, light natural makeup, wearing trendy oversized cream knit sweater, small gold hoop earrings, holding smartphone, cheerful energetic expression, fair skin, neutral standing pose looking directly at camera, modern bright Korean cafe with large windows and plants, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "speaker": "B"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
     ]
   },
-  "versionId": "48cf055b-3ece-4d18-b14c-7450de1e7b9b",
-  "activeVersionId": "48cf055b-3ece-4d18-b14c-7450de1e7b9b",
-  "versionCounter": 165,
+  "versionId": "6417d7db-85ee-45f7-b953-7e3d1ffad9d9",
+  "activeVersionId": "6417d7db-85ee-45f7-b953-7e3d1ffad9d9",
+  "versionCounter": 172,
   "triggerCount": 1,
   "shared": [
     {
@@ -5079,9 +4966,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-19T17:30:33.770Z",
-    "createdAt": "2026-02-19T17:30:33.770Z",
-    "versionId": "48cf055b-3ece-4d18-b14c-7450de1e7b9b",
+    "updatedAt": "2026-02-19T18:20:46.901Z",
+    "createdAt": "2026-02-19T18:20:46.901Z",
+    "versionId": "6417d7db-85ee-45f7-b953-7e3d1ffad9d9",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -5274,7 +5161,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 참조 이미지 URL (캐릭터 일관성)\nconst refResults = $('참조 이미지 결과').all();\nconst refA_url = refResults[0]?.json?.images?.[0]?.url || '';\nconst refB_url = refResults[1]?.json?.images?.[0]?.url || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || 'A';\n  const isABScene = (scene.image_prompt || '').includes('sitting next to');\n\n  // Veo3용 프롬프트: 이미지 프롬프트 + 대사 포함 (립싱크용)\n  // 큰따옴표 제거 → JSON body 깨짐 방지\n  const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n  const veo3_prompt = cleanImagePrompt +\n    '. The person is naturally speaking in Korean, saying: ' +\n    cleanDialogue +\n    '. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl: (speaker === 'B') ? refB_url : refA_url,\n      imgStrength: isABScene ? 0.85 : 0.5,\n    }\n  };\n});"
+          "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 참조 이미지 URL (캐릭터 일관성)\nconst refResults = $('참조 이미지 결과').all();\nconst refA_url = refResults[0]?.json?.images?.[0]?.url || '';\nconst refB_url = refResults[1]?.json?.images?.[0]?.url || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || 'A';\n  const isABScene = (scene.image_prompt || '').includes('two-shot');\n\n  // Veo3용 프롬프트: 이미지 프롬프트 + 대사 포함 (립싱크용)\n  // 큰따옴표 제거 → JSON body 깨짐 방지\n  const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n  const veo3_prompt = cleanImagePrompt +\n    '. The person is naturally speaking in Korean, saying: ' +\n    cleanDialogue +\n    '. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl: (speaker === 'B') ? refB_url : refA_url,\n      imgStrength: isABScene ? 0.85 : 0.5,\n    }\n  };\n});"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -5363,7 +5250,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// NCA 스토리형 숏츠 - Veo3 Fast (audio on) - 가로(16:9) 버전\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\n// === 세그먼트 데이터 수집 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8초 클립\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoResult = $('영상 완료 체크').all()[i]?.json;\n  const videoUrl = videoResult?.video?.url || '';\n  const dialogueText = $('세그먼트 분리').all()[i]?.json?.dialogue || '';\n\n  if (!videoUrl) throw new Error('세그먼트 ' + (i+1) + ' 영상 URL 없음');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT 자막 생성 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (영상+오디오 concat만, drawtext 없음) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// 오디오 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
+          "jsCode": "// NCA 스토리형 숏츠 - Veo3 Fast (audio on) - 가로(16:9) 버전\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\n// === 세그먼트 데이터 수집 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8초 클립\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoResult = $('영상 완료 체크').all()[i]?.json;\n  let videoUrl = '';\n  if (videoResult?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(videoResult.data.resultJson);\n      videoUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { videoUrl = ''; }\n  }\n  if (!videoUrl) videoUrl = videoResult?.video?.url || videoResult?.data?.url || '';\n  const dialogueText = $('세그먼트 분리').all()[i]?.json?.dialogue || '';\n\n  if (!videoUrl) throw new Error('세그먼트 ' + (i+1) + ' 영상 URL 없음');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT 자막 생성 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (영상+오디오 concat만, drawtext 없음) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// 오디오 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -5526,12 +5413,12 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "https://queue.fal.run/fal-ai/veo3/fast/image-to-video",
+          "url": "https://api.kie.ai/api/v1/veo/generate",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={\n  \"image_url\": \"{{ $json.images[0].url }}\",\n  \"prompt\": \"{{ $('세그먼트 분리').item.json.veo3_prompt }}\",\n  \"duration\": \"8s\",\n  \"aspect_ratio\": \"16:9\",\n  \"resolution\": \"1080p\",\n  \"generate_audio\": true\n}",
+          "jsonBody": "={\n  \"prompt\": \"{{ $('세그먼트 분리').item.json.veo3_prompt }}\",\n  \"imageUrls\": [\"{{ $json.images[0].url }}\"],\n  \"model\": \"veo3_fast\",\n  \"generationType\": \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n  \"aspect_ratio\": \"16:9\",\n  \"enableTranslation\": false\n}",
           "options": {
             "timeout": 30000
           }
@@ -5546,8 +5433,8 @@
         "name": "영상 변환",
         "credentials": {
           "httpHeaderAuth": {
-            "id": "PuGtmUb23v3qkRug",
-            "name": "fal.ai API Key"
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
           }
         }
       },
@@ -5567,12 +5454,13 @@
       },
       {
         "parameters": {
-          "url": "={{ $('영상 변환').item.json.response_url }}",
+          "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('영상 변환').item.json.data.taskId }}",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpHeaderAuth",
           "options": {
             "timeout": 30000
-          }
+          },
+          "method": "GET"
         },
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
@@ -5584,8 +5472,8 @@
         "name": "영상 변환 결과",
         "credentials": {
           "httpHeaderAuth": {
-            "id": "PuGtmUb23v3qkRug",
-            "name": "fal.ai API Key"
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
           }
         },
         "onError": "continueRegularOutput"
@@ -5601,13 +5489,12 @@
             },
             "conditions": [
               {
-                "id": "kling_check_condition",
-                "leftValue": "={{ $json.video.url }}",
-                "rightValue": "",
+                "id": "kie_check_condition",
+                "leftValue": "={{ $json.data.state }}",
+                "rightValue": "success",
                 "operator": {
                   "type": "string",
-                  "operation": "exists",
-                  "singleValue": true
+                  "operation": "equals"
                 }
               }
             ],
@@ -6022,10 +5909,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-19T17:30:33.864Z",
-        "id": 450,
+        "createdAt": "2026-02-19T18:20:46.973Z",
+        "id": 452,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "48cf055b-3ece-4d18-b14c-7450de1e7b9b",
+        "versionId": "6417d7db-85ee-45f7-b953-7e3d1ffad9d9",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
