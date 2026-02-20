@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-20T14:18:12.780Z",
+  "updatedAt": "2026-02-20T17:32:40.738Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -603,7 +603,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n  const veo3Prompt = data.veo3_prompt || '';\n  const imageUrl = data.images?.[0]?.url || '';\n\n  // 큰따옴표, 백슬래시, 줄바꿈 등 JSON 깨뜨리는 문자 제거\n  const safePrompt = veo3Prompt.replace(/[\\\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\n\n  return {\n    json: {\n      ...data,\n      veo3Body: {\n        prompt: safePrompt,\n        imageUrls: [imageUrl],\n        model: \"veo3_fast\",\n        generationType: \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n        aspect_ratio: \"16:9\",\n        enableTranslation: false\n      }\n    }\n  };\n});"
+        "jsCode": "const items = $input.all();\nconst segments = $('세그먼트 분리').all();\n\nreturn items.map((item, i) => {\n  const data = item.json;\n  const seg = segments[i]?.json || {};\n  const veo3Prompt = seg.veo3_prompt || '';\n  const imageUrl = data.images?.[0]?.url || '';\n\n  // 큰따옴표, 백슬래시, 줄바꿈 등 JSON 깨뜨리는 문자 제거\n  const safePrompt = veo3Prompt.replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\n\n  if (!safePrompt) {\n    throw new Error('veo3_prompt 없음! segment ' + i + ', keys: ' + Object.keys(seg).join(','));\n  }\n  if (!imageUrl) {\n    throw new Error('imageUrl 없음! item ' + i);\n  }\n\n  return {\n    json: {\n      ...data,\n      veo3Body: {\n        prompt: safePrompt,\n        imageUrls: [imageUrl],\n        model: \"veo3_fast\",\n        generationType: \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n        aspect_ratio: \"16:9\",\n        enableTranslation: false\n      }\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -5119,71 +5119,6 @@
         }
       }
     ],
-    "이미지 결과": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "2e91e60553528473b0278de415d93a2b",
-            "model": "nano-banana-pro",
-            "state": "waiting",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": null,
-            "completeTime": null,
-            "createTime": 1771596563216
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
-            "model": "nano-banana-pro",
-            "state": "waiting",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": null,
-            "completeTime": null,
-            "createTime": 1771596563226
-          }
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
-            "model": "nano-banana-pro",
-            "state": "success",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": 104,
-            "completeTime": 1771596667827,
-            "createTime": 1771596563141
-          }
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      }
-    ],
     "이미지 집계": [
       {
         "json": {
@@ -5217,11 +5152,362 @@
           }
         ]
       }
+    ],
+    "이미지 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "2e91e60553528473b0278de415d93a2b",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 225,
+            "completeTime": 1771596788301,
+            "createTime": 1771596563216
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 232,
+            "completeTime": 1771596795141,
+            "createTime": 1771596563226
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 104,
+            "completeTime": 1771596667827,
+            "createTime": 1771596563141
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "영상 변환": [
+      {
+        "json": {
+          "code": 422,
+          "msg": "Please enter prompt",
+          "data": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 422,
+          "msg": "Please enter prompt",
+          "data": null
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 422,
+          "msg": "Please enter prompt",
+          "data": null
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "이미지 URL 추출": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "2e91e60553528473b0278de415d93a2b",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 225,
+            "completeTime": 1771596788301,
+            "createTime": 1771596563216
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png"
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 232,
+            "completeTime": 1771596795141,
+            "createTime": 1771596563226
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png"
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 104,
+            "completeTime": 1771596667827,
+            "createTime": 1771596563141
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png"
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "영상 변환 준비": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "2e91e60553528473b0278de415d93a2b",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 225,
+            "completeTime": 1771596788301,
+            "createTime": 1771596563216
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png"
+            }
+          ],
+          "veo3Body": {
+            "prompt": "",
+            "imageUrls": [
+              "https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png"
+            ],
+            "model": "veo3_fast",
+            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
+            "aspect_ratio": "16:9",
+            "enableTranslation": false
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 232,
+            "completeTime": 1771596795141,
+            "createTime": 1771596563226
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png"
+            }
+          ],
+          "veo3Body": {
+            "prompt": "",
+            "imageUrls": [
+              "https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png"
+            ],
+            "model": "veo3_fast",
+            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
+            "aspect_ratio": "16:9",
+            "enableTranslation": false
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 104,
+            "completeTime": 1771596667827,
+            "createTime": 1771596563141
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png"
+            }
+          ],
+          "veo3Body": {
+            "prompt": "",
+            "imageUrls": [
+              "https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png"
+            ],
+            "model": "veo3_fast",
+            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
+            "aspect_ratio": "16:9",
+            "enableTranslation": false
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "영상 변환 대기": [
+      {
+        "json": {
+          "code": 422,
+          "msg": "Please enter prompt",
+          "data": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 422,
+          "msg": "Please enter prompt",
+          "data": null
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 422,
+          "msg": "Please enter prompt",
+          "data": null
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "영상 변환 결과": [
+      {
+        "json": {
+          "code": 422,
+          "msg": "Record not found for taskId: ",
+          "data": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 422,
+          "msg": "Record not found for taskId: ",
+          "data": null
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 422,
+          "msg": "Record not found for taskId: ",
+          "data": null
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
     ]
   },
-  "versionId": "b964ca2a-dea6-47b5-991f-4c15912d1f9d",
-  "activeVersionId": "b964ca2a-dea6-47b5-991f-4c15912d1f9d",
-  "versionCounter": 325,
+  "versionId": "aee9dde3-9ec7-4e68-b0a5-422c1b443c9d",
+  "activeVersionId": "aee9dde3-9ec7-4e68-b0a5-422c1b443c9d",
+  "versionCounter": 331,
   "triggerCount": 1,
   "shared": [
     {
@@ -5246,7 +5532,7 @@
             "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
             "projectId": "W6LETsSnBzw4J5Aa",
             "user": {
-              "updatedAt": "2026-02-20T14:08:46.014Z",
+              "updatedAt": "2026-02-20T15:34:19.675Z",
               "createdAt": "2026-02-07T19:04:09.331Z",
               "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
               "email": "hatihoro15@gmail.com",
@@ -5270,7 +5556,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-02-19",
+              "lastActiveAt": "2026-02-20",
               "isPending": false
             }
           }
@@ -5280,9 +5566,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-20T14:18:12.781Z",
-    "createdAt": "2026-02-20T14:18:12.781Z",
-    "versionId": "b964ca2a-dea6-47b5-991f-4c15912d1f9d",
+    "updatedAt": "2026-02-20T17:32:40.739Z",
+    "createdAt": "2026-02-20T17:32:40.739Z",
+    "versionId": "aee9dde3-9ec7-4e68-b0a5-422c1b443c9d",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -5881,7 +6167,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n  const veo3Prompt = data.veo3_prompt || '';\n  const imageUrl = data.images?.[0]?.url || '';\n\n  // 큰따옴표, 백슬래시, 줄바꿈 등 JSON 깨뜨리는 문자 제거\n  const safePrompt = veo3Prompt.replace(/[\\\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\n\n  return {\n    json: {\n      ...data,\n      veo3Body: {\n        prompt: safePrompt,\n        imageUrls: [imageUrl],\n        model: \"veo3_fast\",\n        generationType: \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n        aspect_ratio: \"16:9\",\n        enableTranslation: false\n      }\n    }\n  };\n});"
+          "jsCode": "const items = $input.all();\nconst segments = $('세그먼트 분리').all();\n\nreturn items.map((item, i) => {\n  const data = item.json;\n  const seg = segments[i]?.json || {};\n  const veo3Prompt = seg.veo3_prompt || '';\n  const imageUrl = data.images?.[0]?.url || '';\n\n  // 큰따옴표, 백슬래시, 줄바꿈 등 JSON 깨뜨리는 문자 제거\n  const safePrompt = veo3Prompt.replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\n\n  if (!safePrompt) {\n    throw new Error('veo3_prompt 없음! segment ' + i + ', keys: ' + Object.keys(seg).join(','));\n  }\n  if (!imageUrl) {\n    throw new Error('imageUrl 없음! item ' + i);\n  }\n\n  return {\n    json: {\n      ...data,\n      veo3Body: {\n        prompt: safePrompt,\n        imageUrls: [imageUrl],\n        model: \"veo3_fast\",\n        generationType: \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n        aspect_ratio: \"16:9\",\n        enableTranslation: false\n      }\n    }\n  };\n});"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -6155,10 +6441,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-20T14:18:12.855Z",
-        "id": 474,
+        "createdAt": "2026-02-20T17:32:40.831Z",
+        "id": 475,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "b964ca2a-dea6-47b5-991f-4c15912d1f9d",
+        "versionId": "aee9dde3-9ec7-4e68-b0a5-422c1b443c9d",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
