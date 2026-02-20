@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-20T06:07:38.611Z",
+  "updatedAt": "2026-02-20T06:43:37.813Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -286,7 +286,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// NCA 스토리형 숏츠 - Veo3 Fast (audio on) - 가로(16:9) 버전\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\n// === 세그먼트 데이터 수집 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8초 클립\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoResult = $('영상 완료 체크').all()[i]?.json;\n  let videoUrl = '';\n  if (videoResult?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(videoResult.data.resultJson);\n      videoUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { videoUrl = ''; }\n  }\n  if (!videoUrl) videoUrl = videoResult?.video?.url || videoResult?.data?.url || '';\n  const dialogueText = $('세그먼트 분리').all()[i]?.json?.dialogue || '';\n\n  if (!videoUrl) throw new Error('세그먼트 ' + (i+1) + ' 영상 URL 없음');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT 자막 생성 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (영상+오디오 concat만, drawtext 없음) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// 오디오 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
+        "jsCode": "// NCA 스토리형 숏츠 - Veo3 Fast (audio on) - 가로(16:9) 버전\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\n// === 세그먼트 데이터 수집 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8초 클립\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoResult = $('영상 완료 체크').all()[i]?.json;\n  let videoUrl = '';\n  // Kie.ai Veo3 응답: data.response.resultUrls\n  if (videoResult?.data?.response?.resultUrls) {\n    videoUrl = videoResult.data.response.resultUrls[0] || '';\n  }\n  if (!videoUrl && videoResult?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(videoResult.data.resultJson);\n      videoUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { videoUrl = ''; }\n  }\n  if (!videoUrl) videoUrl = videoResult?.video?.url || videoResult?.data?.url || '';\n  const dialogueText = $('세그먼트 분리').all()[i]?.json?.dialogue || '';\n\n  if (!videoUrl) throw new Error('세그먼트 ' + (i+1) + ' 영상 URL 없음');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT 자막 생성 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (영상+오디오 concat만, drawtext 없음) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// 오디오 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -490,7 +490,7 @@
     },
     {
       "parameters": {
-        "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('영상 변환').item.json.data.taskId }}",
+        "url": "=https://api.kie.ai/api/v1/veo/record-info?taskId={{ $('영상 변환').item.json.data.taskId }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "options": {
@@ -519,22 +519,23 @@
           "options": {
             "caseSensitive": true,
             "leftValue": "",
-            "typeValidation": "strict",
+            "typeValidation": "loose",
             "version": 2
           },
           "conditions": [
             {
-              "id": "kie_check_condition",
-              "leftValue": "={{ $json.data.state }}",
-              "rightValue": "success",
+              "id": "veo3_check",
+              "leftValue": "={{ $json.data.successFlag }}",
+              "rightValue": 1,
               "operator": {
-                "type": "string",
+                "type": "number",
                 "operation": "equals"
               }
             }
           ],
           "combinator": "and"
         },
+        "looseTypeValidation": true,
         "options": {}
       },
       "type": "n8n-nodes-base.if",
@@ -655,7 +656,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $input.first().json;\nlet imageUrl = '';\n\nif (data?.data?.resultJson) {\n  try {\n    const parsed = JSON.parse(data.data.resultJson);\n    imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n  } catch(e) {\n    imageUrl = '';\n  }\n}\n\nif (!imageUrl) {\n  throw new Error('이미지 URL 추출 실패: ' + JSON.stringify(data).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    ...data,\n    images: [{ url: imageUrl }]\n  }\n}];"
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n  let imageUrl = '';\n  \n  if (data?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(data.data.resultJson);\n      imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { imageUrl = ''; }\n  }\n  \n  if (!imageUrl) {\n    throw new Error('이미지 URL 추출 실패: ' + JSON.stringify(data).substring(0, 500));\n  }\n  \n  return { json: { ...data, images: [{ url: imageUrl }] } };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -665,53 +666,6 @@
       ],
       "id": "nano_url_extract",
       "name": "이미지 URL 추출"
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "img_check",
-              "leftValue": "={{ $json.data.state }}",
-              "rightValue": "success",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
-      "position": [
-        976,
-        912
-      ],
-      "id": "img_check_01",
-      "name": "이미지 완료 체크"
-    },
-    {
-      "parameters": {
-        "amount": 30
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        1344,
-        944
-      ],
-      "id": "img_rewait_01",
-      "name": "이미지 재대기",
-      "webhookId": "img-rewait-01"
     }
   ],
   "connections": {
@@ -1006,23 +960,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "이미지 완료 체크": {
-      "main": [
-        [],
-        [
-          {
-            "node": "이미지 재대기",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "이미지 재대기": {
-      "main": [
-        []
       ]
     }
   },
@@ -5198,9 +5135,6 @@
             "taskId": "ca38782d14785fbf7397d457206fddd6",
             "recordId": "ca38782d14785fbf7397d457206fddd6"
           }
-        },
-        "pairedItem": {
-          "item": 0
         }
       },
       {
@@ -5211,9 +5145,6 @@
             "taskId": "c6298004d1b3d992868d05f393c4e913",
             "recordId": "c6298004d1b3d992868d05f393c4e913"
           }
-        },
-        "pairedItem": {
-          "item": 1
         }
       },
       {
@@ -5224,9 +5155,6 @@
             "taskId": "bc624b22e9a272623a0d08abee8d5b4d",
             "recordId": "bc624b22e9a272623a0d08abee8d5b4d"
           }
-        },
-        "pairedItem": {
-          "item": 2
         }
       }
     ],
@@ -5321,11 +5249,628 @@
           }
         ]
       }
+    ],
+    "이미지 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "ca38782d14785fbf7397d457206fddd6",
+            "recordId": "ca38782d14785fbf7397d457206fddd6"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "c6298004d1b3d992868d05f393c4e913",
+            "recordId": "c6298004d1b3d992868d05f393c4e913"
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "bc624b22e9a272623a0d08abee8d5b4d",
+            "recordId": "bc624b22e9a272623a0d08abee8d5b4d"
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "이미지 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "ca38782d14785fbf7397d457206fddd6",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610003-cea0hej1bkg.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 152,
+            "completeTime": 1771567611574,
+            "createTime": 1771567459133
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "c6298004d1b3d992868d05f393c4e913",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566759804-qqj9t7d2mel.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610416-3j1td88d402.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 153,
+            "completeTime": 1771567612044,
+            "createTime": 1771567459373
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "bc624b22e9a272623a0d08abee8d5b4d",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567562635-ne3w103lls.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 105,
+            "completeTime": 1771567564266,
+            "createTime": 1771567459138
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "영상 변환": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "af3097b57da81adb408472dfaa3f0d1f"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "d62ede035bd2550fc79f72a80692b36a"
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c"
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "이미지 URL 추출": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "ca38782d14785fbf7397d457206fddd6",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610003-cea0hej1bkg.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 152,
+            "completeTime": 1771567611574,
+            "createTime": 1771567459133
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/images/1771567610003-cea0hej1bkg.png"
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "c6298004d1b3d992868d05f393c4e913",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566759804-qqj9t7d2mel.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610416-3j1td88d402.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 153,
+            "completeTime": 1771567612044,
+            "createTime": 1771567459373
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/images/1771567610416-3j1td88d402.png"
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "bc624b22e9a272623a0d08abee8d5b4d",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567562635-ne3w103lls.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 105,
+            "completeTime": 1771567564266,
+            "createTime": 1771567459138
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/images/1771567562635-ne3w103lls.png"
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "영상 변환 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "af3097b57da81adb408472dfaa3f0d1f"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "d62ede035bd2550fc79f72a80692b36a"
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c"
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "Aggregate": [
+      {
+        "json": {
+          "data": [
+            {
+              "code": 200,
+              "msg": "success",
+              "data": {
+                "taskId": "af3097b57da81adb408472dfaa3f0d1f",
+                "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610003-cea0hej1bkg.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: Bro, 진짜 이거 모르면 100% 후회한다. I'm telling you.. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
+                "response": {
+                  "taskId": "af3097b57da81adb408472dfaa3f0d1f",
+                  "resolution": "720p",
+                  "originUrls": null,
+                  "resultUrls": [
+                    "https://tempfile.aiquickdraw.com/v/af3097b57da81adb408472dfaa3f0d1f_1771568162.mp4"
+                  ],
+                  "hasAudioList": [
+                    true
+                  ],
+                  "seeds": [
+                    78033
+                  ]
+                },
+                "successFlag": 1,
+                "fallbackFlag": false,
+                "completeTime": 1771568164000,
+                "createTime": 1771567819000,
+                "errorCode": null,
+                "errorMessage": null
+              }
+            },
+            {
+              "code": 200,
+              "msg": "success",
+              "data": {
+                "taskId": "d62ede035bd2550fc79f72a80692b36a",
+                "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610416-3j1td88d402.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: Wait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
+                "response": {
+                  "taskId": "d62ede035bd2550fc79f72a80692b36a",
+                  "resolution": "720p",
+                  "originUrls": null,
+                  "resultUrls": [
+                    "https://tempfile.aiquickdraw.com/v/d62ede035bd2550fc79f72a80692b36a_1771567979.mp4"
+                  ],
+                  "hasAudioList": [
+                    true
+                  ],
+                  "seeds": [
+                    88010
+                  ]
+                },
+                "successFlag": 1,
+                "fallbackFlag": false,
+                "completeTime": 1771567981000,
+                "createTime": 1771567819000,
+                "errorCode": null,
+                "errorMessage": null
+              }
+            },
+            {
+              "code": 200,
+              "msg": "success",
+              "data": {
+                "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c",
+                "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567562635-ne3w103lls.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: No way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
+                "response": {
+                  "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c",
+                  "resolution": "720p",
+                  "originUrls": null,
+                  "resultUrls": [
+                    "https://tempfile.aiquickdraw.com/v/6a8b267bd109d9d4b2f6fbbd9a7bc90c_1771567991.mp4"
+                  ],
+                  "hasAudioList": [
+                    true
+                  ],
+                  "seeds": [
+                    97711
+                  ]
+                },
+                "successFlag": 1,
+                "fallbackFlag": false,
+                "completeTime": 1771567993000,
+                "createTime": 1771567819000,
+                "errorCode": null,
+                "errorMessage": null
+              }
+            }
+          ]
+        },
+        "pairedItem": [
+          {
+            "item": 0
+          },
+          {
+            "item": 1
+          },
+          {
+            "item": 2
+          }
+        ]
+      }
+    ],
+    "NCA 데이터 준비": [
+      {
+        "json": {
+          "nca_payload": {
+            "inputs": [
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/v/af3097b57da81adb408472dfaa3f0d1f_1771568162.mp4",
+                "options": []
+              },
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/v/d62ede035bd2550fc79f72a80692b36a_1771567979.mp4",
+                "options": []
+              },
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/v/6a8b267bd109d9d4b2f6fbbd9a7bc90c_1771567991.mp4",
+                "options": []
+              }
+            ],
+            "filters": [
+              {
+                "filter": "[0:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v0];[0:a]atrim=duration=8,asetpts=PTS-STARTPTS[a0];[1:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v1];[1:a]atrim=duration=8,asetpts=PTS-STARTPTS[a1];[2:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v2];[2:a]atrim=duration=8,asetpts=PTS-STARTPTS[a2];[v0][v1][v2]concat=n=3:v=1:a=0[vfinal];[a0][a1][a2]concat=n=3:v=0:a=1[afinal]"
+              }
+            ],
+            "outputs": [
+              {
+                "options": [
+                  {
+                    "option": "-map",
+                    "argument": "[vfinal]"
+                  },
+                  {
+                    "option": "-map",
+                    "argument": "[afinal]"
+                  },
+                  {
+                    "option": "-c:v",
+                    "argument": "libx264"
+                  },
+                  {
+                    "option": "-preset",
+                    "argument": "medium"
+                  },
+                  {
+                    "option": "-crf",
+                    "argument": "18"
+                  },
+                  {
+                    "option": "-c:a",
+                    "argument": "aac"
+                  },
+                  {
+                    "option": "-b:a",
+                    "argument": "256k"
+                  },
+                  {
+                    "option": "-pix_fmt",
+                    "argument": "yuv420p"
+                  },
+                  {
+                    "option": "-movflags",
+                    "argument": "+faststart"
+                  },
+                  {
+                    "option": "-t",
+                    "argument": "24"
+                  }
+                ],
+                "file_name": "story_shorts_final.mp4"
+              }
+            ]
+          },
+          "totalDuration": 24,
+          "srtContent": "1\n00:00:00,000 --> 00:00:08,000\nBro, 진짜 이거 모르면 100% 후회한다. I'm telling you.\n\n2\n00:00:08,000 --> 00:00:16,000\nWait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?\n\n3\n00:00:16,000 --> 00:00:24,000\nNo way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.\n",
+          "segmentCount": 3,
+          "hookTitle": "카지노 <y>안전</y> 체크! 흑형이 알려주는 <y>필수</y> 3가지",
+          "subject": "제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터",
+          "caption": "설명문 #온카스터디 #먹튀검증 #카지노커뮤니티 #안전놀이터",
+          "comment": "🔥 온카스터디에서 더 많은 정보 확인하세요!"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상 변환 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "af3097b57da81adb408472dfaa3f0d1f",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610003-cea0hej1bkg.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: Bro, 진짜 이거 모르면 100% 후회한다. I'm telling you.. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "af3097b57da81adb408472dfaa3f0d1f",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/af3097b57da81adb408472dfaa3f0d1f_1771568162.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                78033
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771568164000,
+            "createTime": 1771567819000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "d62ede035bd2550fc79f72a80692b36a",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610416-3j1td88d402.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: Wait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "d62ede035bd2550fc79f72a80692b36a",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/d62ede035bd2550fc79f72a80692b36a_1771567979.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                88010
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771567981000,
+            "createTime": 1771567819000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567562635-ne3w103lls.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: No way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/6a8b267bd109d9d4b2f6fbbd9a7bc90c_1771567991.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                97711
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771567993000,
+            "createTime": 1771567819000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "NCA 영상 제작": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "4b556080-058b-4ec2-8bcc-096f9e9a2d2e",
+          "message": "success",
+          "pid": 9,
+          "queue_id": 137906192205280,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/4b556080-058b-4ec2-8bcc-096f9e9a2d2e_output_0.mp4"
+            }
+          ],
+          "run_time": 48.298,
+          "total_time": 48.298
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "NCA 제작 대기": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "4b556080-058b-4ec2-8bcc-096f9e9a2d2e",
+          "message": "success",
+          "pid": 9,
+          "queue_id": 137906192205280,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/4b556080-058b-4ec2-8bcc-096f9e9a2d2e_output_0.mp4"
+            }
+          ],
+          "run_time": 48.298,
+          "total_time": 48.298
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "NCA 결과 처리": [
+      {
+        "json": {
+          "final_video_url": "http://76.13.182.180:9000/nca-toolkit/4b556080-058b-4ec2-8bcc-096f9e9a2d2e_output_0.mp4",
+          "url": "http://76.13.182.180:9000/nca-toolkit/4b556080-058b-4ec2-8bcc-096f9e9a2d2e_output_0.mp4",
+          "srtContent": "1\n00:00:00,000 --> 00:00:08,000\nBro, 진짜 이거 모르면 100% 후회한다. I'm telling you.\n\n2\n00:00:08,000 --> 00:00:16,000\nWait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?\n\n3\n00:00:16,000 --> 00:00:24,000\nNo way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.\n",
+          "subject": "제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터",
+          "caption": "설명문 #온카스터디 #먹튀검증 #카지노커뮤니티 #안전놀이터",
+          "comment": "🔥 온카스터디에서 더 많은 정보 확인하세요!"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
     ]
   },
-  "versionId": "b81ca1cf-f50d-4782-90d9-f5b3eefaa4a2",
-  "activeVersionId": "f2b66ac8-57c8-4d0c-ad3e-a8dd838bcc8d",
-  "versionCounter": 248,
+  "versionId": "73b685e0-c4e5-491e-a317-84525c89cebb",
+  "activeVersionId": "58b6a01e-2c3d-4893-b8a1-42b25718f9b3",
+  "versionCounter": 263,
   "triggerCount": 1,
   "shared": [
     {
@@ -5384,9 +5929,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-20T06:04:16.914Z",
-    "createdAt": "2026-02-20T06:04:16.914Z",
-    "versionId": "f2b66ac8-57c8-4d0c-ad3e-a8dd838bcc8d",
+    "updatedAt": "2026-02-20T06:38:30.045Z",
+    "createdAt": "2026-02-20T06:38:30.045Z",
+    "versionId": "58b6a01e-2c3d-4893-b8a1-42b25718f9b3",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -5668,7 +6213,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// NCA 스토리형 숏츠 - Veo3 Fast (audio on) - 가로(16:9) 버전\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\n// === 세그먼트 데이터 수집 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8초 클립\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoResult = $('영상 완료 체크').all()[i]?.json;\n  let videoUrl = '';\n  if (videoResult?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(videoResult.data.resultJson);\n      videoUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { videoUrl = ''; }\n  }\n  if (!videoUrl) videoUrl = videoResult?.video?.url || videoResult?.data?.url || '';\n  const dialogueText = $('세그먼트 분리').all()[i]?.json?.dialogue || '';\n\n  if (!videoUrl) throw new Error('세그먼트 ' + (i+1) + ' 영상 URL 없음');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT 자막 생성 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (영상+오디오 concat만, drawtext 없음) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// 오디오 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
+          "jsCode": "// NCA 스토리형 숏츠 - Veo3 Fast (audio on) - 가로(16:9) 버전\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\n// === 세그먼트 데이터 수집 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8초 클립\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoResult = $('영상 완료 체크').all()[i]?.json;\n  let videoUrl = '';\n  // Kie.ai Veo3 응답: data.response.resultUrls\n  if (videoResult?.data?.response?.resultUrls) {\n    videoUrl = videoResult.data.response.resultUrls[0] || '';\n  }\n  if (!videoUrl && videoResult?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(videoResult.data.resultJson);\n      videoUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { videoUrl = ''; }\n  }\n  if (!videoUrl) videoUrl = videoResult?.video?.url || videoResult?.data?.url || '';\n  const dialogueText = $('세그먼트 분리').all()[i]?.json?.dialogue || '';\n\n  if (!videoUrl) throw new Error('세그먼트 ' + (i+1) + ' 영상 URL 없음');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT 자막 생성 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (영상+오디오 concat만, drawtext 없음) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// 오디오 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -5872,7 +6417,7 @@
       },
       {
         "parameters": {
-          "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('영상 변환').item.json.data.taskId }}",
+          "url": "=https://api.kie.ai/api/v1/veo/record-info?taskId={{ $('영상 변환').item.json.data.taskId }}",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpHeaderAuth",
           "options": {
@@ -5906,11 +6451,11 @@
             },
             "conditions": [
               {
-                "id": "kie_check_condition",
-                "leftValue": "={{ $json.data.state }}",
-                "rightValue": "success",
+                "id": "veo3_check",
+                "leftValue": "={{ $json.data.successFlag }}",
+                "rightValue": "1",
                 "operator": {
-                  "type": "string",
+                  "type": "number",
                   "operation": "equals"
                 }
               }
@@ -6037,7 +6582,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const data = $input.first().json;\nlet imageUrl = '';\n\nif (data?.data?.resultJson) {\n  try {\n    const parsed = JSON.parse(data.data.resultJson);\n    imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n  } catch(e) {\n    imageUrl = '';\n  }\n}\n\nif (!imageUrl) {\n  throw new Error('이미지 URL 추출 실패: ' + JSON.stringify(data).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    ...data,\n    images: [{ url: imageUrl }]\n  }\n}];"
+          "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n  let imageUrl = '';\n  \n  if (data?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(data.data.resultJson);\n      imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { imageUrl = ''; }\n  }\n  \n  if (!imageUrl) {\n    throw new Error('이미지 URL 추출 실패: ' + JSON.stringify(data).substring(0, 500));\n  }\n  \n  return { json: { ...data, images: [{ url: imageUrl }] } };\n});"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -6350,10 +6895,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-20T06:04:17.003Z",
-        "id": 463,
+        "createdAt": "2026-02-20T06:38:30.112Z",
+        "id": 464,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "f2b66ac8-57c8-4d0c-ad3e-a8dd838bcc8d",
+        "versionId": "58b6a01e-2c3d-4893-b8a1-42b25718f9b3",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
