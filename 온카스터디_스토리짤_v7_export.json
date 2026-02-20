@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-20T14:13:22.820Z",
+  "updatedAt": "2026-02-20T14:15:35.144Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -648,20 +648,6 @@
       "id": "4a3b2ba0-ee30-430e-af8e-8a4d58ee43c8",
       "name": "이미지 재대기",
       "webhookId": "ece39763-91dd-4969-918f-353eb71936d8"
-    },
-    {
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.aggregate",
-      "typeVersion": 1,
-      "position": [
-        160,
-        624
-      ],
-      "id": "82d63c4b-3ee9-46e9-98dc-28a7b6aecbaf",
-      "name": "이미지 집계"
     }
   ],
   "connections": {
@@ -901,7 +887,7 @@
       "main": [
         [
           {
-            "node": "이미지 집계",
+            "node": "영상 변환",
             "type": "main",
             "index": 0
           }
@@ -931,17 +917,6 @@
         [
           {
             "node": "이미지 결과",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "이미지 집계": {
-      "main": [
-        [
-          {
-            "node": "영상 변환",
             "type": "main",
             "index": 0
           }
@@ -5325,9 +5300,9 @@
       }
     ]
   },
-  "versionId": "2cc00779-7799-411d-bdc2-398ac4f0beeb",
-  "activeVersionId": "2cc00779-7799-411d-bdc2-398ac4f0beeb",
-  "versionCounter": 318,
+  "versionId": "ec789a42-887b-4f7f-b13b-9bb38417e115",
+  "activeVersionId": "ec789a42-887b-4f7f-b13b-9bb38417e115",
+  "versionCounter": 321,
   "triggerCount": 1,
   "shared": [
     {
@@ -5386,9 +5361,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-20T14:13:22.822Z",
-    "createdAt": "2026-02-20T14:13:22.822Z",
-    "versionId": "2cc00779-7799-411d-bdc2-398ac4f0beeb",
+    "updatedAt": "2026-02-20T14:15:35.145Z",
+    "createdAt": "2026-02-20T14:15:35.145Z",
+    "versionId": "ec789a42-887b-4f7f-b13b-9bb38417e115",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -6032,20 +6007,6 @@
         "id": "4a3b2ba0-ee30-430e-af8e-8a4d58ee43c8",
         "name": "이미지 재대기",
         "webhookId": "ece39763-91dd-4969-918f-353eb71936d8"
-      },
-      {
-        "parameters": {
-          "aggregate": "aggregateAllItemData",
-          "options": {}
-        },
-        "type": "n8n-nodes-base.aggregate",
-        "typeVersion": 1,
-        "position": [
-          160,
-          624
-        ],
-        "id": "82d63c4b-3ee9-46e9-98dc-28a7b6aecbaf",
-        "name": "이미지 집계"
       }
     ],
     "connections": {
@@ -6285,7 +6246,7 @@
         "main": [
           [
             {
-              "node": "이미지 집계",
+              "node": "영상 변환",
               "type": "main",
               "index": 0
             }
@@ -6320,17 +6281,6 @@
             }
           ]
         ]
-      },
-      "이미지 집계": {
-        "main": [
-          [
-            {
-              "node": "영상 변환",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
       }
     },
     "authors": "hatihoro15 hatihoro15",
@@ -6339,10 +6289,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-20T14:13:22.912Z",
-        "id": 472,
+        "createdAt": "2026-02-20T14:15:35.220Z",
+        "id": 473,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "2cc00779-7799-411d-bdc2-398ac4f0beeb",
+        "versionId": "ec789a42-887b-4f7f-b13b-9bb38417e115",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
