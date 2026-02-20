@@ -1,5 +1,5 @@
 {
-    "updatedAt": "2026-02-20T18:07:57.929Z",
+    "updatedAt": "2026-02-20T18:26:22.701Z",
     "createdAt": "2026-02-16T06:29:45.385Z",
     "id": "jSEDYrkFcWUzJ8Et",
     "name": "\uc628\uce74\uc2a4\ud130\ub514 \uc2a4\ud1a0\ub9ac, \uc9e4 (\ud504\ub86c\ud504\ud2b8, \ud654\uc9c8 \uc218\uc815)",
@@ -272,7 +272,7 @@
         },
         {
             "parameters": {
-                "jsCode": "// NCA \uc2a4\ud1a0\ub9ac\ud615 \uc20f\uce20 - Veo3 Fast (audio on) - \uac00\ub85c(16:9) \ubc84\uc804\nconst hookTitle = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.hook_title;\nconst segmentCount = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.segmentCount;\n\n// === \uc138\uadf8\uba3c\ud2b8 \ub370\uc774\ud130 \uc218\uc9d1 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8\ucd08 \ud074\ub9bd\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoResult = $('\uc601\uc0c1 \ubcc0\ud658 \uacb0\uacfc').all()[i]?.json;\n  let videoUrl = '';\n  // Kie.ai Veo3 \uc751\ub2f5: data.response.resultUrls\n  if (videoResult?.data?.response?.resultUrls) {\n    videoUrl = videoResult.data.response.resultUrls[0] || '';\n  }\n  if (!videoUrl && videoResult?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(videoResult.data.resultJson);\n      videoUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { videoUrl = ''; }\n  }\n  if (!videoUrl) videoUrl = videoResult?.video?.url || videoResult?.data?.url || '';\n  const segData = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all()[i]?.json;\n  const dialogueText = segData?.dialogue || (segData?.dialogue_turns || []).map(t => t.line).join(' ') || '';\n\n  if (!videoUrl) throw new Error('\uc138\uadf8\uba3c\ud2b8 ' + (i+1) + ' \uc601\uc0c1 URL \uc5c6\uc74c');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT \uc790\ub9c9 \uc0dd\uc131 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (\uc601\uc0c1+\uc624\ub514\uc624 concat\ub9cc, drawtext \uc5c6\uc74c) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// \ube44\ub514\uc624 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// \uc624\ub514\uc624 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Subject,\n    caption: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Caption,\n    comment: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Comment,\n  }\n}];"
+                "jsCode": "// NCA \uc2a4\ud1a0\ub9ac\ud615 \uc20f\uce20 - Veo3 Fast (audio on) - \uac00\ub85c(16:9) \ubc84\uc804\nconst hookTitle = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.hook_title;\nconst segmentCount = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.segmentCount;\nconst videoResults = $('\uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac').first().json.results;\n\n// === \uc138\uadf8\uba3c\ud2b8 \ub370\uc774\ud130 \uc218\uc9d1 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8\ucd08 \ud074\ub9bd\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoUrl = videoResults[i]?.videoUrl || '';\n  const segData = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all()[i]?.json;\n  const dialogueText = segData?.dialogue || (segData?.dialogue_turns || []).map(t => t.line).join(' ') || '';\n\n  if (!videoUrl) throw new Error('\uc138\uadf8\uba3c\ud2b8 ' + (i+1) + ' \uc601\uc0c1 URL \uc5c6\uc74c');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT \uc790\ub9c9 \uc0dd\uc131 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (\uc601\uc0c1+\uc624\ub514\uc624 concat\ub9cc, drawtext \uc5c6\uc74c) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// \ube44\ub514\uc624 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// \uc624\ub514\uc624 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Subject,\n    caption: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Caption,\n    comment: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Comment,\n  }\n}];"
             },
             "type": "n8n-nodes-base.code",
             "typeVersion": 2,
@@ -434,73 +434,6 @@
         },
         {
             "parameters": {
-                "method": "POST",
-                "url": "https://api.kie.ai/api/v1/veo/generate",
-                "authentication": "genericCredentialType",
-                "genericAuthType": "httpHeaderAuth",
-                "sendBody": true,
-                "specifyBody": "json",
-                "jsonBody": "={{ JSON.stringify($json.veo3Body) }}",
-                "options": {
-                    "timeout": 30000
-                }
-            },
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.3,
-            "position": [
-                384,
-                624
-            ],
-            "id": "kling_convert_01",
-            "name": "\uc601\uc0c1 \ubcc0\ud658",
-            "credentials": {
-                "httpHeaderAuth": {
-                    "id": "l77M6Gy6p1bUA86P",
-                    "name": "Kie.ai API Key"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "amount": 300
-            },
-            "type": "n8n-nodes-base.wait",
-            "typeVersion": 1.1,
-            "position": [
-                608,
-                624
-            ],
-            "id": "kling_wait_01",
-            "name": "\uc601\uc0c1 \ubcc0\ud658 \ub300\uae30",
-            "webhookId": "kling-wait-01"
-        },
-        {
-            "parameters": {
-                "url": "=https://api.kie.ai/api/v1/veo/record-info?taskId={{ $('\uc601\uc0c1 \ubcc0\ud658').item.json.data.taskId }}",
-                "authentication": "genericCredentialType",
-                "genericAuthType": "httpHeaderAuth",
-                "options": {
-                    "timeout": 30000
-                }
-            },
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.2,
-            "position": [
-                832,
-                624
-            ],
-            "id": "kling_result_01",
-            "name": "\uc601\uc0c1 \ubcc0\ud658 \uacb0\uacfc",
-            "credentials": {
-                "httpHeaderAuth": {
-                    "id": "l77M6Gy6p1bUA86P",
-                    "name": "Kie.ai API Key"
-                }
-            },
-            "onError": "continueRegularOutput"
-        },
-        {
-            "parameters": {
                 "jsCode": "// \uace0\uc815 \ucc38\uc870 \uc774\ubbf8\uc9c0 URL\nconst refA_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\";\nconst refB_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\";\nreturn [\n  { json: { refUrl: refA_url, speaker: \"A\" } },\n  { json: { refUrl: refB_url, speaker: \"B\" } }\n];"
             },
             "type": "n8n-nodes-base.code",
@@ -541,22 +474,20 @@
         },
         {
             "parameters": {
-                "jsCode": "const items = $input.all();\nconst segments = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all();\n\nreturn items.map((item, i) => {\n  const data = item.json;\n  const seg = segments[i]?.json || {};\n  const veo3Prompt = seg.veo3_prompt || '';\n  const imageUrl = data.images?.[0]?.url || '';\n\n  // \ud070\ub530\uc634\ud45c, \ubc31\uc2ac\ub798\uc2dc, \uc904\ubc14\uafc8 \ub4f1 JSON \uae68\ub728\ub9ac\ub294 \ubb38\uc790 \uc81c\uac70\n  const safePrompt = veo3Prompt.replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\n\n  if (!safePrompt) {\n    throw new Error('veo3_prompt \uc5c6\uc74c! segment ' + i + ', keys: ' + Object.keys(seg).join(','));\n  }\n  if (!imageUrl) {\n    throw new Error('imageUrl \uc5c6\uc74c! item ' + i);\n  }\n\n  return {\n    json: {\n      ...data,\n      veo3Body: {\n        prompt: safePrompt,\n        imageUrls: [imageUrl],\n        model: \"veo3_fast\",\n        generationType: \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n        aspect_ratio: \"16:9\",\n        enableTranslation: false\n      }\n    }\n  };\n});"
+                "jsCode": "// \uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac: Veo3 \uc21c\ucc28 \uc0dd\uc131 + NCA \ud504\ub808\uc784 \ucd94\ucd9c\ub85c \uc7a5\uba74 \uc5f0\uc18d\uc131 \ud655\ubcf4\nconst helpers = this.helpers;\nconst segments = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all();\nconst firstItem = $input.first().json;\nconst initialImageUrl = firstItem.images?.[0]?.url || '';\n\nif (!initialImageUrl) throw new Error('\uc774\ubbf8\uc9c0 URL \uc5c6\uc74c: ' + JSON.stringify(firstItem).substring(0, 300));\n\nconst KIE_KEY = '6c34c79064e71366c0fe9db193754999';\nconst NCA_API = 'http://76.13.182.180:8080/v1/ffmpeg/compose';\nconst NCA_KEY = 'nca-sagong-2026';\n\nfunction sleep(ms) {\n  return new Promise(resolve => setTimeout(resolve, ms));\n}\n\n// --- Veo3 \uc601\uc0c1 \uc0dd\uc131 ---\nasync function createVeo3(prompt, imageUrl) {\n  return await helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/veo/generate',\n    headers: {\n      'Authorization': 'Bearer ' + KIE_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  });\n}\n\n// --- Veo3 \ud3f4\ub9c1 (30\ucd08 \uac04\uaca9, \ucd5c\ub300 20\ubd84) ---\nasync function pollVeo3(taskId) {\n  for (let attempt = 0; attempt < 40; attempt++) {\n    await sleep(30000);\n\n    let resp;\n    try {\n      resp = await helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.kie.ai/api/v1/veo/record-info?taskId=' + taskId,\n        headers: { 'Authorization': 'Bearer ' + KIE_KEY }\n      });\n    } catch(e) {\n      // \ub124\ud2b8\uc6cc\ud06c \uc624\ub958\ub294 \ubb34\uc2dc\ud558\uace0 \uc7ac\uc2dc\ub3c4\n      continue;\n    }\n\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const videoUrl = resp.data.response?.resultUrls?.[0] || '';\n      if (!videoUrl) throw new Error('Veo3 \uc131\uacf5\ud588\uc9c0\ub9cc URL \uc5c6\uc74c: ' + taskId);\n      return videoUrl;\n    }\n    if (state === 'failed') {\n      throw new Error('Veo3 \uc0dd\uc131 \uc2e4\ud328: ' + taskId + ' / ' + JSON.stringify(resp?.data).substring(0, 200));\n    }\n    // queuing, generating \u2192 \uacc4\uc18d \ub300\uae30\n  }\n  throw new Error('Veo3 \ud0c0\uc784\uc544\uc6c3 (20\ubd84): ' + taskId);\n}\n\n// --- NCA\ub85c \ub9c8\uc9c0\ub9c9 \ud504\ub808\uc784 \ucd94\ucd9c ---\nasync function extractLastFrame(videoUrl) {\n  const resp = await helpers.httpRequest({\n    method: 'POST',\n    url: NCA_API,\n    headers: {\n      'x-api-key': NCA_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: ['-sseof', '-0.1'] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' }\n        ],\n        file_name: 'last_frame.jpg'\n      }]\n    }\n  });\n\n  // \uc751\ub2f5\uc5d0\uc11c \uc774\ubbf8\uc9c0 URL \ucd94\ucd9c\n  if (Array.isArray(resp?.response)) {\n    const url = resp.response[0]?.file_url || '';\n    if (url) return url;\n  }\n  if (resp?.file_url) return resp.file_url;\n  if (resp?.url) return resp.url;\n\n  throw new Error('\ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328: ' + JSON.stringify(resp).substring(0, 500));\n}\n\n// ========== \uc21c\ucc28 \ucc98\ub9ac \uc2dc\uc791 ==========\nconst results = [];\nlet refImageUrl = initialImageUrl;\n\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i].json;\n  const prompt = seg.veo3_prompt || '';\n\n  if (!prompt) throw new Error('\uc138\uadf8\uba3c\ud2b8 ' + (i+1) + ' veo3_prompt \uc5c6\uc74c');\n\n  // 1) Veo3 \uc601\uc0c1 \uc0dd\uc131 \uc694\uccad\n  const createResp = await createVeo3(prompt, refImageUrl);\n  const taskId = createResp?.data?.taskId;\n  if (!taskId) throw new Error('\uc601\uc0c1 ' + (i+1) + ' taskId \uc5c6\uc74c: ' + JSON.stringify(createResp).substring(0, 300));\n\n  // 2) \ud3f4\ub9c1 \ub300\uae30\n  const videoUrl = await pollVeo3(taskId);\n\n  results.push({\n    index: i + 1,\n    videoUrl: videoUrl,\n    taskId: taskId,\n    refImageUsed: refImageUrl\n  });\n\n  // 3) \ub9c8\uc9c0\ub9c9 \uc601\uc0c1\uc774 \uc544\ub2c8\uba74 \ud504\ub808\uc784 \ucd94\ucd9c \u2192 \ub2e4\uc74c \uc601\uc0c1 \ucc38\uc870 \uc774\ubbf8\uc9c0\n  if (i < segments.length - 1) {\n    try {\n      refImageUrl = await extractLastFrame(videoUrl);\n    } catch(e) {\n      // \ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328 \uc2dc \uae30\uc874 \uc774\ubbf8\uc9c0 \uc720\uc9c0\n      refImageUrl = initialImageUrl;\n    }\n  }\n}\n\nreturn [{ json: { results, segmentCount: results.length } }];",
+                "mode": "runOnceForAllItems"
             },
+            "id": "seq-video-node",
+            "name": "\uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac",
             "type": "n8n-nodes-base.code",
             "typeVersion": 2,
             "position": [
                 160,
                 624
-            ],
-            "id": "8bc0b64f-213f-412d-bcaf-7a7a9db04cdf",
-            "name": "\uc601\uc0c1 \ubcc0\ud658 \uc900\ube44"
+            ]
         }
     ],
     "connections": {
-        "\uc2a4\ucf00\uc904 \ud2b8\ub9ac\uac70": {
-            "main": []
-        },
         "AI \ucf58\ud150\uce20 \uc0dd\uc131": {
             "main": [
                 [
@@ -689,39 +620,6 @@
                 ]
             ]
         },
-        "\uc601\uc0c1 \ubcc0\ud658": {
-            "main": [
-                [
-                    {
-                        "node": "\uc601\uc0c1 \ubcc0\ud658 \ub300\uae30",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc601\uc0c1 \ubcc0\ud658 \ub300\uae30": {
-            "main": [
-                [
-                    {
-                        "node": "\uc601\uc0c1 \ubcc0\ud658 \uacb0\uacfc",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc601\uc0c1 \ubcc0\ud658 \uacb0\uacfc": {
-            "main": [
-                [
-                    {
-                        "node": "NCA \ub370\uc774\ud130 \uc900\ube44",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
         "\ucc38\uc870 \uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8": {
             "main": [
                 [
@@ -748,18 +646,18 @@
             "main": [
                 [
                     {
-                        "node": "\uc601\uc0c1 \ubcc0\ud658 \uc900\ube44",
+                        "node": "\uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac",
                         "type": "main",
                         "index": 0
                     }
                 ]
             ]
         },
-        "\uc601\uc0c1 \ubcc0\ud658 \uc900\ube44": {
+        "\uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac": {
             "main": [
                 [
                     {
-                        "node": "\uc601\uc0c1 \ubcc0\ud658",
+                        "node": "NCA \ub370\uc774\ud130 \uc900\ube44",
                         "type": "main",
                         "index": 0
                     }
@@ -4732,289 +4630,6 @@
                 }
             }
         ],
-        "When clicking \u2018Execute workflow\u2019": [
-            {
-                "json": {},
-                "pairedItem": {
-                    "item": 0
-                }
-            }
-        ],
-        "AI \ucf58\ud150\uce20 \uc0dd\uc131": [
-            {
-                "json": {
-                    "content": {
-                        "parts": [
-                            {
-                                "text": "{\n  \"hook_title\": \"\ud751\ud615\uc774 \uc54c\ub824\uc8fc\ub294 <y>\uc2ac\ub86f</y> \ucd08\ubcf4 <y>\ud544\uc218</y> \uc0c1\uc2dd\",\n  \"scenes\": [\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568?\"},\n        {\"speaker\": \"B\", \"line\": \"Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0.\"}\n      ],\n      \"dialogue\": \"Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568? Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0.\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"\uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568?\"},\n        {\"speaker\": \"B\", \"line\": \"RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c?\"},\n        {\"speaker\": \"A\", \"line\": \"\ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0.\"}\n      ],\n      \"dialogue\": \"\uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568? RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c? \ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0.\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"B\", \"line\": \"Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370.\"},\n        {\"speaker\": \"A\", \"line\": \"\uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4.\"}\n      ],\n      \"dialogue\": \"Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370. \uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4.\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    }\n  ],\n  \"Subject\": \"\uc81c\ubaa9 #\uc628\uce74\uc2a4\ud130\ub514 #\uc2ac\ub86f #RTP #\uce74\uc9c0\ub178\uafc0\ud301\",\n  \"Caption\": \"\uc2ac\ub86f \uac8c\uc784, RTP\ub9cc \uc81c\ub300\ub85c \uc54c\uc544\ub3c4 \uc2b9\ub960\uc774 \ub2ec\ub77c\uc9c4\ub2e4? \ud83d\ude0e \ud751\ud615 Jay\uc758 \uafc0\ud301\uacfc Mike\uc758 \ub9ac\uc5bc \ubc18\uc751! #\uc628\uce74\uc2a4\ud130\ub514 #\uc2ac\ub86f\uba38\uc2e0 #\uce74\uc9c0\ub178 #\uc2ac\ub86f\uc804\ub7b5 #\uc548\uc804\ub180\uc774\ud130 # RTP #\uba39\ud280\uac80\uc99d\",\n  \"Comment\": \"\ub2e4\uc74c\uc5d4 \uc2ac\ub86f \ub9d0\uace0 \ub2e4\ub978 \uafc0\ud301\ub3c4 \uc54c\ub824\uc918!\",\n  \"BGM_prompt\": \"chill lo-fi hip hop beat with a subtle jazz influence\"\n}"
-                            }
-                        ],
-                        "role": "model"
-                    },
-                    "finishReason": "STOP",
-                    "index": 0
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            }
-        ],
-        "\ucf58\ud150\uce20 \ud30c\uc2f1": [
-            {
-                "json": {
-                    "hook_title": "\ud751\ud615\uc774 \uc54c\ub824\uc8fc\ub294 <y>\uc2ac\ub86f</y> \ucd08\ubcf4 <y>\ud544\uc218</y> \uc0c1\uc2dd",
-                    "scenes": [
-                        {
-                            "dialogue_turns": [
-                                {
-                                    "speaker": "A",
-                                    "line": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568?"
-                                },
-                                {
-                                    "speaker": "B",
-                                    "line": "Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0."
-                                }
-                            ],
-                            "dialogue": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568? Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0.",
-                            "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-                            "speaker": "A"
-                        },
-                        {
-                            "dialogue_turns": [
-                                {
-                                    "speaker": "A",
-                                    "line": "\uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568?"
-                                },
-                                {
-                                    "speaker": "B",
-                                    "line": "RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c?"
-                                },
-                                {
-                                    "speaker": "A",
-                                    "line": "\ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0."
-                                }
-                            ],
-                            "dialogue": "\uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568? RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c? \ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0.",
-                            "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-                            "speaker": "A"
-                        },
-                        {
-                            "dialogue_turns": [
-                                {
-                                    "speaker": "B",
-                                    "line": "Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370."
-                                },
-                                {
-                                    "speaker": "A",
-                                    "line": "\uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4."
-                                }
-                            ],
-                            "dialogue": "Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370. \uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4.",
-                            "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-                            "speaker": "B"
-                        }
-                    ],
-                    "Subject": "\uc81c\ubaa9 #\uc628\uce74\uc2a4\ud130\ub514 #\uc2ac\ub86f #RTP #\uce74\uc9c0\ub178\uafc0\ud301",
-                    "Caption": "\uc2ac\ub86f \uac8c\uc784, RTP\ub9cc \uc81c\ub300\ub85c \uc54c\uc544\ub3c4 \uc2b9\ub960\uc774 \ub2ec\ub77c\uc9c4\ub2e4? \ud83d\ude0e \ud751\ud615 Jay\uc758 \uafc0\ud301\uacfc Mike\uc758 \ub9ac\uc5bc \ubc18\uc751! #\uc628\uce74\uc2a4\ud130\ub514 #\uc2ac\ub86f\uba38\uc2e0 #\uce74\uc9c0\ub178 #\uc2ac\ub86f\uc804\ub7b5 #\uc548\uc804\ub180\uc774\ud130 # RTP #\uba39\ud280\uac80\uc99d",
-                    "Comment": "\ub2e4\uc74c\uc5d4 \uc2ac\ub86f \ub9d0\uace0 \ub2e4\ub978 \uafc0\ud301\ub3c4 \uc54c\ub824\uc918!",
-                    "BGM_prompt": "chill lo-fi hip hop beat with a subtle jazz influence",
-                    "fullDialogue": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568? Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0. \uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568? RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c? \ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0. Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370. \uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4.",
-                    "segmentCount": 3,
-                    "Status": "\uc900\ube44",
-                    "generatedAt": "2026-02-20T14:09:20.823Z"
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            }
-        ],
-        "\uc2dc\ud2b8 \uae30\ub85d": [
-            {
-                "json": {
-                    "Subject": "\uc81c\ubaa9 #\uc628\uce74\uc2a4\ud130\ub514 #\uc2ac\ub86f #RTP #\uce74\uc9c0\ub178\uafc0\ud301",
-                    "Hook": "\ud751\ud615\uc774 \uc54c\ub824\uc8fc\ub294 <y>\uc2ac\ub86f</y> \ucd08\ubcf4 <y>\ud544\uc218</y> \uc0c1\uc2dd",
-                    "Narration": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568? Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0. \uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568? RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c? \ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0. Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370. \uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4.",
-                    "Caption": "\uc2ac\ub86f \uac8c\uc784, RTP\ub9cc \uc81c\ub300\ub85c \uc54c\uc544\ub3c4 \uc2b9\ub960\uc774 \ub2ec\ub77c\uc9c4\ub2e4? \ud83d\ude0e \ud751\ud615 Jay\uc758 \uafc0\ud301\uacfc Mike\uc758 \ub9ac\uc5bc \ubc18\uc751! #\uc628\uce74\uc2a4\ud130\ub514 #\uc2ac\ub86f\uba38\uc2e0 #\uce74\uc9c0\ub178 #\uc2ac\ub86f\uc804\ub7b5 #\uc548\uc804\ub180\uc774\ud130 # RTP #\uba39\ud280\uac80\uc99d",
-                    "\ub313\uae00": "\ub2e4\uc74c\uc5d4 \uc2ac\ub86f \ub9d0\uace0 \ub2e4\ub978 \uafc0\ud301\ub3c4 \uc54c\ub824\uc918!",
-                    "BGM prompt": "chill lo-fi hip hop beat with a subtle jazz influence",
-                    "Status": "\uc900\ube44"
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            }
-        ],
-        "\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac": [
-            {
-                "json": {
-                    "index": 0,
-                    "dialogue": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568? Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0.",
-                    "dialogue_turns": [
-                        {
-                            "speaker": "A",
-                            "line": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568?"
-                        },
-                        {
-                            "speaker": "B",
-                            "line": "Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0."
-                        }
-                    ],
-                    "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-                    "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says \"Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568?\", then The second man (medium twists hairstyle, white graphic t-shirt) responds \"Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0.\". Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-                    "speaker": "A",
-                    "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
-                    "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
-                }
-            },
-            {
-                "json": {
-                    "index": 1,
-                    "dialogue": "\uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568? RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c? \ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0.",
-                    "dialogue_turns": [
-                        {
-                            "speaker": "A",
-                            "line": "\uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568?"
-                        },
-                        {
-                            "speaker": "B",
-                            "line": "RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c?"
-                        },
-                        {
-                            "speaker": "A",
-                            "line": "\ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0."
-                        }
-                    ],
-                    "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-                    "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says \"\uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568?\", then The second man (medium twists hairstyle, white graphic t-shirt) responds \"RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c?\", then The first man (short fade haircut, black hoodie, gold chain) responds \"\ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0.\". Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-                    "speaker": "A",
-                    "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
-                    "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
-                }
-            },
-            {
-                "json": {
-                    "index": 2,
-                    "dialogue": "Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370. \uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4.",
-                    "dialogue_turns": [
-                        {
-                            "speaker": "B",
-                            "line": "Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370."
-                        },
-                        {
-                            "speaker": "A",
-                            "line": "\uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4."
-                        }
-                    ],
-                    "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-                    "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says \"Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370.\", then The first man (short fade haircut, black hoodie, gold chain) responds \"\uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4.\". Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-                    "speaker": "B",
-                    "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
-                    "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
-                }
-            }
-        ],
-        "\uc774\ubbf8\uc9c0 \uc0dd\uc131": [
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "2e91e60553528473b0278de415d93a2b",
-                        "recordId": "2e91e60553528473b0278de415d93a2b"
-                    }
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
-                        "recordId": "a9cf63ec7365007799cb1f5c0c05466f"
-                    }
-                },
-                "pairedItem": {
-                    "item": 1
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
-                        "recordId": "1d0a9ea976a98a393d04f5dc8f72f9ba"
-                    }
-                },
-                "pairedItem": {
-                    "item": 2
-                }
-            }
-        ],
-        "\ucc38\uc870 \uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8": [
-            {
-                "json": {
-                    "refUrl": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
-                    "speaker": "A"
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            },
-            {
-                "json": {
-                    "refUrl": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png",
-                    "speaker": "B"
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            }
-        ],
-        "\uc774\ubbf8\uc9c0 \ub300\uae30": [
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "2e91e60553528473b0278de415d93a2b",
-                        "recordId": "2e91e60553528473b0278de415d93a2b"
-                    }
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
-                        "recordId": "a9cf63ec7365007799cb1f5c0c05466f"
-                    }
-                },
-                "pairedItem": {
-                    "item": 1
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
-                        "recordId": "1d0a9ea976a98a393d04f5dc8f72f9ba"
-                    }
-                },
-                "pairedItem": {
-                    "item": 2
-                }
-            }
-        ],
         "\uc774\ubbf8\uc9c0 \uc9d1\uacc4": [
             {
                 "json": {
@@ -5048,417 +4663,11 @@
                     }
                 ]
             }
-        ],
-        "\uc774\ubbf8\uc9c0 \uacb0\uacfc": [
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "2e91e60553528473b0278de415d93a2b",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 225,
-                        "completeTime": 1771596788301,
-                        "createTime": 1771596563216
-                    }
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 232,
-                        "completeTime": 1771596795141,
-                        "createTime": 1771596563226
-                    }
-                },
-                "pairedItem": {
-                    "item": 1
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 104,
-                        "completeTime": 1771596667827,
-                        "createTime": 1771596563141
-                    }
-                },
-                "pairedItem": {
-                    "item": 2
-                }
-            }
-        ],
-        "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c": [
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "2e91e60553528473b0278de415d93a2b",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 225,
-                        "completeTime": 1771596788301,
-                        "createTime": 1771596563216
-                    },
-                    "images": [
-                        {
-                            "url": "https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png"
-                        }
-                    ]
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 232,
-                        "completeTime": 1771596795141,
-                        "createTime": 1771596563226
-                    },
-                    "images": [
-                        {
-                            "url": "https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png"
-                        }
-                    ]
-                },
-                "pairedItem": {
-                    "item": 1
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 104,
-                        "completeTime": 1771596667827,
-                        "createTime": 1771596563141
-                    },
-                    "images": [
-                        {
-                            "url": "https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png"
-                        }
-                    ]
-                },
-                "pairedItem": {
-                    "item": 2
-                }
-            }
-        ],
-        "\uc601\uc0c1 \ubcc0\ud658": [
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "fb849b43a4b3109fcb642637b7687c10"
-                    }
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "b5d35ed0fac1c014446a7c7d4e907d3a"
-                    }
-                },
-                "pairedItem": {
-                    "item": 1
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "de92828a3fd30d72715a348c6f8ecdfc"
-                    }
-                },
-                "pairedItem": {
-                    "item": 2
-                }
-            }
-        ],
-        "\uc601\uc0c1 \ubcc0\ud658 \uc900\ube44": [
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "2e91e60553528473b0278de415d93a2b",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 225,
-                        "completeTime": 1771596788301,
-                        "createTime": 1771596563216
-                    },
-                    "images": [
-                        {
-                            "url": "https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png"
-                        }
-                    ],
-                    "veo3Body": {
-                        "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says 'Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568?', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-                        "imageUrls": [
-                            "https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png"
-                        ],
-                        "model": "veo3_fast",
-                        "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
-                        "aspect_ratio": "16:9",
-                        "enableTranslation": false
-                    }
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 232,
-                        "completeTime": 1771596795141,
-                        "createTime": 1771596563226
-                    },
-                    "images": [
-                        {
-                            "url": "https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png"
-                        }
-                    ],
-                    "veo3Body": {
-                        "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '\uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568?', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c?', then The first man (short fade haircut, black hoodie, gold chain) responds '\ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-                        "imageUrls": [
-                            "https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png"
-                        ],
-                        "model": "veo3_fast",
-                        "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
-                        "aspect_ratio": "16:9",
-                        "enableTranslation": false
-                    }
-                },
-                "pairedItem": {
-                    "item": 1
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 104,
-                        "completeTime": 1771596667827,
-                        "createTime": 1771596563141
-                    },
-                    "images": [
-                        {
-                            "url": "https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png"
-                        }
-                    ],
-                    "veo3Body": {
-                        "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says 'Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370.', then The first man (short fade haircut, black hoodie, gold chain) responds '\uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-                        "imageUrls": [
-                            "https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png"
-                        ],
-                        "model": "veo3_fast",
-                        "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
-                        "aspect_ratio": "16:9",
-                        "enableTranslation": false
-                    }
-                },
-                "pairedItem": {
-                    "item": 2
-                }
-            }
-        ],
-        "\uc601\uc0c1 \ubcc0\ud658 \ub300\uae30": [
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "fb849b43a4b3109fcb642637b7687c10"
-                    }
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "b5d35ed0fac1c014446a7c7d4e907d3a"
-                    }
-                },
-                "pairedItem": {
-                    "item": 1
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "de92828a3fd30d72715a348c6f8ecdfc"
-                    }
-                },
-                "pairedItem": {
-                    "item": 2
-                }
-            }
-        ],
-        "\uc601\uc0c1 \ubcc0\ud658 \uacb0\uacfc": [
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "fb849b43a4b3109fcb642637b7687c10",
-                        "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says 'Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \uc2ac\ub86f\ud568?', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'Wait WHAT? \ub098 \uadf8\ub0e5 \uc7ac\ubc0c\uc73c\uba74 \ud588\uc9c0.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
-                        "response": null,
-                        "successFlag": 0,
-                        "fallbackFlag": false,
-                        "completeTime": null,
-                        "createTime": 1771609518000,
-                        "errorCode": null,
-                        "errorMessage": null
-                    }
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "b5d35ed0fac1c014446a7c7d4e907d3a",
-                        "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '\uc774\uac74 basic\uc774\uc57c. RTP \ud655\uc778 \uc548 \ud568?', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'RTP? \uadf8\uac8c \ubb54\ub370? \ubb50 \uac8c\uc784\ud558\ub294 \uac70\uc57c?', then The first man (short fade haircut, black hoodie, gold chain) responds '\ud658\uc218\uc728 bro. 96% \uc774\uc0c1\uc740 \ubd10\uc57c\uc9c0.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
-                        "response": {
-                            "taskId": "b5d35ed0fac1c014446a7c7d4e907d3a",
-                            "resolution": "720p",
-                            "originUrls": null,
-                            "resultUrls": [
-                                "https://tempfile.aiquickdraw.com/v/b5d35ed0fac1c014446a7c7d4e907d3a_1771609598.mp4"
-                            ],
-                            "hasAudioList": [
-                                true
-                            ],
-                            "seeds": [
-                                41536
-                            ]
-                        },
-                        "successFlag": 1,
-                        "fallbackFlag": false,
-                        "completeTime": 1771609600000,
-                        "createTime": 1771609518000,
-                        "errorCode": null,
-                        "errorMessage": null
-                    }
-                },
-                "pairedItem": {
-                    "item": 1
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "de92828a3fd30d72715a348c6f8ecdfc",
-                        "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says 'Damn... \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \uac10\uc73c\ub85c \ud588\ub294\ub370.', then The first man (short fade haircut, black hoodie, gold chain) responds '\uadf8\ub798\uc11c \ub9e8\ub0a0 \ud138\ub9ac\ub294 \uac70\uc57c bro. \uc628\uce74\uc2a4\ud130\ub514\uc5d0 \ub2e4 \uc788\uc5b4.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
-                        "response": null,
-                        "successFlag": 0,
-                        "fallbackFlag": false,
-                        "completeTime": null,
-                        "createTime": 1771609518000,
-                        "errorCode": null,
-                        "errorMessage": null
-                    }
-                },
-                "pairedItem": {
-                    "item": 2
-                }
-            }
         ]
     },
-    "versionId": "b41dbb48-f2d0-44e3-90bd-2b7dc3f47bd1",
-    "activeVersionId": "b41dbb48-f2d0-44e3-90bd-2b7dc3f47bd1",
-    "versionCounter": 346,
+    "versionId": "388a3750-33b7-4450-856b-b59b1befc182",
+    "activeVersionId": "388a3750-33b7-4450-856b-b59b1befc182",
+    "versionCounter": 350,
     "triggerCount": 1,
     "shared": [
         {
@@ -5517,9 +4726,9 @@
     ],
     "tags": [],
     "activeVersion": {
-        "updatedAt": "2026-02-20T18:07:57.930Z",
-        "createdAt": "2026-02-20T18:07:57.930Z",
-        "versionId": "b41dbb48-f2d0-44e3-90bd-2b7dc3f47bd1",
+        "updatedAt": "2026-02-20T18:26:22.702Z",
+        "createdAt": "2026-02-20T18:26:22.702Z",
+        "versionId": "388a3750-33b7-4450-856b-b59b1befc182",
         "workflowId": "jSEDYrkFcWUzJ8Et",
         "nodes": [
             {
@@ -5787,7 +4996,7 @@
             },
             {
                 "parameters": {
-                    "jsCode": "// NCA \uc2a4\ud1a0\ub9ac\ud615 \uc20f\uce20 - Veo3 Fast (audio on) - \uac00\ub85c(16:9) \ubc84\uc804\nconst hookTitle = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.hook_title;\nconst segmentCount = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.segmentCount;\n\n// === \uc138\uadf8\uba3c\ud2b8 \ub370\uc774\ud130 \uc218\uc9d1 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8\ucd08 \ud074\ub9bd\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoResult = $('\uc601\uc0c1 \ubcc0\ud658 \uacb0\uacfc').all()[i]?.json;\n  let videoUrl = '';\n  // Kie.ai Veo3 \uc751\ub2f5: data.response.resultUrls\n  if (videoResult?.data?.response?.resultUrls) {\n    videoUrl = videoResult.data.response.resultUrls[0] || '';\n  }\n  if (!videoUrl && videoResult?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(videoResult.data.resultJson);\n      videoUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { videoUrl = ''; }\n  }\n  if (!videoUrl) videoUrl = videoResult?.video?.url || videoResult?.data?.url || '';\n  const segData = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all()[i]?.json;\n  const dialogueText = segData?.dialogue || (segData?.dialogue_turns || []).map(t => t.line).join(' ') || '';\n\n  if (!videoUrl) throw new Error('\uc138\uadf8\uba3c\ud2b8 ' + (i+1) + ' \uc601\uc0c1 URL \uc5c6\uc74c');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT \uc790\ub9c9 \uc0dd\uc131 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (\uc601\uc0c1+\uc624\ub514\uc624 concat\ub9cc, drawtext \uc5c6\uc74c) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// \ube44\ub514\uc624 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// \uc624\ub514\uc624 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Subject,\n    caption: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Caption,\n    comment: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Comment,\n  }\n}];"
+                    "jsCode": "// NCA \uc2a4\ud1a0\ub9ac\ud615 \uc20f\uce20 - Veo3 Fast (audio on) - \uac00\ub85c(16:9) \ubc84\uc804\nconst hookTitle = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.hook_title;\nconst segmentCount = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.segmentCount;\nconst videoResults = $('\uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac').first().json.results;\n\n// === \uc138\uadf8\uba3c\ud2b8 \ub370\uc774\ud130 \uc218\uc9d1 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8\ucd08 \ud074\ub9bd\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoUrl = videoResults[i]?.videoUrl || '';\n  const segData = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all()[i]?.json;\n  const dialogueText = segData?.dialogue || (segData?.dialogue_turns || []).map(t => t.line).join(' ') || '';\n\n  if (!videoUrl) throw new Error('\uc138\uadf8\uba3c\ud2b8 ' + (i+1) + ' \uc601\uc0c1 URL \uc5c6\uc74c');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT \uc790\ub9c9 \uc0dd\uc131 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (\uc601\uc0c1+\uc624\ub514\uc624 concat\ub9cc, drawtext \uc5c6\uc74c) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// \ube44\ub514\uc624 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// \uc624\ub514\uc624 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Subject,\n    caption: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Caption,\n    comment: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Comment,\n  }\n}];"
                 },
                 "type": "n8n-nodes-base.code",
                 "typeVersion": 2,
@@ -5949,73 +5158,6 @@
             },
             {
                 "parameters": {
-                    "method": "POST",
-                    "url": "https://api.kie.ai/api/v1/veo/generate",
-                    "authentication": "genericCredentialType",
-                    "genericAuthType": "httpHeaderAuth",
-                    "sendBody": true,
-                    "specifyBody": "json",
-                    "jsonBody": "={{ JSON.stringify($json.veo3Body) }}",
-                    "options": {
-                        "timeout": 30000
-                    }
-                },
-                "type": "n8n-nodes-base.httpRequest",
-                "typeVersion": 4.3,
-                "position": [
-                    384,
-                    624
-                ],
-                "id": "kling_convert_01",
-                "name": "\uc601\uc0c1 \ubcc0\ud658",
-                "credentials": {
-                    "httpHeaderAuth": {
-                        "id": "l77M6Gy6p1bUA86P",
-                        "name": "Kie.ai API Key"
-                    }
-                }
-            },
-            {
-                "parameters": {
-                    "amount": 300
-                },
-                "type": "n8n-nodes-base.wait",
-                "typeVersion": 1.1,
-                "position": [
-                    608,
-                    624
-                ],
-                "id": "kling_wait_01",
-                "name": "\uc601\uc0c1 \ubcc0\ud658 \ub300\uae30",
-                "webhookId": "kling-wait-01"
-            },
-            {
-                "parameters": {
-                    "url": "=https://api.kie.ai/api/v1/veo/record-info?taskId={{ $('\uc601\uc0c1 \ubcc0\ud658').item.json.data.taskId }}",
-                    "authentication": "genericCredentialType",
-                    "genericAuthType": "httpHeaderAuth",
-                    "options": {
-                        "timeout": 30000
-                    }
-                },
-                "type": "n8n-nodes-base.httpRequest",
-                "typeVersion": 4.2,
-                "position": [
-                    832,
-                    624
-                ],
-                "id": "kling_result_01",
-                "name": "\uc601\uc0c1 \ubcc0\ud658 \uacb0\uacfc",
-                "credentials": {
-                    "httpHeaderAuth": {
-                        "id": "l77M6Gy6p1bUA86P",
-                        "name": "Kie.ai API Key"
-                    }
-                },
-                "onError": "continueRegularOutput"
-            },
-            {
-                "parameters": {
                     "jsCode": "// \uace0\uc815 \ucc38\uc870 \uc774\ubbf8\uc9c0 URL\nconst refA_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\";\nconst refB_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\";\nreturn [\n  { json: { refUrl: refA_url, speaker: \"A\" } },\n  { json: { refUrl: refB_url, speaker: \"B\" } }\n];"
                 },
                 "type": "n8n-nodes-base.code",
@@ -6056,22 +5198,20 @@
             },
             {
                 "parameters": {
-                    "jsCode": "const items = $input.all();\nconst segments = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all();\n\nreturn items.map((item, i) => {\n  const data = item.json;\n  const seg = segments[i]?.json || {};\n  const veo3Prompt = seg.veo3_prompt || '';\n  const imageUrl = data.images?.[0]?.url || '';\n\n  // \ud070\ub530\uc634\ud45c, \ubc31\uc2ac\ub798\uc2dc, \uc904\ubc14\uafc8 \ub4f1 JSON \uae68\ub728\ub9ac\ub294 \ubb38\uc790 \uc81c\uac70\n  const safePrompt = veo3Prompt.replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\n\n  if (!safePrompt) {\n    throw new Error('veo3_prompt \uc5c6\uc74c! segment ' + i + ', keys: ' + Object.keys(seg).join(','));\n  }\n  if (!imageUrl) {\n    throw new Error('imageUrl \uc5c6\uc74c! item ' + i);\n  }\n\n  return {\n    json: {\n      ...data,\n      veo3Body: {\n        prompt: safePrompt,\n        imageUrls: [imageUrl],\n        model: \"veo3_fast\",\n        generationType: \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n        aspect_ratio: \"16:9\",\n        enableTranslation: false\n      }\n    }\n  };\n});"
+                    "jsCode": "// \uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac: Veo3 \uc21c\ucc28 \uc0dd\uc131 + NCA \ud504\ub808\uc784 \ucd94\ucd9c\ub85c \uc7a5\uba74 \uc5f0\uc18d\uc131 \ud655\ubcf4\nconst helpers = this.helpers;\nconst segments = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all();\nconst firstItem = $input.first().json;\nconst initialImageUrl = firstItem.images?.[0]?.url || '';\n\nif (!initialImageUrl) throw new Error('\uc774\ubbf8\uc9c0 URL \uc5c6\uc74c: ' + JSON.stringify(firstItem).substring(0, 300));\n\nconst KIE_KEY = '6c34c79064e71366c0fe9db193754999';\nconst NCA_API = 'http://76.13.182.180:8080/v1/ffmpeg/compose';\nconst NCA_KEY = 'nca-sagong-2026';\n\nfunction sleep(ms) {\n  return new Promise(resolve => setTimeout(resolve, ms));\n}\n\n// --- Veo3 \uc601\uc0c1 \uc0dd\uc131 ---\nasync function createVeo3(prompt, imageUrl) {\n  return await helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/veo/generate',\n    headers: {\n      'Authorization': 'Bearer ' + KIE_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  });\n}\n\n// --- Veo3 \ud3f4\ub9c1 (30\ucd08 \uac04\uaca9, \ucd5c\ub300 20\ubd84) ---\nasync function pollVeo3(taskId) {\n  for (let attempt = 0; attempt < 40; attempt++) {\n    await sleep(30000);\n\n    let resp;\n    try {\n      resp = await helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.kie.ai/api/v1/veo/record-info?taskId=' + taskId,\n        headers: { 'Authorization': 'Bearer ' + KIE_KEY }\n      });\n    } catch(e) {\n      // \ub124\ud2b8\uc6cc\ud06c \uc624\ub958\ub294 \ubb34\uc2dc\ud558\uace0 \uc7ac\uc2dc\ub3c4\n      continue;\n    }\n\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const videoUrl = resp.data.response?.resultUrls?.[0] || '';\n      if (!videoUrl) throw new Error('Veo3 \uc131\uacf5\ud588\uc9c0\ub9cc URL \uc5c6\uc74c: ' + taskId);\n      return videoUrl;\n    }\n    if (state === 'failed') {\n      throw new Error('Veo3 \uc0dd\uc131 \uc2e4\ud328: ' + taskId + ' / ' + JSON.stringify(resp?.data).substring(0, 200));\n    }\n    // queuing, generating \u2192 \uacc4\uc18d \ub300\uae30\n  }\n  throw new Error('Veo3 \ud0c0\uc784\uc544\uc6c3 (20\ubd84): ' + taskId);\n}\n\n// --- NCA\ub85c \ub9c8\uc9c0\ub9c9 \ud504\ub808\uc784 \ucd94\ucd9c ---\nasync function extractLastFrame(videoUrl) {\n  const resp = await helpers.httpRequest({\n    method: 'POST',\n    url: NCA_API,\n    headers: {\n      'x-api-key': NCA_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: ['-sseof', '-0.1'] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' }\n        ],\n        file_name: 'last_frame.jpg'\n      }]\n    }\n  });\n\n  // \uc751\ub2f5\uc5d0\uc11c \uc774\ubbf8\uc9c0 URL \ucd94\ucd9c\n  if (Array.isArray(resp?.response)) {\n    const url = resp.response[0]?.file_url || '';\n    if (url) return url;\n  }\n  if (resp?.file_url) return resp.file_url;\n  if (resp?.url) return resp.url;\n\n  throw new Error('\ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328: ' + JSON.stringify(resp).substring(0, 500));\n}\n\n// ========== \uc21c\ucc28 \ucc98\ub9ac \uc2dc\uc791 ==========\nconst results = [];\nlet refImageUrl = initialImageUrl;\n\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i].json;\n  const prompt = seg.veo3_prompt || '';\n\n  if (!prompt) throw new Error('\uc138\uadf8\uba3c\ud2b8 ' + (i+1) + ' veo3_prompt \uc5c6\uc74c');\n\n  // 1) Veo3 \uc601\uc0c1 \uc0dd\uc131 \uc694\uccad\n  const createResp = await createVeo3(prompt, refImageUrl);\n  const taskId = createResp?.data?.taskId;\n  if (!taskId) throw new Error('\uc601\uc0c1 ' + (i+1) + ' taskId \uc5c6\uc74c: ' + JSON.stringify(createResp).substring(0, 300));\n\n  // 2) \ud3f4\ub9c1 \ub300\uae30\n  const videoUrl = await pollVeo3(taskId);\n\n  results.push({\n    index: i + 1,\n    videoUrl: videoUrl,\n    taskId: taskId,\n    refImageUsed: refImageUrl\n  });\n\n  // 3) \ub9c8\uc9c0\ub9c9 \uc601\uc0c1\uc774 \uc544\ub2c8\uba74 \ud504\ub808\uc784 \ucd94\ucd9c \u2192 \ub2e4\uc74c \uc601\uc0c1 \ucc38\uc870 \uc774\ubbf8\uc9c0\n  if (i < segments.length - 1) {\n    try {\n      refImageUrl = await extractLastFrame(videoUrl);\n    } catch(e) {\n      // \ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328 \uc2dc \uae30\uc874 \uc774\ubbf8\uc9c0 \uc720\uc9c0\n      refImageUrl = initialImageUrl;\n    }\n  }\n}\n\nreturn [{ json: { results, segmentCount: results.length } }];",
+                    "mode": "runOnceForAllItems"
                 },
+                "id": "seq-video-node",
+                "name": "\uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac",
                 "type": "n8n-nodes-base.code",
                 "typeVersion": 2,
                 "position": [
                     160,
                     624
-                ],
-                "id": "8bc0b64f-213f-412d-bcaf-7a7a9db04cdf",
-                "name": "\uc601\uc0c1 \ubcc0\ud658 \uc900\ube44"
+                ]
             }
         ],
         "connections": {
-            "\uc2a4\ucf00\uc904 \ud2b8\ub9ac\uac70": {
-                "main": []
-            },
             "AI \ucf58\ud150\uce20 \uc0dd\uc131": {
                 "main": [
                     [
@@ -6204,39 +5344,6 @@
                     ]
                 ]
             },
-            "\uc601\uc0c1 \ubcc0\ud658": {
-                "main": [
-                    [
-                        {
-                            "node": "\uc601\uc0c1 \ubcc0\ud658 \ub300\uae30",
-                            "type": "main",
-                            "index": 0
-                        }
-                    ]
-                ]
-            },
-            "\uc601\uc0c1 \ubcc0\ud658 \ub300\uae30": {
-                "main": [
-                    [
-                        {
-                            "node": "\uc601\uc0c1 \ubcc0\ud658 \uacb0\uacfc",
-                            "type": "main",
-                            "index": 0
-                        }
-                    ]
-                ]
-            },
-            "\uc601\uc0c1 \ubcc0\ud658 \uacb0\uacfc": {
-                "main": [
-                    [
-                        {
-                            "node": "NCA \ub370\uc774\ud130 \uc900\ube44",
-                            "type": "main",
-                            "index": 0
-                        }
-                    ]
-                ]
-            },
             "\ucc38\uc870 \uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8": {
                 "main": [
                     [
@@ -6263,18 +5370,18 @@
                 "main": [
                     [
                         {
-                            "node": "\uc601\uc0c1 \ubcc0\ud658 \uc900\ube44",
+                            "node": "\uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac",
                             "type": "main",
                             "index": 0
                         }
                     ]
                 ]
             },
-            "\uc601\uc0c1 \ubcc0\ud658 \uc900\ube44": {
+            "\uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac": {
                 "main": [
                     [
                         {
-                            "node": "\uc601\uc0c1 \ubcc0\ud658",
+                            "node": "NCA \ub370\uc774\ud130 \uc900\ube44",
                             "type": "main",
                             "index": 0
                         }
@@ -6288,10 +5395,10 @@
         "autosaved": false,
         "workflowPublishHistory": [
             {
-                "createdAt": "2026-02-20T18:07:57.983Z",
-                "id": 478,
+                "createdAt": "2026-02-20T18:26:22.774Z",
+                "id": 479,
                 "workflowId": "jSEDYrkFcWUzJ8Et",
-                "versionId": "b41dbb48-f2d0-44e3-90bd-2b7dc3f47bd1",
+                "versionId": "388a3750-33b7-4450-856b-b59b1befc182",
                 "event": "activated",
                 "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
             }
