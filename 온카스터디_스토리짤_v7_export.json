@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-19T19:20:45.916Z",
+  "updatedAt": "2026-02-19T19:28:54.950Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -236,8 +236,7 @@
     },
     {
       "parameters": {
-        "amount": 30,
-        "unit": "seconds"
+        "amount": 30
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -254,8 +253,7 @@
         "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('이미지 생성').item.json.data.taskId }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
-        "options": {},
-        "method": "GET"
+        "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
@@ -605,8 +603,7 @@
     },
     {
       "parameters": {
-        "amount": 30,
-        "unit": "seconds"
+        "amount": 30
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -625,8 +622,7 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {
           "timeout": 30000
-        },
-        "method": "GET"
+        }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
@@ -669,6 +665,100 @@
       ],
       "id": "nano_url_extract",
       "name": "이미지 URL 추출"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ref_img_check",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -248,
+        304
+      ],
+      "id": "ref_img_check_01",
+      "name": "참조 이미지 완료 체크"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        -48,
+        404
+      ],
+      "id": "ref_img_rewait_01",
+      "name": "참조 이미지 재대기",
+      "webhookId": "ref-img-rewait-01"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "img_check",
+              "leftValue": "={{ $json.data.state }}",
+              "rightValue": "success",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1096,
+        496
+      ],
+      "id": "img_check_01",
+      "name": "이미지 완료 체크"
+    },
+    {
+      "parameters": {
+        "amount": 30
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1296,
+        596
+      ],
+      "id": "img_rewait_01",
+      "name": "이미지 재대기",
+      "webhookId": "img-rewait-01"
     }
   ],
   "connections": {
@@ -753,7 +843,7 @@
       "main": [
         [
           {
-            "node": "이미지 URL 추출",
+            "node": "이미지 완료 체크",
             "type": "main",
             "index": 0
           }
@@ -936,7 +1026,7 @@
       "main": [
         [
           {
-            "node": "참조 이미지 집계",
+            "node": "참조 이미지 완료 체크",
             "type": "main",
             "index": 0
           }
@@ -959,6 +1049,64 @@
         [
           {
             "node": "영상 변환",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "참조 이미지 완료 체크": {
+      "main": [
+        [
+          {
+            "node": "참조 이미지 집계",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "참조 이미지 재대기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "참조 이미지 재대기": {
+      "main": [
+        [
+          {
+            "node": "참조 이미지 결과",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 완료 체크": {
+      "main": [
+        [
+          {
+            "node": "이미지 URL 추출",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "이미지 재대기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 재대기": {
+      "main": [
+        [
+          {
+            "node": "이미지 결과",
             "type": "main",
             "index": 0
           }
@@ -4945,7 +5093,7 @@
           "content": {
             "parts": [
               {
-                "text": "{\n  \"hook_title\": \"흑형이 알려주는 <y>카지노</y> <y>안전</y> 체크리스트\",\n  \"scenes\": [\n    {\n      \"dialogue\": \"Bro, 진짜 이건 알아야 돼. 안전한 사이트 고르는 법, 내가 다 알려줄게.\",\n      \"image_prompt\": \"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, serious expression leaning forward pointing finger, dimly lit vintage arcade with neon signs and classic game cabinets, two friends, two-shot, Jay talking and gesturing, Mike listening with curious expression, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue\": \"Wait, for real? 야, 솔직히 난 그냥 제일 유명한 데 갔는데... 그거 위험한 거 아니야?\",\n      \"image_prompt\": \"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, surprised worried expression, dimly lit vintage arcade with neon signs and classic game cabinets, two friends, two-shot, Mike talking with animated expression, Jay listening with confident smile, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    },\n    {\n      \"dialogue\": \"aight, 들어봐. 딱 세 가지만 체크하면 돼. 첫째, 먹튀 이력 있는지 꼭 확인하고. 둘째, 라이센스 정보 확실한지 보고. 셋째, 커뮤니티에서 실제 이용자 후기 꼼꼼히 읽으면 돼. 온카스터디 같은 데 가면 이런 정보 다 있어.\",\n      \"image_prompt\": \"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, dimly lit vintage arcade with neon signs and classic game cabinets, two friends, two-shot, Jay talking and gesturing, Mike listening nodding thoughtfully, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    }\n  ],\n  \"Subject\": \"제목 #온카스터디 #카지노 #안전놀이터 #먹튀검증\",\n  \"Caption\": \"설명문 #온카스터디 #카지노사이트 #안전놀이터추천 #먹튀검증커뮤니티\",\n  \"Comment\": \"🔥 안전한 카지노 사이트 찾는 법, 온카스터디에서 더 자세히 알아보세요!\",\n  \"BGM_prompt\": \"upbeat hip hop beat with a touch of jazz, confident and informative vibe, steady rhythm, bright city street background\"\n}"
+                "text": "{\n  \"hook_title\": \"이것도 모르고 하면 <y>100%</y> 당한다\",\n  \"scenes\": [\n    {\n      \"dialogue\": \"Bro, 이거 진짜 basic인데 모르는 사람 너무 많아. 내가 explain해줄게.\",\n      \"image_prompt\": \"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intently explaining with hands, sitting at a cozy coffee shop booth, natural sunlight streaming in, two friends, two-shot, Jay talking and gesturing, Mike listening with focused expression, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue\": \"Wait, what? 야, 나 지금까지 그냥 감으로 했는데? legit한 거야?\",\n      \"image_prompt\": \"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, surprised but intrigued expression, sitting at a cozy coffee shop booth, natural sunlight streaming in, two friends, two-shot, Mike talking with wide eyes, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    },\n    {\n      \"dialogue\": \"aight, 그럼 3가지만 딱 기억해. 이걸로 안전한 곳 거르는 건 totally 쉬워.\",\n      \"image_prompt\": \"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, holding up three fingers calmly, sitting at a cozy coffee shop booth, natural sunlight streaming in, two friends, two-shot, Jay talking and holding up fingers, Mike listening intently nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay's hand, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    }\n  ],\n  \"Subject\": \"제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터 #꿀팁\",\n  \"Caption\": \"설명문 #온카스터디 #먹튀검증 #카지노커뮤니티 #안전놀이터 #꿀팁 #안전정보\",\n  \"Comment\": \"🔥 온카스터디에서 더 많은 안전 정보 확인하세요! #온카\",\n  \"BGM_prompt\": \"upbeat and catchy lo-fi hip hop, friendly banter vibe, subtle synth melody, city street cafe atmosphere\"\n}"
               }
             ],
             "role": "model"
@@ -4961,32 +5109,32 @@
     "콘텐츠 파싱": [
       {
         "json": {
-          "hook_title": "흑형이 알려주는 <y>카지노</y> <y>안전</y> 체크리스트",
+          "hook_title": "이것도 모르고 하면 <y>100%</y> 당한다",
           "scenes": [
             {
-              "dialogue": "Bro, 진짜 이건 알아야 돼. 안전한 사이트 고르는 법, 내가 다 알려줄게.",
-              "image_prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, serious expression leaning forward pointing finger, dimly lit vintage arcade with neon signs and classic game cabinets, two friends, two-shot, Jay talking and gesturing, Mike listening with curious expression, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "dialogue": "Bro, 이거 진짜 basic인데 모르는 사람 너무 많아. 내가 explain해줄게.",
+              "image_prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intently explaining with hands, sitting at a cozy coffee shop booth, natural sunlight streaming in, two friends, two-shot, Jay talking and gesturing, Mike listening with focused expression, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
               "speaker": "A"
             },
             {
-              "dialogue": "Wait, for real? 야, 솔직히 난 그냥 제일 유명한 데 갔는데... 그거 위험한 거 아니야?",
-              "image_prompt": "young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, surprised worried expression, dimly lit vintage arcade with neon signs and classic game cabinets, two friends, two-shot, Mike talking with animated expression, Jay listening with confident smile, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "dialogue": "Wait, what? 야, 나 지금까지 그냥 감으로 했는데? legit한 거야?",
+              "image_prompt": "young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, surprised but intrigued expression, sitting at a cozy coffee shop booth, natural sunlight streaming in, two friends, two-shot, Mike talking with wide eyes, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
               "speaker": "B"
             },
             {
-              "dialogue": "aight, 들어봐. 딱 세 가지만 체크하면 돼. 첫째, 먹튀 이력 있는지 꼭 확인하고. 둘째, 라이센스 정보 확실한지 보고. 셋째, 커뮤니티에서 실제 이용자 후기 꼼꼼히 읽으면 돼. 온카스터디 같은 데 가면 이런 정보 다 있어.",
-              "image_prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, dimly lit vintage arcade with neon signs and classic game cabinets, two friends, two-shot, Jay talking and gesturing, Mike listening nodding thoughtfully, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "dialogue": "aight, 그럼 3가지만 딱 기억해. 이걸로 안전한 곳 거르는 건 totally 쉬워.",
+              "image_prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, holding up three fingers calmly, sitting at a cozy coffee shop booth, natural sunlight streaming in, two friends, two-shot, Jay talking and holding up fingers, Mike listening intently nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay's hand, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
               "speaker": "A"
             }
           ],
-          "Subject": "제목 #온카스터디 #카지노 #안전놀이터 #먹튀검증",
-          "Caption": "설명문 #온카스터디 #카지노사이트 #안전놀이터추천 #먹튀검증커뮤니티",
-          "Comment": "🔥 안전한 카지노 사이트 찾는 법, 온카스터디에서 더 자세히 알아보세요!",
-          "BGM_prompt": "upbeat hip hop beat with a touch of jazz, confident and informative vibe, steady rhythm, bright city street background",
-          "fullDialogue": "Bro, 진짜 이건 알아야 돼. 안전한 사이트 고르는 법, 내가 다 알려줄게. Wait, for real? 야, 솔직히 난 그냥 제일 유명한 데 갔는데... 그거 위험한 거 아니야? aight, 들어봐. 딱 세 가지만 체크하면 돼. 첫째, 먹튀 이력 있는지 꼭 확인하고. 둘째, 라이센스 정보 확실한지 보고. 셋째, 커뮤니티에서 실제 이용자 후기 꼼꼼히 읽으면 돼. 온카스터디 같은 데 가면 이런 정보 다 있어.",
+          "Subject": "제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터 #꿀팁",
+          "Caption": "설명문 #온카스터디 #먹튀검증 #카지노커뮤니티 #안전놀이터 #꿀팁 #안전정보",
+          "Comment": "🔥 온카스터디에서 더 많은 안전 정보 확인하세요! #온카",
+          "BGM_prompt": "upbeat and catchy lo-fi hip hop, friendly banter vibe, subtle synth melody, city street cafe atmosphere",
+          "fullDialogue": "Bro, 이거 진짜 basic인데 모르는 사람 너무 많아. 내가 explain해줄게. Wait, what? 야, 나 지금까지 그냥 감으로 했는데? legit한 거야? aight, 그럼 3가지만 딱 기억해. 이걸로 안전한 곳 거르는 건 totally 쉬워.",
           "segmentCount": 3,
           "Status": "준비",
-          "generatedAt": "2026-02-19T18:49:44.779Z"
+          "generatedAt": "2026-02-19T19:26:09.712Z"
         },
         "pairedItem": {
           "item": 0
@@ -4996,12 +5144,12 @@
     "시트 기록": [
       {
         "json": {
-          "Subject": "제목 #온카스터디 #카지노 #안전놀이터 #먹튀검증",
-          "Hook": "흑형이 알려주는 <y>카지노</y> <y>안전</y> 체크리스트",
-          "Narration": "Bro, 진짜 이건 알아야 돼. 안전한 사이트 고르는 법, 내가 다 알려줄게. Wait, for real? 야, 솔직히 난 그냥 제일 유명한 데 갔는데... 그거 위험한 거 아니야? aight, 들어봐. 딱 세 가지만 체크하면 돼. 첫째, 먹튀 이력 있는지 꼭 확인하고. 둘째, 라이센스 정보 확실한지 보고. 셋째, 커뮤니티에서 실제 이용자 후기 꼼꼼히 읽으면 돼. 온카스터디 같은 데 가면 이런 정보 다 있어.",
-          "Caption": "설명문 #온카스터디 #카지노사이트 #안전놀이터추천 #먹튀검증커뮤니티",
-          "댓글": "🔥 안전한 카지노 사이트 찾는 법, 온카스터디에서 더 자세히 알아보세요!",
-          "BGM prompt": "upbeat hip hop beat with a touch of jazz, confident and informative vibe, steady rhythm, bright city street background",
+          "Subject": "제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터 #꿀팁",
+          "Hook": "이것도 모르고 하면 <y>100%</y> 당한다",
+          "Narration": "Bro, 이거 진짜 basic인데 모르는 사람 너무 많아. 내가 explain해줄게. Wait, what? 야, 나 지금까지 그냥 감으로 했는데? legit한 거야? aight, 그럼 3가지만 딱 기억해. 이걸로 안전한 곳 거르는 건 totally 쉬워.",
+          "Caption": "설명문 #온카스터디 #먹튀검증 #카지노커뮤니티 #안전놀이터 #꿀팁 #안전정보",
+          "댓글": "🔥 온카스터디에서 더 많은 안전 정보 확인하세요! #온카",
+          "BGM prompt": "upbeat and catchy lo-fi hip hop, friendly banter vibe, subtle synth melody, city street cafe atmosphere",
           "Status": "준비"
         },
         "pairedItem": {
@@ -5028,17 +5176,165 @@
           "item": 0
         }
       }
+    ],
+    "참조 이미지 생성": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "109ba69676bc50b88308220e689a4146",
+            "recordId": "109ba69676bc50b88308220e689a4146"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "8981f1c4d7d611c981e814ab8b7d0415",
+            "recordId": "8981f1c4d7d611c981e814ab8b7d0415"
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      }
+    ],
+    "참조 이미지 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "109ba69676bc50b88308220e689a4146",
+            "recordId": "109ba69676bc50b88308220e689a4146"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "8981f1c4d7d611c981e814ab8b7d0415",
+            "recordId": "8981f1c4d7d611c981e814ab8b7d0415"
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      }
+    ],
+    "참조 이미지 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "109ba69676bc50b88308220e689a4146",
+            "model": "nano-banana-pro",
+            "state": "waiting",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": null,
+            "completeTime": null,
+            "createTime": 1771529172577
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "8981f1c4d7d611c981e814ab8b7d0415",
+            "model": "nano-banana-pro",
+            "state": "waiting",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": null,
+            "completeTime": null,
+            "createTime": 1771529172509
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      }
+    ],
+    "참조 이미지 집계": [
+      {
+        "json": {
+          "data": [
+            {
+              "code": 200,
+              "msg": "success",
+              "data": {
+                "taskId": "109ba69676bc50b88308220e689a4146",
+                "model": "nano-banana-pro",
+                "state": "waiting",
+                "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+                "resultJson": "",
+                "failCode": null,
+                "failMsg": null,
+                "costTime": null,
+                "completeTime": null,
+                "createTime": 1771529172577
+              }
+            },
+            {
+              "code": 200,
+              "msg": "success",
+              "data": {
+                "taskId": "8981f1c4d7d611c981e814ab8b7d0415",
+                "model": "nano-banana-pro",
+                "state": "waiting",
+                "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+                "resultJson": "",
+                "failCode": null,
+                "failMsg": null,
+                "costTime": null,
+                "completeTime": null,
+                "createTime": 1771529172509
+              }
+            }
+          ]
+        },
+        "pairedItem": [
+          {
+            "item": 0
+          },
+          {
+            "item": 1
+          }
+        ]
+      }
     ]
   },
-  "versionId": "374774ad-8f23-4b61-b204-424b5742b28e",
-  "activeVersionId": "374774ad-8f23-4b61-b204-424b5742b28e",
-  "versionCounter": 190,
+  "versionId": "9fb17c3f-c0f7-416e-85a9-ce2d31ede76e",
+  "activeVersionId": "9fb17c3f-c0f7-416e-85a9-ce2d31ede76e",
+  "versionCounter": 195,
   "triggerCount": 1,
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-19T19:20:45.918Z",
-    "createdAt": "2026-02-19T19:20:45.918Z",
-    "versionId": "374774ad-8f23-4b61-b204-424b5742b28e",
+    "updatedAt": "2026-02-19T19:28:54.952Z",
+    "createdAt": "2026-02-19T19:28:54.952Z",
+    "versionId": "9fb17c3f-c0f7-416e-85a9-ce2d31ede76e",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -5270,8 +5566,7 @@
       },
       {
         "parameters": {
-          "amount": 30,
-          "unit": "seconds"
+          "amount": 30
         },
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
@@ -5288,8 +5583,7 @@
           "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('이미지 생성').item.json.data.taskId }}",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpHeaderAuth",
-          "options": {},
-          "method": "GET"
+          "options": {}
         },
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
@@ -5639,8 +5933,7 @@
       },
       {
         "parameters": {
-          "amount": 30,
-          "unit": "seconds"
+          "amount": 30
         },
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
@@ -5659,8 +5952,7 @@
           "genericAuthType": "httpHeaderAuth",
           "options": {
             "timeout": 30000
-          },
-          "method": "GET"
+          }
         },
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
@@ -5703,6 +5995,100 @@
         ],
         "id": "nano_url_extract",
         "name": "이미지 URL 추출"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "ref_img_check",
+                "leftValue": "={{ $json.data.state }}",
+                "rightValue": "success",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          -248,
+          304
+        ],
+        "id": "ref_img_check_01",
+        "name": "참조 이미지 완료 체크"
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -48,
+          404
+        ],
+        "id": "ref_img_rewait_01",
+        "name": "참조 이미지 재대기",
+        "webhookId": "ref-img-rewait-01"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "img_check",
+                "leftValue": "={{ $json.data.state }}",
+                "rightValue": "success",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1096,
+          496
+        ],
+        "id": "img_check_01",
+        "name": "이미지 완료 체크"
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          1296,
+          596
+        ],
+        "id": "img_rewait_01",
+        "name": "이미지 재대기",
+        "webhookId": "img-rewait-01"
       }
     ],
     "connections": {
@@ -5787,7 +6173,7 @@
         "main": [
           [
             {
-              "node": "이미지 URL 추출",
+              "node": "이미지 완료 체크",
               "type": "main",
               "index": 0
             }
@@ -5970,7 +6356,7 @@
         "main": [
           [
             {
-              "node": "참조 이미지 집계",
+              "node": "참조 이미지 완료 체크",
               "type": "main",
               "index": 0
             }
@@ -5993,6 +6379,64 @@
           [
             {
               "node": "영상 변환",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "참조 이미지 완료 체크": {
+        "main": [
+          [
+            {
+              "node": "참조 이미지 집계",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "참조 이미지 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "참조 이미지 재대기": {
+        "main": [
+          [
+            {
+              "node": "참조 이미지 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 완료 체크": {
+        "main": [
+          [
+            {
+              "node": "이미지 URL 추출",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "이미지 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 재대기": {
+        "main": [
+          [
+            {
+              "node": "이미지 결과",
               "type": "main",
               "index": 0
             }
