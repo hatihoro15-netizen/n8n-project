@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-20T17:56:42.710Z",
+  "updatedAt": "2026-02-20T18:00:20.756Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -613,6 +613,32 @@
       ],
       "id": "8bc0b64f-213f-412d-bcaf-7a7a9db04cdf",
       "name": "영상 변환 준비"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 장면 1의 이미지 프롬프트만 선택 (1장만 생성)\nconst items = $input.all();\nconst first = items[0].json;\n\nreturn [{\n  json: {\n    image_prompt: first.image_prompt,\n    refUrl_A: first.refUrl_A,\n    refUrl_B: first.refUrl_B,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1072,
+        736
+      ],
+      "id": "10eaa384-6743-44fb-866f-a5b6cd93b368",
+      "name": "이미지 프롬프트 선택"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1개 이미지 URL을 3개 세그먼트에 공유\nconst imageData = $input.first().json;\nconst imageUrl = imageData.images?.[0]?.url || '';\n\nif (!imageUrl) {\n  throw new Error('이미지 URL 없음: ' + JSON.stringify(imageData).substring(0, 300));\n}\n\nconst segments = $('세그먼트 분리').all();\n\nreturn segments.map((seg, i) => {\n  return {\n    json: {\n      ...seg.json,\n      images: [{ url: imageUrl }]\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        48,
+        624
+      ],
+      "id": "872a5b8d-b4f9-4d3e-aa60-066f80332352",
+      "name": "영상 데이터 합치기"
     }
   ],
   "connections": {
@@ -658,7 +684,7 @@
       "main": [
         [
           {
-            "node": "이미지 생성",
+            "node": "이미지 프롬프트 선택",
             "type": "main",
             "index": 0
           }
@@ -852,7 +878,7 @@
       "main": [
         [
           {
-            "node": "영상 변환 준비",
+            "node": "영상 데이터 합치기",
             "type": "main",
             "index": 0
           }
@@ -864,6 +890,28 @@
         [
           {
             "node": "영상 변환",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 프롬프트 선택": {
+      "main": [
+        [
+          {
+            "node": "이미지 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상 데이터 합치기": {
+      "main": [
+        [
+          {
+            "node": "영상 변환 준비",
             "type": "main",
             "index": 0
           }
@@ -5601,9 +5649,9 @@
       }
     ]
   },
-  "versionId": "7f6205e2-709e-4015-970c-2a635fec800b",
-  "activeVersionId": "7f6205e2-709e-4015-970c-2a635fec800b",
-  "versionCounter": 339,
+  "versionId": "d1f555c6-655e-47e1-813b-d5dcb7911537",
+  "activeVersionId": "d1f555c6-655e-47e1-813b-d5dcb7911537",
+  "versionCounter": 342,
   "triggerCount": 1,
   "shared": [
     {
@@ -5662,9 +5710,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-20T17:56:42.711Z",
-    "createdAt": "2026-02-20T17:56:42.711Z",
-    "versionId": "7f6205e2-709e-4015-970c-2a635fec800b",
+    "updatedAt": "2026-02-20T18:00:20.757Z",
+    "createdAt": "2026-02-20T18:00:20.757Z",
+    "versionId": "d1f555c6-655e-47e1-813b-d5dcb7911537",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -6273,6 +6321,32 @@
         ],
         "id": "8bc0b64f-213f-412d-bcaf-7a7a9db04cdf",
         "name": "영상 변환 준비"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 장면 1의 이미지 프롬프트만 선택 (1장만 생성)\nconst items = $input.all();\nconst first = items[0].json;\n\nreturn [{\n  json: {\n    image_prompt: first.image_prompt,\n    refUrl_A: first.refUrl_A,\n    refUrl_B: first.refUrl_B,\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1072,
+          736
+        ],
+        "id": "10eaa384-6743-44fb-866f-a5b6cd93b368",
+        "name": "이미지 프롬프트 선택"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 1개 이미지 URL을 3개 세그먼트에 공유\nconst imageData = $input.first().json;\nconst imageUrl = imageData.images?.[0]?.url || '';\n\nif (!imageUrl) {\n  throw new Error('이미지 URL 없음: ' + JSON.stringify(imageData).substring(0, 300));\n}\n\nconst segments = $('세그먼트 분리').all();\n\nreturn segments.map((seg, i) => {\n  return {\n    json: {\n      ...seg.json,\n      images: [{ url: imageUrl }]\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          48,
+          624
+        ],
+        "id": "872a5b8d-b4f9-4d3e-aa60-066f80332352",
+        "name": "영상 데이터 합치기"
       }
     ],
     "connections": {
@@ -6318,7 +6392,7 @@
         "main": [
           [
             {
-              "node": "이미지 생성",
+              "node": "이미지 프롬프트 선택",
               "type": "main",
               "index": 0
             }
@@ -6512,7 +6586,7 @@
         "main": [
           [
             {
-              "node": "영상 변환 준비",
+              "node": "영상 데이터 합치기",
               "type": "main",
               "index": 0
             }
@@ -6529,6 +6603,28 @@
             }
           ]
         ]
+      },
+      "이미지 프롬프트 선택": {
+        "main": [
+          [
+            {
+              "node": "이미지 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상 데이터 합치기": {
+        "main": [
+          [
+            {
+              "node": "영상 변환 준비",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "hatihoro15 hatihoro15",
@@ -6537,10 +6633,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-20T17:56:42.784Z",
-        "id": 476,
+        "createdAt": "2026-02-20T18:00:20.830Z",
+        "id": 477,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "7f6205e2-709e-4015-970c-2a635fec800b",
+        "versionId": "d1f555c6-655e-47e1-813b-d5dcb7911537",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
