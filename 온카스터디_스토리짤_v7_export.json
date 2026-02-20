@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-20T17:32:40.738Z",
+  "updatedAt": "2026-02-20T17:56:42.710Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -476,7 +476,7 @@
     },
     {
       "parameters": {
-        "amount": 120
+        "amount": 180
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -5218,38 +5218,6 @@
         }
       }
     ],
-    "영상 변환": [
-      {
-        "json": {
-          "code": 422,
-          "msg": "Please enter prompt",
-          "data": null
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 422,
-          "msg": "Please enter prompt",
-          "data": null
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "code": 422,
-          "msg": "Please enter prompt",
-          "data": null
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      }
-    ],
     "이미지 URL 추출": [
       {
         "json": {
@@ -5330,6 +5298,44 @@
         }
       }
     ],
+    "영상 변환": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "fb849b43a4b3109fcb642637b7687c10"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "b5d35ed0fac1c014446a7c7d4e907d3a"
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "de92828a3fd30d72715a348c6f8ecdfc"
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
     "영상 변환 준비": [
       {
         "json": {
@@ -5353,7 +5359,7 @@
             }
           ],
           "veo3Body": {
-            "prompt": "",
+            "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says 'Bro 진짜 이것도 모르고 슬롯함?', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'Wait WHAT? 나 그냥 재밌으면 했지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
             "imageUrls": [
               "https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png"
             ],
@@ -5389,7 +5395,7 @@
             }
           ],
           "veo3Body": {
-            "prompt": "",
+            "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '이건 basic이야. RTP 확인 안 함?', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'RTP? 그게 뭔데? 뭐 게임하는 거야?', then The first man (short fade haircut, black hoodie, gold chain) responds '환수율 bro. 96% 이상은 봐야지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
             "imageUrls": [
               "https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png"
             ],
@@ -5425,7 +5431,7 @@
             }
           ],
           "veo3Body": {
-            "prompt": "",
+            "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says 'Damn... 나 지금까지 그냥 감으로 했는데.', then The first man (short fade haircut, black hoodie, gold chain) responds '그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
             "imageUrls": [
               "https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png"
             ],
@@ -5440,12 +5446,55 @@
         }
       }
     ],
+    "Aggregate": [
+      {
+        "json": {
+          "data": [
+            {
+              "code": 200,
+              "msg": "success",
+              "data": {
+                "taskId": "b5d35ed0fac1c014446a7c7d4e907d3a",
+                "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '이건 basic이야. RTP 확인 안 함?', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'RTP? 그게 뭔데? 뭐 게임하는 거야?', then The first man (short fade haircut, black hoodie, gold chain) responds '환수율 bro. 96% 이상은 봐야지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+                "response": {
+                  "taskId": "b5d35ed0fac1c014446a7c7d4e907d3a",
+                  "resolution": "720p",
+                  "originUrls": null,
+                  "resultUrls": [
+                    "https://tempfile.aiquickdraw.com/v/b5d35ed0fac1c014446a7c7d4e907d3a_1771609598.mp4"
+                  ],
+                  "hasAudioList": [
+                    true
+                  ],
+                  "seeds": [
+                    41536
+                  ]
+                },
+                "successFlag": 1,
+                "fallbackFlag": false,
+                "completeTime": 1771609600000,
+                "createTime": 1771609518000,
+                "errorCode": null,
+                "errorMessage": null
+              }
+            }
+          ]
+        },
+        "pairedItem": [
+          {
+            "item": 0
+          }
+        ]
+      }
+    ],
     "영상 변환 대기": [
       {
         "json": {
-          "code": 422,
-          "msg": "Please enter prompt",
-          "data": null
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "fb849b43a4b3109fcb642637b7687c10"
+          }
         },
         "pairedItem": {
           "item": 0
@@ -5453,9 +5502,11 @@
       },
       {
         "json": {
-          "code": 422,
-          "msg": "Please enter prompt",
-          "data": null
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "b5d35ed0fac1c014446a7c7d4e907d3a"
+          }
         },
         "pairedItem": {
           "item": 1
@@ -5463,9 +5514,11 @@
       },
       {
         "json": {
-          "code": 422,
-          "msg": "Please enter prompt",
-          "data": null
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "de92828a3fd30d72715a348c6f8ecdfc"
+          }
         },
         "pairedItem": {
           "item": 2
@@ -5475,9 +5528,19 @@
     "영상 변환 결과": [
       {
         "json": {
-          "code": 422,
-          "msg": "Record not found for taskId: ",
-          "data": null
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "fb849b43a4b3109fcb642637b7687c10",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/workers/nano/image_1771596787392_dcwssg.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says 'Bro 진짜 이것도 모르고 슬롯함?', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'Wait WHAT? 나 그냥 재밌으면 했지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": null,
+            "successFlag": 0,
+            "fallbackFlag": false,
+            "completeTime": null,
+            "createTime": 1771609518000,
+            "errorCode": null,
+            "errorMessage": null
+          }
         },
         "pairedItem": {
           "item": 0
@@ -5485,9 +5548,32 @@
       },
       {
         "json": {
-          "code": 422,
-          "msg": "Record not found for taskId: ",
-          "data": null
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "b5d35ed0fac1c014446a7c7d4e907d3a",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596793821-hlyp2j42oxh.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '이건 basic이야. RTP 확인 안 함?', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'RTP? 그게 뭔데? 뭐 게임하는 거야?', then The first man (short fade haircut, black hoodie, gold chain) responds '환수율 bro. 96% 이상은 봐야지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "b5d35ed0fac1c014446a7c7d4e907d3a",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/b5d35ed0fac1c014446a7c7d4e907d3a_1771609598.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                41536
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771609600000,
+            "createTime": 1771609518000,
+            "errorCode": null,
+            "errorMessage": null
+          }
         },
         "pairedItem": {
           "item": 1
@@ -5495,9 +5581,19 @@
       },
       {
         "json": {
-          "code": 422,
-          "msg": "Record not found for taskId: ",
-          "data": null
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "de92828a3fd30d72715a348c6f8ecdfc",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says 'Damn... 나 지금까지 그냥 감으로 했는데.', then The first man (short fade haircut, black hoodie, gold chain) responds '그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": null,
+            "successFlag": 0,
+            "fallbackFlag": false,
+            "completeTime": null,
+            "createTime": 1771609518000,
+            "errorCode": null,
+            "errorMessage": null
+          }
         },
         "pairedItem": {
           "item": 2
@@ -5505,9 +5601,9 @@
       }
     ]
   },
-  "versionId": "aee9dde3-9ec7-4e68-b0a5-422c1b443c9d",
-  "activeVersionId": "aee9dde3-9ec7-4e68-b0a5-422c1b443c9d",
-  "versionCounter": 331,
+  "versionId": "7f6205e2-709e-4015-970c-2a635fec800b",
+  "activeVersionId": "7f6205e2-709e-4015-970c-2a635fec800b",
+  "versionCounter": 339,
   "triggerCount": 1,
   "shared": [
     {
@@ -5566,9 +5662,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-20T17:32:40.739Z",
-    "createdAt": "2026-02-20T17:32:40.739Z",
-    "versionId": "aee9dde3-9ec7-4e68-b0a5-422c1b443c9d",
+    "updatedAt": "2026-02-20T17:56:42.711Z",
+    "createdAt": "2026-02-20T17:56:42.711Z",
+    "versionId": "7f6205e2-709e-4015-970c-2a635fec800b",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -6040,7 +6136,7 @@
       },
       {
         "parameters": {
-          "amount": 120
+          "amount": 180
         },
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
@@ -6441,10 +6537,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-20T17:32:40.831Z",
-        "id": 475,
+        "createdAt": "2026-02-20T17:56:42.784Z",
+        "id": 476,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "aee9dde3-9ec7-4e68-b0a5-422c1b443c9d",
+        "versionId": "7f6205e2-709e-4015-970c-2a635fec800b",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
