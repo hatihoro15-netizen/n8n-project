@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-20T14:15:35.144Z",
+  "updatedAt": "2026-02-20T14:18:12.780Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -236,7 +236,7 @@
     },
     {
       "parameters": {
-        "amount": 120
+        "amount": 180
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -454,7 +454,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"prompt\": \"{{ $('세그먼트 분리').item.json.veo3_prompt }}\",\n  \"imageUrls\": [\"{{ $json.images[0].url }}\"],\n  \"model\": \"veo3_fast\",\n  \"generationType\": \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n  \"aspect_ratio\": \"16:9\",\n  \"enableTranslation\": false\n}",
+        "jsonBody": "={{ JSON.stringify($json.veo3Body) }}",
         "options": {
           "timeout": 30000
         }
@@ -603,51 +603,16 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 2
-          },
-          "conditions": [
-            {
-              "id": "img_state_check",
-              "leftValue": "={{ $json.data.state }}",
-              "rightValue": "success",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "looseTypeValidation": true,
-        "options": {}
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n  const veo3Prompt = data.veo3_prompt || '';\n  const imageUrl = data.images?.[0]?.url || '';\n\n  // 큰따옴표, 백슬래시, 줄바꿈 등 JSON 깨뜨리는 문자 제거\n  const safePrompt = veo3Prompt.replace(/[\\\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\n\n  return {\n    json: {\n      ...data,\n      veo3Body: {\n        prompt: safePrompt,\n        imageUrls: [imageUrl],\n        model: \"veo3_fast\",\n        generationType: \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n        aspect_ratio: \"16:9\",\n        enableTranslation: false\n      }\n    }\n  };\n});"
       },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.2,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
-        -288,
-        672
+        160,
+        624
       ],
-      "id": "5083dd8c-127b-4d70-a2dd-afa443668627",
-      "name": "이미지 완료 체크"
-    },
-    {
-      "parameters": {
-        "amount": 30
-      },
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        -64,
-        832
-      ],
-      "id": "4a3b2ba0-ee30-430e-af8e-8a4d58ee43c8",
-      "name": "이미지 재대기",
-      "webhookId": "ece39763-91dd-4969-918f-353eb71936d8"
+      "id": "8bc0b64f-213f-412d-bcaf-7a7a9db04cdf",
+      "name": "영상 변환 준비"
     }
   ],
   "connections": {
@@ -726,7 +691,7 @@
       "main": [
         [
           {
-            "node": "이미지 완료 체크",
+            "node": "이미지 URL 추출",
             "type": "main",
             "index": 0
           }
@@ -887,36 +852,18 @@
       "main": [
         [
           {
+            "node": "영상 변환 준비",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상 변환 준비": {
+      "main": [
+        [
+          {
             "node": "영상 변환",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "이미지 완료 체크": {
-      "main": [
-        [
-          {
-            "node": "이미지 URL 추출",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "이미지 재대기",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "이미지 재대기": {
-      "main": [
-        [
-          {
-            "node": "이미지 결과",
             "type": "main",
             "index": 0
           }
@@ -5237,34 +5184,6 @@
         }
       }
     ],
-    "이미지 URL 추출": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
-            "model": "nano-banana-pro",
-            "state": "success",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": 104,
-            "completeTime": 1771596667827,
-            "createTime": 1771596563141
-          },
-          "images": [
-            {
-              "url": "https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png"
-            }
-          ]
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
     "이미지 집계": [
       {
         "json": {
@@ -5300,9 +5219,9 @@
       }
     ]
   },
-  "versionId": "ec789a42-887b-4f7f-b13b-9bb38417e115",
-  "activeVersionId": "ec789a42-887b-4f7f-b13b-9bb38417e115",
-  "versionCounter": 321,
+  "versionId": "b964ca2a-dea6-47b5-991f-4c15912d1f9d",
+  "activeVersionId": "b964ca2a-dea6-47b5-991f-4c15912d1f9d",
+  "versionCounter": 325,
   "triggerCount": 1,
   "shared": [
     {
@@ -5361,9 +5280,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-20T14:15:35.145Z",
-    "createdAt": "2026-02-20T14:15:35.145Z",
-    "versionId": "ec789a42-887b-4f7f-b13b-9bb38417e115",
+    "updatedAt": "2026-02-20T14:18:12.781Z",
+    "createdAt": "2026-02-20T14:18:12.781Z",
+    "versionId": "b964ca2a-dea6-47b5-991f-4c15912d1f9d",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -5595,7 +5514,7 @@
       },
       {
         "parameters": {
-          "amount": 120
+          "amount": 180
         },
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
@@ -5813,7 +5732,7 @@
           "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={\n  \"prompt\": \"{{ $('세그먼트 분리').item.json.veo3_prompt }}\",\n  \"imageUrls\": [\"{{ $json.images[0].url }}\"],\n  \"model\": \"veo3_fast\",\n  \"generationType\": \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n  \"aspect_ratio\": \"16:9\",\n  \"enableTranslation\": false\n}",
+          "jsonBody": "={{ JSON.stringify($json.veo3Body) }}",
           "options": {
             "timeout": 30000
           }
@@ -5962,51 +5881,16 @@
       },
       {
         "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "loose",
-              "version": 2
-            },
-            "conditions": [
-              {
-                "id": "img_state_check",
-                "leftValue": "={{ $json.data.state }}",
-                "rightValue": "success",
-                "operator": {
-                  "type": "string",
-                  "operation": "equals"
-                }
-              }
-            ],
-            "combinator": "and"
-          },
-          "looseTypeValidation": true,
-          "options": {}
+          "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n  const veo3Prompt = data.veo3_prompt || '';\n  const imageUrl = data.images?.[0]?.url || '';\n\n  // 큰따옴표, 백슬래시, 줄바꿈 등 JSON 깨뜨리는 문자 제거\n  const safePrompt = veo3Prompt.replace(/[\\\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\n\n  return {\n    json: {\n      ...data,\n      veo3Body: {\n        prompt: safePrompt,\n        imageUrls: [imageUrl],\n        model: \"veo3_fast\",\n        generationType: \"FIRST_AND_LAST_FRAMES_2_VIDEO\",\n        aspect_ratio: \"16:9\",\n        enableTranslation: false\n      }\n    }\n  };\n});"
         },
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2.2,
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
         "position": [
-          -288,
-          672
+          160,
+          624
         ],
-        "id": "5083dd8c-127b-4d70-a2dd-afa443668627",
-        "name": "이미지 완료 체크"
-      },
-      {
-        "parameters": {
-          "amount": 30
-        },
-        "type": "n8n-nodes-base.wait",
-        "typeVersion": 1.1,
-        "position": [
-          -64,
-          832
-        ],
-        "id": "4a3b2ba0-ee30-430e-af8e-8a4d58ee43c8",
-        "name": "이미지 재대기",
-        "webhookId": "ece39763-91dd-4969-918f-353eb71936d8"
+        "id": "8bc0b64f-213f-412d-bcaf-7a7a9db04cdf",
+        "name": "영상 변환 준비"
       }
     ],
     "connections": {
@@ -6085,7 +5969,7 @@
         "main": [
           [
             {
-              "node": "이미지 완료 체크",
+              "node": "이미지 URL 추출",
               "type": "main",
               "index": 0
             }
@@ -6246,36 +6130,18 @@
         "main": [
           [
             {
+              "node": "영상 변환 준비",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상 변환 준비": {
+        "main": [
+          [
+            {
               "node": "영상 변환",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "이미지 완료 체크": {
-        "main": [
-          [
-            {
-              "node": "이미지 URL 추출",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "이미지 재대기",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "이미지 재대기": {
-        "main": [
-          [
-            {
-              "node": "이미지 결과",
               "type": "main",
               "index": 0
             }
@@ -6289,10 +6155,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-20T14:15:35.220Z",
-        "id": 473,
+        "createdAt": "2026-02-20T14:18:12.855Z",
+        "id": 474,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "ec789a42-887b-4f7f-b13b-9bb38417e115",
+        "versionId": "b964ca2a-dea6-47b5-991f-4c15912d1f9d",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
