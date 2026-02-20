@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-20T06:43:37.813Z",
+  "updatedAt": "2026-02-20T07:01:29.026Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -197,7 +197,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 참조 이미지 URL (Kie.ai Nano Banana Pro 응답에서 추출)\nconst refResults = $('참조 이미지 결과').all();\n\nfunction extractImageUrl(result) {\n  const state = result?.json?.data?.state;\n  if (state !== 'success') {\n    throw new Error('참조 이미지 아직 완료 안됨! state=' + state + ' (대기 시간을 늘려주세요)');\n  }\n  try {\n    const resultJson = JSON.parse(result?.json?.data?.resultJson || '{}');\n    return (resultJson.resultUrls || resultJson.originUrls || [])[0] || '';\n  } catch(e) {\n    return '';\n  }\n}\n\nconst refA_url = extractImageUrl(refResults[0]);\nconst refB_url = extractImageUrl(refResults[1]);\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || 'A';\n  const isABScene = (scene.image_prompt || '').includes('two-shot');\n\n  const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n  const veo3_prompt = cleanImagePrompt +\n    '. The person is naturally speaking in Korean, saying: ' +\n    cleanDialogue +\n    '. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl: (speaker === 'B') ? refB_url : refA_url,\n      imgStrength: isABScene ? 0.85 : 0.5,\n    }\n  };\n});"
+        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL (참조 이미지 프롬프트에서 직접 가져옴)\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || 'A';\n  const isABScene = (scene.image_prompt || '').includes('two-shot');\n\n  const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n  const veo3_prompt = cleanImagePrompt +\n    '. The person is naturally speaking in Korean, saying: ' +\n    cleanDialogue +\n    '. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl: (speaker === 'B') ? refB_url : refA_url,\n      imgStrength: isABScene ? 0.85 : 0.5,\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -563,7 +563,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const charA = \"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\";\nconst charB = \"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\";\nreturn [\n  { json: { prompt: charA, speaker: \"A\" } },\n  { json: { prompt: charB, speaker: \"B\" } }\n];"
+        "jsCode": "// 고정 참조 이미지 URL\nconst refA_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\";\nconst refB_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\";\nreturn [\n  { json: { refUrl: refA_url, speaker: \"A\" } },\n  { json: { refUrl: refB_url, speaker: \"B\" } }\n];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -889,7 +889,7 @@
       "main": [
         [
           {
-            "node": "참조 이미지 생성",
+            "node": "세그먼트 분리",
             "type": "main",
             "index": 0
           }
@@ -901,50 +901,6 @@
         [
           {
             "node": "AI 콘텐츠 생성",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "참조 이미지 생성": {
-      "main": [
-        [
-          {
-            "node": "참조 이미지 대기",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "참조 이미지 대기": {
-      "main": [
-        [
-          {
-            "node": "참조 이미지 결과",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "참조 이미지 결과": {
-      "main": [
-        [
-          {
-            "node": "참조 이미지 집계",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "참조 이미지 집계": {
-      "main": [
-        [
-          {
-            "node": "세그먼트 분리",
             "type": "main",
             "index": 0
           }
@@ -4927,950 +4883,11 @@
           "item": 0
         }
       }
-    ],
-    "When clicking ‘Execute workflow’": [
-      {
-        "json": {},
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "AI 콘텐츠 생성": [
-      {
-        "json": {
-          "content": {
-            "parts": [
-              {
-                "text": "{\n  \"hook_title\": \"카지노 <y>안전</y> 체크! 흑형이 알려주는 <y>필수</y> 3가지\",\n  \"scenes\": [\n    {\n      \"dialogue\": \"Bro, 진짜 이거 모르면 100% 후회한다. I'm telling you.\",\n      \"image_prompt\": \"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue\": \"Wait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?\",\n      \"image_prompt\": \"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    },\n    {\n      \"dialogue\": \"No way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.\",\n      \"image_prompt\": \"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    }\n  ],\n  \"Subject\": \"제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터\",\n  \"Caption\": \"설명문 #온카스터디 #먹튀검증 #카지노커뮤니티 #안전놀이터\",\n  \"Comment\": \"🔥 온카스터디에서 더 많은 정보 확인하세요!\",\n  \"BGM_prompt\": \"chill lo-fi hip hop beat, relaxed friendly conversation vibe, smooth bass line, urban cafe atmosphere\"\n}"
-              }
-            ],
-            "role": "model"
-          },
-          "finishReason": "STOP",
-          "index": 0
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "콘텐츠 파싱": [
-      {
-        "json": {
-          "hook_title": "카지노 <y>안전</y> 체크! 흑형이 알려주는 <y>필수</y> 3가지",
-          "scenes": [
-            {
-              "dialogue": "Bro, 진짜 이거 모르면 100% 후회한다. I'm telling you.",
-              "image_prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-              "speaker": "A"
-            },
-            {
-              "dialogue": "Wait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?",
-              "image_prompt": "young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-              "speaker": "B"
-            },
-            {
-              "dialogue": "No way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.",
-              "image_prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-              "speaker": "A"
-            }
-          ],
-          "Subject": "제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터",
-          "Caption": "설명문 #온카스터디 #먹튀검증 #카지노커뮤니티 #안전놀이터",
-          "Comment": "🔥 온카스터디에서 더 많은 정보 확인하세요!",
-          "BGM_prompt": "chill lo-fi hip hop beat, relaxed friendly conversation vibe, smooth bass line, urban cafe atmosphere",
-          "fullDialogue": "Bro, 진짜 이거 모르면 100% 후회한다. I'm telling you. Wait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지? No way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.",
-          "segmentCount": 3,
-          "Status": "준비",
-          "generatedAt": "2026-02-20T05:51:03.412Z"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "시트 기록": [
-      {
-        "json": {
-          "Subject": "제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터",
-          "Hook": "카지노 <y>안전</y> 체크! 흑형이 알려주는 <y>필수</y> 3가지",
-          "Narration": "Bro, 진짜 이거 모르면 100% 후회한다. I'm telling you. Wait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지? No way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.",
-          "Caption": "설명문 #온카스터디 #먹튀검증 #카지노커뮤니티 #안전놀이터",
-          "댓글": "🔥 온카스터디에서 더 많은 정보 확인하세요!",
-          "BGM prompt": "chill lo-fi hip hop beat, relaxed friendly conversation vibe, smooth bass line, urban cafe atmosphere",
-          "Status": "준비"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "참조 이미지 프롬프트": [
-      {
-        "json": {
-          "prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "speaker": "A"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "prompt": "young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "speaker": "B"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "참조 이미지 생성": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "97220cc3ef4f8361aa30ab13ec5a720d",
-            "recordId": "97220cc3ef4f8361aa30ab13ec5a720d"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "3af916d52ee102aeb1e95b49b6ec723e",
-            "recordId": "3af916d52ee102aeb1e95b49b6ec723e"
-          }
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      }
-    ],
-    "참조 이미지 대기": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "97220cc3ef4f8361aa30ab13ec5a720d",
-            "recordId": "97220cc3ef4f8361aa30ab13ec5a720d"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "3af916d52ee102aeb1e95b49b6ec723e",
-            "recordId": "3af916d52ee102aeb1e95b49b6ec723e"
-          }
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      }
-    ],
-    "세그먼트 분리": [
-      {
-        "json": {
-          "index": 0,
-          "dialogue": "Bro, 진짜 이거 모르면 100% 후회한다. I'm telling you.",
-          "image_prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "veo3_prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: Bro, 진짜 이거 모르면 100% 후회한다. I'm telling you.. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.",
-          "speaker": "A",
-          "refUrl": "https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png",
-          "imgStrength": 0.85
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "index": 1,
-          "dialogue": "Wait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?",
-          "image_prompt": "young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "veo3_prompt": "young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: Wait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.",
-          "speaker": "B",
-          "refUrl": "https://tempfile.aiquickdraw.com/images/1771566759804-qqj9t7d2mel.png",
-          "imgStrength": 0.85
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "index": 2,
-          "dialogue": "No way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.",
-          "image_prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "veo3_prompt": "young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: No way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.",
-          "speaker": "A",
-          "refUrl": "https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png",
-          "imgStrength": 0.85
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "이미지 생성": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "ca38782d14785fbf7397d457206fddd6",
-            "recordId": "ca38782d14785fbf7397d457206fddd6"
-          }
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "c6298004d1b3d992868d05f393c4e913",
-            "recordId": "c6298004d1b3d992868d05f393c4e913"
-          }
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "bc624b22e9a272623a0d08abee8d5b4d",
-            "recordId": "bc624b22e9a272623a0d08abee8d5b4d"
-          }
-        }
-      }
-    ],
-    "참조 이미지 결과": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "97220cc3ef4f8361aa30ab13ec5a720d",
-            "model": "nano-banana-pro",
-            "state": "success",
-            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png\"]}",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": 88,
-            "completeTime": 1771566755212,
-            "createTime": 1771566666642
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "3af916d52ee102aeb1e95b49b6ec723e",
-            "model": "nano-banana-pro",
-            "state": "success",
-            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771566759804-qqj9t7d2mel.png\"]}",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": 94,
-            "completeTime": 1771566761413,
-            "createTime": 1771566666614
-          }
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      }
-    ],
-    "참조 이미지 집계": [
-      {
-        "json": {
-          "data": [
-            {
-              "code": 200,
-              "msg": "success",
-              "data": {
-                "taskId": "97220cc3ef4f8361aa30ab13ec5a720d",
-                "model": "nano-banana-pro",
-                "state": "success",
-                "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png\"]}",
-                "failCode": null,
-                "failMsg": null,
-                "costTime": 88,
-                "completeTime": 1771566755212,
-                "createTime": 1771566666642
-              }
-            },
-            {
-              "code": 200,
-              "msg": "success",
-              "data": {
-                "taskId": "3af916d52ee102aeb1e95b49b6ec723e",
-                "model": "nano-banana-pro",
-                "state": "success",
-                "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771566759804-qqj9t7d2mel.png\"]}",
-                "failCode": null,
-                "failMsg": null,
-                "costTime": 94,
-                "completeTime": 1771566761413,
-                "createTime": 1771566666614
-              }
-            }
-          ]
-        },
-        "pairedItem": [
-          {
-            "item": 0
-          },
-          {
-            "item": 1
-          }
-        ]
-      }
-    ],
-    "이미지 대기": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "ca38782d14785fbf7397d457206fddd6",
-            "recordId": "ca38782d14785fbf7397d457206fddd6"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "c6298004d1b3d992868d05f393c4e913",
-            "recordId": "c6298004d1b3d992868d05f393c4e913"
-          }
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "bc624b22e9a272623a0d08abee8d5b4d",
-            "recordId": "bc624b22e9a272623a0d08abee8d5b4d"
-          }
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      }
-    ],
-    "이미지 결과": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "ca38782d14785fbf7397d457206fddd6",
-            "model": "nano-banana-pro",
-            "state": "success",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610003-cea0hej1bkg.png\"]}",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": 152,
-            "completeTime": 1771567611574,
-            "createTime": 1771567459133
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "c6298004d1b3d992868d05f393c4e913",
-            "model": "nano-banana-pro",
-            "state": "success",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566759804-qqj9t7d2mel.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610416-3j1td88d402.png\"]}",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": 153,
-            "completeTime": 1771567612044,
-            "createTime": 1771567459373
-          }
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "bc624b22e9a272623a0d08abee8d5b4d",
-            "model": "nano-banana-pro",
-            "state": "success",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567562635-ne3w103lls.png\"]}",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": 105,
-            "completeTime": 1771567564266,
-            "createTime": 1771567459138
-          }
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      }
-    ],
-    "영상 변환": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "af3097b57da81adb408472dfaa3f0d1f"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "d62ede035bd2550fc79f72a80692b36a"
-          }
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c"
-          }
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      }
-    ],
-    "이미지 URL 추출": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "ca38782d14785fbf7397d457206fddd6",
-            "model": "nano-banana-pro",
-            "state": "success",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610003-cea0hej1bkg.png\"]}",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": 152,
-            "completeTime": 1771567611574,
-            "createTime": 1771567459133
-          },
-          "images": [
-            {
-              "url": "https://tempfile.aiquickdraw.com/images/1771567610003-cea0hej1bkg.png"
-            }
-          ]
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "c6298004d1b3d992868d05f393c4e913",
-            "model": "nano-banana-pro",
-            "state": "success",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566759804-qqj9t7d2mel.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610416-3j1td88d402.png\"]}",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": 153,
-            "completeTime": 1771567612044,
-            "createTime": 1771567459373
-          },
-          "images": [
-            {
-              "url": "https://tempfile.aiquickdraw.com/images/1771567610416-3j1td88d402.png"
-            }
-          ]
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "bc624b22e9a272623a0d08abee8d5b4d",
-            "model": "nano-banana-pro",
-            "state": "success",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://tempfile.aiquickdraw.com/images/1771566753432-5r9nz6zsslf.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567562635-ne3w103lls.png\"]}",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": 105,
-            "completeTime": 1771567564266,
-            "createTime": 1771567459138
-          },
-          "images": [
-            {
-              "url": "https://tempfile.aiquickdraw.com/images/1771567562635-ne3w103lls.png"
-            }
-          ]
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      }
-    ],
-    "영상 변환 대기": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "af3097b57da81adb408472dfaa3f0d1f"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "d62ede035bd2550fc79f72a80692b36a"
-          }
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c"
-          }
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      }
-    ],
-    "Aggregate": [
-      {
-        "json": {
-          "data": [
-            {
-              "code": 200,
-              "msg": "success",
-              "data": {
-                "taskId": "af3097b57da81adb408472dfaa3f0d1f",
-                "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610003-cea0hej1bkg.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: Bro, 진짜 이거 모르면 100% 후회한다. I'm telling you.. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
-                "response": {
-                  "taskId": "af3097b57da81adb408472dfaa3f0d1f",
-                  "resolution": "720p",
-                  "originUrls": null,
-                  "resultUrls": [
-                    "https://tempfile.aiquickdraw.com/v/af3097b57da81adb408472dfaa3f0d1f_1771568162.mp4"
-                  ],
-                  "hasAudioList": [
-                    true
-                  ],
-                  "seeds": [
-                    78033
-                  ]
-                },
-                "successFlag": 1,
-                "fallbackFlag": false,
-                "completeTime": 1771568164000,
-                "createTime": 1771567819000,
-                "errorCode": null,
-                "errorMessage": null
-              }
-            },
-            {
-              "code": 200,
-              "msg": "success",
-              "data": {
-                "taskId": "d62ede035bd2550fc79f72a80692b36a",
-                "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610416-3j1td88d402.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: Wait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
-                "response": {
-                  "taskId": "d62ede035bd2550fc79f72a80692b36a",
-                  "resolution": "720p",
-                  "originUrls": null,
-                  "resultUrls": [
-                    "https://tempfile.aiquickdraw.com/v/d62ede035bd2550fc79f72a80692b36a_1771567979.mp4"
-                  ],
-                  "hasAudioList": [
-                    true
-                  ],
-                  "seeds": [
-                    88010
-                  ]
-                },
-                "successFlag": 1,
-                "fallbackFlag": false,
-                "completeTime": 1771567981000,
-                "createTime": 1771567819000,
-                "errorCode": null,
-                "errorMessage": null
-              }
-            },
-            {
-              "code": 200,
-              "msg": "success",
-              "data": {
-                "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c",
-                "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567562635-ne3w103lls.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: No way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
-                "response": {
-                  "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c",
-                  "resolution": "720p",
-                  "originUrls": null,
-                  "resultUrls": [
-                    "https://tempfile.aiquickdraw.com/v/6a8b267bd109d9d4b2f6fbbd9a7bc90c_1771567991.mp4"
-                  ],
-                  "hasAudioList": [
-                    true
-                  ],
-                  "seeds": [
-                    97711
-                  ]
-                },
-                "successFlag": 1,
-                "fallbackFlag": false,
-                "completeTime": 1771567993000,
-                "createTime": 1771567819000,
-                "errorCode": null,
-                "errorMessage": null
-              }
-            }
-          ]
-        },
-        "pairedItem": [
-          {
-            "item": 0
-          },
-          {
-            "item": 1
-          },
-          {
-            "item": 2
-          }
-        ]
-      }
-    ],
-    "NCA 데이터 준비": [
-      {
-        "json": {
-          "nca_payload": {
-            "inputs": [
-              {
-                "file_url": "https://tempfile.aiquickdraw.com/v/af3097b57da81adb408472dfaa3f0d1f_1771568162.mp4",
-                "options": []
-              },
-              {
-                "file_url": "https://tempfile.aiquickdraw.com/v/d62ede035bd2550fc79f72a80692b36a_1771567979.mp4",
-                "options": []
-              },
-              {
-                "file_url": "https://tempfile.aiquickdraw.com/v/6a8b267bd109d9d4b2f6fbbd9a7bc90c_1771567991.mp4",
-                "options": []
-              }
-            ],
-            "filters": [
-              {
-                "filter": "[0:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v0];[0:a]atrim=duration=8,asetpts=PTS-STARTPTS[a0];[1:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v1];[1:a]atrim=duration=8,asetpts=PTS-STARTPTS[a1];[2:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v2];[2:a]atrim=duration=8,asetpts=PTS-STARTPTS[a2];[v0][v1][v2]concat=n=3:v=1:a=0[vfinal];[a0][a1][a2]concat=n=3:v=0:a=1[afinal]"
-              }
-            ],
-            "outputs": [
-              {
-                "options": [
-                  {
-                    "option": "-map",
-                    "argument": "[vfinal]"
-                  },
-                  {
-                    "option": "-map",
-                    "argument": "[afinal]"
-                  },
-                  {
-                    "option": "-c:v",
-                    "argument": "libx264"
-                  },
-                  {
-                    "option": "-preset",
-                    "argument": "medium"
-                  },
-                  {
-                    "option": "-crf",
-                    "argument": "18"
-                  },
-                  {
-                    "option": "-c:a",
-                    "argument": "aac"
-                  },
-                  {
-                    "option": "-b:a",
-                    "argument": "256k"
-                  },
-                  {
-                    "option": "-pix_fmt",
-                    "argument": "yuv420p"
-                  },
-                  {
-                    "option": "-movflags",
-                    "argument": "+faststart"
-                  },
-                  {
-                    "option": "-t",
-                    "argument": "24"
-                  }
-                ],
-                "file_name": "story_shorts_final.mp4"
-              }
-            ]
-          },
-          "totalDuration": 24,
-          "srtContent": "1\n00:00:00,000 --> 00:00:08,000\nBro, 진짜 이거 모르면 100% 후회한다. I'm telling you.\n\n2\n00:00:08,000 --> 00:00:16,000\nWait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?\n\n3\n00:00:16,000 --> 00:00:24,000\nNo way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.\n",
-          "segmentCount": 3,
-          "hookTitle": "카지노 <y>안전</y> 체크! 흑형이 알려주는 <y>필수</y> 3가지",
-          "subject": "제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터",
-          "caption": "설명문 #온카스터디 #먹튀검증 #카지노커뮤니티 #안전놀이터",
-          "comment": "🔥 온카스터디에서 더 많은 정보 확인하세요!"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상 변환 결과": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "af3097b57da81adb408472dfaa3f0d1f",
-            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610003-cea0hej1bkg.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, leaning forward intensely, talking with authority, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay talking and gesturing emphatically, Mike listening intently with a slightly confused look, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: Bro, 진짜 이거 모르면 100% 후회한다. I'm telling you.. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
-            "response": {
-              "taskId": "af3097b57da81adb408472dfaa3f0d1f",
-              "resolution": "720p",
-              "originUrls": null,
-              "resultUrls": [
-                "https://tempfile.aiquickdraw.com/v/af3097b57da81adb408472dfaa3f0d1f_1771568162.mp4"
-              ],
-              "hasAudioList": [
-                true
-              ],
-              "seeds": [
-                78033
-              ]
-            },
-            "successFlag": 1,
-            "fallbackFlag": false,
-            "completeTime": 1771568164000,
-            "createTime": 1771567819000,
-            "errorCode": null,
-            "errorMessage": null
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "d62ede035bd2550fc79f72a80692b36a",
-            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567610416-3j1td88d402.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, skeptical raised eyebrow, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Mike talking with a doubtful expression, Jay listening with a knowing smirk, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: Wait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
-            "response": {
-              "taskId": "d62ede035bd2550fc79f72a80692b36a",
-              "resolution": "720p",
-              "originUrls": null,
-              "resultUrls": [
-                "https://tempfile.aiquickdraw.com/v/d62ede035bd2550fc79f72a80692b36a_1771567979.mp4"
-              ],
-              "hasAudioList": [
-                true
-              ],
-              "seeds": [
-                88010
-              ]
-            },
-            "successFlag": 1,
-            "fallbackFlag": false,
-            "completeTime": 1771567981000,
-            "createTime": 1771567819000,
-            "errorCode": null,
-            "errorMessage": null
-          }
-        },
-        "pairedItem": {
-          "item": 1
-        }
-      },
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c",
-            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771567562635-ne3w103lls.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, explaining with hand gestures, a dimly lit, cozy vintage record store, shelves packed with vinyl records, subtle spotlight on the characters, two friends, two-shot, Jay explaining clearly, Mike listening with growing understanding and nodding, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on Jay, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The person is naturally speaking in Korean, saying: No way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.\"}",
-            "response": {
-              "taskId": "6a8b267bd109d9d4b2f6fbbd9a7bc90c",
-              "resolution": "720p",
-              "originUrls": null,
-              "resultUrls": [
-                "https://tempfile.aiquickdraw.com/v/6a8b267bd109d9d4b2f6fbbd9a7bc90c_1771567991.mp4"
-              ],
-              "hasAudioList": [
-                true
-              ],
-              "seeds": [
-                97711
-              ]
-            },
-            "successFlag": 1,
-            "fallbackFlag": false,
-            "completeTime": 1771567993000,
-            "createTime": 1771567819000,
-            "errorCode": null,
-            "errorMessage": null
-          }
-        },
-        "pairedItem": {
-          "item": 2
-        }
-      }
-    ],
-    "NCA 영상 제작": [
-      {
-        "json": {
-          "build_number": 219,
-          "code": 200,
-          "endpoint": "/v1/ffmpeg/compose",
-          "id": null,
-          "job_id": "4b556080-058b-4ec2-8bcc-096f9e9a2d2e",
-          "message": "success",
-          "pid": 9,
-          "queue_id": 137906192205280,
-          "queue_length": 0,
-          "queue_time": 0,
-          "response": [
-            {
-              "file_url": "http://76.13.182.180:9000/nca-toolkit/4b556080-058b-4ec2-8bcc-096f9e9a2d2e_output_0.mp4"
-            }
-          ],
-          "run_time": 48.298,
-          "total_time": 48.298
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "NCA 제작 대기": [
-      {
-        "json": {
-          "build_number": 219,
-          "code": 200,
-          "endpoint": "/v1/ffmpeg/compose",
-          "id": null,
-          "job_id": "4b556080-058b-4ec2-8bcc-096f9e9a2d2e",
-          "message": "success",
-          "pid": 9,
-          "queue_id": 137906192205280,
-          "queue_length": 0,
-          "queue_time": 0,
-          "response": [
-            {
-              "file_url": "http://76.13.182.180:9000/nca-toolkit/4b556080-058b-4ec2-8bcc-096f9e9a2d2e_output_0.mp4"
-            }
-          ],
-          "run_time": 48.298,
-          "total_time": 48.298
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "NCA 결과 처리": [
-      {
-        "json": {
-          "final_video_url": "http://76.13.182.180:9000/nca-toolkit/4b556080-058b-4ec2-8bcc-096f9e9a2d2e_output_0.mp4",
-          "url": "http://76.13.182.180:9000/nca-toolkit/4b556080-058b-4ec2-8bcc-096f9e9a2d2e_output_0.mp4",
-          "srtContent": "1\n00:00:00,000 --> 00:00:08,000\nBro, 진짜 이거 모르면 100% 후회한다. I'm telling you.\n\n2\n00:00:08,000 --> 00:00:16,000\nWait, wait. 3가지? 야 설마 또 '사이트 이름' 이런 거 아니지?\n\n3\n00:00:16,000 --> 00:00:24,000\nNo way, bro. 이건 진짜 '사이트'가 아니라 '너'를 지키는 거야. 첫째, 운영 기간. 둘째, 졸업 회원 수. 셋째, 커뮤니티 평판. 온카스터디 가면 이런 거 다 정리되어 있어. Trust me.\n",
-          "subject": "제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터",
-          "caption": "설명문 #온카스터디 #먹튀검증 #카지노커뮤니티 #안전놀이터",
-          "comment": "🔥 온카스터디에서 더 많은 정보 확인하세요!"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
     ]
   },
-  "versionId": "73b685e0-c4e5-491e-a317-84525c89cebb",
-  "activeVersionId": "58b6a01e-2c3d-4893-b8a1-42b25718f9b3",
-  "versionCounter": 263,
+  "versionId": "0d50f552-27e5-4575-a670-bf55a1b524c7",
+  "activeVersionId": "0d50f552-27e5-4575-a670-bf55a1b524c7",
+  "versionCounter": 267,
   "triggerCount": 1,
   "shared": [
     {
@@ -5929,9 +4946,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-20T06:38:30.045Z",
-    "createdAt": "2026-02-20T06:38:30.045Z",
-    "versionId": "58b6a01e-2c3d-4893-b8a1-42b25718f9b3",
+    "updatedAt": "2026-02-20T07:01:29.027Z",
+    "createdAt": "2026-02-20T07:01:29.027Z",
+    "versionId": "0d50f552-27e5-4575-a670-bf55a1b524c7",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -6124,7 +5141,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 참조 이미지 URL (Kie.ai Nano Banana Pro 응답에서 추출)\nconst refResults = $('참조 이미지 결과').all();\n\nfunction extractImageUrl(result) {\n  const state = result?.json?.data?.state;\n  if (state !== 'success') {\n    throw new Error('참조 이미지 아직 완료 안됨! state=' + state + ' (대기 시간을 늘려주세요)');\n  }\n  try {\n    const resultJson = JSON.parse(result?.json?.data?.resultJson || '{}');\n    return (resultJson.resultUrls || resultJson.originUrls || [])[0] || '';\n  } catch(e) {\n    return '';\n  }\n}\n\nconst refA_url = extractImageUrl(refResults[0]);\nconst refB_url = extractImageUrl(refResults[1]);\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || 'A';\n  const isABScene = (scene.image_prompt || '').includes('two-shot');\n\n  const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n  const veo3_prompt = cleanImagePrompt +\n    '. The person is naturally speaking in Korean, saying: ' +\n    cleanDialogue +\n    '. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl: (speaker === 'B') ? refB_url : refA_url,\n      imgStrength: isABScene ? 0.85 : 0.5,\n    }\n  };\n});"
+          "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL (참조 이미지 프롬프트에서 직접 가져옴)\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || 'A';\n  const isABScene = (scene.image_prompt || '').includes('two-shot');\n\n  const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n  const veo3_prompt = cleanImagePrompt +\n    '. The person is naturally speaking in Korean, saying: ' +\n    cleanDialogue +\n    '. Natural lip synchronization, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl: (speaker === 'B') ? refB_url : refA_url,\n      imgStrength: isABScene ? 0.85 : 0.5,\n    }\n  };\n});"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -6446,14 +5463,14 @@
             "options": {
               "caseSensitive": true,
               "leftValue": "",
-              "typeValidation": "strict",
+              "typeValidation": "loose",
               "version": 2
             },
             "conditions": [
               {
                 "id": "veo3_check",
                 "leftValue": "={{ $json.data.successFlag }}",
-                "rightValue": "1",
+                "rightValue": 1,
                 "operator": {
                   "type": "number",
                   "operation": "equals"
@@ -6462,6 +5479,7 @@
             ],
             "combinator": "and"
           },
+          "looseTypeValidation": true,
           "options": {}
         },
         "type": "n8n-nodes-base.if",
@@ -6489,7 +5507,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const charA = \"young Black man, 28 years old, short fade haircut with neat line up, well-groomed short beard, confident relaxed expression, wearing black premium hoodie with gold chain necklace, athletic build, warm brown eyes, clear dark skin, natural charismatic smile, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\";\nconst charB = \"young Black man, 25 years old, medium length twists hairstyle, clean shaven, expressive animated face, wearing white oversized graphic t-shirt with silver watch, lean build, bright curious eyes, dark skin, big genuine smile showing teeth, neutral standing pose looking directly at camera, stylish modern lounge with ambient lighting, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\";\nreturn [\n  { json: { prompt: charA, speaker: \"A\" } },\n  { json: { prompt: charB, speaker: \"B\" } }\n];"
+          "jsCode": "// 고정 참조 이미지 URL\nconst refA_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\";\nconst refB_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\";\nreturn [\n  { json: { refUrl: refA_url, speaker: \"A\" } },\n  { json: { refUrl: refB_url, speaker: \"B\" } }\n];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -6815,7 +5833,7 @@
         "main": [
           [
             {
-              "node": "참조 이미지 생성",
+              "node": "세그먼트 분리",
               "type": "main",
               "index": 0
             }
@@ -6827,50 +5845,6 @@
           [
             {
               "node": "AI 콘텐츠 생성",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "참조 이미지 생성": {
-        "main": [
-          [
-            {
-              "node": "참조 이미지 대기",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "참조 이미지 대기": {
-        "main": [
-          [
-            {
-              "node": "참조 이미지 결과",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "참조 이미지 결과": {
-        "main": [
-          [
-            {
-              "node": "참조 이미지 집계",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "참조 이미지 집계": {
-        "main": [
-          [
-            {
-              "node": "세그먼트 분리",
               "type": "main",
               "index": 0
             }
@@ -6895,10 +5869,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-20T06:38:30.112Z",
-        "id": 464,
+        "createdAt": "2026-02-20T07:01:29.099Z",
+        "id": 465,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "58b6a01e-2c3d-4893-b8a1-42b25718f9b3",
+        "versionId": "0d50f552-27e5-4575-a670-bf55a1b524c7",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
