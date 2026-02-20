@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-20T13:30:38.455Z",
+  "updatedAt": "2026-02-20T14:13:22.820Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -22,7 +22,7 @@
       "typeVersion": 1.3,
       "position": [
         -2432,
-        496
+        640
       ],
       "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
       "name": "스케줄 트리거"
@@ -34,7 +34,7 @@
       "type": "n8n-nodes-base.manualTrigger",
       "position": [
         -2432,
-        688
+        832
       ],
       "typeVersion": 1
     },
@@ -61,7 +61,7 @@
       "typeVersion": 1.1,
       "position": [
         -2208,
-        592
+        736
       ],
       "id": "0f0b8cab-e649-4c60-afba-6991b2a30901",
       "name": "AI 콘텐츠 생성",
@@ -80,7 +80,7 @@
       "typeVersion": 2,
       "position": [
         -1856,
-        592
+        736
       ],
       "id": "debd624e-66b9-4443-8544-002d62bd2da6",
       "name": "콘텐츠 파싱"
@@ -184,7 +184,7 @@
       "typeVersion": 4.7,
       "position": [
         -1632,
-        592
+        736
       ],
       "id": "ad97017d-7051-4a32-a9d2-9ba6d5276e01",
       "name": "시트 기록",
@@ -197,13 +197,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/\"/g, \"'\");\n    if (i === 0) return desc + ' says \"' + line + '\"';\n    return 'then ' + desc + ' responds \"' + line + '\"';\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
+        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -976,
-        592
+        -1184,
+        736
       ],
       "id": "624571a3-41be-44cb-a4cd-1b5f40b89fec",
       "name": "세그먼트 분리"
@@ -222,8 +222,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -752,
-        592
+        -960,
+        736
       ],
       "id": "img-gen-001",
       "name": "이미지 생성",
@@ -241,8 +241,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -528,
-        592
+        -736,
+        736
       ],
       "id": "img-wait-001",
       "name": "이미지 대기",
@@ -258,8 +258,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -304,
-        592
+        -512,
+        736
       ],
       "id": "img-result-001",
       "name": "이미지 결과",
@@ -278,8 +278,8 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        1008,
-        576
+        1280,
+        496
       ],
       "id": "7461ba5a-a829-4ccb-8437-f4107e6aba1a",
       "name": "Aggregate"
@@ -291,8 +291,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1232,
-        576
+        1504,
+        496
       ],
       "id": "98d0499e-0f4e-43d0-a80d-f65128036951",
       "name": "NCA 데이터 준비"
@@ -320,8 +320,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        1456,
-        576
+        1728,
+        496
       ],
       "id": "c9c85671-3eb2-4fa5-a158-74cf8d4613fb",
       "name": "NCA 영상 제작"
@@ -333,8 +333,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        1680,
-        576
+        1952,
+        496
       ],
       "id": "0abbc265-f782-44cd-8a9a-6462e14753c8",
       "name": "NCA 제작 대기",
@@ -347,8 +347,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1904,
-        576
+        2176,
+        496
       ],
       "id": "7bf9dedf-711a-47f7-b00a-2980c09c9574",
       "name": "NCA 결과 처리"
@@ -434,8 +434,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        2128,
-        576
+        2400,
+        496
       ],
       "id": "9d065d63-6fbc-4c9e-9bf2-7b06ec695e4c",
       "name": "상태 업데이트",
@@ -462,8 +462,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        256,
-        592
+        384,
+        624
       ],
       "id": "kling_convert_01",
       "name": "영상 변환",
@@ -481,8 +481,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        368,
-        592
+        608,
+        624
       ],
       "id": "kling_wait_01",
       "name": "영상 변환 대기",
@@ -500,8 +500,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        592,
-        592
+        832,
+        624
       ],
       "id": "kling_result_01",
       "name": "영상 변환 결과",
@@ -541,8 +541,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        816,
-        592
+        1056,
+        544
       ],
       "id": "kling_check_01",
       "name": "영상 완료 체크"
@@ -554,8 +554,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        960,
-        736
+        1280,
+        720
       ],
       "id": "kling_rewait_01",
       "name": "영상 재대기",
@@ -569,7 +569,7 @@
       "typeVersion": 2,
       "position": [
         -1408,
-        592
+        736
       ],
       "id": "20787f47-c724-4ea1-bfbf-1243c574a1c7",
       "name": "참조 이미지 프롬프트"
@@ -582,8 +582,8 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        -1200,
-        592
+        -2432,
+        1056
       ],
       "id": "6fa7f913-a1f2-461f-8e0c-82bfdea0bad6",
       "name": "참조 이미지 집계"
@@ -595,8 +595,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -80,
-        592
+        -64,
+        624
       ],
       "id": "nano_url_extract",
       "name": "이미지 URL 추출"
@@ -629,22 +629,21 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        -192,
-        592
+        -288,
+        672
       ],
       "id": "5083dd8c-127b-4d70-a2dd-afa443668627",
       "name": "이미지 완료 체크"
     },
     {
       "parameters": {
-        "amount": 30,
-        "unit": "seconds"
+        "amount": 30
       },
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -192,
-        792
+        -64,
+        832
       ],
       "id": "4a3b2ba0-ee30-430e-af8e-8a4d58ee43c8",
       "name": "이미지 재대기",
@@ -658,8 +657,8 @@
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        32,
-        592
+        160,
+        624
       ],
       "id": "82d63c4b-3ee9-46e9-98dc-28a7b6aecbaf",
       "name": "이미지 집계"
@@ -668,13 +667,7 @@
   "connections": {
     "스케줄 트리거": {
       "main": [
-        [
-          {
-            "node": "AI 콘텐츠 생성",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "AI 콘텐츠 생성": {
@@ -4935,7 +4928,7 @@
           "content": {
             "parts": [
               {
-                "text": "{\n  \"hook_title\": \"흑형이 알려주는 <y>안전</y> 사이트 <y>필수</y> 체크리스트\",\n  \"scenes\": [\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"야, 신생 사이트 쓸 때 이걸로 걸러.\"},\n        {\"speaker\": \"B\", \"line\": \"응? 뭘로? 그냥 쓰지 않아?\"}\n      ],\n      \"dialogue\": \"야, 신생 사이트 쓸 때 이걸로 걸러. 응? 뭘로? 그냥 쓰지 않아?\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at a modern co-working space, Jay leaning back on a couch looking serious, Mike leaning forward looking confused, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"첫째, 운영 기간 1년 이상인지 봐.\"},\n        {\"speaker\": \"B\", \"line\": \"1년? 그걸 어떻게 알아?\"},\n        {\"speaker\": \"A\", \"line\": \"커뮤니티 후기랑 졸업 회원 수를 세.\"},\n        {\"speaker\": \"B\", \"line\": \"졸업 회원? weird한데?\"},\n        {\"speaker\": \"A\", \"line\": \"많을수록 안전하다는 거지, bro.\"}\n      ],\n      \"dialogue\": \"첫째, 운영 기간 1년 이상인지 봐. 1년? 그걸 어떻게 알아? 커뮤니티 후기랑 졸업 회원 수를 세. 졸업 회원? weird한데? 많을수록 안전하다는 거지, bro.\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at the same modern co-working space, Jay gesturing with hands explaining, Mike looking thoughtful nodding slowly, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"B\", \"line\": \"Damn, 그런 디테일은 몰랐네.\"},\n        {\"speaker\": \"A\", \"line\": \"온카스터디 가면 이런 거 다 정리돼있어.\"}\n      ],\n      \"dialogue\": \"Damn, 그런 디테일은 몰랐네. 온카스터디 가면 이런 거 다 정리돼있어.\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at the same modern co-working space, Jay pointing to an imaginary screen with a knowing smile, Mike looking impressed, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    }\n  ],\n  \"Subject\": \"제목 #온카스터디 #안전놀이터 #먹튀검증 #카지노팁\",\n  \"Caption\": \"신생 사이트 이용 전 필수 체크리스트! Jay의 경험과 Mike의 리액션으로 알아보는 안전한 선택법. 온카스터디에서 더 많은 꿀팁을 얻어가세요! #안전놀이터 #먹튀검증 #카지노 #슬롯 #라이브카지노\",\n  \"Comment\": \"다음 영상에서 또 만나요!\",\n  \"BGM_prompt\": \"upbeat hip hop instrumental\"\n}"
+                "text": "{\n  \"hook_title\": \"흑형이 알려주는 <y>슬롯</y> 초보 <y>필수</y> 상식\",\n  \"scenes\": [\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"Bro 진짜 이것도 모르고 슬롯함?\"},\n        {\"speaker\": \"B\", \"line\": \"Wait WHAT? 나 그냥 재밌으면 했지.\"}\n      ],\n      \"dialogue\": \"Bro 진짜 이것도 모르고 슬롯함? Wait WHAT? 나 그냥 재밌으면 했지.\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"이건 basic이야. RTP 확인 안 함?\"},\n        {\"speaker\": \"B\", \"line\": \"RTP? 그게 뭔데? 뭐 게임하는 거야?\"},\n        {\"speaker\": \"A\", \"line\": \"환수율 bro. 96% 이상은 봐야지.\"}\n      ],\n      \"dialogue\": \"이건 basic이야. RTP 확인 안 함? RTP? 그게 뭔데? 뭐 게임하는 거야? 환수율 bro. 96% 이상은 봐야지.\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"B\", \"line\": \"Damn... 나 지금까지 그냥 감으로 했는데.\"},\n        {\"speaker\": \"A\", \"line\": \"그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어.\"}\n      ],\n      \"dialogue\": \"Damn... 나 지금까지 그냥 감으로 했는데. 그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어.\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    }\n  ],\n  \"Subject\": \"제목 #온카스터디 #슬롯 #RTP #카지노꿀팁\",\n  \"Caption\": \"슬롯 게임, RTP만 제대로 알아도 승률이 달라진다? 😎 흑형 Jay의 꿀팁과 Mike의 리얼 반응! #온카스터디 #슬롯머신 #카지노 #슬롯전략 #안전놀이터 # RTP #먹튀검증\",\n  \"Comment\": \"다음엔 슬롯 말고 다른 꿀팁도 알려줘!\",\n  \"BGM_prompt\": \"chill lo-fi hip hop beat with a subtle jazz influence\"\n}"
               }
             ],
             "role": "model"
@@ -4951,74 +4944,66 @@
     "콘텐츠 파싱": [
       {
         "json": {
-          "hook_title": "흑형이 알려주는 <y>안전</y> 사이트 <y>필수</y> 체크리스트",
+          "hook_title": "흑형이 알려주는 <y>슬롯</y> 초보 <y>필수</y> 상식",
           "scenes": [
             {
               "dialogue_turns": [
                 {
                   "speaker": "A",
-                  "line": "야, 신생 사이트 쓸 때 이걸로 걸러."
+                  "line": "Bro 진짜 이것도 모르고 슬롯함?"
                 },
                 {
                   "speaker": "B",
-                  "line": "응? 뭘로? 그냥 쓰지 않아?"
+                  "line": "Wait WHAT? 나 그냥 재밌으면 했지."
                 }
               ],
-              "dialogue": "야, 신생 사이트 쓸 때 이걸로 걸러. 응? 뭘로? 그냥 쓰지 않아?",
-              "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at a modern co-working space, Jay leaning back on a couch looking serious, Mike leaning forward looking confused, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "dialogue": "Bro 진짜 이것도 모르고 슬롯함? Wait WHAT? 나 그냥 재밌으면 했지.",
+              "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
               "speaker": "A"
             },
             {
               "dialogue_turns": [
                 {
                   "speaker": "A",
-                  "line": "첫째, 운영 기간 1년 이상인지 봐."
+                  "line": "이건 basic이야. RTP 확인 안 함?"
                 },
                 {
                   "speaker": "B",
-                  "line": "1년? 그걸 어떻게 알아?"
+                  "line": "RTP? 그게 뭔데? 뭐 게임하는 거야?"
                 },
                 {
                   "speaker": "A",
-                  "line": "커뮤니티 후기랑 졸업 회원 수를 세."
-                },
-                {
-                  "speaker": "B",
-                  "line": "졸업 회원? weird한데?"
-                },
-                {
-                  "speaker": "A",
-                  "line": "많을수록 안전하다는 거지, bro."
+                  "line": "환수율 bro. 96% 이상은 봐야지."
                 }
               ],
-              "dialogue": "첫째, 운영 기간 1년 이상인지 봐. 1년? 그걸 어떻게 알아? 커뮤니티 후기랑 졸업 회원 수를 세. 졸업 회원? weird한데? 많을수록 안전하다는 거지, bro.",
-              "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at the same modern co-working space, Jay gesturing with hands explaining, Mike looking thoughtful nodding slowly, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "dialogue": "이건 basic이야. RTP 확인 안 함? RTP? 그게 뭔데? 뭐 게임하는 거야? 환수율 bro. 96% 이상은 봐야지.",
+              "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
               "speaker": "A"
             },
             {
               "dialogue_turns": [
                 {
                   "speaker": "B",
-                  "line": "Damn, 그런 디테일은 몰랐네."
+                  "line": "Damn... 나 지금까지 그냥 감으로 했는데."
                 },
                 {
                   "speaker": "A",
-                  "line": "온카스터디 가면 이런 거 다 정리돼있어."
+                  "line": "그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어."
                 }
               ],
-              "dialogue": "Damn, 그런 디테일은 몰랐네. 온카스터디 가면 이런 거 다 정리돼있어.",
-              "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at the same modern co-working space, Jay pointing to an imaginary screen with a knowing smile, Mike looking impressed, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "dialogue": "Damn... 나 지금까지 그냥 감으로 했는데. 그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어.",
+              "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
               "speaker": "B"
             }
           ],
-          "Subject": "제목 #온카스터디 #안전놀이터 #먹튀검증 #카지노팁",
-          "Caption": "신생 사이트 이용 전 필수 체크리스트! Jay의 경험과 Mike의 리액션으로 알아보는 안전한 선택법. 온카스터디에서 더 많은 꿀팁을 얻어가세요! #안전놀이터 #먹튀검증 #카지노 #슬롯 #라이브카지노",
-          "Comment": "다음 영상에서 또 만나요!",
-          "BGM_prompt": "upbeat hip hop instrumental",
-          "fullDialogue": "야, 신생 사이트 쓸 때 이걸로 걸러. 응? 뭘로? 그냥 쓰지 않아? 첫째, 운영 기간 1년 이상인지 봐. 1년? 그걸 어떻게 알아? 커뮤니티 후기랑 졸업 회원 수를 세. 졸업 회원? weird한데? 많을수록 안전하다는 거지, bro. Damn, 그런 디테일은 몰랐네. 온카스터디 가면 이런 거 다 정리돼있어.",
+          "Subject": "제목 #온카스터디 #슬롯 #RTP #카지노꿀팁",
+          "Caption": "슬롯 게임, RTP만 제대로 알아도 승률이 달라진다? 😎 흑형 Jay의 꿀팁과 Mike의 리얼 반응! #온카스터디 #슬롯머신 #카지노 #슬롯전략 #안전놀이터 # RTP #먹튀검증",
+          "Comment": "다음엔 슬롯 말고 다른 꿀팁도 알려줘!",
+          "BGM_prompt": "chill lo-fi hip hop beat with a subtle jazz influence",
+          "fullDialogue": "Bro 진짜 이것도 모르고 슬롯함? Wait WHAT? 나 그냥 재밌으면 했지. 이건 basic이야. RTP 확인 안 함? RTP? 그게 뭔데? 뭐 게임하는 거야? 환수율 bro. 96% 이상은 봐야지. Damn... 나 지금까지 그냥 감으로 했는데. 그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어.",
           "segmentCount": 3,
           "Status": "준비",
-          "generatedAt": "2026-02-20T13:14:57.242Z"
+          "generatedAt": "2026-02-20T14:09:20.823Z"
         },
         "pairedItem": {
           "item": 0
@@ -5028,12 +5013,12 @@
     "시트 기록": [
       {
         "json": {
-          "Subject": "제목 #온카스터디 #안전놀이터 #먹튀검증 #카지노팁",
-          "Hook": "흑형이 알려주는 <y>안전</y> 사이트 <y>필수</y> 체크리스트",
-          "Narration": "야, 신생 사이트 쓸 때 이걸로 걸러. 응? 뭘로? 그냥 쓰지 않아? 첫째, 운영 기간 1년 이상인지 봐. 1년? 그걸 어떻게 알아? 커뮤니티 후기랑 졸업 회원 수를 세. 졸업 회원? weird한데? 많을수록 안전하다는 거지, bro. Damn, 그런 디테일은 몰랐네. 온카스터디 가면 이런 거 다 정리돼있어.",
-          "Caption": "신생 사이트 이용 전 필수 체크리스트! Jay의 경험과 Mike의 리액션으로 알아보는 안전한 선택법. 온카스터디에서 더 많은 꿀팁을 얻어가세요! #안전놀이터 #먹튀검증 #카지노 #슬롯 #라이브카지노",
-          "댓글": "다음 영상에서 또 만나요!",
-          "BGM prompt": "upbeat hip hop instrumental",
+          "Subject": "제목 #온카스터디 #슬롯 #RTP #카지노꿀팁",
+          "Hook": "흑형이 알려주는 <y>슬롯</y> 초보 <y>필수</y> 상식",
+          "Narration": "Bro 진짜 이것도 모르고 슬롯함? Wait WHAT? 나 그냥 재밌으면 했지. 이건 basic이야. RTP 확인 안 함? RTP? 그게 뭔데? 뭐 게임하는 거야? 환수율 bro. 96% 이상은 봐야지. Damn... 나 지금까지 그냥 감으로 했는데. 그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어.",
+          "Caption": "슬롯 게임, RTP만 제대로 알아도 승률이 달라진다? 😎 흑형 Jay의 꿀팁과 Mike의 리얼 반응! #온카스터디 #슬롯머신 #카지노 #슬롯전략 #안전놀이터 # RTP #먹튀검증",
+          "댓글": "다음엔 슬롯 말고 다른 꿀팁도 알려줘!",
+          "BGM prompt": "chill lo-fi hip hop beat with a subtle jazz influence",
           "Status": "준비"
         },
         "pairedItem": {
@@ -5045,19 +5030,19 @@
       {
         "json": {
           "index": 0,
-          "dialogue": "야, 신생 사이트 쓸 때 이걸로 걸러. 응? 뭘로? 그냥 쓰지 않아?",
+          "dialogue": "Bro 진짜 이것도 모르고 슬롯함? Wait WHAT? 나 그냥 재밌으면 했지.",
           "dialogue_turns": [
             {
               "speaker": "A",
-              "line": "야, 신생 사이트 쓸 때 이걸로 걸러."
+              "line": "Bro 진짜 이것도 모르고 슬롯함?"
             },
             {
               "speaker": "B",
-              "line": "응? 뭘로? 그냥 쓰지 않아?"
+              "line": "Wait WHAT? 나 그냥 재밌으면 했지."
             }
           ],
-          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at a modern co-working space, Jay leaning back on a couch looking serious, Mike leaning forward looking confused, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at a modern co-working space, Jay leaning back on a couch looking serious, Mike leaning forward looking confused, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says \"야, 신생 사이트 쓸 때 이걸로 걸러.\", then The second man (medium twists hairstyle, white graphic t-shirt) responds \"응? 뭘로? 그냥 쓰지 않아?\". Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says \"Bro 진짜 이것도 모르고 슬롯함?\", then The second man (medium twists hairstyle, white graphic t-shirt) responds \"Wait WHAT? 나 그냥 재밌으면 했지.\". Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
           "speaker": "A",
           "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
           "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
@@ -5066,31 +5051,23 @@
       {
         "json": {
           "index": 1,
-          "dialogue": "첫째, 운영 기간 1년 이상인지 봐. 1년? 그걸 어떻게 알아? 커뮤니티 후기랑 졸업 회원 수를 세. 졸업 회원? weird한데? 많을수록 안전하다는 거지, bro.",
+          "dialogue": "이건 basic이야. RTP 확인 안 함? RTP? 그게 뭔데? 뭐 게임하는 거야? 환수율 bro. 96% 이상은 봐야지.",
           "dialogue_turns": [
             {
               "speaker": "A",
-              "line": "첫째, 운영 기간 1년 이상인지 봐."
+              "line": "이건 basic이야. RTP 확인 안 함?"
             },
             {
               "speaker": "B",
-              "line": "1년? 그걸 어떻게 알아?"
+              "line": "RTP? 그게 뭔데? 뭐 게임하는 거야?"
             },
             {
               "speaker": "A",
-              "line": "커뮤니티 후기랑 졸업 회원 수를 세."
-            },
-            {
-              "speaker": "B",
-              "line": "졸업 회원? weird한데?"
-            },
-            {
-              "speaker": "A",
-              "line": "많을수록 안전하다는 거지, bro."
+              "line": "환수율 bro. 96% 이상은 봐야지."
             }
           ],
-          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at the same modern co-working space, Jay gesturing with hands explaining, Mike looking thoughtful nodding slowly, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at the same modern co-working space, Jay gesturing with hands explaining, Mike looking thoughtful nodding slowly, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says \"첫째, 운영 기간 1년 이상인지 봐.\", then The second man (medium twists hairstyle, white graphic t-shirt) responds \"1년? 그걸 어떻게 알아?\", then The first man (short fade haircut, black hoodie, gold chain) responds \"커뮤니티 후기랑 졸업 회원 수를 세.\", then The second man (medium twists hairstyle, white graphic t-shirt) responds \"졸업 회원? weird한데?\", then The first man (short fade haircut, black hoodie, gold chain) responds \"많을수록 안전하다는 거지, bro.\". Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says \"이건 basic이야. RTP 확인 안 함?\", then The second man (medium twists hairstyle, white graphic t-shirt) responds \"RTP? 그게 뭔데? 뭐 게임하는 거야?\", then The first man (short fade haircut, black hoodie, gold chain) responds \"환수율 bro. 96% 이상은 봐야지.\". Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
           "speaker": "A",
           "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
           "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
@@ -5099,19 +5076,19 @@
       {
         "json": {
           "index": 2,
-          "dialogue": "Damn, 그런 디테일은 몰랐네. 온카스터디 가면 이런 거 다 정리돼있어.",
+          "dialogue": "Damn... 나 지금까지 그냥 감으로 했는데. 그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어.",
           "dialogue_turns": [
             {
               "speaker": "B",
-              "line": "Damn, 그런 디테일은 몰랐네."
+              "line": "Damn... 나 지금까지 그냥 감으로 했는데."
             },
             {
               "speaker": "A",
-              "line": "온카스터디 가면 이런 거 다 정리돼있어."
+              "line": "그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어."
             }
           ],
-          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at the same modern co-working space, Jay pointing to an imaginary screen with a knowing smile, Mike looking impressed, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at the same modern co-working space, Jay pointing to an imaginary screen with a knowing smile, Mike looking impressed, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says \"Damn, 그런 디테일은 몰랐네.\", then The first man (short fade haircut, black hoodie, gold chain) responds \"온카스터디 가면 이런 거 다 정리돼있어.\". Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says \"Damn... 나 지금까지 그냥 감으로 했는데.\", then The first man (short fade haircut, black hoodie, gold chain) responds \"그래서 맨날 털리는 거야 bro. 온카스터디에 다 있어.\". Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
           "speaker": "B",
           "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
           "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
@@ -5124,8 +5101,8 @@
           "code": 200,
           "msg": "success",
           "data": {
-            "taskId": "962a7c3b2045f30d426cc7021fa5c4cc",
-            "recordId": "962a7c3b2045f30d426cc7021fa5c4cc"
+            "taskId": "2e91e60553528473b0278de415d93a2b",
+            "recordId": "2e91e60553528473b0278de415d93a2b"
           }
         },
         "pairedItem": {
@@ -5137,8 +5114,8 @@
           "code": 200,
           "msg": "success",
           "data": {
-            "taskId": "90fc8e633372d78a6aa2dd13259cbb53",
-            "recordId": "90fc8e633372d78a6aa2dd13259cbb53"
+            "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
+            "recordId": "a9cf63ec7365007799cb1f5c0c05466f"
           }
         },
         "pairedItem": {
@@ -5150,8 +5127,8 @@
           "code": 200,
           "msg": "success",
           "data": {
-            "taskId": "2b6741b499ca9983d74aa6c52f077081",
-            "recordId": "2b6741b499ca9983d74aa6c52f077081"
+            "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
+            "recordId": "1d0a9ea976a98a393d04f5dc8f72f9ba"
           }
         },
         "pairedItem": {
@@ -5178,11 +5155,179 @@
           "item": 0
         }
       }
+    ],
+    "이미지 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "2e91e60553528473b0278de415d93a2b",
+            "recordId": "2e91e60553528473b0278de415d93a2b"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
+            "recordId": "a9cf63ec7365007799cb1f5c0c05466f"
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
+            "recordId": "1d0a9ea976a98a393d04f5dc8f72f9ba"
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "이미지 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "2e91e60553528473b0278de415d93a2b",
+            "model": "nano-banana-pro",
+            "state": "waiting",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are sitting at a cozy booth in a dimly lit jazz bar, Jay is leaning forward explaining intensely, Mike is looking surprised with hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly zooms out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": null,
+            "completeTime": null,
+            "createTime": 1771596563216
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "a9cf63ec7365007799cb1f5c0c05466f",
+            "model": "nano-banana-pro",
+            "state": "waiting",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is pointing at his phone screen, Mike is leaning in to see, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera pan left, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": null,
+            "completeTime": null,
+            "createTime": 1771596563226
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 104,
+            "completeTime": 1771596667827,
+            "createTime": 1771596563141
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      }
+    ],
+    "이미지 URL 추출": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 104,
+            "completeTime": 1771596667827,
+            "createTime": 1771596563141
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png"
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "이미지 집계": [
+      {
+        "json": {
+          "data": [
+            {
+              "code": 200,
+              "msg": "success",
+              "data": {
+                "taskId": "1d0a9ea976a98a393d04f5dc8f72f9ba",
+                "model": "nano-banana-pro",
+                "state": "success",
+                "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends are at the same cozy booth in a jazz bar, Jay is looking at Mike with a knowing smile, Mike is looking down with a slightly regretful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+                "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png\"]}",
+                "failCode": null,
+                "failMsg": null,
+                "costTime": 104,
+                "completeTime": 1771596667827,
+                "createTime": 1771596563141
+              },
+              "images": [
+                {
+                  "url": "https://tempfile.aiquickdraw.com/images/1771596666728-hfvnlh0fv7e.png"
+                }
+              ]
+            }
+          ]
+        },
+        "pairedItem": [
+          {
+            "item": 0
+          }
+        ]
+      }
     ]
   },
-  "versionId": "78bedeb4-484c-4809-9133-571820b5f0db",
-  "activeVersionId": "78bedeb4-484c-4809-9133-571820b5f0db",
-  "versionCounter": 301,
+  "versionId": "2cc00779-7799-411d-bdc2-398ac4f0beeb",
+  "activeVersionId": "2cc00779-7799-411d-bdc2-398ac4f0beeb",
+  "versionCounter": 318,
   "triggerCount": 1,
   "shared": [
     {
@@ -5207,7 +5352,7 @@
             "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
             "projectId": "W6LETsSnBzw4J5Aa",
             "user": {
-              "updatedAt": "2026-02-19T15:04:14.929Z",
+              "updatedAt": "2026-02-20T14:08:46.014Z",
               "createdAt": "2026-02-07T19:04:09.331Z",
               "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
               "email": "hatihoro15@gmail.com",
@@ -5241,9 +5386,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-20T13:30:38.456Z",
-    "createdAt": "2026-02-20T13:30:38.456Z",
-    "versionId": "78bedeb4-484c-4809-9133-571820b5f0db",
+    "updatedAt": "2026-02-20T14:13:22.822Z",
+    "createdAt": "2026-02-20T14:13:22.822Z",
+    "versionId": "2cc00779-7799-411d-bdc2-398ac4f0beeb",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -5261,7 +5406,7 @@
         "typeVersion": 1.3,
         "position": [
           -2432,
-          496
+          640
         ],
         "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
         "name": "스케줄 트리거"
@@ -5273,7 +5418,7 @@
         "type": "n8n-nodes-base.manualTrigger",
         "position": [
           -2432,
-          688
+          832
         ],
         "typeVersion": 1
       },
@@ -5300,7 +5445,7 @@
         "typeVersion": 1.1,
         "position": [
           -2208,
-          592
+          736
         ],
         "id": "0f0b8cab-e649-4c60-afba-6991b2a30901",
         "name": "AI 콘텐츠 생성",
@@ -5319,7 +5464,7 @@
         "typeVersion": 2,
         "position": [
           -1856,
-          592
+          736
         ],
         "id": "debd624e-66b9-4443-8544-002d62bd2da6",
         "name": "콘텐츠 파싱"
@@ -5423,7 +5568,7 @@
         "typeVersion": 4.7,
         "position": [
           -1632,
-          592
+          736
         ],
         "id": "ad97017d-7051-4a32-a9d2-9ba6d5276e01",
         "name": "시트 기록",
@@ -5436,13 +5581,13 @@
       },
       {
         "parameters": {
-          "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/\"/g, \"'\");\n    if (i === 0) return desc + ' says \"' + line + '\"';\n    return 'then ' + desc + ' responds \"' + line + '\"';\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
+          "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -976,
-          592
+          -1184,
+          736
         ],
         "id": "624571a3-41be-44cb-a4cd-1b5f40b89fec",
         "name": "세그먼트 분리"
@@ -5461,8 +5606,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -752,
-          592
+          -960,
+          736
         ],
         "id": "img-gen-001",
         "name": "이미지 생성",
@@ -5480,8 +5625,8 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -528,
-          592
+          -736,
+          736
         ],
         "id": "img-wait-001",
         "name": "이미지 대기",
@@ -5497,8 +5642,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -304,
-          592
+          -512,
+          736
         ],
         "id": "img-result-001",
         "name": "이미지 결과",
@@ -5517,8 +5662,8 @@
         "type": "n8n-nodes-base.aggregate",
         "typeVersion": 1,
         "position": [
-          1008,
-          576
+          1280,
+          496
         ],
         "id": "7461ba5a-a829-4ccb-8437-f4107e6aba1a",
         "name": "Aggregate"
@@ -5530,8 +5675,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1232,
-          576
+          1504,
+          496
         ],
         "id": "98d0499e-0f4e-43d0-a80d-f65128036951",
         "name": "NCA 데이터 준비"
@@ -5559,8 +5704,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          1456,
-          576
+          1728,
+          496
         ],
         "id": "c9c85671-3eb2-4fa5-a158-74cf8d4613fb",
         "name": "NCA 영상 제작"
@@ -5572,8 +5717,8 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          1680,
-          576
+          1952,
+          496
         ],
         "id": "0abbc265-f782-44cd-8a9a-6462e14753c8",
         "name": "NCA 제작 대기",
@@ -5586,8 +5731,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          1904,
-          576
+          2176,
+          496
         ],
         "id": "7bf9dedf-711a-47f7-b00a-2980c09c9574",
         "name": "NCA 결과 처리"
@@ -5673,8 +5818,8 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.7,
         "position": [
-          2128,
-          576
+          2400,
+          496
         ],
         "id": "9d065d63-6fbc-4c9e-9bf2-7b06ec695e4c",
         "name": "상태 업데이트",
@@ -5701,8 +5846,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          256,
-          592
+          384,
+          624
         ],
         "id": "kling_convert_01",
         "name": "영상 변환",
@@ -5720,8 +5865,8 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          368,
-          592
+          608,
+          624
         ],
         "id": "kling_wait_01",
         "name": "영상 변환 대기",
@@ -5739,8 +5884,8 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
-          592,
-          592
+          832,
+          624
         ],
         "id": "kling_result_01",
         "name": "영상 변환 결과",
@@ -5780,8 +5925,8 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
         "position": [
-          816,
-          592
+          1056,
+          544
         ],
         "id": "kling_check_01",
         "name": "영상 완료 체크"
@@ -5793,8 +5938,8 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          960,
-          736
+          1280,
+          720
         ],
         "id": "kling_rewait_01",
         "name": "영상 재대기",
@@ -5808,7 +5953,7 @@
         "typeVersion": 2,
         "position": [
           -1408,
-          592
+          736
         ],
         "id": "20787f47-c724-4ea1-bfbf-1243c574a1c7",
         "name": "참조 이미지 프롬프트"
@@ -5821,8 +5966,8 @@
         "type": "n8n-nodes-base.aggregate",
         "typeVersion": 1,
         "position": [
-          -1200,
-          592
+          -2432,
+          1056
         ],
         "id": "6fa7f913-a1f2-461f-8e0c-82bfdea0bad6",
         "name": "참조 이미지 집계"
@@ -5834,8 +5979,8 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -80,
-          592
+          -64,
+          624
         ],
         "id": "nano_url_extract",
         "name": "이미지 URL 추출"
@@ -5868,22 +6013,21 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2.2,
         "position": [
-          -192,
-          592
+          -288,
+          672
         ],
         "id": "5083dd8c-127b-4d70-a2dd-afa443668627",
         "name": "이미지 완료 체크"
       },
       {
         "parameters": {
-          "amount": 30,
-          "unit": "seconds"
+          "amount": 30
         },
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -192,
-          792
+          -64,
+          832
         ],
         "id": "4a3b2ba0-ee30-430e-af8e-8a4d58ee43c8",
         "name": "이미지 재대기",
@@ -5897,8 +6041,8 @@
         "type": "n8n-nodes-base.aggregate",
         "typeVersion": 1,
         "position": [
-          32,
-          592
+          160,
+          624
         ],
         "id": "82d63c4b-3ee9-46e9-98dc-28a7b6aecbaf",
         "name": "이미지 집계"
@@ -5907,13 +6051,7 @@
     "connections": {
       "스케줄 트리거": {
         "main": [
-          [
-            {
-              "node": "AI 콘텐츠 생성",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          []
         ]
       },
       "AI 콘텐츠 생성": {
@@ -6201,10 +6339,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-20T13:30:38.536Z",
-        "id": 471,
+        "createdAt": "2026-02-20T14:13:22.912Z",
+        "id": 472,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "78bedeb4-484c-4809-9133-571820b5f0db",
+        "versionId": "2cc00779-7799-411d-bdc2-398ac4f0beeb",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
