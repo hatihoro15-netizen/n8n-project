@@ -1,5 +1,5 @@
 {
-    "updatedAt": "2026-02-20T18:26:22.701Z",
+    "updatedAt": "2026-02-20T18:42:42.755Z",
     "createdAt": "2026-02-16T06:29:45.385Z",
     "id": "jSEDYrkFcWUzJ8Et",
     "name": "\uc628\uce74\uc2a4\ud130\ub514 \uc2a4\ud1a0\ub9ac, \uc9e4 (\ud504\ub86c\ud504\ud2b8, \ud654\uc9c8 \uc218\uc815)",
@@ -222,7 +222,7 @@
             "type": "n8n-nodes-base.httpRequest",
             "typeVersion": 4.3,
             "position": [
-                -960,
+                -976,
                 736
             ],
             "id": "img-gen-001",
@@ -241,7 +241,7 @@
             "type": "n8n-nodes-base.wait",
             "typeVersion": 1.1,
             "position": [
-                -736,
+                -752,
                 736
             ],
             "id": "img-wait-001",
@@ -258,7 +258,7 @@
             "type": "n8n-nodes-base.httpRequest",
             "typeVersion": 4.3,
             "position": [
-                -512,
+                -528,
                 736
             ],
             "id": "img-result-001",
@@ -277,8 +277,8 @@
             "type": "n8n-nodes-base.code",
             "typeVersion": 2,
             "position": [
-                1504,
-                496
+                96,
+                736
             ],
             "id": "98d0499e-0f4e-43d0-a80d-f65128036951",
             "name": "NCA \ub370\uc774\ud130 \uc900\ube44"
@@ -306,8 +306,8 @@
             "type": "n8n-nodes-base.httpRequest",
             "typeVersion": 4.3,
             "position": [
-                1728,
-                496
+                320,
+                736
             ],
             "id": "c9c85671-3eb2-4fa5-a158-74cf8d4613fb",
             "name": "NCA \uc601\uc0c1 \uc81c\uc791"
@@ -319,8 +319,8 @@
             "type": "n8n-nodes-base.wait",
             "typeVersion": 1.1,
             "position": [
-                1952,
-                496
+                544,
+                736
             ],
             "id": "0abbc265-f782-44cd-8a9a-6462e14753c8",
             "name": "NCA \uc81c\uc791 \ub300\uae30",
@@ -333,8 +333,8 @@
             "type": "n8n-nodes-base.code",
             "typeVersion": 2,
             "position": [
-                2176,
-                496
+                768,
+                736
             ],
             "id": "7bf9dedf-711a-47f7-b00a-2980c09c9574",
             "name": "NCA \uacb0\uacfc \ucc98\ub9ac"
@@ -420,8 +420,8 @@
             "type": "n8n-nodes-base.googleSheets",
             "typeVersion": 4.7,
             "position": [
-                2400,
-                496
+                992,
+                736
             ],
             "id": "9d065d63-6fbc-4c9e-9bf2-7b06ec695e4c",
             "name": "\uc0c1\ud0dc \uc5c5\ub370\uc774\ud2b8",
@@ -461,29 +461,42 @@
         },
         {
             "parameters": {
-                "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n  let imageUrl = '';\n  \n  if (data?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(data.data.resultJson);\n      imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { imageUrl = ''; }\n  }\n  \n  if (!imageUrl) {\n    throw new Error('\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c \uc2e4\ud328: ' + JSON.stringify(data).substring(0, 500));\n  }\n  \n  return { json: { ...data, images: [{ url: imageUrl }] } };\n});"
+                "jsCode": "// \uc774\ubbf8\uc9c0 URL \ucd94\ucd9c (\ud3f4\ub9c1 \ud3ec\ud568)\nconst helpers = this.helpers;\nconst data = $input.first().json;\nconst KIE_KEY = '6c34c79064e71366c0fe9db193754999';\n\nfunction sleep(ms) {\n  return new Promise(resolve => setTimeout(resolve, ms));\n}\n\nlet imageUrl = '';\n\n// 1) \uc774\ubbf8 \uc644\ub8cc\ub41c \uacbd\uc6b0 \ubc14\ub85c \ucd94\ucd9c\nif (data?.data?.state === 'success' && data?.data?.resultJson) {\n  try {\n    const parsed = JSON.parse(data.data.resultJson);\n    imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n  } catch(e) {}\n}\n\n// 2) \ubbf8\uc644\ub8cc \uc2dc \ud3f4\ub9c1 (30\ucd08 \uac04\uaca9, \ucd5c\ub300 15\ubd84)\nif (!imageUrl) {\n  const taskId = data?.data?.taskId || $('\uc774\ubbf8\uc9c0 \uc0dd\uc131').first().json?.data?.taskId || '';\n  if (!taskId) throw new Error('taskId \uc5c6\uc74c: ' + JSON.stringify(data).substring(0, 300));\n\n  for (let attempt = 0; attempt < 30; attempt++) {\n    await sleep(30000);\n\n    let resp;\n    try {\n      resp = await helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.kie.ai/api/v1/jobs/recordInfo?taskId=' + taskId,\n        headers: { 'Authorization': 'Bearer ' + KIE_KEY }\n      });\n    } catch(e) {\n      continue; // \ub124\ud2b8\uc6cc\ud06c \uc624\ub958\ub294 \uc7ac\uc2dc\ub3c4\n    }\n\n    if (resp?.data?.state === 'success' && resp?.data?.resultJson) {\n      try {\n        const parsed = JSON.parse(resp.data.resultJson);\n        imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n        if (imageUrl) break;\n      } catch(e) {}\n    }\n    if (resp?.data?.state === 'failed') {\n      throw new Error('\uc774\ubbf8\uc9c0 \uc0dd\uc131 \uc2e4\ud328: ' + taskId);\n    }\n    // waiting, queuing, generating \u2192 \uacc4\uc18d \ub300\uae30\n  }\n}\n\nif (!imageUrl) {\n  throw new Error('\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c \uc2e4\ud328 (15\ubd84 \ud0c0\uc784\uc544\uc6c3)');\n}\n\nreturn [{\n  json: {\n    ...data,\n    images: [{ url: imageUrl }]\n  }\n}];"
             },
             "type": "n8n-nodes-base.code",
             "typeVersion": 2,
             "position": [
-                -64,
-                624
+                -336,
+                736
             ],
             "id": "nano_url_extract",
             "name": "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c"
         },
         {
             "parameters": {
-                "jsCode": "// \uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac: Veo3 \uc21c\ucc28 \uc0dd\uc131 + NCA \ud504\ub808\uc784 \ucd94\ucd9c\ub85c \uc7a5\uba74 \uc5f0\uc18d\uc131 \ud655\ubcf4\nconst helpers = this.helpers;\nconst segments = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all();\nconst firstItem = $input.first().json;\nconst initialImageUrl = firstItem.images?.[0]?.url || '';\n\nif (!initialImageUrl) throw new Error('\uc774\ubbf8\uc9c0 URL \uc5c6\uc74c: ' + JSON.stringify(firstItem).substring(0, 300));\n\nconst KIE_KEY = '6c34c79064e71366c0fe9db193754999';\nconst NCA_API = 'http://76.13.182.180:8080/v1/ffmpeg/compose';\nconst NCA_KEY = 'nca-sagong-2026';\n\nfunction sleep(ms) {\n  return new Promise(resolve => setTimeout(resolve, ms));\n}\n\n// --- Veo3 \uc601\uc0c1 \uc0dd\uc131 ---\nasync function createVeo3(prompt, imageUrl) {\n  return await helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/veo/generate',\n    headers: {\n      'Authorization': 'Bearer ' + KIE_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  });\n}\n\n// --- Veo3 \ud3f4\ub9c1 (30\ucd08 \uac04\uaca9, \ucd5c\ub300 20\ubd84) ---\nasync function pollVeo3(taskId) {\n  for (let attempt = 0; attempt < 40; attempt++) {\n    await sleep(30000);\n\n    let resp;\n    try {\n      resp = await helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.kie.ai/api/v1/veo/record-info?taskId=' + taskId,\n        headers: { 'Authorization': 'Bearer ' + KIE_KEY }\n      });\n    } catch(e) {\n      // \ub124\ud2b8\uc6cc\ud06c \uc624\ub958\ub294 \ubb34\uc2dc\ud558\uace0 \uc7ac\uc2dc\ub3c4\n      continue;\n    }\n\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const videoUrl = resp.data.response?.resultUrls?.[0] || '';\n      if (!videoUrl) throw new Error('Veo3 \uc131\uacf5\ud588\uc9c0\ub9cc URL \uc5c6\uc74c: ' + taskId);\n      return videoUrl;\n    }\n    if (state === 'failed') {\n      throw new Error('Veo3 \uc0dd\uc131 \uc2e4\ud328: ' + taskId + ' / ' + JSON.stringify(resp?.data).substring(0, 200));\n    }\n    // queuing, generating \u2192 \uacc4\uc18d \ub300\uae30\n  }\n  throw new Error('Veo3 \ud0c0\uc784\uc544\uc6c3 (20\ubd84): ' + taskId);\n}\n\n// --- NCA\ub85c \ub9c8\uc9c0\ub9c9 \ud504\ub808\uc784 \ucd94\ucd9c ---\nasync function extractLastFrame(videoUrl) {\n  const resp = await helpers.httpRequest({\n    method: 'POST',\n    url: NCA_API,\n    headers: {\n      'x-api-key': NCA_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: ['-sseof', '-0.1'] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' }\n        ],\n        file_name: 'last_frame.jpg'\n      }]\n    }\n  });\n\n  // \uc751\ub2f5\uc5d0\uc11c \uc774\ubbf8\uc9c0 URL \ucd94\ucd9c\n  if (Array.isArray(resp?.response)) {\n    const url = resp.response[0]?.file_url || '';\n    if (url) return url;\n  }\n  if (resp?.file_url) return resp.file_url;\n  if (resp?.url) return resp.url;\n\n  throw new Error('\ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328: ' + JSON.stringify(resp).substring(0, 500));\n}\n\n// ========== \uc21c\ucc28 \ucc98\ub9ac \uc2dc\uc791 ==========\nconst results = [];\nlet refImageUrl = initialImageUrl;\n\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i].json;\n  const prompt = seg.veo3_prompt || '';\n\n  if (!prompt) throw new Error('\uc138\uadf8\uba3c\ud2b8 ' + (i+1) + ' veo3_prompt \uc5c6\uc74c');\n\n  // 1) Veo3 \uc601\uc0c1 \uc0dd\uc131 \uc694\uccad\n  const createResp = await createVeo3(prompt, refImageUrl);\n  const taskId = createResp?.data?.taskId;\n  if (!taskId) throw new Error('\uc601\uc0c1 ' + (i+1) + ' taskId \uc5c6\uc74c: ' + JSON.stringify(createResp).substring(0, 300));\n\n  // 2) \ud3f4\ub9c1 \ub300\uae30\n  const videoUrl = await pollVeo3(taskId);\n\n  results.push({\n    index: i + 1,\n    videoUrl: videoUrl,\n    taskId: taskId,\n    refImageUsed: refImageUrl\n  });\n\n  // 3) \ub9c8\uc9c0\ub9c9 \uc601\uc0c1\uc774 \uc544\ub2c8\uba74 \ud504\ub808\uc784 \ucd94\ucd9c \u2192 \ub2e4\uc74c \uc601\uc0c1 \ucc38\uc870 \uc774\ubbf8\uc9c0\n  if (i < segments.length - 1) {\n    try {\n      refImageUrl = await extractLastFrame(videoUrl);\n    } catch(e) {\n      // \ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328 \uc2dc \uae30\uc874 \uc774\ubbf8\uc9c0 \uc720\uc9c0\n      refImageUrl = initialImageUrl;\n    }\n  }\n}\n\nreturn [{ json: { results, segmentCount: results.length } }];",
-                "mode": "runOnceForAllItems"
+                "jsCode": "// \uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac: Veo3 \uc21c\ucc28 \uc0dd\uc131 + NCA \ud504\ub808\uc784 \ucd94\ucd9c\ub85c \uc7a5\uba74 \uc5f0\uc18d\uc131 \ud655\ubcf4\nconst helpers = this.helpers;\nconst segments = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all();\nconst firstItem = $input.first().json;\nconst initialImageUrl = firstItem.images?.[0]?.url || '';\n\nif (!initialImageUrl) throw new Error('\uc774\ubbf8\uc9c0 URL \uc5c6\uc74c: ' + JSON.stringify(firstItem).substring(0, 300));\n\nconst KIE_KEY = '6c34c79064e71366c0fe9db193754999';\nconst NCA_API = 'http://76.13.182.180:8080/v1/ffmpeg/compose';\nconst NCA_KEY = 'nca-sagong-2026';\n\nfunction sleep(ms) {\n  return new Promise(resolve => setTimeout(resolve, ms));\n}\n\n// --- Veo3 \uc601\uc0c1 \uc0dd\uc131 ---\nasync function createVeo3(prompt, imageUrl) {\n  return await helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/veo/generate',\n    headers: {\n      'Authorization': 'Bearer ' + KIE_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  });\n}\n\n// --- Veo3 \ud3f4\ub9c1 (30\ucd08 \uac04\uaca9, \ucd5c\ub300 20\ubd84) ---\nasync function pollVeo3(taskId) {\n  for (let attempt = 0; attempt < 40; attempt++) {\n    await sleep(30000);\n\n    let resp;\n    try {\n      resp = await helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.kie.ai/api/v1/veo/record-info?taskId=' + taskId,\n        headers: { 'Authorization': 'Bearer ' + KIE_KEY }\n      });\n    } catch(e) {\n      // \ub124\ud2b8\uc6cc\ud06c \uc624\ub958\ub294 \ubb34\uc2dc\ud558\uace0 \uc7ac\uc2dc\ub3c4\n      continue;\n    }\n\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const videoUrl = resp.data.response?.resultUrls?.[0] || '';\n      if (!videoUrl) throw new Error('Veo3 \uc131\uacf5\ud588\uc9c0\ub9cc URL \uc5c6\uc74c: ' + taskId);\n      return videoUrl;\n    }\n    if (state === 'failed') {\n      throw new Error('Veo3 \uc0dd\uc131 \uc2e4\ud328: ' + taskId + ' / ' + JSON.stringify(resp?.data).substring(0, 200));\n    }\n    // queuing, generating \u2192 \uacc4\uc18d \ub300\uae30\n  }\n  throw new Error('Veo3 \ud0c0\uc784\uc544\uc6c3 (20\ubd84): ' + taskId);\n}\n\n// --- NCA\ub85c \ub9c8\uc9c0\ub9c9 \ud504\ub808\uc784 \ucd94\ucd9c ---\nasync function extractLastFrame(videoUrl) {\n  const resp = await helpers.httpRequest({\n    method: 'POST',\n    url: NCA_API,\n    headers: {\n      'x-api-key': NCA_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: ['-sseof', '-0.1'] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' }\n        ],\n        file_name: 'last_frame.jpg'\n      }]\n    }\n  });\n\n  // \uc751\ub2f5\uc5d0\uc11c \uc774\ubbf8\uc9c0 URL \ucd94\ucd9c\n  if (Array.isArray(resp?.response)) {\n    const url = resp.response[0]?.file_url || '';\n    if (url) return url;\n  }\n  if (resp?.file_url) return resp.file_url;\n  if (resp?.url) return resp.url;\n\n  throw new Error('\ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328: ' + JSON.stringify(resp).substring(0, 500));\n}\n\n// ========== \uc21c\ucc28 \ucc98\ub9ac \uc2dc\uc791 ==========\nconst results = [];\nlet refImageUrl = initialImageUrl;\n\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i].json;\n  const prompt = seg.veo3_prompt || '';\n\n  if (!prompt) throw new Error('\uc138\uadf8\uba3c\ud2b8 ' + (i+1) + ' veo3_prompt \uc5c6\uc74c');\n\n  // 1) Veo3 \uc601\uc0c1 \uc0dd\uc131 \uc694\uccad\n  const createResp = await createVeo3(prompt, refImageUrl);\n  const taskId = createResp?.data?.taskId;\n  if (!taskId) throw new Error('\uc601\uc0c1 ' + (i+1) + ' taskId \uc5c6\uc74c: ' + JSON.stringify(createResp).substring(0, 300));\n\n  // 2) \ud3f4\ub9c1 \ub300\uae30\n  const videoUrl = await pollVeo3(taskId);\n\n  results.push({\n    index: i + 1,\n    videoUrl: videoUrl,\n    taskId: taskId,\n    refImageUsed: refImageUrl\n  });\n\n  // 3) \ub9c8\uc9c0\ub9c9 \uc601\uc0c1\uc774 \uc544\ub2c8\uba74 \ud504\ub808\uc784 \ucd94\ucd9c \u2192 \ub2e4\uc74c \uc601\uc0c1 \ucc38\uc870 \uc774\ubbf8\uc9c0\n  if (i < segments.length - 1) {\n    try {\n      refImageUrl = await extractLastFrame(videoUrl);\n    } catch(e) {\n      // \ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328 \uc2dc \uae30\uc874 \uc774\ubbf8\uc9c0 \uc720\uc9c0\n      refImageUrl = initialImageUrl;\n    }\n  }\n}\n\nreturn [{ json: { results, segmentCount: results.length } }];"
             },
             "id": "seq-video-node",
             "name": "\uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac",
             "type": "n8n-nodes-base.code",
             "typeVersion": 2,
             "position": [
-                160,
-                624
+                -112,
+                736
+            ]
+        },
+        {
+            "parameters": {
+                "jsCode": "// \uc7a5\uba74 1\uc758 \uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8\ub9cc \uc120\ud0dd (1\uc7a5\ub9cc \uc0dd\uc131)\nconst items = $input.all();\nconst first = items[0].json;\nreturn [{\n  json: {\n    image_prompt: first.image_prompt,\n    refUrl_A: first.refUrl_A,\n    refUrl_B: first.refUrl_B,\n  }\n}];",
+                "mode": "runOnceForAllItems"
+            },
+            "id": "img-prompt-select",
+            "name": "\uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8 \uc120\ud0dd",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
+            "position": [
+                -1080,
+                736
             ]
         }
     ],
@@ -525,7 +538,7 @@
             "main": [
                 [
                     {
-                        "node": "\uc774\ubbf8\uc9c0 \uc0dd\uc131",
+                        "node": "\uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8 \uc120\ud0dd",
                         "type": "main",
                         "index": 0
                     }
@@ -658,6 +671,17 @@
                 [
                     {
                         "node": "NCA \ub370\uc774\ud130 \uc900\ube44",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "\uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8 \uc120\ud0dd": {
+            "main": [
+                [
+                    {
+                        "node": "\uc774\ubbf8\uc9c0 \uc0dd\uc131",
                         "type": "main",
                         "index": 0
                     }
@@ -4663,11 +4687,359 @@
                     }
                 ]
             }
+        ],
+        "When clicking \u2018Execute workflow\u2019": [
+            {
+                "json": {},
+                "pairedItem": {
+                    "item": 0
+                }
+            }
+        ],
+        "AI \ucf58\ud150\uce20 \uc0dd\uc131": [
+            {
+                "json": {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": "{\n  \"hook_title\": \"\ud751\ud615\uc774 \uc54c\ub824\uc8fc\ub294 <y>\uc2ac\ub86f</y> \ucd08\ubcf4 <y>\ud544\uc218</y> \uc0c1\uc2dd\",\n  \"scenes\": [\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \ud558\uba74.\"},\n        {\"speaker\": \"B\", \"line\": \"Wait WHAT? \uc57c \uadf8\uac70 for real?\"}\n      ],\n      \"dialogue\": \"Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \ud558\uba74. Wait WHAT? \uc57c \uadf8\uac70 for real?\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends hanging out in a cozy vintage record store, Jay is explaining passionately, Mike is reacting with wide eyes and hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera zoom in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"\ud575\uc2ec\uc740 RTP\uc57c. 96% \uc774\uc0c1\ub9cc \ubd10.\"},\n        {\"speaker\": \"B\", \"line\": \"RTP? \uadf8\uac8c \ubb54\ub370 bro?\"},\n        {\"speaker\": \"A\", \"line\": \"\ud658\uc218\uc728. \ub192\uc744\uc218\ub85d \uc774\ub4dd\uc774\uc9c0.\"}\n      ],\n      \"dialogue\": \"\ud575\uc2ec\uc740 RTP\uc57c. 96% \uc774\uc0c1\ub9cc \ubd10. RTP? \uadf8\uac8c \ubb54\ub370 bro? \ud658\uc218\uc728. \ub192\uc744\uc218\ub85d \uc774\ub4dd\uc774\uc9c0.\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same vintage record store, Jay is gesturing towards a record, Mike is looking at Jay with curiosity, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"B\", \"line\": \"Damn. \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \ud588\ub294\ub370.\"},\n        {\"speaker\": \"A\", \"line\": \"\uadf8\ub798\uc11c \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\ub77c\uace0.\"}\n      ],\n      \"dialogue\": \"Damn. \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \ud588\ub294\ub370. \uadf8\ub798\uc11c \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\ub77c\uace0.\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the vintage record store, Jay is giving a knowing look, Mike is nodding slowly, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    }\n  ],\n  \"Subject\": \"\uc81c\ubaa9 #\uc2ac\ub86f #RTP #\uc628\uce74\uc2a4\ud130\ub514 #\uce74\uc9c0\ub178\ud301\",\n  \"Caption\": \"\uc2ac\ub86f \ucd08\ubcf4\ub77c\uba74 RTP\ub294 \ubb34\uc870\uac74 \uccb4\ud06c! \ud83d\udc4d \ub354 \ub9ce\uc740 \uafc0\ud301\uc740 \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\uc138\uc694! #\uc2ac\ub86f\uba38\uc2e0 #\uce74\uc9c0\ub178 #\uc628\ub77c\uc778\uce74\uc9c0\ub178 #\uac8c\uc784\ud301 #\uafc0\ud301\",\n  \"Comment\": \"RTP \ub192\uc740 \uc2ac\ub86f \ucc3e\uae30 \uc5b4\ub835\uc8e0? \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \uc27d\uac8c \ud655\uc778\ud558\uc138\uc694!\",\n  \"BGM_prompt\": \"upbeat lo-fi hip hop with a subtle vinyl crackle\"\n}"
+                            }
+                        ],
+                        "role": "model"
+                    },
+                    "finishReason": "STOP",
+                    "index": 0
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            }
+        ],
+        "\ucf58\ud150\uce20 \ud30c\uc2f1": [
+            {
+                "json": {
+                    "hook_title": "\ud751\ud615\uc774 \uc54c\ub824\uc8fc\ub294 <y>\uc2ac\ub86f</y> \ucd08\ubcf4 <y>\ud544\uc218</y> \uc0c1\uc2dd",
+                    "scenes": [
+                        {
+                            "dialogue_turns": [
+                                {
+                                    "speaker": "A",
+                                    "line": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \ud558\uba74."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "line": "Wait WHAT? \uc57c \uadf8\uac70 for real?"
+                                }
+                            ],
+                            "dialogue": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \ud558\uba74. Wait WHAT? \uc57c \uadf8\uac70 for real?",
+                            "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends hanging out in a cozy vintage record store, Jay is explaining passionately, Mike is reacting with wide eyes and hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera zoom in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+                            "speaker": "A"
+                        },
+                        {
+                            "dialogue_turns": [
+                                {
+                                    "speaker": "A",
+                                    "line": "\ud575\uc2ec\uc740 RTP\uc57c. 96% \uc774\uc0c1\ub9cc \ubd10."
+                                },
+                                {
+                                    "speaker": "B",
+                                    "line": "RTP? \uadf8\uac8c \ubb54\ub370 bro?"
+                                },
+                                {
+                                    "speaker": "A",
+                                    "line": "\ud658\uc218\uc728. \ub192\uc744\uc218\ub85d \uc774\ub4dd\uc774\uc9c0."
+                                }
+                            ],
+                            "dialogue": "\ud575\uc2ec\uc740 RTP\uc57c. 96% \uc774\uc0c1\ub9cc \ubd10. RTP? \uadf8\uac8c \ubb54\ub370 bro? \ud658\uc218\uc728. \ub192\uc744\uc218\ub85d \uc774\ub4dd\uc774\uc9c0.",
+                            "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same vintage record store, Jay is gesturing towards a record, Mike is looking at Jay with curiosity, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+                            "speaker": "A"
+                        },
+                        {
+                            "dialogue_turns": [
+                                {
+                                    "speaker": "B",
+                                    "line": "Damn. \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \ud588\ub294\ub370."
+                                },
+                                {
+                                    "speaker": "A",
+                                    "line": "\uadf8\ub798\uc11c \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\ub77c\uace0."
+                                }
+                            ],
+                            "dialogue": "Damn. \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \ud588\ub294\ub370. \uadf8\ub798\uc11c \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\ub77c\uace0.",
+                            "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the vintage record store, Jay is giving a knowing look, Mike is nodding slowly, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+                            "speaker": "B"
+                        }
+                    ],
+                    "Subject": "\uc81c\ubaa9 #\uc2ac\ub86f #RTP #\uc628\uce74\uc2a4\ud130\ub514 #\uce74\uc9c0\ub178\ud301",
+                    "Caption": "\uc2ac\ub86f \ucd08\ubcf4\ub77c\uba74 RTP\ub294 \ubb34\uc870\uac74 \uccb4\ud06c! \ud83d\udc4d \ub354 \ub9ce\uc740 \uafc0\ud301\uc740 \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\uc138\uc694! #\uc2ac\ub86f\uba38\uc2e0 #\uce74\uc9c0\ub178 #\uc628\ub77c\uc778\uce74\uc9c0\ub178 #\uac8c\uc784\ud301 #\uafc0\ud301",
+                    "Comment": "RTP \ub192\uc740 \uc2ac\ub86f \ucc3e\uae30 \uc5b4\ub835\uc8e0? \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \uc27d\uac8c \ud655\uc778\ud558\uc138\uc694!",
+                    "BGM_prompt": "upbeat lo-fi hip hop with a subtle vinyl crackle",
+                    "fullDialogue": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \ud558\uba74. Wait WHAT? \uc57c \uadf8\uac70 for real? \ud575\uc2ec\uc740 RTP\uc57c. 96% \uc774\uc0c1\ub9cc \ubd10. RTP? \uadf8\uac8c \ubb54\ub370 bro? \ud658\uc218\uc728. \ub192\uc744\uc218\ub85d \uc774\ub4dd\uc774\uc9c0. Damn. \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \ud588\ub294\ub370. \uadf8\ub798\uc11c \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\ub77c\uace0.",
+                    "segmentCount": 3,
+                    "Status": "\uc900\ube44",
+                    "generatedAt": "2026-02-20T18:33:09.655Z"
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            }
+        ],
+        "\uc2dc\ud2b8 \uae30\ub85d": [
+            {
+                "json": {
+                    "Subject": "\uc81c\ubaa9 #\uc2ac\ub86f #RTP #\uc628\uce74\uc2a4\ud130\ub514 #\uce74\uc9c0\ub178\ud301",
+                    "Hook": "\ud751\ud615\uc774 \uc54c\ub824\uc8fc\ub294 <y>\uc2ac\ub86f</y> \ucd08\ubcf4 <y>\ud544\uc218</y> \uc0c1\uc2dd",
+                    "Narration": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \ud558\uba74. Wait WHAT? \uc57c \uadf8\uac70 for real? \ud575\uc2ec\uc740 RTP\uc57c. 96% \uc774\uc0c1\ub9cc \ubd10. RTP? \uadf8\uac8c \ubb54\ub370 bro? \ud658\uc218\uc728. \ub192\uc744\uc218\ub85d \uc774\ub4dd\uc774\uc9c0. Damn. \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \ud588\ub294\ub370. \uadf8\ub798\uc11c \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\ub77c\uace0.",
+                    "Caption": "\uc2ac\ub86f \ucd08\ubcf4\ub77c\uba74 RTP\ub294 \ubb34\uc870\uac74 \uccb4\ud06c! \ud83d\udc4d \ub354 \ub9ce\uc740 \uafc0\ud301\uc740 \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\uc138\uc694! #\uc2ac\ub86f\uba38\uc2e0 #\uce74\uc9c0\ub178 #\uc628\ub77c\uc778\uce74\uc9c0\ub178 #\uac8c\uc784\ud301 #\uafc0\ud301",
+                    "\ub313\uae00": "RTP \ub192\uc740 \uc2ac\ub86f \ucc3e\uae30 \uc5b4\ub835\uc8e0? \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \uc27d\uac8c \ud655\uc778\ud558\uc138\uc694!",
+                    "BGM prompt": "upbeat lo-fi hip hop with a subtle vinyl crackle",
+                    "Status": "\uc900\ube44"
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            }
+        ],
+        "\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac": [
+            {
+                "json": {
+                    "index": 0,
+                    "dialogue": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \ud558\uba74. Wait WHAT? \uc57c \uadf8\uac70 for real?",
+                    "dialogue_turns": [
+                        {
+                            "speaker": "A",
+                            "line": "Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \ud558\uba74."
+                        },
+                        {
+                            "speaker": "B",
+                            "line": "Wait WHAT? \uc57c \uadf8\uac70 for real?"
+                        }
+                    ],
+                    "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends hanging out in a cozy vintage record store, Jay is explaining passionately, Mike is reacting with wide eyes and hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera zoom in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+                    "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends hanging out in a cozy vintage record store, Jay is explaining passionately, Mike is reacting with wide eyes and hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera zoom in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says 'Bro \uc9c4\uc9dc \uc774\uac83\ub3c4 \ubaa8\ub974\uace0 \ud558\uba74.', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'Wait WHAT? \uc57c \uadf8\uac70 for real?'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+                    "speaker": "A",
+                    "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
+                    "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+                }
+            },
+            {
+                "json": {
+                    "index": 1,
+                    "dialogue": "\ud575\uc2ec\uc740 RTP\uc57c. 96% \uc774\uc0c1\ub9cc \ubd10. RTP? \uadf8\uac8c \ubb54\ub370 bro? \ud658\uc218\uc728. \ub192\uc744\uc218\ub85d \uc774\ub4dd\uc774\uc9c0.",
+                    "dialogue_turns": [
+                        {
+                            "speaker": "A",
+                            "line": "\ud575\uc2ec\uc740 RTP\uc57c. 96% \uc774\uc0c1\ub9cc \ubd10."
+                        },
+                        {
+                            "speaker": "B",
+                            "line": "RTP? \uadf8\uac8c \ubb54\ub370 bro?"
+                        },
+                        {
+                            "speaker": "A",
+                            "line": "\ud658\uc218\uc728. \ub192\uc744\uc218\ub85d \uc774\ub4dd\uc774\uc9c0."
+                        }
+                    ],
+                    "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same vintage record store, Jay is gesturing towards a record, Mike is looking at Jay with curiosity, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+                    "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same vintage record store, Jay is gesturing towards a record, Mike is looking at Jay with curiosity, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '\ud575\uc2ec\uc740 RTP\uc57c. 96% \uc774\uc0c1\ub9cc \ubd10.', then The second man (medium twists hairstyle, white graphic t-shirt) responds 'RTP? \uadf8\uac8c \ubb54\ub370 bro?', then The first man (short fade haircut, black hoodie, gold chain) responds '\ud658\uc218\uc728. \ub192\uc744\uc218\ub85d \uc774\ub4dd\uc774\uc9c0.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+                    "speaker": "A",
+                    "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
+                    "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+                }
+            },
+            {
+                "json": {
+                    "index": 2,
+                    "dialogue": "Damn. \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \ud588\ub294\ub370. \uadf8\ub798\uc11c \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\ub77c\uace0.",
+                    "dialogue_turns": [
+                        {
+                            "speaker": "B",
+                            "line": "Damn. \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \ud588\ub294\ub370."
+                        },
+                        {
+                            "speaker": "A",
+                            "line": "\uadf8\ub798\uc11c \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\ub77c\uace0."
+                        }
+                    ],
+                    "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the vintage record store, Jay is giving a knowing look, Mike is nodding slowly, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+                    "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the vintage record store, Jay is giving a knowing look, Mike is nodding slowly, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says 'Damn. \ub098 \uc9c0\uae08\uae4c\uc9c0 \uadf8\ub0e5 \ud588\ub294\ub370.', then The first man (short fade haircut, black hoodie, gold chain) responds '\uadf8\ub798\uc11c \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ud655\uc778\ud558\ub77c\uace0.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+                    "speaker": "B",
+                    "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
+                    "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+                }
+            }
+        ],
+        "\uc774\ubbf8\uc9c0 \uc0dd\uc131": [
+            {
+                "json": {
+                    "code": 200,
+                    "msg": "success",
+                    "data": {
+                        "taskId": "9bae2fecc07967ef509a1f3d4fb15c7e",
+                        "recordId": "9bae2fecc07967ef509a1f3d4fb15c7e"
+                    }
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            },
+            {
+                "json": {
+                    "code": 200,
+                    "msg": "success",
+                    "data": {
+                        "taskId": "776cdf88dbd6e7536db9509828576753",
+                        "recordId": "776cdf88dbd6e7536db9509828576753"
+                    }
+                },
+                "pairedItem": {
+                    "item": 1
+                }
+            },
+            {
+                "json": {
+                    "code": 200,
+                    "msg": "success",
+                    "data": {
+                        "taskId": "2664d0e9019fd25a5782f4698b8effad",
+                        "recordId": "2664d0e9019fd25a5782f4698b8effad"
+                    }
+                },
+                "pairedItem": {
+                    "item": 2
+                }
+            }
+        ],
+        "\ucc38\uc870 \uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8": [
+            {
+                "json": {
+                    "refUrl": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
+                    "speaker": "A"
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            },
+            {
+                "json": {
+                    "refUrl": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png",
+                    "speaker": "B"
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            }
+        ],
+        "\uc774\ubbf8\uc9c0 \ub300\uae30": [
+            {
+                "json": {
+                    "code": 200,
+                    "msg": "success",
+                    "data": {
+                        "taskId": "9bae2fecc07967ef509a1f3d4fb15c7e",
+                        "recordId": "9bae2fecc07967ef509a1f3d4fb15c7e"
+                    }
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            },
+            {
+                "json": {
+                    "code": 200,
+                    "msg": "success",
+                    "data": {
+                        "taskId": "776cdf88dbd6e7536db9509828576753",
+                        "recordId": "776cdf88dbd6e7536db9509828576753"
+                    }
+                },
+                "pairedItem": {
+                    "item": 1
+                }
+            },
+            {
+                "json": {
+                    "code": 200,
+                    "msg": "success",
+                    "data": {
+                        "taskId": "2664d0e9019fd25a5782f4698b8effad",
+                        "recordId": "2664d0e9019fd25a5782f4698b8effad"
+                    }
+                },
+                "pairedItem": {
+                    "item": 2
+                }
+            }
+        ],
+        "\uc774\ubbf8\uc9c0 \uacb0\uacfc": [
+            {
+                "json": {
+                    "code": 200,
+                    "msg": "success",
+                    "data": {
+                        "taskId": "9bae2fecc07967ef509a1f3d4fb15c7e",
+                        "model": "nano-banana-pro",
+                        "state": "success",
+                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends hanging out in a cozy vintage record store, Jay is explaining passionately, Mike is reacting with wide eyes and hands up, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera zoom in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771612525726-oksmn154v3.png\"]}",
+                        "failCode": null,
+                        "failMsg": null,
+                        "costTime": 133,
+                        "completeTime": 1771612527005,
+                        "createTime": 1771612392772
+                    }
+                },
+                "pairedItem": {
+                    "item": 0
+                }
+            },
+            {
+                "json": {
+                    "code": 200,
+                    "msg": "success",
+                    "data": {
+                        "taskId": "776cdf88dbd6e7536db9509828576753",
+                        "model": "nano-banana-pro",
+                        "state": "waiting",
+                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same vintage record store, Jay is gesturing towards a record, Mike is looking at Jay with curiosity, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+                        "resultJson": "",
+                        "failCode": null,
+                        "failMsg": null,
+                        "costTime": null,
+                        "completeTime": null,
+                        "createTime": 1771612392722
+                    }
+                },
+                "pairedItem": {
+                    "item": 1
+                }
+            },
+            {
+                "json": {
+                    "code": 200,
+                    "msg": "success",
+                    "data": {
+                        "taskId": "2664d0e9019fd25a5782f4698b8effad",
+                        "model": "nano-banana-pro",
+                        "state": "success",
+                        "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the vintage record store, Jay is giving a knowing look, Mike is nodding slowly, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, close-up shot on both faces, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771612527217-snno3x6rm6p.png\"]}",
+                        "failCode": null,
+                        "failMsg": null,
+                        "costTime": 135,
+                        "completeTime": 1771612528571,
+                        "createTime": 1771612392718
+                    }
+                },
+                "pairedItem": {
+                    "item": 2
+                }
+            }
         ]
     },
-    "versionId": "388a3750-33b7-4450-856b-b59b1befc182",
-    "activeVersionId": "388a3750-33b7-4450-856b-b59b1befc182",
-    "versionCounter": 350,
+    "versionId": "2ace1f44-fe47-4eae-ac82-2d725743366e",
+    "activeVersionId": "2ace1f44-fe47-4eae-ac82-2d725743366e",
+    "versionCounter": 365,
     "triggerCount": 1,
     "shared": [
         {
@@ -4726,9 +5098,9 @@
     ],
     "tags": [],
     "activeVersion": {
-        "updatedAt": "2026-02-20T18:26:22.702Z",
-        "createdAt": "2026-02-20T18:26:22.702Z",
-        "versionId": "388a3750-33b7-4450-856b-b59b1befc182",
+        "updatedAt": "2026-02-20T18:42:42.756Z",
+        "createdAt": "2026-02-20T18:42:42.756Z",
+        "versionId": "2ace1f44-fe47-4eae-ac82-2d725743366e",
         "workflowId": "jSEDYrkFcWUzJ8Et",
         "nodes": [
             {
@@ -4946,7 +5318,7 @@
                 "type": "n8n-nodes-base.httpRequest",
                 "typeVersion": 4.3,
                 "position": [
-                    -960,
+                    -976,
                     736
                 ],
                 "id": "img-gen-001",
@@ -4965,7 +5337,7 @@
                 "type": "n8n-nodes-base.wait",
                 "typeVersion": 1.1,
                 "position": [
-                    -736,
+                    -752,
                     736
                 ],
                 "id": "img-wait-001",
@@ -4982,7 +5354,7 @@
                 "type": "n8n-nodes-base.httpRequest",
                 "typeVersion": 4.3,
                 "position": [
-                    -512,
+                    -528,
                     736
                 ],
                 "id": "img-result-001",
@@ -5001,8 +5373,8 @@
                 "type": "n8n-nodes-base.code",
                 "typeVersion": 2,
                 "position": [
-                    1504,
-                    496
+                    96,
+                    736
                 ],
                 "id": "98d0499e-0f4e-43d0-a80d-f65128036951",
                 "name": "NCA \ub370\uc774\ud130 \uc900\ube44"
@@ -5030,8 +5402,8 @@
                 "type": "n8n-nodes-base.httpRequest",
                 "typeVersion": 4.3,
                 "position": [
-                    1728,
-                    496
+                    320,
+                    736
                 ],
                 "id": "c9c85671-3eb2-4fa5-a158-74cf8d4613fb",
                 "name": "NCA \uc601\uc0c1 \uc81c\uc791"
@@ -5043,8 +5415,8 @@
                 "type": "n8n-nodes-base.wait",
                 "typeVersion": 1.1,
                 "position": [
-                    1952,
-                    496
+                    544,
+                    736
                 ],
                 "id": "0abbc265-f782-44cd-8a9a-6462e14753c8",
                 "name": "NCA \uc81c\uc791 \ub300\uae30",
@@ -5057,8 +5429,8 @@
                 "type": "n8n-nodes-base.code",
                 "typeVersion": 2,
                 "position": [
-                    2176,
-                    496
+                    768,
+                    736
                 ],
                 "id": "7bf9dedf-711a-47f7-b00a-2980c09c9574",
                 "name": "NCA \uacb0\uacfc \ucc98\ub9ac"
@@ -5144,8 +5516,8 @@
                 "type": "n8n-nodes-base.googleSheets",
                 "typeVersion": 4.7,
                 "position": [
-                    2400,
-                    496
+                    992,
+                    736
                 ],
                 "id": "9d065d63-6fbc-4c9e-9bf2-7b06ec695e4c",
                 "name": "\uc0c1\ud0dc \uc5c5\ub370\uc774\ud2b8",
@@ -5185,29 +5557,42 @@
             },
             {
                 "parameters": {
-                    "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const data = item.json;\n  let imageUrl = '';\n  \n  if (data?.data?.resultJson) {\n    try {\n      const parsed = JSON.parse(data.data.resultJson);\n      imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n    } catch(e) { imageUrl = ''; }\n  }\n  \n  if (!imageUrl) {\n    throw new Error('\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c \uc2e4\ud328: ' + JSON.stringify(data).substring(0, 500));\n  }\n  \n  return { json: { ...data, images: [{ url: imageUrl }] } };\n});"
+                    "jsCode": "// \uc774\ubbf8\uc9c0 URL \ucd94\ucd9c (\ud3f4\ub9c1 \ud3ec\ud568)\nconst helpers = this.helpers;\nconst data = $input.first().json;\nconst KIE_KEY = '6c34c79064e71366c0fe9db193754999';\n\nfunction sleep(ms) {\n  return new Promise(resolve => setTimeout(resolve, ms));\n}\n\nlet imageUrl = '';\n\n// 1) \uc774\ubbf8 \uc644\ub8cc\ub41c \uacbd\uc6b0 \ubc14\ub85c \ucd94\ucd9c\nif (data?.data?.state === 'success' && data?.data?.resultJson) {\n  try {\n    const parsed = JSON.parse(data.data.resultJson);\n    imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n  } catch(e) {}\n}\n\n// 2) \ubbf8\uc644\ub8cc \uc2dc \ud3f4\ub9c1 (30\ucd08 \uac04\uaca9, \ucd5c\ub300 15\ubd84)\nif (!imageUrl) {\n  const taskId = data?.data?.taskId || $('\uc774\ubbf8\uc9c0 \uc0dd\uc131').first().json?.data?.taskId || '';\n  if (!taskId) throw new Error('taskId \uc5c6\uc74c: ' + JSON.stringify(data).substring(0, 300));\n\n  for (let attempt = 0; attempt < 30; attempt++) {\n    await sleep(30000);\n\n    let resp;\n    try {\n      resp = await helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.kie.ai/api/v1/jobs/recordInfo?taskId=' + taskId,\n        headers: { 'Authorization': 'Bearer ' + KIE_KEY }\n      });\n    } catch(e) {\n      continue; // \ub124\ud2b8\uc6cc\ud06c \uc624\ub958\ub294 \uc7ac\uc2dc\ub3c4\n    }\n\n    if (resp?.data?.state === 'success' && resp?.data?.resultJson) {\n      try {\n        const parsed = JSON.parse(resp.data.resultJson);\n        imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n        if (imageUrl) break;\n      } catch(e) {}\n    }\n    if (resp?.data?.state === 'failed') {\n      throw new Error('\uc774\ubbf8\uc9c0 \uc0dd\uc131 \uc2e4\ud328: ' + taskId);\n    }\n    // waiting, queuing, generating \u2192 \uacc4\uc18d \ub300\uae30\n  }\n}\n\nif (!imageUrl) {\n  throw new Error('\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c \uc2e4\ud328 (15\ubd84 \ud0c0\uc784\uc544\uc6c3)');\n}\n\nreturn [{\n  json: {\n    ...data,\n    images: [{ url: imageUrl }]\n  }\n}];"
                 },
                 "type": "n8n-nodes-base.code",
                 "typeVersion": 2,
                 "position": [
-                    -64,
-                    624
+                    -336,
+                    736
                 ],
                 "id": "nano_url_extract",
                 "name": "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c"
             },
             {
                 "parameters": {
-                    "jsCode": "// \uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac: Veo3 \uc21c\ucc28 \uc0dd\uc131 + NCA \ud504\ub808\uc784 \ucd94\ucd9c\ub85c \uc7a5\uba74 \uc5f0\uc18d\uc131 \ud655\ubcf4\nconst helpers = this.helpers;\nconst segments = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all();\nconst firstItem = $input.first().json;\nconst initialImageUrl = firstItem.images?.[0]?.url || '';\n\nif (!initialImageUrl) throw new Error('\uc774\ubbf8\uc9c0 URL \uc5c6\uc74c: ' + JSON.stringify(firstItem).substring(0, 300));\n\nconst KIE_KEY = '6c34c79064e71366c0fe9db193754999';\nconst NCA_API = 'http://76.13.182.180:8080/v1/ffmpeg/compose';\nconst NCA_KEY = 'nca-sagong-2026';\n\nfunction sleep(ms) {\n  return new Promise(resolve => setTimeout(resolve, ms));\n}\n\n// --- Veo3 \uc601\uc0c1 \uc0dd\uc131 ---\nasync function createVeo3(prompt, imageUrl) {\n  return await helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/veo/generate',\n    headers: {\n      'Authorization': 'Bearer ' + KIE_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  });\n}\n\n// --- Veo3 \ud3f4\ub9c1 (30\ucd08 \uac04\uaca9, \ucd5c\ub300 20\ubd84) ---\nasync function pollVeo3(taskId) {\n  for (let attempt = 0; attempt < 40; attempt++) {\n    await sleep(30000);\n\n    let resp;\n    try {\n      resp = await helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.kie.ai/api/v1/veo/record-info?taskId=' + taskId,\n        headers: { 'Authorization': 'Bearer ' + KIE_KEY }\n      });\n    } catch(e) {\n      // \ub124\ud2b8\uc6cc\ud06c \uc624\ub958\ub294 \ubb34\uc2dc\ud558\uace0 \uc7ac\uc2dc\ub3c4\n      continue;\n    }\n\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const videoUrl = resp.data.response?.resultUrls?.[0] || '';\n      if (!videoUrl) throw new Error('Veo3 \uc131\uacf5\ud588\uc9c0\ub9cc URL \uc5c6\uc74c: ' + taskId);\n      return videoUrl;\n    }\n    if (state === 'failed') {\n      throw new Error('Veo3 \uc0dd\uc131 \uc2e4\ud328: ' + taskId + ' / ' + JSON.stringify(resp?.data).substring(0, 200));\n    }\n    // queuing, generating \u2192 \uacc4\uc18d \ub300\uae30\n  }\n  throw new Error('Veo3 \ud0c0\uc784\uc544\uc6c3 (20\ubd84): ' + taskId);\n}\n\n// --- NCA\ub85c \ub9c8\uc9c0\ub9c9 \ud504\ub808\uc784 \ucd94\ucd9c ---\nasync function extractLastFrame(videoUrl) {\n  const resp = await helpers.httpRequest({\n    method: 'POST',\n    url: NCA_API,\n    headers: {\n      'x-api-key': NCA_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: ['-sseof', '-0.1'] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' }\n        ],\n        file_name: 'last_frame.jpg'\n      }]\n    }\n  });\n\n  // \uc751\ub2f5\uc5d0\uc11c \uc774\ubbf8\uc9c0 URL \ucd94\ucd9c\n  if (Array.isArray(resp?.response)) {\n    const url = resp.response[0]?.file_url || '';\n    if (url) return url;\n  }\n  if (resp?.file_url) return resp.file_url;\n  if (resp?.url) return resp.url;\n\n  throw new Error('\ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328: ' + JSON.stringify(resp).substring(0, 500));\n}\n\n// ========== \uc21c\ucc28 \ucc98\ub9ac \uc2dc\uc791 ==========\nconst results = [];\nlet refImageUrl = initialImageUrl;\n\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i].json;\n  const prompt = seg.veo3_prompt || '';\n\n  if (!prompt) throw new Error('\uc138\uadf8\uba3c\ud2b8 ' + (i+1) + ' veo3_prompt \uc5c6\uc74c');\n\n  // 1) Veo3 \uc601\uc0c1 \uc0dd\uc131 \uc694\uccad\n  const createResp = await createVeo3(prompt, refImageUrl);\n  const taskId = createResp?.data?.taskId;\n  if (!taskId) throw new Error('\uc601\uc0c1 ' + (i+1) + ' taskId \uc5c6\uc74c: ' + JSON.stringify(createResp).substring(0, 300));\n\n  // 2) \ud3f4\ub9c1 \ub300\uae30\n  const videoUrl = await pollVeo3(taskId);\n\n  results.push({\n    index: i + 1,\n    videoUrl: videoUrl,\n    taskId: taskId,\n    refImageUsed: refImageUrl\n  });\n\n  // 3) \ub9c8\uc9c0\ub9c9 \uc601\uc0c1\uc774 \uc544\ub2c8\uba74 \ud504\ub808\uc784 \ucd94\ucd9c \u2192 \ub2e4\uc74c \uc601\uc0c1 \ucc38\uc870 \uc774\ubbf8\uc9c0\n  if (i < segments.length - 1) {\n    try {\n      refImageUrl = await extractLastFrame(videoUrl);\n    } catch(e) {\n      // \ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328 \uc2dc \uae30\uc874 \uc774\ubbf8\uc9c0 \uc720\uc9c0\n      refImageUrl = initialImageUrl;\n    }\n  }\n}\n\nreturn [{ json: { results, segmentCount: results.length } }];",
-                    "mode": "runOnceForAllItems"
+                    "jsCode": "// \uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac: Veo3 \uc21c\ucc28 \uc0dd\uc131 + NCA \ud504\ub808\uc784 \ucd94\ucd9c\ub85c \uc7a5\uba74 \uc5f0\uc18d\uc131 \ud655\ubcf4\nconst helpers = this.helpers;\nconst segments = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all();\nconst firstItem = $input.first().json;\nconst initialImageUrl = firstItem.images?.[0]?.url || '';\n\nif (!initialImageUrl) throw new Error('\uc774\ubbf8\uc9c0 URL \uc5c6\uc74c: ' + JSON.stringify(firstItem).substring(0, 300));\n\nconst KIE_KEY = '6c34c79064e71366c0fe9db193754999';\nconst NCA_API = 'http://76.13.182.180:8080/v1/ffmpeg/compose';\nconst NCA_KEY = 'nca-sagong-2026';\n\nfunction sleep(ms) {\n  return new Promise(resolve => setTimeout(resolve, ms));\n}\n\n// --- Veo3 \uc601\uc0c1 \uc0dd\uc131 ---\nasync function createVeo3(prompt, imageUrl) {\n  return await helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/veo/generate',\n    headers: {\n      'Authorization': 'Bearer ' + KIE_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  });\n}\n\n// --- Veo3 \ud3f4\ub9c1 (30\ucd08 \uac04\uaca9, \ucd5c\ub300 20\ubd84) ---\nasync function pollVeo3(taskId) {\n  for (let attempt = 0; attempt < 40; attempt++) {\n    await sleep(30000);\n\n    let resp;\n    try {\n      resp = await helpers.httpRequest({\n        method: 'GET',\n        url: 'https://api.kie.ai/api/v1/veo/record-info?taskId=' + taskId,\n        headers: { 'Authorization': 'Bearer ' + KIE_KEY }\n      });\n    } catch(e) {\n      // \ub124\ud2b8\uc6cc\ud06c \uc624\ub958\ub294 \ubb34\uc2dc\ud558\uace0 \uc7ac\uc2dc\ub3c4\n      continue;\n    }\n\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const videoUrl = resp.data.response?.resultUrls?.[0] || '';\n      if (!videoUrl) throw new Error('Veo3 \uc131\uacf5\ud588\uc9c0\ub9cc URL \uc5c6\uc74c: ' + taskId);\n      return videoUrl;\n    }\n    if (state === 'failed') {\n      throw new Error('Veo3 \uc0dd\uc131 \uc2e4\ud328: ' + taskId + ' / ' + JSON.stringify(resp?.data).substring(0, 200));\n    }\n    // queuing, generating \u2192 \uacc4\uc18d \ub300\uae30\n  }\n  throw new Error('Veo3 \ud0c0\uc784\uc544\uc6c3 (20\ubd84): ' + taskId);\n}\n\n// --- NCA\ub85c \ub9c8\uc9c0\ub9c9 \ud504\ub808\uc784 \ucd94\ucd9c ---\nasync function extractLastFrame(videoUrl) {\n  const resp = await helpers.httpRequest({\n    method: 'POST',\n    url: NCA_API,\n    headers: {\n      'x-api-key': NCA_KEY,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: ['-sseof', '-0.1'] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' }\n        ],\n        file_name: 'last_frame.jpg'\n      }]\n    }\n  });\n\n  // \uc751\ub2f5\uc5d0\uc11c \uc774\ubbf8\uc9c0 URL \ucd94\ucd9c\n  if (Array.isArray(resp?.response)) {\n    const url = resp.response[0]?.file_url || '';\n    if (url) return url;\n  }\n  if (resp?.file_url) return resp.file_url;\n  if (resp?.url) return resp.url;\n\n  throw new Error('\ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328: ' + JSON.stringify(resp).substring(0, 500));\n}\n\n// ========== \uc21c\ucc28 \ucc98\ub9ac \uc2dc\uc791 ==========\nconst results = [];\nlet refImageUrl = initialImageUrl;\n\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i].json;\n  const prompt = seg.veo3_prompt || '';\n\n  if (!prompt) throw new Error('\uc138\uadf8\uba3c\ud2b8 ' + (i+1) + ' veo3_prompt \uc5c6\uc74c');\n\n  // 1) Veo3 \uc601\uc0c1 \uc0dd\uc131 \uc694\uccad\n  const createResp = await createVeo3(prompt, refImageUrl);\n  const taskId = createResp?.data?.taskId;\n  if (!taskId) throw new Error('\uc601\uc0c1 ' + (i+1) + ' taskId \uc5c6\uc74c: ' + JSON.stringify(createResp).substring(0, 300));\n\n  // 2) \ud3f4\ub9c1 \ub300\uae30\n  const videoUrl = await pollVeo3(taskId);\n\n  results.push({\n    index: i + 1,\n    videoUrl: videoUrl,\n    taskId: taskId,\n    refImageUsed: refImageUrl\n  });\n\n  // 3) \ub9c8\uc9c0\ub9c9 \uc601\uc0c1\uc774 \uc544\ub2c8\uba74 \ud504\ub808\uc784 \ucd94\ucd9c \u2192 \ub2e4\uc74c \uc601\uc0c1 \ucc38\uc870 \uc774\ubbf8\uc9c0\n  if (i < segments.length - 1) {\n    try {\n      refImageUrl = await extractLastFrame(videoUrl);\n    } catch(e) {\n      // \ud504\ub808\uc784 \ucd94\ucd9c \uc2e4\ud328 \uc2dc \uae30\uc874 \uc774\ubbf8\uc9c0 \uc720\uc9c0\n      refImageUrl = initialImageUrl;\n    }\n  }\n}\n\nreturn [{ json: { results, segmentCount: results.length } }];"
                 },
                 "id": "seq-video-node",
                 "name": "\uc601\uc0c1 \uc21c\ucc28 \ucc98\ub9ac",
                 "type": "n8n-nodes-base.code",
                 "typeVersion": 2,
                 "position": [
-                    160,
-                    624
+                    -112,
+                    736
+                ]
+            },
+            {
+                "parameters": {
+                    "jsCode": "// \uc7a5\uba74 1\uc758 \uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8\ub9cc \uc120\ud0dd (1\uc7a5\ub9cc \uc0dd\uc131)\nconst items = $input.all();\nconst first = items[0].json;\nreturn [{\n  json: {\n    image_prompt: first.image_prompt,\n    refUrl_A: first.refUrl_A,\n    refUrl_B: first.refUrl_B,\n  }\n}];",
+                    "mode": "runOnceForAllItems"
+                },
+                "id": "img-prompt-select",
+                "name": "\uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8 \uc120\ud0dd",
+                "type": "n8n-nodes-base.code",
+                "typeVersion": 2,
+                "position": [
+                    -1080,
+                    736
                 ]
             }
         ],
@@ -5249,7 +5634,7 @@
                 "main": [
                     [
                         {
-                            "node": "\uc774\ubbf8\uc9c0 \uc0dd\uc131",
+                            "node": "\uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8 \uc120\ud0dd",
                             "type": "main",
                             "index": 0
                         }
@@ -5387,6 +5772,17 @@
                         }
                     ]
                 ]
+            },
+            "\uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8 \uc120\ud0dd": {
+                "main": [
+                    [
+                        {
+                            "node": "\uc774\ubbf8\uc9c0 \uc0dd\uc131",
+                            "type": "main",
+                            "index": 0
+                        }
+                    ]
+                ]
             }
         },
         "authors": "hatihoro15 hatihoro15",
@@ -5395,10 +5791,10 @@
         "autosaved": false,
         "workflowPublishHistory": [
             {
-                "createdAt": "2026-02-20T18:26:22.774Z",
-                "id": 479,
+                "createdAt": "2026-02-20T18:42:42.821Z",
+                "id": 481,
                 "workflowId": "jSEDYrkFcWUzJ8Et",
-                "versionId": "388a3750-33b7-4450-856b-b59b1befc182",
+                "versionId": "2ace1f44-fe47-4eae-ac82-2d725743366e",
                 "event": "activated",
                 "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
             }
