@@ -1,5 +1,5 @@
 {
-    "updatedAt": "2026-02-21T05:36:28.356Z",
+    "updatedAt": "2026-02-21T05:48:36.462Z",
     "createdAt": "2026-02-16T06:29:45.385Z",
     "id": "jSEDYrkFcWUzJ8Et",
     "name": "\uc628\uce74\uc2a4\ud130\ub514 \uc2a4\ud1a0\ub9ac, \uc9e4 (\ud504\ub86c\ud504\ud2b8, \ud654\uc9c8 \uc218\uc815)",
@@ -566,22 +566,25 @@
                     "options": {
                         "caseSensitive": true,
                         "leftValue": "",
-                        "typeValidation": "loose"
+                        "typeValidation": "loose",
+                        "version": 1
                     },
                     "conditions": [
                         {
-                            "id": "sf-\uc601\uc0c11",
+                            "id": "bb07e65a",
                             "leftValue": "={{ $json.data.successFlag }}",
-                            "rightValue": 1,
+                            "rightValue": "1",
                             "operator": {
-                                "type": "number",
+                                "type": "string",
                                 "operation": "equals"
                             }
                         }
                     ],
                     "combinator": "and"
                 },
-                "options": {}
+                "options": {
+                    "looseTypeValidation": true
+                }
             },
             "id": "1eb9f0e1",
             "name": "\uc601\uc0c11 \uc644\ub8cc\uccb4\ud06c",
@@ -621,7 +624,7 @@
                 },
                 "sendBody": true,
                 "specifyBody": "json",
-                "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[\"-sseof\",\"-0.1\"]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_1.jpg\"}]}",
+                "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[{\"option\":\"-sseof\",\"argument\":\"-0.1\"}]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_1.jpg\"}]}",
                 "options": {}
             },
             "id": "182701f3",
@@ -741,22 +744,25 @@
                     "options": {
                         "caseSensitive": true,
                         "leftValue": "",
-                        "typeValidation": "loose"
+                        "typeValidation": "loose",
+                        "version": 1
                     },
                     "conditions": [
                         {
-                            "id": "sf-\uc601\uc0c12",
+                            "id": "e36b459a",
                             "leftValue": "={{ $json.data.successFlag }}",
-                            "rightValue": 1,
+                            "rightValue": "1",
                             "operator": {
-                                "type": "number",
+                                "type": "string",
                                 "operation": "equals"
                             }
                         }
                     ],
                     "combinator": "and"
                 },
-                "options": {}
+                "options": {
+                    "looseTypeValidation": true
+                }
             },
             "id": "0c133eb8",
             "name": "\uc601\uc0c12 \uc644\ub8cc\uccb4\ud06c",
@@ -796,7 +802,7 @@
                 },
                 "sendBody": true,
                 "specifyBody": "json",
-                "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[\"-sseof\",\"-0.1\"]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_2.jpg\"}]}",
+                "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[{\"option\":\"-sseof\",\"argument\":\"-0.1\"}]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_2.jpg\"}]}",
                 "options": {}
             },
             "id": "39092918",
@@ -916,22 +922,25 @@
                     "options": {
                         "caseSensitive": true,
                         "leftValue": "",
-                        "typeValidation": "loose"
+                        "typeValidation": "loose",
+                        "version": 1
                     },
                     "conditions": [
                         {
-                            "id": "sf-\uc601\uc0c13",
+                            "id": "85d82019",
                             "leftValue": "={{ $json.data.successFlag }}",
-                            "rightValue": 1,
+                            "rightValue": "1",
                             "operator": {
-                                "type": "number",
+                                "type": "string",
                                 "operation": "equals"
                             }
                         }
                     ],
                     "combinator": "and"
                 },
-                "options": {}
+                "options": {
+                    "looseTypeValidation": true
+                }
             },
             "id": "12e70534",
             "name": "\uc601\uc0c13 \uc644\ub8cc\uccb4\ud06c",
@@ -5758,9 +5767,9 @@
             }
         ]
     },
-    "versionId": "e1041ff6-34c6-495d-bc72-bac31a6984bd",
-    "activeVersionId": "e1041ff6-34c6-495d-bc72-bac31a6984bd",
-    "versionCounter": 391,
+    "versionId": "61250ba9-8e5d-4353-a92c-02f42e8df546",
+    "activeVersionId": "61250ba9-8e5d-4353-a92c-02f42e8df546",
+    "versionCounter": 405,
     "triggerCount": 1,
     "shared": [
         {
@@ -5819,9 +5828,9 @@
     ],
     "tags": [],
     "activeVersion": {
-        "updatedAt": "2026-02-21T05:36:28.363Z",
-        "createdAt": "2026-02-21T05:36:28.363Z",
-        "versionId": "e1041ff6-34c6-495d-bc72-bac31a6984bd",
+        "updatedAt": "2026-02-21T05:48:36.464Z",
+        "createdAt": "2026-02-21T05:48:36.464Z",
+        "versionId": "61250ba9-8e5d-4353-a92c-02f42e8df546",
         "workflowId": "jSEDYrkFcWUzJ8Et",
         "nodes": [
             {
@@ -6383,22 +6392,25 @@
                         "options": {
                             "caseSensitive": true,
                             "leftValue": "",
-                            "typeValidation": "loose"
+                            "typeValidation": "loose",
+                            "version": 1
                         },
                         "conditions": [
                             {
-                                "id": "sf-\uc601\uc0c11",
+                                "id": "bb07e65a",
                                 "leftValue": "={{ $json.data.successFlag }}",
-                                "rightValue": 1,
+                                "rightValue": "1",
                                 "operator": {
-                                    "type": "number",
+                                    "type": "string",
                                     "operation": "equals"
                                 }
                             }
                         ],
                         "combinator": "and"
                     },
-                    "options": {}
+                    "options": {
+                        "looseTypeValidation": true
+                    }
                 },
                 "id": "1eb9f0e1",
                 "name": "\uc601\uc0c11 \uc644\ub8cc\uccb4\ud06c",
@@ -6438,7 +6450,7 @@
                     },
                     "sendBody": true,
                     "specifyBody": "json",
-                    "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[\"-sseof\",\"-0.1\"]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_1.jpg\"}]}",
+                    "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[{\"option\":\"-sseof\",\"argument\":\"-0.1\"}]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_1.jpg\"}]}",
                     "options": {}
                 },
                 "id": "182701f3",
@@ -6558,22 +6570,25 @@
                         "options": {
                             "caseSensitive": true,
                             "leftValue": "",
-                            "typeValidation": "loose"
+                            "typeValidation": "loose",
+                            "version": 1
                         },
                         "conditions": [
                             {
-                                "id": "sf-\uc601\uc0c12",
+                                "id": "e36b459a",
                                 "leftValue": "={{ $json.data.successFlag }}",
-                                "rightValue": 1,
+                                "rightValue": "1",
                                 "operator": {
-                                    "type": "number",
+                                    "type": "string",
                                     "operation": "equals"
                                 }
                             }
                         ],
                         "combinator": "and"
                     },
-                    "options": {}
+                    "options": {
+                        "looseTypeValidation": true
+                    }
                 },
                 "id": "0c133eb8",
                 "name": "\uc601\uc0c12 \uc644\ub8cc\uccb4\ud06c",
@@ -6613,7 +6628,7 @@
                     },
                     "sendBody": true,
                     "specifyBody": "json",
-                    "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[\"-sseof\",\"-0.1\"]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_2.jpg\"}]}",
+                    "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[{\"option\":\"-sseof\",\"argument\":\"-0.1\"}]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_2.jpg\"}]}",
                     "options": {}
                 },
                 "id": "39092918",
@@ -6733,22 +6748,25 @@
                         "options": {
                             "caseSensitive": true,
                             "leftValue": "",
-                            "typeValidation": "loose"
+                            "typeValidation": "loose",
+                            "version": 1
                         },
                         "conditions": [
                             {
-                                "id": "sf-\uc601\uc0c13",
+                                "id": "85d82019",
                                 "leftValue": "={{ $json.data.successFlag }}",
-                                "rightValue": 1,
+                                "rightValue": "1",
                                 "operator": {
-                                    "type": "number",
+                                    "type": "string",
                                     "operation": "equals"
                                 }
                             }
                         ],
                         "combinator": "and"
                     },
-                    "options": {}
+                    "options": {
+                        "looseTypeValidation": true
+                    }
                 },
                 "id": "12e70534",
                 "name": "\uc601\uc0c13 \uc644\ub8cc\uccb4\ud06c",
@@ -7243,10 +7261,10 @@
         "autosaved": false,
         "workflowPublishHistory": [
             {
-                "createdAt": "2026-02-21T05:36:28.480Z",
-                "id": 484,
+                "createdAt": "2026-02-21T05:48:36.544Z",
+                "id": 485,
                 "workflowId": "jSEDYrkFcWUzJ8Et",
-                "versionId": "e1041ff6-34c6-495d-bc72-bac31a6984bd",
+                "versionId": "61250ba9-8e5d-4353-a92c-02f42e8df546",
                 "event": "activated",
                 "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
             }
