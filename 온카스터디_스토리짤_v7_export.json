@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-21T09:17:10.919Z",
+  "updatedAt": "2026-02-21T10:23:53.317Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -197,7 +197,7 @@
     },
     {
       "parameters": {
-        "jsCode": "\n// 프롬프트 사전 순화 (Kie.ai 안전 필터 대응)\nfunction sanitizeForVideo(text) {\n  const replaceMap = {\n    '카지노': '문화공간', '도박': '게임', '베팅': '참여',\n    '슬롯': '게임기', '토토': '스포츠', '먹튀': '문제',\n    '포커': '카드', '바카라': '카드', '블랙잭': '카드',\n    '룰렛': '게임', '배당': '결과', '환전': '교환',\n    '사기': '문제', '불법': '부적절', '범죄': '사건',\n    '폭력': '갈등', '싸움': '논쟁', '총': '도구', '칼': '도구',\n    'gambling': 'entertainment', 'casino': 'venue',\n    'betting': 'activity', 'slot': 'game',\n    'scam': 'issue', 'fraud': 'problem',\n    'illegal': 'inappropriate', 'crime': 'incident',\n    'violence': 'conflict', 'fight': 'debate',\n    'weapon': 'object', 'gun': 'object', 'knife': 'object',\n  };\n  let cleaned = text;\n  for (const [key, val] of Object.entries(replaceMap)) {\n    cleaned = cleaned.replace(new RegExp(key, 'gi'), val);\n  }\n  return cleaned;\n}\nconst data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = sanitizeForVideo(cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
+        "jsCode": "\n// 프롬프트 사전 순화 (Kie.ai 안전 필터 대응)\n  return cleaned;\n}\nconst data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -936,7 +936,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 영상1 실패/타임아웃 체크 (원본 이미지 폴백 + 안전필터 감지)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 안전체크에서 이미 실패 확정된 경우 즉시 폴백\ntry {\n  const safetyData = $('영상1 안전체크').first().json;\n  if (safetyData?.videoFailed) {\n    staticData.retryCount = 0;\n    console.log('안전 필터 실패 확정 → 즉시 폴백');\n    return [{json: {\n      data: { successFlag: 1 },\n      videoFailed: true,\n      failReason: safetyData.failReason || 'Kie.ai 안전 필터',\n      originalImageUrl: safetyData.originalImageUrl || originalImageUrl\n    }}];\n  }\n} catch(e) {}\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상1 실패 (successFlag=' + flag + ')'\n    : '영상1 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+        "jsCode": "// 영상1 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (\\!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상1 실패 (successFlag=' + flag + ')'\n    : '영상1 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
       },
       "id": "fail-check-1",
       "name": "영상1 실패체크",
@@ -949,7 +949,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 영상2 실패/타임아웃 체크 (원본 이미지 폴백 + 안전필터 감지)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 안전체크에서 이미 실패 확정된 경우 즉시 폴백\ntry {\n  const safetyData = $('영상2 안전체크').first().json;\n  if (safetyData?.videoFailed) {\n    staticData.retryCount = 0;\n    console.log('안전 필터 실패 확정 → 즉시 폴백');\n    return [{json: {\n      data: { successFlag: 1 },\n      videoFailed: true,\n      failReason: safetyData.failReason || 'Kie.ai 안전 필터',\n      originalImageUrl: safetyData.originalImageUrl || originalImageUrl\n    }}];\n  }\n} catch(e) {}\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상2 실패 (successFlag=' + flag + ')'\n    : '영상2 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+        "jsCode": "// 영상2 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (\\!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상2 실패 (successFlag=' + flag + ')'\n    : '영상2 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
       },
       "id": "fail-check-2",
       "name": "영상2 실패체크",
@@ -962,7 +962,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 영상3 실패/타임아웃 체크 (원본 이미지 폴백 + 안전필터 감지)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 안전체크에서 이미 실패 확정된 경우 즉시 폴백\ntry {\n  const safetyData = $('영상3 안전체크').first().json;\n  if (safetyData?.videoFailed) {\n    staticData.retryCount = 0;\n    console.log('안전 필터 실패 확정 → 즉시 폴백');\n    return [{json: {\n      data: { successFlag: 1 },\n      videoFailed: true,\n      failReason: safetyData.failReason || 'Kie.ai 안전 필터',\n      originalImageUrl: safetyData.originalImageUrl || originalImageUrl\n    }}];\n  }\n} catch(e) {}\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상3 실패 (successFlag=' + flag + ')'\n    : '영상3 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+        "jsCode": "// 영상3 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (\\!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상3 실패 (successFlag=' + flag + ')'\n    : '영상3 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
       },
       "id": "fail-check-3",
       "name": "영상3 실패체크",
@@ -1119,150 +1119,6 @@
         2576
       ],
       "webhookId": "90d602d6-1c87-43f8-bf90-ad3ef0cf1093"
-    },
-    {
-      "id": "safety-check-1",
-      "name": "영상1 안전체크",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -2240,
-        2064
-      ],
-      "parameters": {
-        "jsCode": "// 영상1 안전체크: Kie.ai safety filter 감지 + 프롬프트 순화 재시도\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.safetyRetry) staticData.safetyRetry = 0;\n\nconst data = $input.first().json;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 성공: taskId 존재\nif (data?.data?.taskId) {\n  staticData.safetyRetry = 0;\n  return [{ json: { ...data, needRetry: false } }];\n}\n\n// 에러 감지\nstaticData.safetyRetry++;\nconsole.log('영상1 생성 실패 (시도 ' + staticData.safetyRetry + '/2): ' + JSON.stringify(data).substring(0, 300));\n\nfunction sanitizePrompt(prompt, level) {\n  let cleaned = prompt;\n  const replaceMap = {\n    '카지노': '문화공간', '도박': '게임', '베팅': '참여',\n    '슬롯': '게임기', '토토': '스포츠', '먹튀': '문제',\n    '포커': '카드', '바카라': '카드', '블랙잭': '카드',\n    '룰렛': '게임', '배당': '결과', '환전': '교환',\n    '사기': '문제', '불법': '부적절', '범죄': '사건',\n    '폭력': '갈등', '싸움': '논쟁',\n    'gambling': 'entertainment', 'casino': 'venue',\n    'betting': 'activity', 'slot': 'game',\n    'scam': 'issue', 'fraud': 'problem',\n    'violence': 'conflict', 'fight': 'debate',\n  };\n  for (const [key, val] of Object.entries(replaceMap)) {\n    cleaned = cleaned.replace(new RegExp(key, 'gi'), val);\n  }\n  if (level >= 2) {\n    // Level 2: 대사 내용 제거, 시각적 묘사만 유지\n    const parts = cleaned.split('. ');\n    cleaned = parts.filter(p => !p.includes(\"says\") && !p.includes(\"responds\") && !p.includes(\"then\")).slice(0, 2).join('. ') +\n      '. Two friends having a casual indoor conversation. Natural body language and facial expressions, cinematic lighting.';\n  }\n  return cleaned;\n}\n\nif (staticData.safetyRetry <= 2) {\n  const originalBody = $('영상1 준비').first().json.veo3Body;\n  const sanitized = sanitizePrompt(originalBody.prompt, staticData.safetyRetry);\n  const imageUrl = staticData.safetyRetry >= 2\n    ? originalImageUrl\n    : (originalBody.imageUrls?.[0] || originalImageUrl);\n\n  console.log('영상1 프롬프트 순화 (레벨 ' + staticData.safetyRetry + ')');\n  return [{ json: {\n    veo3Body: {\n      ...originalBody,\n      prompt: sanitized,\n      imageUrls: [imageUrl]\n    },\n    needRetry: true\n  } }];\n}\n\n// 포기: 2회 재시도 실패\nstaticData.safetyRetry = 0;\nconsole.log('영상1 안전 필터 재시도 모두 실패 → 폴백');\nreturn [{ json: {\n  data: { successFlag: 1 },\n  videoFailed: true,\n  failReason: 'Kie.ai 안전 필터 (재시도 2회 실패)',\n  originalImageUrl: originalImageUrl,\n  needRetry: false\n} }];"
-      }
-    },
-    {
-      "id": "safety-check-2",
-      "name": "영상2 안전체크",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -2224,
-        2672
-      ],
-      "parameters": {
-        "jsCode": "// 영상2 안전체크: Kie.ai safety filter 감지 + 프롬프트 순화 재시도\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.safetyRetry) staticData.safetyRetry = 0;\n\nconst data = $input.first().json;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 성공: taskId 존재\nif (data?.data?.taskId) {\n  staticData.safetyRetry = 0;\n  return [{ json: { ...data, needRetry: false } }];\n}\n\n// 에러 감지\nstaticData.safetyRetry++;\nconsole.log('영상2 생성 실패 (시도 ' + staticData.safetyRetry + '/2): ' + JSON.stringify(data).substring(0, 300));\n\nfunction sanitizePrompt(prompt, level) {\n  let cleaned = prompt;\n  const replaceMap = {\n    '카지노': '문화공간', '도박': '게임', '베팅': '참여',\n    '슬롯': '게임기', '토토': '스포츠', '먹튀': '문제',\n    '포커': '카드', '바카라': '카드', '블랙잭': '카드',\n    '룰렛': '게임', '배당': '결과', '환전': '교환',\n    '사기': '문제', '불법': '부적절', '범죄': '사건',\n    '폭력': '갈등', '싸움': '논쟁',\n    'gambling': 'entertainment', 'casino': 'venue',\n    'betting': 'activity', 'slot': 'game',\n    'scam': 'issue', 'fraud': 'problem',\n    'violence': 'conflict', 'fight': 'debate',\n  };\n  for (const [key, val] of Object.entries(replaceMap)) {\n    cleaned = cleaned.replace(new RegExp(key, 'gi'), val);\n  }\n  if (level >= 2) {\n    // Level 2: 대사 내용 제거, 시각적 묘사만 유지\n    const parts = cleaned.split('. ');\n    cleaned = parts.filter(p => !p.includes(\"says\") && !p.includes(\"responds\") && !p.includes(\"then\")).slice(0, 2).join('. ') +\n      '. Two friends having a casual indoor conversation. Natural body language and facial expressions, cinematic lighting.';\n  }\n  return cleaned;\n}\n\nif (staticData.safetyRetry <= 2) {\n  const originalBody = $('영상2 준비').first().json.veo3Body;\n  const sanitized = sanitizePrompt(originalBody.prompt, staticData.safetyRetry);\n  const imageUrl = staticData.safetyRetry >= 2\n    ? originalImageUrl\n    : (originalBody.imageUrls?.[0] || originalImageUrl);\n\n  console.log('영상2 프롬프트 순화 (레벨 ' + staticData.safetyRetry + ')');\n  return [{ json: {\n    veo3Body: {\n      ...originalBody,\n      prompt: sanitized,\n      imageUrls: [imageUrl]\n    },\n    needRetry: true\n  } }];\n}\n\n// 포기: 2회 재시도 실패\nstaticData.safetyRetry = 0;\nconsole.log('영상2 안전 필터 재시도 모두 실패 → 폴백');\nreturn [{ json: {\n  data: { successFlag: 1 },\n  videoFailed: true,\n  failReason: 'Kie.ai 안전 필터 (재시도 2회 실패)',\n  originalImageUrl: originalImageUrl,\n  needRetry: false\n} }];"
-      }
-    },
-    {
-      "id": "safety-check-3",
-      "name": "영상3 안전체크",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        -2240,
-        3264
-      ],
-      "parameters": {
-        "jsCode": "// 영상3 안전체크: Kie.ai safety filter 감지 + 프롬프트 순화 재시도\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.safetyRetry) staticData.safetyRetry = 0;\n\nconst data = $input.first().json;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 성공: taskId 존재\nif (data?.data?.taskId) {\n  staticData.safetyRetry = 0;\n  return [{ json: { ...data, needRetry: false } }];\n}\n\n// 에러 감지\nstaticData.safetyRetry++;\nconsole.log('영상3 생성 실패 (시도 ' + staticData.safetyRetry + '/2): ' + JSON.stringify(data).substring(0, 300));\n\nfunction sanitizePrompt(prompt, level) {\n  let cleaned = prompt;\n  const replaceMap = {\n    '카지노': '문화공간', '도박': '게임', '베팅': '참여',\n    '슬롯': '게임기', '토토': '스포츠', '먹튀': '문제',\n    '포커': '카드', '바카라': '카드', '블랙잭': '카드',\n    '룰렛': '게임', '배당': '결과', '환전': '교환',\n    '사기': '문제', '불법': '부적절', '범죄': '사건',\n    '폭력': '갈등', '싸움': '논쟁',\n    'gambling': 'entertainment', 'casino': 'venue',\n    'betting': 'activity', 'slot': 'game',\n    'scam': 'issue', 'fraud': 'problem',\n    'violence': 'conflict', 'fight': 'debate',\n  };\n  for (const [key, val] of Object.entries(replaceMap)) {\n    cleaned = cleaned.replace(new RegExp(key, 'gi'), val);\n  }\n  if (level >= 2) {\n    // Level 2: 대사 내용 제거, 시각적 묘사만 유지\n    const parts = cleaned.split('. ');\n    cleaned = parts.filter(p => !p.includes(\"says\") && !p.includes(\"responds\") && !p.includes(\"then\")).slice(0, 2).join('. ') +\n      '. Two friends having a casual indoor conversation. Natural body language and facial expressions, cinematic lighting.';\n  }\n  return cleaned;\n}\n\nif (staticData.safetyRetry <= 2) {\n  const originalBody = $('영상3 준비').first().json.veo3Body;\n  const sanitized = sanitizePrompt(originalBody.prompt, staticData.safetyRetry);\n  const imageUrl = staticData.safetyRetry >= 2\n    ? originalImageUrl\n    : (originalBody.imageUrls?.[0] || originalImageUrl);\n\n  console.log('영상3 프롬프트 순화 (레벨 ' + staticData.safetyRetry + ')');\n  return [{ json: {\n    veo3Body: {\n      ...originalBody,\n      prompt: sanitized,\n      imageUrls: [imageUrl]\n    },\n    needRetry: true\n  } }];\n}\n\n// 포기: 2회 재시도 실패\nstaticData.safetyRetry = 0;\nconsole.log('영상3 안전 필터 재시도 모두 실패 → 폴백');\nreturn [{ json: {\n  data: { successFlag: 1 },\n  videoFailed: true,\n  failReason: 'Kie.ai 안전 필터 (재시도 2회 실패)',\n  originalImageUrl: originalImageUrl,\n  needRetry: false\n} }];"
-      }
-    },
-    {
-      "id": "safety-branch-1",
-      "name": "영상1 안전분기",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        -2240,
-        2224
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "safety-cond-1",
-              "leftValue": "={{ $json.needRetry }}",
-              "rightValue": "true",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {
-          "looseTypeValidation": true
-        }
-      }
-    },
-    {
-      "id": "safety-branch-2",
-      "name": "영상2 안전분기",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        -2224,
-        2832
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "safety-cond-2",
-              "leftValue": "={{ $json.needRetry }}",
-              "rightValue": "true",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {
-          "looseTypeValidation": true
-        }
-      }
-    },
-    {
-      "id": "safety-branch-3",
-      "name": "영상3 안전분기",
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        -2240,
-        3424
-      ],
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "safety-cond-3",
-              "leftValue": "={{ $json.needRetry }}",
-              "rightValue": "true",
-              "operator": {
-                "type": "string",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {
-          "looseTypeValidation": true
-        }
-      }
     }
   ],
   "connections": {
@@ -1457,7 +1313,7 @@
       "main": [
         [
           {
-            "node": "영상1 안전체크",
+            "node": "영상1 대기",
             "type": "main",
             "index": 0
           }
@@ -1563,7 +1419,7 @@
       "main": [
         [
           {
-            "node": "영상2 안전체크",
+            "node": "영상2 대기",
             "type": "main",
             "index": 0
           }
@@ -1669,7 +1525,7 @@
       "main": [
         [
           {
-            "node": "영상3 안전체크",
+            "node": "영상3 대기",
             "type": "main",
             "index": 0
           }
@@ -1841,93 +1697,6 @@
         [
           {
             "node": "프레임2 추출",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "영상1 안전체크": {
-      "main": [
-        [
-          {
-            "node": "영상1 안전분기",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "영상1 안전분기": {
-      "main": [
-        [
-          {
-            "node": "영상1 생성",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "영상1 대기",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "영상2 안전체크": {
-      "main": [
-        [
-          {
-            "node": "영상2 안전분기",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "영상2 안전분기": {
-      "main": [
-        [
-          {
-            "node": "영상2 생성",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "영상2 대기",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "영상3 안전체크": {
-      "main": [
-        [
-          {
-            "node": "영상3 안전분기",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "영상3 안전분기": {
-      "main": [
-        [
-          {
-            "node": "영상3 생성",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "영상3 대기",
             "type": "main",
             "index": 0
           }
@@ -6800,9 +6569,9 @@
       }
     ]
   },
-  "versionId": "a22d348b-7804-4883-9601-69028f34fda6",
-  "activeVersionId": "a22d348b-7804-4883-9601-69028f34fda6",
-  "versionCounter": 486,
+  "versionId": "b90e03f5-13bf-4d99-8f1f-66277b922205",
+  "activeVersionId": "b90e03f5-13bf-4d99-8f1f-66277b922205",
+  "versionCounter": 489,
   "triggerCount": 1,
   "shared": [
     {
@@ -6861,9 +6630,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-21T09:17:10.920Z",
-    "createdAt": "2026-02-21T09:17:10.920Z",
-    "versionId": "a22d348b-7804-4883-9601-69028f34fda6",
+    "updatedAt": "2026-02-21T10:23:53.319Z",
+    "createdAt": "2026-02-21T10:23:53.319Z",
+    "versionId": "b90e03f5-13bf-4d99-8f1f-66277b922205",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -7056,7 +6825,7 @@
       },
       {
         "parameters": {
-          "jsCode": "\n// 프롬프트 사전 순화 (Kie.ai 안전 필터 대응)\nfunction sanitizeForVideo(text) {\n  const replaceMap = {\n    '카지노': '문화공간', '도박': '게임', '베팅': '참여',\n    '슬롯': '게임기', '토토': '스포츠', '먹튀': '문제',\n    '포커': '카드', '바카라': '카드', '블랙잭': '카드',\n    '룰렛': '게임', '배당': '결과', '환전': '교환',\n    '사기': '문제', '불법': '부적절', '범죄': '사건',\n    '폭력': '갈등', '싸움': '논쟁', '총': '도구', '칼': '도구',\n    'gambling': 'entertainment', 'casino': 'venue',\n    'betting': 'activity', 'slot': 'game',\n    'scam': 'issue', 'fraud': 'problem',\n    'illegal': 'inappropriate', 'crime': 'incident',\n    'violence': 'conflict', 'fight': 'debate',\n    'weapon': 'object', 'gun': 'object', 'knife': 'object',\n  };\n  let cleaned = text;\n  for (const [key, val] of Object.entries(replaceMap)) {\n    cleaned = cleaned.replace(new RegExp(key, 'gi'), val);\n  }\n  return cleaned;\n}\nconst data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = sanitizeForVideo(cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
+          "jsCode": "\n// 프롬프트 사전 순화 (Kie.ai 안전 필터 대응)\n  return cleaned;\n}\nconst data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -7795,7 +7564,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 영상1 실패/타임아웃 체크 (원본 이미지 폴백 + 안전필터 감지)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 안전체크에서 이미 실패 확정된 경우 즉시 폴백\ntry {\n  const safetyData = $('영상1 안전체크').first().json;\n  if (safetyData?.videoFailed) {\n    staticData.retryCount = 0;\n    console.log('안전 필터 실패 확정 → 즉시 폴백');\n    return [{json: {\n      data: { successFlag: 1 },\n      videoFailed: true,\n      failReason: safetyData.failReason || 'Kie.ai 안전 필터',\n      originalImageUrl: safetyData.originalImageUrl || originalImageUrl\n    }}];\n  }\n} catch(e) {}\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상1 실패 (successFlag=' + flag + ')'\n    : '영상1 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+          "jsCode": "// 영상1 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (\\!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상1 실패 (successFlag=' + flag + ')'\n    : '영상1 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
         },
         "id": "fail-check-1",
         "name": "영상1 실패체크",
@@ -7808,7 +7577,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 영상2 실패/타임아웃 체크 (원본 이미지 폴백 + 안전필터 감지)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 안전체크에서 이미 실패 확정된 경우 즉시 폴백\ntry {\n  const safetyData = $('영상2 안전체크').first().json;\n  if (safetyData?.videoFailed) {\n    staticData.retryCount = 0;\n    console.log('안전 필터 실패 확정 → 즉시 폴백');\n    return [{json: {\n      data: { successFlag: 1 },\n      videoFailed: true,\n      failReason: safetyData.failReason || 'Kie.ai 안전 필터',\n      originalImageUrl: safetyData.originalImageUrl || originalImageUrl\n    }}];\n  }\n} catch(e) {}\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상2 실패 (successFlag=' + flag + ')'\n    : '영상2 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+          "jsCode": "// 영상2 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (\\!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상2 실패 (successFlag=' + flag + ')'\n    : '영상2 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
         },
         "id": "fail-check-2",
         "name": "영상2 실패체크",
@@ -7821,7 +7590,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 영상3 실패/타임아웃 체크 (원본 이미지 폴백 + 안전필터 감지)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 안전체크에서 이미 실패 확정된 경우 즉시 폴백\ntry {\n  const safetyData = $('영상3 안전체크').first().json;\n  if (safetyData?.videoFailed) {\n    staticData.retryCount = 0;\n    console.log('안전 필터 실패 확정 → 즉시 폴백');\n    return [{json: {\n      data: { successFlag: 1 },\n      videoFailed: true,\n      failReason: safetyData.failReason || 'Kie.ai 안전 필터',\n      originalImageUrl: safetyData.originalImageUrl || originalImageUrl\n    }}];\n  }\n} catch(e) {}\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상3 실패 (successFlag=' + flag + ')'\n    : '영상3 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+          "jsCode": "// 영상3 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (\\!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상3 실패 (successFlag=' + flag + ')'\n    : '영상3 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
         },
         "id": "fail-check-3",
         "name": "영상3 실패체크",
@@ -7978,150 +7747,6 @@
           2576
         ],
         "webhookId": "90d602d6-1c87-43f8-bf90-ad3ef0cf1093"
-      },
-      {
-        "id": "safety-check-1",
-        "name": "영상1 안전체크",
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          -2240,
-          2064
-        ],
-        "parameters": {
-          "jsCode": "// 영상1 안전체크: Kie.ai safety filter 감지 + 프롬프트 순화 재시도\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.safetyRetry) staticData.safetyRetry = 0;\n\nconst data = $input.first().json;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 성공: taskId 존재\nif (data?.data?.taskId) {\n  staticData.safetyRetry = 0;\n  return [{ json: { ...data, needRetry: false } }];\n}\n\n// 에러 감지\nstaticData.safetyRetry++;\nconsole.log('영상1 생성 실패 (시도 ' + staticData.safetyRetry + '/2): ' + JSON.stringify(data).substring(0, 300));\n\nfunction sanitizePrompt(prompt, level) {\n  let cleaned = prompt;\n  const replaceMap = {\n    '카지노': '문화공간', '도박': '게임', '베팅': '참여',\n    '슬롯': '게임기', '토토': '스포츠', '먹튀': '문제',\n    '포커': '카드', '바카라': '카드', '블랙잭': '카드',\n    '룰렛': '게임', '배당': '결과', '환전': '교환',\n    '사기': '문제', '불법': '부적절', '범죄': '사건',\n    '폭력': '갈등', '싸움': '논쟁',\n    'gambling': 'entertainment', 'casino': 'venue',\n    'betting': 'activity', 'slot': 'game',\n    'scam': 'issue', 'fraud': 'problem',\n    'violence': 'conflict', 'fight': 'debate',\n  };\n  for (const [key, val] of Object.entries(replaceMap)) {\n    cleaned = cleaned.replace(new RegExp(key, 'gi'), val);\n  }\n  if (level >= 2) {\n    // Level 2: 대사 내용 제거, 시각적 묘사만 유지\n    const parts = cleaned.split('. ');\n    cleaned = parts.filter(p => !p.includes(\"says\") && !p.includes(\"responds\") && !p.includes(\"then\")).slice(0, 2).join('. ') +\n      '. Two friends having a casual indoor conversation. Natural body language and facial expressions, cinematic lighting.';\n  }\n  return cleaned;\n}\n\nif (staticData.safetyRetry <= 2) {\n  const originalBody = $('영상1 준비').first().json.veo3Body;\n  const sanitized = sanitizePrompt(originalBody.prompt, staticData.safetyRetry);\n  const imageUrl = staticData.safetyRetry >= 2\n    ? originalImageUrl\n    : (originalBody.imageUrls?.[0] || originalImageUrl);\n\n  console.log('영상1 프롬프트 순화 (레벨 ' + staticData.safetyRetry + ')');\n  return [{ json: {\n    veo3Body: {\n      ...originalBody,\n      prompt: sanitized,\n      imageUrls: [imageUrl]\n    },\n    needRetry: true\n  } }];\n}\n\n// 포기: 2회 재시도 실패\nstaticData.safetyRetry = 0;\nconsole.log('영상1 안전 필터 재시도 모두 실패 → 폴백');\nreturn [{ json: {\n  data: { successFlag: 1 },\n  videoFailed: true,\n  failReason: 'Kie.ai 안전 필터 (재시도 2회 실패)',\n  originalImageUrl: originalImageUrl,\n  needRetry: false\n} }];"
-        }
-      },
-      {
-        "id": "safety-check-2",
-        "name": "영상2 안전체크",
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          -2224,
-          2672
-        ],
-        "parameters": {
-          "jsCode": "// 영상2 안전체크: Kie.ai safety filter 감지 + 프롬프트 순화 재시도\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.safetyRetry) staticData.safetyRetry = 0;\n\nconst data = $input.first().json;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 성공: taskId 존재\nif (data?.data?.taskId) {\n  staticData.safetyRetry = 0;\n  return [{ json: { ...data, needRetry: false } }];\n}\n\n// 에러 감지\nstaticData.safetyRetry++;\nconsole.log('영상2 생성 실패 (시도 ' + staticData.safetyRetry + '/2): ' + JSON.stringify(data).substring(0, 300));\n\nfunction sanitizePrompt(prompt, level) {\n  let cleaned = prompt;\n  const replaceMap = {\n    '카지노': '문화공간', '도박': '게임', '베팅': '참여',\n    '슬롯': '게임기', '토토': '스포츠', '먹튀': '문제',\n    '포커': '카드', '바카라': '카드', '블랙잭': '카드',\n    '룰렛': '게임', '배당': '결과', '환전': '교환',\n    '사기': '문제', '불법': '부적절', '범죄': '사건',\n    '폭력': '갈등', '싸움': '논쟁',\n    'gambling': 'entertainment', 'casino': 'venue',\n    'betting': 'activity', 'slot': 'game',\n    'scam': 'issue', 'fraud': 'problem',\n    'violence': 'conflict', 'fight': 'debate',\n  };\n  for (const [key, val] of Object.entries(replaceMap)) {\n    cleaned = cleaned.replace(new RegExp(key, 'gi'), val);\n  }\n  if (level >= 2) {\n    // Level 2: 대사 내용 제거, 시각적 묘사만 유지\n    const parts = cleaned.split('. ');\n    cleaned = parts.filter(p => !p.includes(\"says\") && !p.includes(\"responds\") && !p.includes(\"then\")).slice(0, 2).join('. ') +\n      '. Two friends having a casual indoor conversation. Natural body language and facial expressions, cinematic lighting.';\n  }\n  return cleaned;\n}\n\nif (staticData.safetyRetry <= 2) {\n  const originalBody = $('영상2 준비').first().json.veo3Body;\n  const sanitized = sanitizePrompt(originalBody.prompt, staticData.safetyRetry);\n  const imageUrl = staticData.safetyRetry >= 2\n    ? originalImageUrl\n    : (originalBody.imageUrls?.[0] || originalImageUrl);\n\n  console.log('영상2 프롬프트 순화 (레벨 ' + staticData.safetyRetry + ')');\n  return [{ json: {\n    veo3Body: {\n      ...originalBody,\n      prompt: sanitized,\n      imageUrls: [imageUrl]\n    },\n    needRetry: true\n  } }];\n}\n\n// 포기: 2회 재시도 실패\nstaticData.safetyRetry = 0;\nconsole.log('영상2 안전 필터 재시도 모두 실패 → 폴백');\nreturn [{ json: {\n  data: { successFlag: 1 },\n  videoFailed: true,\n  failReason: 'Kie.ai 안전 필터 (재시도 2회 실패)',\n  originalImageUrl: originalImageUrl,\n  needRetry: false\n} }];"
-        }
-      },
-      {
-        "id": "safety-check-3",
-        "name": "영상3 안전체크",
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          -2240,
-          3264
-        ],
-        "parameters": {
-          "jsCode": "// 영상3 안전체크: Kie.ai safety filter 감지 + 프롬프트 순화 재시도\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.safetyRetry) staticData.safetyRetry = 0;\n\nconst data = $input.first().json;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 성공: taskId 존재\nif (data?.data?.taskId) {\n  staticData.safetyRetry = 0;\n  return [{ json: { ...data, needRetry: false } }];\n}\n\n// 에러 감지\nstaticData.safetyRetry++;\nconsole.log('영상3 생성 실패 (시도 ' + staticData.safetyRetry + '/2): ' + JSON.stringify(data).substring(0, 300));\n\nfunction sanitizePrompt(prompt, level) {\n  let cleaned = prompt;\n  const replaceMap = {\n    '카지노': '문화공간', '도박': '게임', '베팅': '참여',\n    '슬롯': '게임기', '토토': '스포츠', '먹튀': '문제',\n    '포커': '카드', '바카라': '카드', '블랙잭': '카드',\n    '룰렛': '게임', '배당': '결과', '환전': '교환',\n    '사기': '문제', '불법': '부적절', '범죄': '사건',\n    '폭력': '갈등', '싸움': '논쟁',\n    'gambling': 'entertainment', 'casino': 'venue',\n    'betting': 'activity', 'slot': 'game',\n    'scam': 'issue', 'fraud': 'problem',\n    'violence': 'conflict', 'fight': 'debate',\n  };\n  for (const [key, val] of Object.entries(replaceMap)) {\n    cleaned = cleaned.replace(new RegExp(key, 'gi'), val);\n  }\n  if (level >= 2) {\n    // Level 2: 대사 내용 제거, 시각적 묘사만 유지\n    const parts = cleaned.split('. ');\n    cleaned = parts.filter(p => !p.includes(\"says\") && !p.includes(\"responds\") && !p.includes(\"then\")).slice(0, 2).join('. ') +\n      '. Two friends having a casual indoor conversation. Natural body language and facial expressions, cinematic lighting.';\n  }\n  return cleaned;\n}\n\nif (staticData.safetyRetry <= 2) {\n  const originalBody = $('영상3 준비').first().json.veo3Body;\n  const sanitized = sanitizePrompt(originalBody.prompt, staticData.safetyRetry);\n  const imageUrl = staticData.safetyRetry >= 2\n    ? originalImageUrl\n    : (originalBody.imageUrls?.[0] || originalImageUrl);\n\n  console.log('영상3 프롬프트 순화 (레벨 ' + staticData.safetyRetry + ')');\n  return [{ json: {\n    veo3Body: {\n      ...originalBody,\n      prompt: sanitized,\n      imageUrls: [imageUrl]\n    },\n    needRetry: true\n  } }];\n}\n\n// 포기: 2회 재시도 실패\nstaticData.safetyRetry = 0;\nconsole.log('영상3 안전 필터 재시도 모두 실패 → 폴백');\nreturn [{ json: {\n  data: { successFlag: 1 },\n  videoFailed: true,\n  failReason: 'Kie.ai 안전 필터 (재시도 2회 실패)',\n  originalImageUrl: originalImageUrl,\n  needRetry: false\n} }];"
-        }
-      },
-      {
-        "id": "safety-branch-1",
-        "name": "영상1 안전분기",
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2,
-        "position": [
-          -2240,
-          2224
-        ],
-        "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "loose",
-              "version": 1
-            },
-            "conditions": [
-              {
-                "id": "safety-cond-1",
-                "leftValue": "={{ $json.needRetry }}",
-                "rightValue": "true",
-                "operator": {
-                  "type": "string",
-                  "operation": "equals"
-                }
-              }
-            ],
-            "combinator": "and"
-          },
-          "options": {
-            "looseTypeValidation": true
-          }
-        }
-      },
-      {
-        "id": "safety-branch-2",
-        "name": "영상2 안전분기",
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2,
-        "position": [
-          -2224,
-          2832
-        ],
-        "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "loose",
-              "version": 1
-            },
-            "conditions": [
-              {
-                "id": "safety-cond-2",
-                "leftValue": "={{ $json.needRetry }}",
-                "rightValue": "true",
-                "operator": {
-                  "type": "string",
-                  "operation": "equals"
-                }
-              }
-            ],
-            "combinator": "and"
-          },
-          "options": {
-            "looseTypeValidation": true
-          }
-        }
-      },
-      {
-        "id": "safety-branch-3",
-        "name": "영상3 안전분기",
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2,
-        "position": [
-          -2240,
-          3424
-        ],
-        "parameters": {
-          "conditions": {
-            "options": {
-              "caseSensitive": true,
-              "leftValue": "",
-              "typeValidation": "loose",
-              "version": 1
-            },
-            "conditions": [
-              {
-                "id": "safety-cond-3",
-                "leftValue": "={{ $json.needRetry }}",
-                "rightValue": "true",
-                "operator": {
-                  "type": "string",
-                  "operation": "equals"
-                }
-              }
-            ],
-            "combinator": "and"
-          },
-          "options": {
-            "looseTypeValidation": true
-          }
-        }
       }
     ],
     "connections": {
@@ -8316,7 +7941,7 @@
         "main": [
           [
             {
-              "node": "영상1 안전체크",
+              "node": "영상1 대기",
               "type": "main",
               "index": 0
             }
@@ -8422,7 +8047,7 @@
         "main": [
           [
             {
-              "node": "영상2 안전체크",
+              "node": "영상2 대기",
               "type": "main",
               "index": 0
             }
@@ -8528,7 +8153,7 @@
         "main": [
           [
             {
-              "node": "영상3 안전체크",
+              "node": "영상3 대기",
               "type": "main",
               "index": 0
             }
@@ -8705,93 +8330,6 @@
             }
           ]
         ]
-      },
-      "영상1 안전체크": {
-        "main": [
-          [
-            {
-              "node": "영상1 안전분기",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "영상1 안전분기": {
-        "main": [
-          [
-            {
-              "node": "영상1 생성",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "영상1 대기",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "영상2 안전체크": {
-        "main": [
-          [
-            {
-              "node": "영상2 안전분기",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "영상2 안전분기": {
-        "main": [
-          [
-            {
-              "node": "영상2 생성",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "영상2 대기",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "영상3 안전체크": {
-        "main": [
-          [
-            {
-              "node": "영상3 안전분기",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "영상3 안전분기": {
-        "main": [
-          [
-            {
-              "node": "영상3 생성",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "영상3 대기",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
       }
     },
     "authors": "hatihoro15 hatihoro15",
@@ -8800,10 +8338,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-21T09:17:11.112Z",
-        "id": 492,
+        "createdAt": "2026-02-21T10:23:53.426Z",
+        "id": 493,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "a22d348b-7804-4883-9601-69028f34fda6",
+        "versionId": "b90e03f5-13bf-4d99-8f1f-66277b922205",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
