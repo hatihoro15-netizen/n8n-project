@@ -1,5 +1,5 @@
 {
-    "updatedAt": "2026-02-21T05:08:09.857Z",
+    "updatedAt": "2026-02-21T05:36:28.356Z",
     "createdAt": "2026-02-16T06:29:45.385Z",
     "id": "jSEDYrkFcWUzJ8Et",
     "name": "\uc628\uce74\uc2a4\ud130\ub514 \uc2a4\ud1a0\ub9ac, \uc9e4 (\ud504\ub86c\ud504\ud2b8, \ud654\uc9c8 \uc218\uc815)",
@@ -22,7 +22,7 @@
             "typeVersion": 1.3,
             "position": [
                 -2432,
-                1256
+                1264
             ],
             "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
             "name": "\uc2a4\ucf00\uc904 \ud2b8\ub9ac\uac70"
@@ -34,7 +34,7 @@
             "type": "n8n-nodes-base.manualTrigger",
             "position": [
                 -2432,
-                936
+                944
             ],
             "typeVersion": 1
         },
@@ -61,7 +61,7 @@
             "typeVersion": 1.1,
             "position": [
                 -2208,
-                936
+                944
             ],
             "id": "0f0b8cab-e649-4c60-afba-6991b2a30901",
             "name": "AI \ucf58\ud150\uce20 \uc0dd\uc131",
@@ -80,7 +80,7 @@
             "typeVersion": 2,
             "position": [
                 -1856,
-                936
+                944
             ],
             "id": "debd624e-66b9-4443-8544-002d62bd2da6",
             "name": "\ucf58\ud150\uce20 \ud30c\uc2f1"
@@ -184,7 +184,7 @@
             "typeVersion": 4.7,
             "position": [
                 -1632,
-                936
+                944
             ],
             "id": "ad97017d-7051-4a32-a9d2-9ba6d5276e01",
             "name": "\uc2dc\ud2b8 \uae30\ub85d",
@@ -203,7 +203,7 @@
             "typeVersion": 2,
             "position": [
                 -1184,
-                936
+                944
             ],
             "id": "624571a3-41be-44cb-a4cd-1b5f40b89fec",
             "name": "\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac"
@@ -223,7 +223,7 @@
             "typeVersion": 4.3,
             "position": [
                 -736,
-                936
+                944
             ],
             "id": "img-gen-001",
             "name": "\uc774\ubbf8\uc9c0 \uc0dd\uc131",
@@ -242,7 +242,7 @@
             "typeVersion": 1.1,
             "position": [
                 -512,
-                936
+                944
             ],
             "id": "img-wait-001",
             "name": "\uc774\ubbf8\uc9c0 \ub300\uae30",
@@ -259,7 +259,7 @@
             "typeVersion": 4.3,
             "position": [
                 -288,
-                936
+                944
             ],
             "id": "img-result-001",
             "name": "\uc774\ubbf8\uc9c0 \uacb0\uacfc",
@@ -440,7 +440,7 @@
             "typeVersion": 2,
             "position": [
                 -1408,
-                936
+                944
             ],
             "id": "20787f47-c724-4ea1-bfbf-1243c574a1c7",
             "name": "\ucc38\uc870 \uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8"
@@ -454,7 +454,7 @@
             "typeVersion": 1,
             "position": [
                 -2432,
-                1480
+                1488
             ],
             "id": "6fa7f913-a1f2-461f-8e0c-82bfdea0bad6",
             "name": "\ucc38\uc870 \uc774\ubbf8\uc9c0 \uc9d1\uacc4"
@@ -467,7 +467,7 @@
             "typeVersion": 2,
             "position": [
                 -64,
-                936
+                944
             ],
             "id": "nano_url_extract",
             "name": "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c"
@@ -482,7 +482,7 @@
             "typeVersion": 2,
             "position": [
                 -960,
-                936
+                944
             ]
         },
         {
@@ -495,7 +495,7 @@
             "typeVersion": 2,
             "position": [
                 160,
-                936
+                944
             ]
         },
         {
@@ -515,7 +515,7 @@
             "typeVersion": 4.3,
             "position": [
                 384,
-                936
+                944
             ],
             "credentials": {
                 "httpHeaderAuth": {
@@ -534,7 +534,7 @@
             "typeVersion": 1.1,
             "position": [
                 608,
-                936
+                944
             ],
             "webhookId": "c82dfe2d-8cd1-43b5-8407-b5fb5f3b82d7"
         },
@@ -551,7 +551,7 @@
             "typeVersion": 4.3,
             "position": [
                 832,
-                936
+                944
             ],
             "credentials": {
                 "httpHeaderAuth": {
@@ -570,9 +570,9 @@
                     },
                     "conditions": [
                         {
-                            "id": "success-check",
+                            "id": "sf-\uc601\uc0c11",
                             "leftValue": "={{ $json.data.successFlag }}",
-                            "rightValue": "1",
+                            "rightValue": 1,
                             "operator": {
                                 "type": "number",
                                 "operation": "equals"
@@ -602,7 +602,7 @@
             "typeVersion": 1.1,
             "position": [
                 1280,
-                1032
+                1040
             ],
             "webhookId": "a13742be-e399-4a95-92ee-9b978949ef28"
         },
@@ -745,9 +745,9 @@
                     },
                     "conditions": [
                         {
-                            "id": "success-check",
+                            "id": "sf-\uc601\uc0c12",
                             "leftValue": "={{ $json.data.successFlag }}",
-                            "rightValue": "1",
+                            "rightValue": 1,
                             "operator": {
                                 "type": "number",
                                 "operation": "equals"
@@ -764,7 +764,7 @@
             "typeVersion": 2,
             "position": [
                 2848,
-                744
+                752
             ]
         },
         {
@@ -805,7 +805,7 @@
             "typeVersion": 4.3,
             "position": [
                 3072,
-                696
+                704
             ]
         },
         {
@@ -818,7 +818,7 @@
             "typeVersion": 1.1,
             "position": [
                 3296,
-                696
+                704
             ],
             "webhookId": "3cd50ace-887f-4a96-a157-ce8b19e41d31"
         },
@@ -832,7 +832,7 @@
             "typeVersion": 2,
             "position": [
                 3520,
-                696
+                704
             ]
         },
         {
@@ -845,7 +845,7 @@
             "typeVersion": 2,
             "position": [
                 3744,
-                696
+                704
             ]
         },
         {
@@ -865,7 +865,7 @@
             "typeVersion": 4.3,
             "position": [
                 3968,
-                696
+                704
             ],
             "credentials": {
                 "httpHeaderAuth": {
@@ -884,7 +884,7 @@
             "typeVersion": 1.1,
             "position": [
                 4192,
-                696
+                704
             ],
             "webhookId": "e249c3c0-0416-4e17-8865-73c8829ce2b3"
         },
@@ -901,7 +901,7 @@
             "typeVersion": 4.3,
             "position": [
                 4416,
-                696
+                704
             ],
             "credentials": {
                 "httpHeaderAuth": {
@@ -920,9 +920,9 @@
                     },
                     "conditions": [
                         {
-                            "id": "success-check",
+                            "id": "sf-\uc601\uc0c13",
                             "leftValue": "={{ $json.data.successFlag }}",
-                            "rightValue": "1",
+                            "rightValue": 1,
                             "operator": {
                                 "type": "number",
                                 "operation": "equals"
@@ -952,7 +952,7 @@
             "typeVersion": 1.1,
             "position": [
                 4864,
-                696
+                704
             ],
             "webhookId": "425f17f7-a44b-49c9-9b2b-90d6a61190fc"
         }
@@ -5756,46 +5756,11 @@
                     "item": 0
                 }
             }
-        ],
-        "\uc601\uc0c11 \uacb0\uacfc": [
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "8325242adf711db2dc81651bd0b3b555",
-                        "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771614647555-qn4pghwbrjb.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends at a cozy, dimly lit jazz bar, Jay leaning forward explaining with hand gestures, Mike listening intently with a slight frown, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, natural camera movement, camera slowly zooms out slightly, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '\uc57c \uc9c4\uc9dc \uc548\uc804\ud55c \uacf3 \ucc3e\ub294 \uac70 \uae30\ubcf8\ubd80\ud130.', then The second man (medium twists hairstyle, white graphic t-shirt) responds '\uae30\ubcf8? \uadfc\ub370 \uadf8\uac70 \uc5b4\ub5bb\uac8c check\ud558\ub294\ub370?'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
-                        "response": {
-                            "taskId": "8325242adf711db2dc81651bd0b3b555",
-                            "resolution": "720p",
-                            "originUrls": null,
-                            "resultUrls": [
-                                "https://tempfile.aiquickdraw.com/v/8325242adf711db2dc81651bd0b3b555_1771614883.mp4"
-                            ],
-                            "hasAudioList": [
-                                true
-                            ],
-                            "seeds": [
-                                41275
-                            ]
-                        },
-                        "successFlag": 1,
-                        "fallbackFlag": false,
-                        "completeTime": 1771614885000,
-                        "createTime": 1771614715000,
-                        "errorCode": null,
-                        "errorMessage": null
-                    }
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            }
         ]
     },
-    "versionId": "8d3372db-dfea-4aa1-824c-b85ba7c28515",
-    "activeVersionId": "8d3372db-dfea-4aa1-824c-b85ba7c28515",
-    "versionCounter": 382,
+    "versionId": "e1041ff6-34c6-495d-bc72-bac31a6984bd",
+    "activeVersionId": "e1041ff6-34c6-495d-bc72-bac31a6984bd",
+    "versionCounter": 391,
     "triggerCount": 1,
     "shared": [
         {
@@ -5854,9 +5819,9 @@
     ],
     "tags": [],
     "activeVersion": {
-        "updatedAt": "2026-02-21T05:08:09.859Z",
-        "createdAt": "2026-02-21T05:08:09.859Z",
-        "versionId": "8d3372db-dfea-4aa1-824c-b85ba7c28515",
+        "updatedAt": "2026-02-21T05:36:28.363Z",
+        "createdAt": "2026-02-21T05:36:28.363Z",
+        "versionId": "e1041ff6-34c6-495d-bc72-bac31a6984bd",
         "workflowId": "jSEDYrkFcWUzJ8Et",
         "nodes": [
             {
@@ -5874,7 +5839,7 @@
                 "typeVersion": 1.3,
                 "position": [
                     -2432,
-                    1256
+                    1264
                 ],
                 "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
                 "name": "\uc2a4\ucf00\uc904 \ud2b8\ub9ac\uac70"
@@ -5886,7 +5851,7 @@
                 "type": "n8n-nodes-base.manualTrigger",
                 "position": [
                     -2432,
-                    936
+                    944
                 ],
                 "typeVersion": 1
             },
@@ -5913,7 +5878,7 @@
                 "typeVersion": 1.1,
                 "position": [
                     -2208,
-                    936
+                    944
                 ],
                 "id": "0f0b8cab-e649-4c60-afba-6991b2a30901",
                 "name": "AI \ucf58\ud150\uce20 \uc0dd\uc131",
@@ -5932,7 +5897,7 @@
                 "typeVersion": 2,
                 "position": [
                     -1856,
-                    936
+                    944
                 ],
                 "id": "debd624e-66b9-4443-8544-002d62bd2da6",
                 "name": "\ucf58\ud150\uce20 \ud30c\uc2f1"
@@ -6036,7 +6001,7 @@
                 "typeVersion": 4.7,
                 "position": [
                     -1632,
-                    936
+                    944
                 ],
                 "id": "ad97017d-7051-4a32-a9d2-9ba6d5276e01",
                 "name": "\uc2dc\ud2b8 \uae30\ub85d",
@@ -6055,7 +6020,7 @@
                 "typeVersion": 2,
                 "position": [
                     -1184,
-                    936
+                    944
                 ],
                 "id": "624571a3-41be-44cb-a4cd-1b5f40b89fec",
                 "name": "\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac"
@@ -6075,7 +6040,7 @@
                 "typeVersion": 4.3,
                 "position": [
                     -736,
-                    936
+                    944
                 ],
                 "id": "img-gen-001",
                 "name": "\uc774\ubbf8\uc9c0 \uc0dd\uc131",
@@ -6094,7 +6059,7 @@
                 "typeVersion": 1.1,
                 "position": [
                     -512,
-                    936
+                    944
                 ],
                 "id": "img-wait-001",
                 "name": "\uc774\ubbf8\uc9c0 \ub300\uae30",
@@ -6111,7 +6076,7 @@
                 "typeVersion": 4.3,
                 "position": [
                     -288,
-                    936
+                    944
                 ],
                 "id": "img-result-001",
                 "name": "\uc774\ubbf8\uc9c0 \uacb0\uacfc",
@@ -6292,7 +6257,7 @@
                 "typeVersion": 2,
                 "position": [
                     -1408,
-                    936
+                    944
                 ],
                 "id": "20787f47-c724-4ea1-bfbf-1243c574a1c7",
                 "name": "\ucc38\uc870 \uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8"
@@ -6306,7 +6271,7 @@
                 "typeVersion": 1,
                 "position": [
                     -2432,
-                    1480
+                    1488
                 ],
                 "id": "6fa7f913-a1f2-461f-8e0c-82bfdea0bad6",
                 "name": "\ucc38\uc870 \uc774\ubbf8\uc9c0 \uc9d1\uacc4"
@@ -6319,7 +6284,7 @@
                 "typeVersion": 2,
                 "position": [
                     -64,
-                    936
+                    944
                 ],
                 "id": "nano_url_extract",
                 "name": "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c"
@@ -6334,7 +6299,7 @@
                 "typeVersion": 2,
                 "position": [
                     -960,
-                    936
+                    944
                 ]
             },
             {
@@ -6347,7 +6312,7 @@
                 "typeVersion": 2,
                 "position": [
                     160,
-                    936
+                    944
                 ]
             },
             {
@@ -6367,7 +6332,7 @@
                 "typeVersion": 4.3,
                 "position": [
                     384,
-                    936
+                    944
                 ],
                 "credentials": {
                     "httpHeaderAuth": {
@@ -6386,7 +6351,7 @@
                 "typeVersion": 1.1,
                 "position": [
                     608,
-                    936
+                    944
                 ],
                 "webhookId": "c82dfe2d-8cd1-43b5-8407-b5fb5f3b82d7"
             },
@@ -6403,7 +6368,7 @@
                 "typeVersion": 4.3,
                 "position": [
                     832,
-                    936
+                    944
                 ],
                 "credentials": {
                     "httpHeaderAuth": {
@@ -6422,9 +6387,9 @@
                         },
                         "conditions": [
                             {
-                                "id": "success-check",
+                                "id": "sf-\uc601\uc0c11",
                                 "leftValue": "={{ $json.data.successFlag }}",
-                                "rightValue": "1",
+                                "rightValue": 1,
                                 "operator": {
                                     "type": "number",
                                     "operation": "equals"
@@ -6454,7 +6419,7 @@
                 "typeVersion": 1.1,
                 "position": [
                     1280,
-                    1032
+                    1040
                 ],
                 "webhookId": "a13742be-e399-4a95-92ee-9b978949ef28"
             },
@@ -6597,9 +6562,9 @@
                         },
                         "conditions": [
                             {
-                                "id": "success-check",
+                                "id": "sf-\uc601\uc0c12",
                                 "leftValue": "={{ $json.data.successFlag }}",
-                                "rightValue": "1",
+                                "rightValue": 1,
                                 "operator": {
                                     "type": "number",
                                     "operation": "equals"
@@ -6616,7 +6581,7 @@
                 "typeVersion": 2,
                 "position": [
                     2848,
-                    744
+                    752
                 ]
             },
             {
@@ -6657,7 +6622,7 @@
                 "typeVersion": 4.3,
                 "position": [
                     3072,
-                    696
+                    704
                 ]
             },
             {
@@ -6670,7 +6635,7 @@
                 "typeVersion": 1.1,
                 "position": [
                     3296,
-                    696
+                    704
                 ],
                 "webhookId": "3cd50ace-887f-4a96-a157-ce8b19e41d31"
             },
@@ -6684,7 +6649,7 @@
                 "typeVersion": 2,
                 "position": [
                     3520,
-                    696
+                    704
                 ]
             },
             {
@@ -6697,7 +6662,7 @@
                 "typeVersion": 2,
                 "position": [
                     3744,
-                    696
+                    704
                 ]
             },
             {
@@ -6717,7 +6682,7 @@
                 "typeVersion": 4.3,
                 "position": [
                     3968,
-                    696
+                    704
                 ],
                 "credentials": {
                     "httpHeaderAuth": {
@@ -6736,7 +6701,7 @@
                 "typeVersion": 1.1,
                 "position": [
                     4192,
-                    696
+                    704
                 ],
                 "webhookId": "e249c3c0-0416-4e17-8865-73c8829ce2b3"
             },
@@ -6753,7 +6718,7 @@
                 "typeVersion": 4.3,
                 "position": [
                     4416,
-                    696
+                    704
                 ],
                 "credentials": {
                     "httpHeaderAuth": {
@@ -6772,9 +6737,9 @@
                         },
                         "conditions": [
                             {
-                                "id": "success-check",
+                                "id": "sf-\uc601\uc0c13",
                                 "leftValue": "={{ $json.data.successFlag }}",
-                                "rightValue": "1",
+                                "rightValue": 1,
                                 "operator": {
                                     "type": "number",
                                     "operation": "equals"
@@ -6804,7 +6769,7 @@
                 "typeVersion": 1.1,
                 "position": [
                     4864,
-                    696
+                    704
                 ],
                 "webhookId": "425f17f7-a44b-49c9-9b2b-90d6a61190fc"
             }
@@ -7278,10 +7243,10 @@
         "autosaved": false,
         "workflowPublishHistory": [
             {
-                "createdAt": "2026-02-21T05:08:10.022Z",
-                "id": 483,
+                "createdAt": "2026-02-21T05:36:28.480Z",
+                "id": 484,
                 "workflowId": "jSEDYrkFcWUzJ8Et",
-                "versionId": "8d3372db-dfea-4aa1-824c-b85ba7c28515",
+                "versionId": "e1041ff6-34c6-495d-bc72-bac31a6984bd",
                 "event": "activated",
                 "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
             }
