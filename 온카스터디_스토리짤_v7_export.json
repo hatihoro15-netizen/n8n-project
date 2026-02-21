@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-21T08:46:22.870Z",
+  "updatedAt": "2026-02-21T09:17:10.919Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -357,16 +357,21 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
-            "row_number": "={{ $('시트 기록').first().json.row_number }}",
             "Status": "생성 완료",
             "영상 URL": "={{ $json.final_video_url || $json.url }}",
             "영상URL": "={{ $json.final_video_url }}",
-            "SRT": "={{ $json.srtContent }}"
+            "SRT": "={{ $json.srtContent }}",
+            "Subject": "={{ $json.subject }}"
           },
           "matchingColumns": [
-            "row_number"
+            "Subject"
           ],
           "schema": [
+            {
+              "id": "Subject",
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
             {
               "id": "Status",
               "displayName": "Status",
@@ -392,7 +397,7 @@
               "defaultMatch": false,
               "display": true,
               "type": "number",
-              "canBeUsedToMatch": true,
+              "canBeUsedToMatch": false,
               "readOnly": true
             },
             {
@@ -6795,9 +6800,9 @@
       }
     ]
   },
-  "versionId": "425e22b7-c2fd-4b97-bed0-4e2010851800",
-  "activeVersionId": "425e22b7-c2fd-4b97-bed0-4e2010851800",
-  "versionCounter": 483,
+  "versionId": "a22d348b-7804-4883-9601-69028f34fda6",
+  "activeVersionId": "a22d348b-7804-4883-9601-69028f34fda6",
+  "versionCounter": 486,
   "triggerCount": 1,
   "shared": [
     {
@@ -6856,9 +6861,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-21T08:46:22.873Z",
-    "createdAt": "2026-02-21T08:46:22.873Z",
-    "versionId": "425e22b7-c2fd-4b97-bed0-4e2010851800",
+    "updatedAt": "2026-02-21T09:17:10.920Z",
+    "createdAt": "2026-02-21T09:17:10.920Z",
+    "versionId": "a22d348b-7804-4883-9601-69028f34fda6",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -7211,16 +7216,21 @@
           "columns": {
             "mappingMode": "defineBelow",
             "value": {
-              "row_number": "={{ $('시트 기록').first().json.row_number }}",
               "Status": "생성 완료",
               "영상 URL": "={{ $json.final_video_url || $json.url }}",
               "영상URL": "={{ $json.final_video_url }}",
-              "SRT": "={{ $json.srtContent }}"
+              "SRT": "={{ $json.srtContent }}",
+              "Subject": "={{ $json.subject }}"
             },
             "matchingColumns": [
-              "row_number"
+              "Subject"
             ],
             "schema": [
+              {
+                "id": "Subject",
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
               {
                 "id": "Status",
                 "displayName": "Status",
@@ -7246,7 +7256,7 @@
                 "defaultMatch": false,
                 "display": true,
                 "type": "number",
-                "canBeUsedToMatch": true,
+                "canBeUsedToMatch": false,
                 "readOnly": true
               },
               {
@@ -8790,10 +8800,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-21T08:46:23.039Z",
-        "id": 491,
+        "createdAt": "2026-02-21T09:17:11.112Z",
+        "id": 492,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "425e22b7-c2fd-4b97-bed0-4e2010851800",
+        "versionId": "a22d348b-7804-4883-9601-69028f34fda6",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
