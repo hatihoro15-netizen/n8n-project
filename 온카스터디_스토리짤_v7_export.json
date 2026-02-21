@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-21T06:12:07.552Z",
+  "updatedAt": "2026-02-21T06:35:35.182Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (프롬프트, 화질 수정)",
@@ -272,7 +272,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// NCA 스토리형 숏츠 - Veo3 Fast (audio on) - 가로(16:9) 버전\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\n// === 세그먼트 데이터 수집 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8초 클립\n\nfunction getVideoUrl(nodeName) {\n  const data = $(nodeName).first().json;\n  return data?.data?.response?.resultUrls?.[0] || '';\n}\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoUrl = getVideoUrl('영상' + (i + 1) + ' 결과');\n  const segData = $('세그먼트 분리').all()[i]?.json;\n  const dialogueText = segData?.dialogue || (segData?.dialogue_turns || []).map(t => t.line).join(' ') || '';\n\n  if (!videoUrl) throw new Error('세그먼트 ' + (i+1) + ' 영상 URL 없음');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT 자막 생성 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (영상+오디오 concat만, drawtext 없음) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// 오디오 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
+        "jsCode": "// NCA 스토리형 숏츠 - 실패한 영상 스킵\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8;\n\nfunction getVideoUrl(nodeName) {\n  try {\n    const data = $(nodeName).first().json;\n    return data?.data?.response?.resultUrls?.[0] || '';\n  } catch(e) { return ''; }\n}\n\nlet skippedVideos = [];\nfor (let i = 0; i < segmentCount; i++) {\n  const videoUrl = getVideoUrl('영상' + (i + 1) + ' 결과');\n  const segData = $('세그먼트 분리').all()[i]?.json;\n  const dialogueText = segData?.dialogue\n    || (segData?.dialogue_turns || []).map(t => t.line).join(' ') || '';\n\n  if (!videoUrl) {\n    console.log('영상' + (i+1) + ' URL 없음 → 스킵');\n    skippedVideos.push(i + 1);\n    continue;\n  }\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nif (segments.length === 0) {\n  throw new Error('모든 영상 생성 실패 - 합성 불가');\n}\n\nconst totalDuration = currentStart;\n\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  srtLines.push((i + 1) + '\\n' + toSrtTime(seg.start) + ' --> ' +\n    toSrtTime(seg.start + seg.duration) + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\nlet filterParts = [];\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\nfilterParts.push(segments.map((_, i) => '[v' + i + ']').join('') +\n  'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\nfilterParts.push(segments.map((_, i) => '[a' + i + ']').join('') +\n  'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filterParts.join(';') }],\n  outputs: [{\n    options: [\n      { option: '-map', argument: '[vfinal]' },\n      { option: '-map', argument: '[afinal]' },\n      { option: '-c:v', argument: 'libx264' },\n      { option: '-preset', argument: 'medium' },\n      { option: '-crf', argument: '18' },\n      { option: '-c:a', argument: 'aac' },\n      { option: '-b:a', argument: '256k' },\n      { option: '-pix_fmt', argument: 'yuv420p' },\n      { option: '-movflags', argument: '+faststart' },\n      { option: '-t', argument: String(totalDuration) }\n    ],\n    file_name: 'story_shorts_final.mp4'\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    skippedVideos,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -611,26 +611,13 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "x-api-key",
-              "value": "nca-sagong-2026"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[{\"option\":\"-sseof\",\"argument\":\"-0.1\"}]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_1.jpg\"}]}",
-        "options": {}
+        "jsCode": "// 프레임1 추출 (Code + 폴백)\nconst data = $input.first().json;\n\n// 영상 실패 시 스킵\nif (data.videoFailed) {\n  console.log('영상 실패 → 프레임 추출 스킵');\n  return [{ json: { skipped: true, originalImageUrl: data.originalImageUrl || '' } }];\n}\n\nconst videoUrl = data?.data?.response?.resultUrls?.[0] || '';\nif (!videoUrl) {\n  console.log('영상 URL 없음 → 프레임 추출 스킵');\n  return [{ json: { skipped: true } }];\n}\n\n// NCA API로 7.5초 시점 프레임 추출\ntry {\n  const result = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'http://76.13.182.180:8080/v1/ffmpeg/compose',\n    headers: {\n      'x-api-key': 'nca-sagong-2026',\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: [{ option: '-ss', argument: '7.5' }] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' }\n        ],\n        file_name: 'last_frame_1.jpg'\n      }]\n    }\n  });\n  return [{ json: result }];\n} catch(e) {\n  console.log('NCA 프레임 추출 실패: ' + e.message);\n  return [{ json: { skipped: true, error: e.message } }];\n}",
+        "mode": "runOnceForAllItems"
       },
       "id": "182701f3",
       "name": "프레임1 추출",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         1280,
         816
@@ -652,7 +639,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 프레임 결과: NCA 응답에서 이미지 URL 추출\nconst data = $input.first().json;\nlet frameUrl = '';\n\nif (Array.isArray(data?.response)) {\n  frameUrl = data.response[0]?.file_url || '';\n}\nif (!frameUrl && data?.file_url) frameUrl = data.file_url;\nif (!frameUrl && data?.url) frameUrl = data.url;\n\nif (!frameUrl) {\n  throw new Error('프레임 추출 실패: ' + JSON.stringify(data).substring(0, 500));\n}\n\nreturn [{ json: { frameUrl: frameUrl } }];"
+        "jsCode": "// 프레임 결과 (폴백 지원)\nconst data = $input.first().json;\nlet frameUrl = '';\n\n// NCA 성공 시 프레임 URL 추출\nif (!data.skipped && !data.error) {\n  if (Array.isArray(data?.response)) {\n    frameUrl = data.response[0]?.file_url || '';\n  }\n  if (!frameUrl && data?.file_url) frameUrl = data.file_url;\n  if (!frameUrl && data?.url) frameUrl = data.url;\n}\n\n// 실패 → 원본 이미지 폴백\nif (!frameUrl) {\n  const fallback = data?.originalImageUrl\n    || $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  if (fallback) {\n    console.log('프레임 → 원본 이미지 폴백');\n    return [{ json: { frameUrl: fallback, usedFallback: true } }];\n  }\n  throw new Error('프레임/원본 이미지 모두 없음');\n}\n\nreturn [{ json: { frameUrl: frameUrl } }];"
       },
       "id": "ea8a4f0f",
       "name": "프레임1 결과",
@@ -665,7 +652,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 영상2 준비: 프레임1 결과에서 프레임 URL 가져오기\nconst frameUrl = $input.first().json.frameUrl || '';\nif (!frameUrl) throw new Error('프레임1 URL 없음');\n\nconst seg = $('세그먼트 분리').all()[1].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면2)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [frameUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+        "jsCode": "// 영상2 준비: 프레임1 또는 원본 이미지 폴백\nlet imageUrl = $input.first().json.frameUrl || '';\n\nif (!imageUrl) {\n  imageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  console.log('프레임 없음 → 원본 이미지 폴백');\n}\nif (!imageUrl) throw new Error('영상2 입력 이미지 없음');\n\nconst seg = $('세그먼트 분리').all()[1].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면2)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
       },
       "id": "37b59c13",
       "name": "영상2 준비",
@@ -789,26 +776,13 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "x-api-key",
-              "value": "nca-sagong-2026"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[{\"option\":\"-sseof\",\"argument\":\"-0.1\"}]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_2.jpg\"}]}",
-        "options": {}
+        "jsCode": "// 프레임2 추출 (Code + 폴백)\nconst data = $input.first().json;\n\n// 영상 실패 시 스킵\nif (data.videoFailed) {\n  console.log('영상 실패 → 프레임 추출 스킵');\n  return [{ json: { skipped: true, originalImageUrl: data.originalImageUrl || '' } }];\n}\n\nconst videoUrl = data?.data?.response?.resultUrls?.[0] || '';\nif (!videoUrl) {\n  console.log('영상 URL 없음 → 프레임 추출 스킵');\n  return [{ json: { skipped: true } }];\n}\n\n// NCA API로 7.5초 시점 프레임 추출\ntry {\n  const result = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'http://76.13.182.180:8080/v1/ffmpeg/compose',\n    headers: {\n      'x-api-key': 'nca-sagong-2026',\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: [{ option: '-ss', argument: '7.5' }] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' }\n        ],\n        file_name: 'last_frame_2.jpg'\n      }]\n    }\n  });\n  return [{ json: result }];\n} catch(e) {\n  console.log('NCA 프레임 추출 실패: ' + e.message);\n  return [{ json: { skipped: true, error: e.message } }];\n}",
+        "mode": "runOnceForAllItems"
       },
       "id": "39092918",
       "name": "프레임2 추출",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.3,
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         3072,
         704
@@ -830,7 +804,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 프레임 결과: NCA 응답에서 이미지 URL 추출\nconst data = $input.first().json;\nlet frameUrl = '';\n\nif (Array.isArray(data?.response)) {\n  frameUrl = data.response[0]?.file_url || '';\n}\nif (!frameUrl && data?.file_url) frameUrl = data.file_url;\nif (!frameUrl && data?.url) frameUrl = data.url;\n\nif (!frameUrl) {\n  throw new Error('프레임 추출 실패: ' + JSON.stringify(data).substring(0, 500));\n}\n\nreturn [{ json: { frameUrl: frameUrl } }];"
+        "jsCode": "// 프레임 결과 (폴백 지원)\nconst data = $input.first().json;\nlet frameUrl = '';\n\n// NCA 성공 시 프레임 URL 추출\nif (!data.skipped && !data.error) {\n  if (Array.isArray(data?.response)) {\n    frameUrl = data.response[0]?.file_url || '';\n  }\n  if (!frameUrl && data?.file_url) frameUrl = data.file_url;\n  if (!frameUrl && data?.url) frameUrl = data.url;\n}\n\n// 실패 → 원본 이미지 폴백\nif (!frameUrl) {\n  const fallback = data?.originalImageUrl\n    || $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  if (fallback) {\n    console.log('프레임 → 원본 이미지 폴백');\n    return [{ json: { frameUrl: fallback, usedFallback: true } }];\n  }\n  throw new Error('프레임/원본 이미지 모두 없음');\n}\n\nreturn [{ json: { frameUrl: frameUrl } }];"
       },
       "id": "b97a75c8",
       "name": "프레임2 결과",
@@ -843,7 +817,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 영상3 준비: 프레임2 결과에서 프레임 URL 가져오기\nconst frameUrl = $input.first().json.frameUrl || '';\nif (!frameUrl) throw new Error('프레임2 URL 없음');\n\nconst seg = $('세그먼트 분리').all()[2].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면3)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [frameUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+        "jsCode": "// 영상3 준비: 프레임2 또는 원본 이미지 폴백\nlet imageUrl = $input.first().json.frameUrl || '';\n\nif (!imageUrl) {\n  imageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  console.log('프레임 없음 → 원본 이미지 폴백');\n}\nif (!imageUrl) throw new Error('영상3 입력 이미지 없음');\n\nconst seg = $('세그먼트 분리').all()[2].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면3)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
       },
       "id": "7dbc45d7",
       "name": "영상3 준비",
@@ -967,7 +941,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 영상1 실패/타임아웃 체크\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\n\n// successFlag >= 2 → 영상 생성 실패\nif (typeof flag === 'number' && flag >= 2) {\n  throw new Error('영상1 생성 실패 (successFlag=' + flag + ')');\n}\n\n// 재시도 20회 초과 (~10분) → 타임아웃\nif (staticData.retryCount > 20) {\n  throw new Error('영상1 타임아웃 (' + staticData.retryCount + '회 재시도, ~10분 경과)');\n}\n\n// 성공 시 카운터 리셋\nif (flag === 1) {\n  staticData.retryCount = 0;\n}\n\nreturn [{json: data}];",
+        "jsCode": "// 영상1 실패/타임아웃 체크 (폴백 지원)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 폴백으로 계속 진행\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상1 실패 (successFlag=' + flag + ')'\n    : '영상1 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];",
         "mode": "runOnceForAllItems"
       },
       "id": "fail-check-1",
@@ -981,7 +955,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 영상2 실패/타임아웃 체크\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\n\n// successFlag >= 2 → 영상 생성 실패\nif (typeof flag === 'number' && flag >= 2) {\n  throw new Error('영상2 생성 실패 (successFlag=' + flag + ')');\n}\n\n// 재시도 20회 초과 (~10분) → 타임아웃\nif (staticData.retryCount > 20) {\n  throw new Error('영상2 타임아웃 (' + staticData.retryCount + '회 재시도, ~10분 경과)');\n}\n\n// 성공 시 카운터 리셋\nif (flag === 1) {\n  staticData.retryCount = 0;\n}\n\nreturn [{json: data}];",
+        "jsCode": "// 영상2 실패/타임아웃 체크 (폴백 지원)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 폴백으로 계속 진행\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상2 실패 (successFlag=' + flag + ')'\n    : '영상2 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];",
         "mode": "runOnceForAllItems"
       },
       "id": "fail-check-2",
@@ -995,7 +969,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 영상3 실패/타임아웃 체크\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\n\n// successFlag >= 2 → 영상 생성 실패\nif (typeof flag === 'number' && flag >= 2) {\n  throw new Error('영상3 생성 실패 (successFlag=' + flag + ')');\n}\n\n// 재시도 20회 초과 (~10분) → 타임아웃\nif (staticData.retryCount > 20) {\n  throw new Error('영상3 타임아웃 (' + staticData.retryCount + '회 재시도, ~10분 경과)');\n}\n\n// 성공 시 카운터 리셋\nif (flag === 1) {\n  staticData.retryCount = 0;\n}\n\nreturn [{json: data}];",
+        "jsCode": "// 영상3 실패/타임아웃 체크 (폴백 지원)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 폴백으로 계속 진행\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상3 실패 (successFlag=' + flag + ')'\n    : '영상3 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];",
         "mode": "runOnceForAllItems"
       },
       "id": "fail-check-3",
@@ -5986,15 +5960,15 @@
       }
     ]
   },
-  "versionId": "f2b636ad-3932-42ed-b081-29dfaada9ad3",
-  "activeVersionId": "f2b636ad-3932-42ed-b081-29dfaada9ad3",
-  "versionCounter": 409,
+  "versionId": "78996e58-e98f-4948-aef4-412571470091",
+  "activeVersionId": "78996e58-e98f-4948-aef4-412571470091",
+  "versionCounter": 412,
   "triggerCount": 1,
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-21T06:12:07.553Z",
-    "createdAt": "2026-02-21T06:12:07.553Z",
-    "versionId": "f2b636ad-3932-42ed-b081-29dfaada9ad3",
+    "updatedAt": "2026-02-21T06:35:35.184Z",
+    "createdAt": "2026-02-21T06:35:35.184Z",
+    "versionId": "78996e58-e98f-4948-aef4-412571470091",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -6262,7 +6236,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// NCA 스토리형 숏츠 - Veo3 Fast (audio on) - 가로(16:9) 버전\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\n// === 세그먼트 데이터 수집 ===\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8; // Veo3 8초 클립\n\nfunction getVideoUrl(nodeName) {\n  const data = $(nodeName).first().json;\n  return data?.data?.response?.resultUrls?.[0] || '';\n}\n\nfor (let i = 0; i < segmentCount; i++) {\n  const videoUrl = getVideoUrl('영상' + (i + 1) + ' 결과');\n  const segData = $('세그먼트 분리').all()[i]?.json;\n  const dialogueText = segData?.dialogue || (segData?.dialogue_turns || []).map(t => t.line).join(' ') || '';\n\n  if (!videoUrl) throw new Error('세그먼트 ' + (i+1) + ' 영상 URL 없음');\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nconst totalDuration = currentStart;\n\n// === SRT 자막 생성 ===\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  const startTime = toSrtTime(seg.start);\n  const endTime = toSrtTime(seg.start + seg.duration);\n  srtLines.push((i + 1) + '\\n' + startTime + ' --> ' + endTime + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\n// === NCA inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\n// === filter_complex (영상+오디오 concat만, drawtext 없음) ===\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS' +\n    ',scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black' +\n    ',fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => '[v' + i + ']').join('');\nfilterParts.push(vLabels + 'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\n\n// 오디오 concat\nconst aLabels = segments.map((_, i) => '[a' + i + ']').join('');\nfilterParts.push(aLabels + 'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"medium\" },\n      { option: \"-crf\", argument: \"18\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"256k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"story_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
+          "jsCode": "// NCA 스토리형 숏츠 - 실패한 영상 스킵\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8;\n\nfunction getVideoUrl(nodeName) {\n  try {\n    const data = $(nodeName).first().json;\n    return data?.data?.response?.resultUrls?.[0] || '';\n  } catch(e) { return ''; }\n}\n\nlet skippedVideos = [];\nfor (let i = 0; i < segmentCount; i++) {\n  const videoUrl = getVideoUrl('영상' + (i + 1) + ' 결과');\n  const segData = $('세그먼트 분리').all()[i]?.json;\n  const dialogueText = segData?.dialogue\n    || (segData?.dialogue_turns || []).map(t => t.line).join(' ') || '';\n\n  if (!videoUrl) {\n    console.log('영상' + (i+1) + ' URL 없음 → 스킵');\n    skippedVideos.push(i + 1);\n    continue;\n  }\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nif (segments.length === 0) {\n  throw new Error('모든 영상 생성 실패 - 합성 불가');\n}\n\nconst totalDuration = currentStart;\n\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  srtLines.push((i + 1) + '\\n' + toSrtTime(seg.start) + ' --> ' +\n    toSrtTime(seg.start + seg.duration) + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\nlet filterParts = [];\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\nfilterParts.push(segments.map((_, i) => '[v' + i + ']').join('') +\n  'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\nfilterParts.push(segments.map((_, i) => '[a' + i + ']').join('') +\n  'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filterParts.join(';') }],\n  outputs: [{\n    options: [\n      { option: '-map', argument: '[vfinal]' },\n      { option: '-map', argument: '[afinal]' },\n      { option: '-c:v', argument: 'libx264' },\n      { option: '-preset', argument: 'medium' },\n      { option: '-crf', argument: '18' },\n      { option: '-c:a', argument: 'aac' },\n      { option: '-b:a', argument: '256k' },\n      { option: '-pix_fmt', argument: 'yuv420p' },\n      { option: '-movflags', argument: '+faststart' },\n      { option: '-t', argument: String(totalDuration) }\n    ],\n    file_name: 'story_shorts_final.mp4'\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    skippedVideos,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -6601,26 +6575,13 @@
       },
       {
         "parameters": {
-          "method": "POST",
-          "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
-          "sendHeaders": true,
-          "headerParameters": {
-            "parameters": [
-              {
-                "name": "x-api-key",
-                "value": "nca-sagong-2026"
-              }
-            ]
-          },
-          "sendBody": true,
-          "specifyBody": "json",
-          "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[{\"option\":\"-sseof\",\"argument\":\"-0.1\"}]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_1.jpg\"}]}",
-          "options": {}
+          "jsCode": "// 프레임1 추출 (Code + 폴백)\nconst data = $input.first().json;\n\n// 영상 실패 시 스킵\nif (data.videoFailed) {\n  console.log('영상 실패 → 프레임 추출 스킵');\n  return [{ json: { skipped: true, originalImageUrl: data.originalImageUrl || '' } }];\n}\n\nconst videoUrl = data?.data?.response?.resultUrls?.[0] || '';\nif (!videoUrl) {\n  console.log('영상 URL 없음 → 프레임 추출 스킵');\n  return [{ json: { skipped: true } }];\n}\n\n// NCA API로 7.5초 시점 프레임 추출\ntry {\n  const result = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'http://76.13.182.180:8080/v1/ffmpeg/compose',\n    headers: {\n      'x-api-key': 'nca-sagong-2026',\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: [{ option: '-ss', argument: '7.5' }] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' }\n        ],\n        file_name: 'last_frame_1.jpg'\n      }]\n    }\n  });\n  return [{ json: result }];\n} catch(e) {\n  console.log('NCA 프레임 추출 실패: ' + e.message);\n  return [{ json: { skipped: true, error: e.message } }];\n}",
+          "mode": "runOnceForAllItems"
         },
         "id": "182701f3",
         "name": "프레임1 추출",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.3,
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
         "position": [
           1280,
           816
@@ -6642,7 +6603,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 프레임 결과: NCA 응답에서 이미지 URL 추출\nconst data = $input.first().json;\nlet frameUrl = '';\n\nif (Array.isArray(data?.response)) {\n  frameUrl = data.response[0]?.file_url || '';\n}\nif (!frameUrl && data?.file_url) frameUrl = data.file_url;\nif (!frameUrl && data?.url) frameUrl = data.url;\n\nif (!frameUrl) {\n  throw new Error('프레임 추출 실패: ' + JSON.stringify(data).substring(0, 500));\n}\n\nreturn [{ json: { frameUrl: frameUrl } }];"
+          "jsCode": "// 프레임 결과 (폴백 지원)\nconst data = $input.first().json;\nlet frameUrl = '';\n\n// NCA 성공 시 프레임 URL 추출\nif (!data.skipped && !data.error) {\n  if (Array.isArray(data?.response)) {\n    frameUrl = data.response[0]?.file_url || '';\n  }\n  if (!frameUrl && data?.file_url) frameUrl = data.file_url;\n  if (!frameUrl && data?.url) frameUrl = data.url;\n}\n\n// 실패 → 원본 이미지 폴백\nif (!frameUrl) {\n  const fallback = data?.originalImageUrl\n    || $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  if (fallback) {\n    console.log('프레임 → 원본 이미지 폴백');\n    return [{ json: { frameUrl: fallback, usedFallback: true } }];\n  }\n  throw new Error('프레임/원본 이미지 모두 없음');\n}\n\nreturn [{ json: { frameUrl: frameUrl } }];"
         },
         "id": "ea8a4f0f",
         "name": "프레임1 결과",
@@ -6655,7 +6616,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 영상2 준비: 프레임1 결과에서 프레임 URL 가져오기\nconst frameUrl = $input.first().json.frameUrl || '';\nif (!frameUrl) throw new Error('프레임1 URL 없음');\n\nconst seg = $('세그먼트 분리').all()[1].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면2)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [frameUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+          "jsCode": "// 영상2 준비: 프레임1 또는 원본 이미지 폴백\nlet imageUrl = $input.first().json.frameUrl || '';\n\nif (!imageUrl) {\n  imageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  console.log('프레임 없음 → 원본 이미지 폴백');\n}\nif (!imageUrl) throw new Error('영상2 입력 이미지 없음');\n\nconst seg = $('세그먼트 분리').all()[1].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면2)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
         },
         "id": "37b59c13",
         "name": "영상2 준비",
@@ -6779,26 +6740,13 @@
       },
       {
         "parameters": {
-          "method": "POST",
-          "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
-          "sendHeaders": true,
-          "headerParameters": {
-            "parameters": [
-              {
-                "name": "x-api-key",
-                "value": "nca-sagong-2026"
-              }
-            ]
-          },
-          "sendBody": true,
-          "specifyBody": "json",
-          "jsonBody": "={\"inputs\":[{\"file_url\":\"{{ $json.data.response.resultUrls[0] }}\",\"options\":[{\"option\":\"-sseof\",\"argument\":\"-0.1\"}]}],\"filters\":[],\"outputs\":[{\"options\":[{\"option\":\"-frames:v\",\"argument\":\"1\"},{\"option\":\"-q:v\",\"argument\":\"2\"}],\"file_name\":\"last_frame_2.jpg\"}]}",
-          "options": {}
+          "jsCode": "// 프레임2 추출 (Code + 폴백)\nconst data = $input.first().json;\n\n// 영상 실패 시 스킵\nif (data.videoFailed) {\n  console.log('영상 실패 → 프레임 추출 스킵');\n  return [{ json: { skipped: true, originalImageUrl: data.originalImageUrl || '' } }];\n}\n\nconst videoUrl = data?.data?.response?.resultUrls?.[0] || '';\nif (!videoUrl) {\n  console.log('영상 URL 없음 → 프레임 추출 스킵');\n  return [{ json: { skipped: true } }];\n}\n\n// NCA API로 7.5초 시점 프레임 추출\ntry {\n  const result = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'http://76.13.182.180:8080/v1/ffmpeg/compose',\n    headers: {\n      'x-api-key': 'nca-sagong-2026',\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: [{ option: '-ss', argument: '7.5' }] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' }\n        ],\n        file_name: 'last_frame_2.jpg'\n      }]\n    }\n  });\n  return [{ json: result }];\n} catch(e) {\n  console.log('NCA 프레임 추출 실패: ' + e.message);\n  return [{ json: { skipped: true, error: e.message } }];\n}",
+          "mode": "runOnceForAllItems"
         },
         "id": "39092918",
         "name": "프레임2 추출",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.3,
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
         "position": [
           3072,
           704
@@ -6820,7 +6768,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 프레임 결과: NCA 응답에서 이미지 URL 추출\nconst data = $input.first().json;\nlet frameUrl = '';\n\nif (Array.isArray(data?.response)) {\n  frameUrl = data.response[0]?.file_url || '';\n}\nif (!frameUrl && data?.file_url) frameUrl = data.file_url;\nif (!frameUrl && data?.url) frameUrl = data.url;\n\nif (!frameUrl) {\n  throw new Error('프레임 추출 실패: ' + JSON.stringify(data).substring(0, 500));\n}\n\nreturn [{ json: { frameUrl: frameUrl } }];"
+          "jsCode": "// 프레임 결과 (폴백 지원)\nconst data = $input.first().json;\nlet frameUrl = '';\n\n// NCA 성공 시 프레임 URL 추출\nif (!data.skipped && !data.error) {\n  if (Array.isArray(data?.response)) {\n    frameUrl = data.response[0]?.file_url || '';\n  }\n  if (!frameUrl && data?.file_url) frameUrl = data.file_url;\n  if (!frameUrl && data?.url) frameUrl = data.url;\n}\n\n// 실패 → 원본 이미지 폴백\nif (!frameUrl) {\n  const fallback = data?.originalImageUrl\n    || $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  if (fallback) {\n    console.log('프레임 → 원본 이미지 폴백');\n    return [{ json: { frameUrl: fallback, usedFallback: true } }];\n  }\n  throw new Error('프레임/원본 이미지 모두 없음');\n}\n\nreturn [{ json: { frameUrl: frameUrl } }];"
         },
         "id": "b97a75c8",
         "name": "프레임2 결과",
@@ -6833,7 +6781,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 영상3 준비: 프레임2 결과에서 프레임 URL 가져오기\nconst frameUrl = $input.first().json.frameUrl || '';\nif (!frameUrl) throw new Error('프레임2 URL 없음');\n\nconst seg = $('세그먼트 분리').all()[2].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면3)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [frameUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+          "jsCode": "// 영상3 준비: 프레임2 또는 원본 이미지 폴백\nlet imageUrl = $input.first().json.frameUrl || '';\n\nif (!imageUrl) {\n  imageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  console.log('프레임 없음 → 원본 이미지 폴백');\n}\nif (!imageUrl) throw new Error('영상3 입력 이미지 없음');\n\nconst seg = $('세그먼트 분리').all()[2].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면3)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
         },
         "id": "7dbc45d7",
         "name": "영상3 준비",
@@ -6957,7 +6905,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 영상1 실패/타임아웃 체크\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\n\n// successFlag >= 2 → 영상 생성 실패\nif (typeof flag === 'number' && flag >= 2) {\n  throw new Error('영상1 생성 실패 (successFlag=' + flag + ')');\n}\n\n// 재시도 20회 초과 (~10분) → 타임아웃\nif (staticData.retryCount > 20) {\n  throw new Error('영상1 타임아웃 (' + staticData.retryCount + '회 재시도, ~10분 경과)');\n}\n\n// 성공 시 카운터 리셋\nif (flag === 1) {\n  staticData.retryCount = 0;\n}\n\nreturn [{json: data}];",
+          "jsCode": "// 영상1 실패/타임아웃 체크 (폴백 지원)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 폴백으로 계속 진행\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상1 실패 (successFlag=' + flag + ')'\n    : '영상1 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];",
           "mode": "runOnceForAllItems"
         },
         "id": "fail-check-1",
@@ -6971,7 +6919,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 영상2 실패/타임아웃 체크\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\n\n// successFlag >= 2 → 영상 생성 실패\nif (typeof flag === 'number' && flag >= 2) {\n  throw new Error('영상2 생성 실패 (successFlag=' + flag + ')');\n}\n\n// 재시도 20회 초과 (~10분) → 타임아웃\nif (staticData.retryCount > 20) {\n  throw new Error('영상2 타임아웃 (' + staticData.retryCount + '회 재시도, ~10분 경과)');\n}\n\n// 성공 시 카운터 리셋\nif (flag === 1) {\n  staticData.retryCount = 0;\n}\n\nreturn [{json: data}];",
+          "jsCode": "// 영상2 실패/타임아웃 체크 (폴백 지원)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 폴백으로 계속 진행\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상2 실패 (successFlag=' + flag + ')'\n    : '영상2 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];",
           "mode": "runOnceForAllItems"
         },
         "id": "fail-check-2",
@@ -6985,7 +6933,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 영상3 실패/타임아웃 체크\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\n\n// successFlag >= 2 → 영상 생성 실패\nif (typeof flag === 'number' && flag >= 2) {\n  throw new Error('영상3 생성 실패 (successFlag=' + flag + ')');\n}\n\n// 재시도 20회 초과 (~10분) → 타임아웃\nif (staticData.retryCount > 20) {\n  throw new Error('영상3 타임아웃 (' + staticData.retryCount + '회 재시도, ~10분 경과)');\n}\n\n// 성공 시 카운터 리셋\nif (flag === 1) {\n  staticData.retryCount = 0;\n}\n\nreturn [{json: data}];",
+          "jsCode": "// 영상3 실패/타임아웃 체크 (폴백 지원)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 폴백으로 계속 진행\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상3 실패 (successFlag=' + flag + ')'\n    : '영상3 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];",
           "mode": "runOnceForAllItems"
         },
         "id": "fail-check-3",
