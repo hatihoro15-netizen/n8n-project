@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-23T16:15:54.368Z",
+  "updatedAt": "2026-02-23T18:21:14.201Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (Jay+Mike)",
@@ -25,7 +25,8 @@
         1600
       ],
       "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
-      "name": "스케줄 트리거"
+      "name": "스케줄 트리거",
+      "disabled": true
     },
     {
       "parameters": {},
@@ -1137,25 +1138,15 @@
       "name": "카테고리 선택"
     },
     {
-      "parameters": {
-        "workflowId": {
-          "__rl": true,
-          "value": "jRT8nmDr34S96I1b",
-          "mode": "list",
-          "cachedResultName": "온카스터디 스토리짤 v7 (할머니+Mike)"
-        },
-        "options": {
-          "waitForSubWorkflow": false
-        }
-      },
-      "type": "n8n-nodes-base.executeWorkflow",
-      "typeVersion": 1.2,
+      "parameters": {},
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
       "position": [
         -3152,
-        1520
+        1128
       ],
-      "id": "exec-grandma-node",
-      "name": "할머니 워크플로우 실행"
+      "id": "ewt-jay-trigger-001",
+      "name": "Execute Workflow Trigger"
     }
   ],
   "connections": {
@@ -1289,7 +1280,7 @@
       "main": [
         [
           {
-            "node": "할머니 워크플로우 실행",
+            "node": "카테고리 선택",
             "type": "main",
             "index": 0
           }
@@ -1723,11 +1714,6 @@
         ]
       ]
     },
-    "스케줄 트리거": {
-      "main": [
-        []
-      ]
-    },
     "카테고리 선택": {
       "main": [
         [
@@ -1739,7 +1725,7 @@
         ]
       ]
     },
-    "할머니 워크플로우 실행": {
+    "Execute Workflow Trigger": {
       "main": [
         [
           {
@@ -5760,10 +5746,10 @@
       }
     ]
   },
-  "versionId": "3f69eb4c-e67d-44fa-80f6-3ca1a3ecd6c8",
-  "activeVersionId": "3f69eb4c-e67d-44fa-80f6-3ca1a3ecd6c8",
-  "versionCounter": 578,
-  "triggerCount": 1,
+  "versionId": "a537bff7-6fae-4082-b29c-ce824dc741b2",
+  "activeVersionId": "a537bff7-6fae-4082-b29c-ce824dc741b2",
+  "versionCounter": 585,
+  "triggerCount": 0,
   "shared": [
     {
       "updatedAt": "2026-02-16T06:29:45.385Z",
@@ -5821,9 +5807,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-23T16:15:54.369Z",
-    "createdAt": "2026-02-23T16:15:54.369Z",
-    "versionId": "3f69eb4c-e67d-44fa-80f6-3ca1a3ecd6c8",
+    "updatedAt": "2026-02-23T18:21:14.203Z",
+    "createdAt": "2026-02-23T18:21:14.203Z",
+    "versionId": "a537bff7-6fae-4082-b29c-ce824dc741b2",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -5844,7 +5830,8 @@
           1600
         ],
         "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
-        "name": "스케줄 트리거"
+        "name": "스케줄 트리거",
+        "disabled": true
       },
       {
         "parameters": {},
@@ -6956,25 +6943,15 @@
         "name": "카테고리 선택"
       },
       {
-        "parameters": {
-          "workflowId": {
-            "__rl": true,
-            "value": "jRT8nmDr34S96I1b",
-            "mode": "list",
-            "cachedResultName": "온카스터디 스토리짤 v7 (할머니+Mike)"
-          },
-          "options": {
-            "waitForSubWorkflow": false
-          }
-        },
-        "type": "n8n-nodes-base.executeWorkflow",
-        "typeVersion": 1.2,
+        "parameters": {},
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.1,
         "position": [
           -3152,
-          1520
+          1128
         ],
-        "id": "exec-grandma-node",
-        "name": "할머니 워크플로우 실행"
+        "id": "ewt-jay-trigger-001",
+        "name": "Execute Workflow Trigger"
       }
     ],
     "connections": {
@@ -7108,7 +7085,7 @@
         "main": [
           [
             {
-              "node": "할머니 워크플로우 실행",
+              "node": "카테고리 선택",
               "type": "main",
               "index": 0
             }
@@ -7542,11 +7519,6 @@
           ]
         ]
       },
-      "스케줄 트리거": {
-        "main": [
-          []
-        ]
-      },
       "카테고리 선택": {
         "main": [
           [
@@ -7558,7 +7530,7 @@
           ]
         ]
       },
-      "할머니 워크플로우 실행": {
+      "Execute Workflow Trigger": {
         "main": [
           [
             {
@@ -7576,10 +7548,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-23T16:15:54.454Z",
-        "id": 508,
+        "createdAt": "2026-02-23T18:21:14.293Z",
+        "id": 511,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "3f69eb4c-e67d-44fa-80f6-3ca1a3ecd6c8",
+        "versionId": "a537bff7-6fae-4082-b29c-ce824dc741b2",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
