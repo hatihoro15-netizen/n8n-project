@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-23T17:53:03.421Z",
+  "updatedAt": "2026-02-23T18:06:02.698Z",
   "createdAt": "2026-02-21T12:42:28.835Z",
   "id": "jRT8nmDr34S96I1b",
   "name": "온카스터디 스토리짤 v7 (할머니+Mike)",
@@ -25,7 +25,8 @@
         1552
       ],
       "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
-      "name": "스케줄 트리거"
+      "name": "스케줄 트리거",
+      "disabled": true
     },
     {
       "parameters": {},
@@ -1719,17 +1720,6 @@
         ]
       ]
     },
-    "스케줄 트리거": {
-      "main": [
-        [
-          {
-            "node": "카테고리 선택",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "카테고리 선택": {
       "main": [
         [
@@ -2548,10 +2538,10 @@
       }
     ]
   },
-  "versionId": "f1c926b9-214c-439c-8726-b27dbc6ecd2e",
-  "activeVersionId": "f1c926b9-214c-439c-8726-b27dbc6ecd2e",
-  "versionCounter": 36,
-  "triggerCount": 1,
+  "versionId": "d11f373a-5700-46d0-be73-b5c1532d6aaa",
+  "activeVersionId": "d11f373a-5700-46d0-be73-b5c1532d6aaa",
+  "versionCounter": 39,
+  "triggerCount": 0,
   "shared": [
     {
       "updatedAt": "2026-02-21T12:42:28.835Z",
@@ -2609,9 +2599,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-23T17:53:03.423Z",
-    "createdAt": "2026-02-23T17:53:03.423Z",
-    "versionId": "f1c926b9-214c-439c-8726-b27dbc6ecd2e",
+    "updatedAt": "2026-02-23T18:06:02.699Z",
+    "createdAt": "2026-02-23T18:06:02.699Z",
+    "versionId": "d11f373a-5700-46d0-be73-b5c1532d6aaa",
     "workflowId": "jRT8nmDr34S96I1b",
     "nodes": [
       {
@@ -2632,7 +2622,8 @@
           1552
         ],
         "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
-        "name": "스케줄 트리거"
+        "name": "스케줄 트리거",
+        "disabled": true
       },
       {
         "parameters": {},
@@ -4326,17 +4317,6 @@
           ]
         ]
       },
-      "스케줄 트리거": {
-        "main": [
-          [
-            {
-              "node": "카테고리 선택",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
       "카테고리 선택": {
         "main": [
           [
@@ -4366,10 +4346,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-23T17:53:03.508Z",
-        "id": 509,
+        "createdAt": "2026-02-23T18:06:02.763Z",
+        "id": 510,
         "workflowId": "jRT8nmDr34S96I1b",
-        "versionId": "f1c926b9-214c-439c-8726-b27dbc6ecd2e",
+        "versionId": "d11f373a-5700-46d0-be73-b5c1532d6aaa",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
