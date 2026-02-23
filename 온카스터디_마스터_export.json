@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-23T18:21:40.307Z",
+  "updatedAt": "2026-02-23T18:40:15.816Z",
   "createdAt": "2026-02-23T18:21:40.307Z",
   "id": "olSVTGTNQ3Bo2KNE",
   "name": "온카스터디 마스터",
@@ -83,6 +83,23 @@
       ],
       "id": "master-exec-grandma",
       "name": "할머니+Mike 실행"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "onca-master",
+        "options": {},
+        "responseMode": "onReceived"
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        100
+      ],
+      "id": "master-webhook-trigger",
+      "name": "Webhook 트리거",
+      "webhookId": "onca-master"
     }
   ],
   "connections": {
@@ -117,6 +134,22 @@
           }
         ]
       ]
+    },
+    "Webhook 트리거": {
+      "main": [
+        [
+          {
+            "node": "Jay+Mike 실행",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "할머니+Mike 실행",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -131,10 +164,10 @@
   },
   "meta": null,
   "pinData": null,
-  "versionId": "239a5559-f999-4ccd-9a23-0965bc9b87b8",
-  "activeVersionId": "239a5559-f999-4ccd-9a23-0965bc9b87b8",
-  "versionCounter": 4,
-  "triggerCount": 1,
+  "versionId": "14883c64-4ed9-4b7f-98c2-07b53534f8bc",
+  "activeVersionId": "14883c64-4ed9-4b7f-98c2-07b53534f8bc",
+  "versionCounter": 7,
+  "triggerCount": 2,
   "shared": [
     {
       "updatedAt": "2026-02-23T18:21:40.307Z",
@@ -158,7 +191,7 @@
             "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
             "projectId": "W6LETsSnBzw4J5Aa",
             "user": {
-              "updatedAt": "2026-02-23T16:06:42.356Z",
+              "updatedAt": "2026-02-23T18:40:22.208Z",
               "createdAt": "2026-02-07T19:04:09.331Z",
               "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
               "email": "hatihoro15@gmail.com",
@@ -172,8 +205,8 @@
               "settings": {
                 "userActivated": true,
                 "easyAIWorkflowOnboarded": true,
-                "firstSuccessfulWorkflowId": "jRT8nmDr34S96I1b",
-                "userActivatedAt": 1771833600121,
+                "firstSuccessfulWorkflowId": "olSVTGTNQ3Bo2KNE",
+                "userActivatedAt": 1771872022132,
                 "npsSurvey": {
                   "waitingForResponse": true,
                   "ignoredCount": 1,
@@ -192,9 +225,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-23T18:21:40.316Z",
-    "createdAt": "2026-02-23T18:21:40.316Z",
-    "versionId": "239a5559-f999-4ccd-9a23-0965bc9b87b8",
+    "updatedAt": "2026-02-23T18:40:15.818Z",
+    "createdAt": "2026-02-23T18:40:15.818Z",
+    "versionId": "14883c64-4ed9-4b7f-98c2-07b53534f8bc",
     "workflowId": "olSVTGTNQ3Bo2KNE",
     "nodes": [
       {
@@ -273,6 +306,23 @@
         ],
         "id": "master-exec-grandma",
         "name": "할머니+Mike 실행"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "onca-master",
+          "options": {},
+          "responseMode": "onReceived"
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          0,
+          100
+        ],
+        "id": "master-webhook-trigger",
+        "name": "Webhook 트리거",
+        "webhookId": "onca-master"
       }
     ],
     "connections": {
@@ -307,6 +357,22 @@
             }
           ]
         ]
+      },
+      "Webhook 트리거": {
+        "main": [
+          [
+            {
+              "node": "Jay+Mike 실행",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "할머니+Mike 실행",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "hatihoro15 hatihoro15",
@@ -315,10 +381,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-23T18:21:48.248Z",
-        "id": 512,
+        "createdAt": "2026-02-23T18:40:15.872Z",
+        "id": 513,
         "workflowId": "olSVTGTNQ3Bo2KNE",
-        "versionId": "239a5559-f999-4ccd-9a23-0965bc9b87b8",
+        "versionId": "14883c64-4ed9-4b7f-98c2-07b53534f8bc",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
