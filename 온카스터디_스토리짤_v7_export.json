@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-21T16:45:29.586Z",
+  "updatedAt": "2026-02-23T16:15:54.368Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (Jay+Mike)",
@@ -21,8 +21,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        -3216,
-        1552
+        -3504,
+        1600
       ],
       "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
       "name": "스케줄 트리거"
@@ -33,7 +33,7 @@
       "name": "When clicking ‘Execute workflow’",
       "type": "n8n-nodes-base.manualTrigger",
       "position": [
-        -3168,
+        -3152,
         1328
       ],
       "typeVersion": 1
@@ -60,7 +60,7 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        -2800,
+        -2784,
         1328
       ],
       "id": "0f0b8cab-e649-4c60-afba-6991b2a30901",
@@ -79,7 +79,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2448,
+        -2432,
         1328
       ],
       "id": "debd624e-66b9-4443-8544-002d62bd2da6",
@@ -183,7 +183,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -2224,
+        -2208,
         1328
       ],
       "id": "ad97017d-7051-4a32-a9d2-9ba6d5276e01",
@@ -202,7 +202,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1776,
+        -1760,
         1328
       ],
       "id": "624571a3-41be-44cb-a4cd-1b5f40b89fec",
@@ -222,7 +222,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1328,
+        -1312,
         1328
       ],
       "id": "img-gen-001",
@@ -241,7 +241,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1104,
+        -1088,
         1328
       ],
       "id": "img-wait-001",
@@ -258,7 +258,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -880,
+        -864,
         1328
       ],
       "id": "img-result-001",
@@ -277,7 +277,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -896,
+        -880,
         2176
       ],
       "id": "98d0499e-0f4e-43d0-a80d-f65128036951",
@@ -306,7 +306,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -672,
+        -656,
         2176
       ],
       "id": "c9c85671-3eb2-4fa5-a158-74cf8d4613fb",
@@ -319,7 +319,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -448,
+        -432,
         2176
       ],
       "id": "0abbc265-f782-44cd-8a9a-6462e14753c8",
@@ -333,7 +333,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -224,
+        -208,
         2176
       ],
       "id": "7bf9dedf-711a-47f7-b00a-2980c09c9574",
@@ -428,7 +428,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        0,
+        16,
         2176
       ],
       "id": "9d065d63-6fbc-4c9e-9bf2-7b06ec695e4c",
@@ -447,7 +447,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2000,
+        -1984,
         1328
       ],
       "id": "20787f47-c724-4ea1-bfbf-1243c574a1c7",
@@ -460,7 +460,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -656,
+        -640,
         1328
       ],
       "id": "nano_url_extract",
@@ -475,7 +475,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1552,
+        -1536,
         1328
       ]
     },
@@ -488,7 +488,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2448,
+        -2432,
         1616
       ]
     },
@@ -508,7 +508,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -2224,
+        -2208,
         1616
       ],
       "credentials": {
@@ -528,7 +528,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -2000,
+        -1984,
         1616
       ],
       "webhookId": "c82dfe2d-8cd1-43b5-8407-b5fb5f3b82d7"
@@ -545,7 +545,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1776,
+        -1760,
         1616
       ],
       "credentials": {
@@ -587,7 +587,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1376,
+        -1360,
         1616
       ]
     },
@@ -600,7 +600,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1136,
+        -1120,
         1632
       ],
       "webhookId": "a13742be-e399-4a95-92ee-9b978949ef28"
@@ -614,7 +614,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -880,
+        -864,
         1600
       ]
     },
@@ -627,7 +627,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -656,
+        -640,
         1600
       ],
       "webhookId": "e836bbd9-d700-47f4-b59a-21c5959c1d30"
@@ -641,7 +641,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -432,
+        -416,
         1600
       ]
     },
@@ -654,7 +654,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2464,
+        -2448,
         1920
       ]
     },
@@ -674,7 +674,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -2240,
+        -2224,
         1920
       ],
       "credentials": {
@@ -694,7 +694,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -2016,
+        -2000,
         1920
       ],
       "webhookId": "d2407170-d76d-4dd5-9eef-9be53fde87d9"
@@ -711,7 +711,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1792,
+        -1776,
         1920
       ],
       "credentials": {
@@ -753,7 +753,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1392,
+        -1376,
         1920
       ]
     },
@@ -766,7 +766,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1136,
+        -1120,
         1936
       ],
       "webhookId": "f5b50b19-c70e-4206-95a7-5b63f8984d76"
@@ -780,7 +780,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -896,
+        -880,
         1904
       ]
     },
@@ -793,7 +793,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -672,
+        -656,
         1904
       ],
       "webhookId": "3cd50ace-887f-4a96-a157-ce8b19e41d31"
@@ -807,7 +807,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -448,
+        -432,
         1904
       ]
     },
@@ -820,7 +820,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2464,
+        -2448,
         2192
       ]
     },
@@ -840,7 +840,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -2240,
+        -2224,
         2192
       ],
       "credentials": {
@@ -860,7 +860,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -2016,
+        -2000,
         2192
       ],
       "webhookId": "e249c3c0-0416-4e17-8865-73c8829ce2b3"
@@ -877,7 +877,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1792,
+        -1776,
         2192
       ],
       "credentials": {
@@ -919,7 +919,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1360,
+        -1344,
         2192
       ]
     },
@@ -932,7 +932,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1120,
+        -1104,
         2208
       ],
       "webhookId": "425f17f7-a44b-49c9-9b2b-90d6a61190fc"
@@ -946,7 +946,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1552,
+        -1536,
         1616
       ]
     },
@@ -959,7 +959,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1568,
+        -1552,
         1920
       ]
     },
@@ -972,7 +972,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1568,
+        -1552,
         2192
       ]
     },
@@ -1007,7 +1007,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -432,
+        -416,
         1328
       ]
     },
@@ -1020,7 +1020,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -176,
+        -160,
         1344
       ],
       "webhookId": "31e22254-2dba-4faa-8e40-a566c24ffc6e"
@@ -1056,7 +1056,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -192,
+        -176,
         1600
       ]
     },
@@ -1069,7 +1069,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        64,
+        80,
         1616
       ],
       "webhookId": "d958b8c2-2524-4e91-a0da-a1dd619289aa"
@@ -1105,7 +1105,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -208,
+        -192,
         1904
       ]
     },
@@ -1118,7 +1118,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        32,
+        48,
         1920
       ],
       "webhookId": "90d602d6-1c87-43f8-bf90-ad3ef0cf1093"
@@ -1130,11 +1130,32 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2992,
+        -2976,
         1328
       ],
       "id": "jm-cat-select",
       "name": "카테고리 선택"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "jRT8nmDr34S96I1b",
+          "mode": "list",
+          "cachedResultName": "온카스터디 스토리짤 v7 (할머니+Mike)"
+        },
+        "options": {
+          "waitForSubWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        -3152,
+        1520
+      ],
+      "id": "exec-grandma-node",
+      "name": "할머니 워크플로우 실행"
     }
   ],
   "connections": {
@@ -1253,17 +1274,6 @@
         ]
       ]
     },
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "AI 콘텐츠 생성",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "참조 이미지 프롬프트": {
       "main": [
         [
@@ -1279,7 +1289,7 @@
       "main": [
         [
           {
-            "node": "카테고리 선택",
+            "node": "할머니 워크플로우 실행",
             "type": "main",
             "index": 0
           }
@@ -1715,13 +1725,7 @@
     },
     "스케줄 트리거": {
       "main": [
-        [
-          {
-            "node": "카테고리 선택",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "카테고리 선택": {
@@ -1729,6 +1733,17 @@
         [
           {
             "node": "AI 콘텐츠 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "할머니 워크플로우 실행": {
+      "main": [
+        [
+          {
+            "node": "카테고리 선택",
             "type": "main",
             "index": 0
           }
@@ -1742,6 +1757,15 @@
     "availableInMCP": false
   },
   "staticData": {
+    "global": {
+      "categoryIndex": 1,
+      "topicIndices": {
+        "0": 1,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      }
+    },
     "node:스케줄 트리거": {
       "recurrenceRules": []
     }
@@ -5734,848 +5758,11 @@
           }
         ]
       }
-    ],
-    "세그먼트 분리": [
-      {
-        "json": {
-          "index": 0,
-          "dialogue": "야, 너 어제도 폰으로 버튼 누르다가 돈 다 날렸지? 아니, 나만 그런 거 아니잖아. 그냥 잘 안 되는 날도 있는 거지.",
-          "dialogue_turns": [
-            {
-              "speaker": "A",
-              "line": "야, 너 어제도 폰으로 버튼 누르다가 돈 다 날렸지?"
-            },
-            {
-              "speaker": "B",
-              "line": "아니, 나만 그런 거 아니잖아. 그냥 잘 안 되는 날도 있는 거지."
-            }
-          ],
-          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench in a sunny afternoon, discussing something serious, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, leaning forward with concerned expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking down at his phone with a frustrated sigh, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench in a sunny afternoon, discussing something serious, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, leaning forward with concerned expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking down at his phone with a frustrated sigh, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '야, 너 어제도 폰으로 버튼 누르다가 돈 다 날렸지?', then The second man (medium twists hairstyle, white graphic t-shirt) responds '아니, 나만 그런 거 아니잖아. 그냥 잘 안 되는 날도 있는 거지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-          "speaker": "A",
-          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
-          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
-        }
-      },
-      {
-        "json": {
-          "index": 1,
-          "dialogue": "되는 날 안 되는 날이 아니라, 네가 선택한 곳의 환수율 문제야. 환수율? 그게 뭔데. 그냥 뜨는 거 눌렀는데. 진짜 답답하다. 모르면 맨날 똑같이 당하는 거야.",
-          "dialogue_turns": [
-            {
-              "speaker": "A",
-              "line": "되는 날 안 되는 날이 아니라, 네가 선택한 곳의 환수율 문제야."
-            },
-            {
-              "speaker": "B",
-              "line": "환수율? 그게 뭔데. 그냥 뜨는 거 눌렀는데."
-            },
-            {
-              "speaker": "A",
-              "line": "진짜 답답하다. 모르면 맨날 똑같이 당하는 거야."
-            }
-          ],
-          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench, one explaining with hand gestures, the other listening with confusion, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, using his hands to explain the concept of payout rates, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, furrowing his brow in concentration, trying to understand, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench, one explaining with hand gestures, the other listening with confusion, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, using his hands to explain the concept of payout rates, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, furrowing his brow in concentration, trying to understand, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '되는 날 안 되는 날이 아니라, 네가 선택한 곳의 환수율 문제야.', then The second man (medium twists hairstyle, white graphic t-shirt) responds '환수율? 그게 뭔데. 그냥 뜨는 거 눌렀는데.', then The first man (short fade haircut, black hoodie, gold chain) responds '진짜 답답하다. 모르면 맨날 똑같이 당하는 거야.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-          "speaker": "A",
-          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
-          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
-        }
-      },
-      {
-        "json": {
-          "index": 2,
-          "dialogue": "그럼 잘 되는 곳은 어떻게 아는데? 온카스터디 가서 확인해봐. 거기 다 정리돼 있어.",
-          "dialogue_turns": [
-            {
-              "speaker": "B",
-              "line": "그럼 잘 되는 곳은 어떻게 아는데?"
-            },
-            {
-              "speaker": "A",
-              "line": "온카스터디 가서 확인해봐. 거기 다 정리돼 있어."
-            }
-          ],
-          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends walking away from the park bench, one pointing forward, the other looking thoughtfully, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, with a knowing smile pointing ahead as if indicating a solution, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking in the direction pointed with a thoughtful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot slowly zooming out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends walking away from the park bench, one pointing forward, the other looking thoughtfully, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, with a knowing smile pointing ahead as if indicating a solution, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking in the direction pointed with a thoughtful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot slowly zooming out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '그럼 잘 되는 곳은 어떻게 아는데?', then The first man (short fade haircut, black hoodie, gold chain) responds '온카스터디 가서 확인해봐. 거기 다 정리돼 있어.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-          "speaker": "B",
-          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
-          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
-        }
-      }
-    ],
-    "이미지 생성": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "3a6d78c1301f29bd122f565da6f47500",
-            "recordId": "3a6d78c1301f29bd122f565da6f47500"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "이미지 대기": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "3a6d78c1301f29bd122f565da6f47500",
-            "recordId": "3a6d78c1301f29bd122f565da6f47500"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "이미지 결과": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "3a6d78c1301f29bd122f565da6f47500",
-            "model": "nano-banana-pro",
-            "state": "waiting",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench in a sunny afternoon, discussing something serious, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, leaning forward with concerned expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking down at his phone with a frustrated sigh, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": null,
-            "completeTime": null,
-            "createTime": 1771677613482
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "참조 이미지 프롬프트": [
-      {
-        "json": {
-          "refUrl": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
-          "speaker": "A"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      },
-      {
-        "json": {
-          "refUrl": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png",
-          "speaker": "B"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "이미지 URL 추출": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "3a6d78c1301f29bd122f565da6f47500",
-            "model": "nano-banana-pro",
-            "state": "waiting",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench in a sunny afternoon, discussing something serious, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, leaning forward with concerned expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking down at his phone with a frustrated sigh, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": null,
-            "completeTime": null,
-            "createTime": 1771677613482
-          },
-          "imageComplete": false
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "이미지 프롬프트 선택": [
-      {
-        "json": {
-          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench in a sunny afternoon, discussing something serious, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, leaning forward with concerned expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking down at his phone with a frustrated sigh, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
-          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
-          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
-        }
-      }
-    ],
-    "영상1 준비": [
-      {
-        "json": {
-          "veo3Body": {
-            "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench in a sunny afternoon, discussing something serious, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, leaning forward with concerned expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking down at his phone with a frustrated sigh, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '야, 너 어제도 폰으로 버튼 누르다가 돈 다 날렸지?', then The second man (medium twists hairstyle, white graphic t-shirt) responds '아니, 나만 그런 거 아니잖아. 그냥 잘 안 되는 날도 있는 거지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-            "imageUrls": [
-              "https://tempfile.aiquickdraw.com/images/1771677930246-q598t7fi3m.png"
-            ],
-            "model": "veo3_fast",
-            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
-            "aspect_ratio": "16:9",
-            "enableTranslation": false
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상1 생성": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "73589a218031f30a99f9dd3a6f9fc8a2"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상1 대기": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "73589a218031f30a99f9dd3a6f9fc8a2"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상1 결과": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "73589a218031f30a99f9dd3a6f9fc8a2",
-            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771677930246-q598t7fi3m.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench in a sunny afternoon, discussing something serious, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, leaning forward with concerned expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking down at his phone with a frustrated sigh, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '야, 너 어제도 폰으로 버튼 누르다가 돈 다 날렸지?', then The second man (medium twists hairstyle, white graphic t-shirt) responds '아니, 나만 그런 거 아니잖아. 그냥 잘 안 되는 날도 있는 거지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
-            "response": {
-              "taskId": "73589a218031f30a99f9dd3a6f9fc8a2",
-              "resolution": "720p",
-              "originUrls": null,
-              "resultUrls": [
-                "https://tempfile.aiquickdraw.com/v/73589a218031f30a99f9dd3a6f9fc8a2_1771678050.mp4"
-              ],
-              "hasAudioList": [
-                true
-              ],
-              "seeds": [
-                90072
-              ]
-            },
-            "successFlag": 1,
-            "fallbackFlag": false,
-            "completeTime": 1771678052000,
-            "createTime": 1771677946000,
-            "errorCode": null,
-            "errorMessage": null
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "프레임1 추출": [
-      {
-        "json": {
-          "build_number": 219,
-          "code": 200,
-          "endpoint": "/v1/ffmpeg/compose",
-          "id": null,
-          "job_id": "0646cbe8-3b04-421e-8fe9-a4fe89e20dc3",
-          "message": "success",
-          "pid": 8,
-          "queue_id": 134447818180400,
-          "queue_length": 0,
-          "queue_time": 0,
-          "response": [
-            {
-              "file_url": "http://76.13.182.180:9000/nca-toolkit/0646cbe8-3b04-421e-8fe9-a4fe89e20dc3_output_0.png"
-            }
-          ],
-          "run_time": 1.123,
-          "total_time": 1.123,
-          "videoUrl": "https://tempfile.aiquickdraw.com/v/73589a218031f30a99f9dd3a6f9fc8a2_1771678050.mp4"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "프레임1 대기": [
-      {
-        "json": {
-          "build_number": 219,
-          "code": 200,
-          "endpoint": "/v1/ffmpeg/compose",
-          "id": null,
-          "job_id": "0646cbe8-3b04-421e-8fe9-a4fe89e20dc3",
-          "message": "success",
-          "pid": 8,
-          "queue_id": 134447818180400,
-          "queue_length": 0,
-          "queue_time": 0,
-          "response": [
-            {
-              "file_url": "http://76.13.182.180:9000/nca-toolkit/0646cbe8-3b04-421e-8fe9-a4fe89e20dc3_output_0.png"
-            }
-          ],
-          "run_time": 1.123,
-          "total_time": 1.123,
-          "videoUrl": "https://tempfile.aiquickdraw.com/v/73589a218031f30a99f9dd3a6f9fc8a2_1771678050.mp4"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "프레임1 결과": [
-      {
-        "json": {
-          "frameUrl": "http://76.13.182.180:9000/nca-toolkit/0646cbe8-3b04-421e-8fe9-a4fe89e20dc3_output_0.png",
-          "frameComplete": true
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상1 실패체크": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "73589a218031f30a99f9dd3a6f9fc8a2",
-            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771677930246-q598t7fi3m.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench in a sunny afternoon, discussing something serious, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, leaning forward with concerned expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking down at his phone with a frustrated sigh, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '야, 너 어제도 폰으로 버튼 누르다가 돈 다 날렸지?', then The second man (medium twists hairstyle, white graphic t-shirt) responds '아니, 나만 그런 거 아니잖아. 그냥 잘 안 되는 날도 있는 거지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
-            "response": {
-              "taskId": "73589a218031f30a99f9dd3a6f9fc8a2",
-              "resolution": "720p",
-              "originUrls": null,
-              "resultUrls": [
-                "https://tempfile.aiquickdraw.com/v/73589a218031f30a99f9dd3a6f9fc8a2_1771678050.mp4"
-              ],
-              "hasAudioList": [
-                true
-              ],
-              "seeds": [
-                90072
-              ]
-            },
-            "successFlag": 1,
-            "fallbackFlag": false,
-            "completeTime": 1771678052000,
-            "createTime": 1771677946000,
-            "errorCode": null,
-            "errorMessage": null
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "이미지 재대기": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "3a6d78c1301f29bd122f565da6f47500",
-            "model": "nano-banana-pro",
-            "state": "waiting",
-            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench in a sunny afternoon, discussing something serious, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, leaning forward with concerned expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking down at his phone with a frustrated sigh, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-            "resultJson": "",
-            "failCode": null,
-            "failMsg": null,
-            "costTime": null,
-            "completeTime": null,
-            "createTime": 1771677613482
-          },
-          "imageComplete": false
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상2 준비": [
-      {
-        "json": {
-          "veo3Body": {
-            "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench, one explaining with hand gestures, the other listening with confusion, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, using his hands to explain the concept of payout rates, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, furrowing his brow in concentration, trying to understand, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '되는 날 안 되는 날이 아니라, 네가 선택한 곳의 환수율 문제야.', then The second man (medium twists hairstyle, white graphic t-shirt) responds '환수율? 그게 뭔데. 그냥 뜨는 거 눌렀는데.', then The first man (short fade haircut, black hoodie, gold chain) responds '진짜 답답하다. 모르면 맨날 똑같이 당하는 거야.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-            "imageUrls": [
-              "http://76.13.182.180:9000/nca-toolkit/0646cbe8-3b04-421e-8fe9-a4fe89e20dc3_output_0.png"
-            ],
-            "model": "veo3_fast",
-            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
-            "aspect_ratio": "16:9",
-            "enableTranslation": false
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상2 생성": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "b6ac508f5c3bde6bc98ea31c0419704b"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상2 대기": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "b6ac508f5c3bde6bc98ea31c0419704b"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상2 결과": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "b6ac508f5c3bde6bc98ea31c0419704b",
-            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/0646cbe8-3b04-421e-8fe9-a4fe89e20dc3_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench, one explaining with hand gestures, the other listening with confusion, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, using his hands to explain the concept of payout rates, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, furrowing his brow in concentration, trying to understand, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '되는 날 안 되는 날이 아니라, 네가 선택한 곳의 환수율 문제야.', then The second man (medium twists hairstyle, white graphic t-shirt) responds '환수율? 그게 뭔데. 그냥 뜨는 거 눌렀는데.', then The first man (short fade haircut, black hoodie, gold chain) responds '진짜 답답하다. 모르면 맨날 똑같이 당하는 거야.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
-            "response": {
-              "taskId": "b6ac508f5c3bde6bc98ea31c0419704b",
-              "resolution": "720p",
-              "originUrls": null,
-              "resultUrls": [
-                "https://tempfile.aiquickdraw.com/v/b6ac508f5c3bde6bc98ea31c0419704b_1771678371.mp4"
-              ],
-              "hasAudioList": [
-                true
-              ],
-              "seeds": [
-                88583
-              ]
-            },
-            "successFlag": 1,
-            "fallbackFlag": false,
-            "completeTime": 1771678373000,
-            "createTime": 1771678277000,
-            "errorCode": null,
-            "errorMessage": null
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "프레임2 추출": [
-      {
-        "json": {
-          "build_number": 219,
-          "code": 200,
-          "endpoint": "/v1/ffmpeg/compose",
-          "id": null,
-          "job_id": "7a7bf5bb-eda7-4afa-97cf-7189f8263dcd",
-          "message": "success",
-          "pid": 9,
-          "queue_id": 134447818180544,
-          "queue_length": 0,
-          "queue_time": 0,
-          "response": [
-            {
-              "file_url": "http://76.13.182.180:9000/nca-toolkit/7a7bf5bb-eda7-4afa-97cf-7189f8263dcd_output_0.png"
-            }
-          ],
-          "run_time": 1.275,
-          "total_time": 1.275,
-          "videoUrl": "https://tempfile.aiquickdraw.com/v/b6ac508f5c3bde6bc98ea31c0419704b_1771678371.mp4"
-        }
-      }
-    ],
-    "영상2 실패체크": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "b6ac508f5c3bde6bc98ea31c0419704b",
-            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/0646cbe8-3b04-421e-8fe9-a4fe89e20dc3_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting on a park bench, one explaining with hand gestures, the other listening with confusion, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, using his hands to explain the concept of payout rates, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, furrowing his brow in concentration, trying to understand, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, camera slowly pans right, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '되는 날 안 되는 날이 아니라, 네가 선택한 곳의 환수율 문제야.', then The second man (medium twists hairstyle, white graphic t-shirt) responds '환수율? 그게 뭔데. 그냥 뜨는 거 눌렀는데.', then The first man (short fade haircut, black hoodie, gold chain) responds '진짜 답답하다. 모르면 맨날 똑같이 당하는 거야.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
-            "response": {
-              "taskId": "b6ac508f5c3bde6bc98ea31c0419704b",
-              "resolution": "720p",
-              "originUrls": null,
-              "resultUrls": [
-                "https://tempfile.aiquickdraw.com/v/b6ac508f5c3bde6bc98ea31c0419704b_1771678371.mp4"
-              ],
-              "hasAudioList": [
-                true
-              ],
-              "seeds": [
-                88583
-              ]
-            },
-            "successFlag": 1,
-            "fallbackFlag": false,
-            "completeTime": 1771678373000,
-            "createTime": 1771678277000,
-            "errorCode": null,
-            "errorMessage": null
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "프레임2 대기": [
-      {
-        "json": {
-          "build_number": 219,
-          "code": 200,
-          "endpoint": "/v1/ffmpeg/compose",
-          "id": null,
-          "job_id": "7a7bf5bb-eda7-4afa-97cf-7189f8263dcd",
-          "message": "success",
-          "pid": 9,
-          "queue_id": 134447818180544,
-          "queue_length": 0,
-          "queue_time": 0,
-          "response": [
-            {
-              "file_url": "http://76.13.182.180:9000/nca-toolkit/7a7bf5bb-eda7-4afa-97cf-7189f8263dcd_output_0.png"
-            }
-          ],
-          "run_time": 1.275,
-          "total_time": 1.275,
-          "videoUrl": "https://tempfile.aiquickdraw.com/v/b6ac508f5c3bde6bc98ea31c0419704b_1771678371.mp4"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "프레임2 결과": [
-      {
-        "json": {
-          "frameUrl": "http://76.13.182.180:9000/nca-toolkit/7a7bf5bb-eda7-4afa-97cf-7189f8263dcd_output_0.png",
-          "frameComplete": true
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "NCA 데이터 준비": [
-      {
-        "json": {
-          "nca_payload": {
-            "inputs": [
-              {
-                "file_url": "https://tempfile.aiquickdraw.com/v/73589a218031f30a99f9dd3a6f9fc8a2_1771678050.mp4",
-                "options": []
-              },
-              {
-                "file_url": "https://tempfile.aiquickdraw.com/v/b6ac508f5c3bde6bc98ea31c0419704b_1771678371.mp4",
-                "options": []
-              },
-              {
-                "file_url": "https://tempfile.aiquickdraw.com/v/15c09c542294f6af0627ce70dd233278_1771678700.mp4",
-                "options": []
-              }
-            ],
-            "filters": [
-              {
-                "filter": "[0:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v0];[0:a]atrim=duration=8,asetpts=PTS-STARTPTS[a0];[1:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v1];[1:a]atrim=duration=8,asetpts=PTS-STARTPTS[a1];[2:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v2];[2:a]atrim=duration=8,asetpts=PTS-STARTPTS[a2];[v0][v1][v2]concat=n=3:v=1:a=0[vfinal];[a0][a1][a2]concat=n=3:v=0:a=1[afinal]"
-              }
-            ],
-            "outputs": [
-              {
-                "options": [
-                  {
-                    "option": "-map",
-                    "argument": "[vfinal]"
-                  },
-                  {
-                    "option": "-map",
-                    "argument": "[afinal]"
-                  },
-                  {
-                    "option": "-c:v",
-                    "argument": "libx264"
-                  },
-                  {
-                    "option": "-preset",
-                    "argument": "medium"
-                  },
-                  {
-                    "option": "-crf",
-                    "argument": "18"
-                  },
-                  {
-                    "option": "-c:a",
-                    "argument": "aac"
-                  },
-                  {
-                    "option": "-b:a",
-                    "argument": "256k"
-                  },
-                  {
-                    "option": "-pix_fmt",
-                    "argument": "yuv420p"
-                  },
-                  {
-                    "option": "-movflags",
-                    "argument": "+faststart"
-                  },
-                  {
-                    "option": "-t",
-                    "argument": "24"
-                  }
-                ],
-                "file_name": "story_shorts_final.mp4"
-              }
-            ]
-          },
-          "totalDuration": 24,
-          "srtContent": "1\n00:00:00,000 --> 00:00:08,000\n야, 너 어제도 폰으로 버튼 누르다가 돈 다 날렸지? 아니, 나만 그런 거 아니잖아. 그냥 잘 안 되는 날도 있는 거지.\n\n2\n00:00:08,000 --> 00:00:16,000\n되는 날 안 되는 날이 아니라, 네가 선택한 곳의 환수율 문제야. 환수율? 그게 뭔데. 그냥 뜨는 거 눌렀는데. 진짜 답답하다. 모르면 맨날 똑같이 당하는 거야.\n\n3\n00:00:16,000 --> 00:00:24,000\n그럼 잘 되는 곳은 어떻게 아는데? 온카스터디 가서 확인해봐. 거기 다 정리돼 있어.\n",
-          "segmentCount": 3,
-          "hookTitle": "이거 모르고 <y>돌리면</y> 100% <y>털린다</y>",
-          "skippedVideos": [],
-          "subject": "이거 모르고 돌리면 100% 털린다 #온카스터디 #슬롯 #먹튀검증 #환수율",
-          "caption": "어제도 털렸다? 😭 환수율 확인 안 하면 맨날 똑같지.. #온카스터디 #카지노팁 #안전놀이터 #슬롯머신",
-          "comment": "환수율 개념 모르고 겜하면 진짜 호구 되는 지름길이지."
-        }
-      }
-    ],
-    "NCA 영상 제작": [
-      {
-        "json": {
-          "build_number": 219,
-          "code": 200,
-          "endpoint": "/v1/ffmpeg/compose",
-          "id": null,
-          "job_id": "adcdbe10-ea16-4e0e-837a-9ae61334f21d",
-          "message": "success",
-          "pid": 9,
-          "queue_id": 134447818180544,
-          "queue_length": 0,
-          "queue_time": 0,
-          "response": [
-            {
-              "file_url": "http://76.13.182.180:9000/nca-toolkit/adcdbe10-ea16-4e0e-837a-9ae61334f21d_output_0.mp4"
-            }
-          ],
-          "run_time": 46.583,
-          "total_time": 46.583
-        }
-      }
-    ],
-    "영상3 준비": [
-      {
-        "json": {
-          "veo3Body": {
-            "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends walking away from the park bench, one pointing forward, the other looking thoughtfully, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, with a knowing smile pointing ahead as if indicating a solution, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking in the direction pointed with a thoughtful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot slowly zooming out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '그럼 잘 되는 곳은 어떻게 아는데?', then The first man (short fade haircut, black hoodie, gold chain) responds '온카스터디 가서 확인해봐. 거기 다 정리돼 있어.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
-            "imageUrls": [
-              "http://76.13.182.180:9000/nca-toolkit/7a7bf5bb-eda7-4afa-97cf-7189f8263dcd_output_0.png"
-            ],
-            "model": "veo3_fast",
-            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
-            "aspect_ratio": "16:9",
-            "enableTranslation": false
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상3 생성": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "15c09c542294f6af0627ce70dd233278"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상3 대기": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "15c09c542294f6af0627ce70dd233278"
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상3 결과": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "15c09c542294f6af0627ce70dd233278",
-            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/7a7bf5bb-eda7-4afa-97cf-7189f8263dcd_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends walking away from the park bench, one pointing forward, the other looking thoughtfully, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, with a knowing smile pointing ahead as if indicating a solution, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking in the direction pointed with a thoughtful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot slowly zooming out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '그럼 잘 되는 곳은 어떻게 아는데?', then The first man (short fade haircut, black hoodie, gold chain) responds '온카스터디 가서 확인해봐. 거기 다 정리돼 있어.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
-            "response": {
-              "taskId": "15c09c542294f6af0627ce70dd233278",
-              "resolution": "720p",
-              "originUrls": null,
-              "resultUrls": [
-                "https://tempfile.aiquickdraw.com/v/15c09c542294f6af0627ce70dd233278_1771678700.mp4"
-              ],
-              "hasAudioList": [
-                true
-              ],
-              "seeds": [
-                62385
-              ]
-            },
-            "successFlag": 1,
-            "fallbackFlag": false,
-            "completeTime": 1771678703000,
-            "createTime": 1771678609000,
-            "errorCode": null,
-            "errorMessage": null
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "영상3 실패체크": [
-      {
-        "json": {
-          "code": 200,
-          "msg": "success",
-          "data": {
-            "taskId": "15c09c542294f6af0627ce70dd233278",
-            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/7a7bf5bb-eda7-4afa-97cf-7189f8263dcd_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends walking away from the park bench, one pointing forward, the other looking thoughtfully, young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, with a knowing smile pointing ahead as if indicating a solution, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking in the direction pointed with a thoughtful expression, two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot slowly zooming out, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '그럼 잘 되는 곳은 어떻게 아는데?', then The first man (short fade haircut, black hoodie, gold chain) responds '온카스터디 가서 확인해봐. 거기 다 정리돼 있어.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
-            "response": {
-              "taskId": "15c09c542294f6af0627ce70dd233278",
-              "resolution": "720p",
-              "originUrls": null,
-              "resultUrls": [
-                "https://tempfile.aiquickdraw.com/v/15c09c542294f6af0627ce70dd233278_1771678700.mp4"
-              ],
-              "hasAudioList": [
-                true
-              ],
-              "seeds": [
-                62385
-              ]
-            },
-            "successFlag": 1,
-            "fallbackFlag": false,
-            "completeTime": 1771678703000,
-            "createTime": 1771678609000,
-            "errorCode": null,
-            "errorMessage": null
-          }
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "NCA 제작 대기": [
-      {
-        "json": {
-          "build_number": 219,
-          "code": 200,
-          "endpoint": "/v1/ffmpeg/compose",
-          "id": null,
-          "job_id": "adcdbe10-ea16-4e0e-837a-9ae61334f21d",
-          "message": "success",
-          "pid": 9,
-          "queue_id": 134447818180544,
-          "queue_length": 0,
-          "queue_time": 0,
-          "response": [
-            {
-              "file_url": "http://76.13.182.180:9000/nca-toolkit/adcdbe10-ea16-4e0e-837a-9ae61334f21d_output_0.mp4"
-            }
-          ],
-          "run_time": 46.583,
-          "total_time": 46.583
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "NCA 결과 처리": [
-      {
-        "json": {
-          "final_video_url": "http://76.13.182.180:9000/nca-toolkit/adcdbe10-ea16-4e0e-837a-9ae61334f21d_output_0.mp4",
-          "url": "http://76.13.182.180:9000/nca-toolkit/adcdbe10-ea16-4e0e-837a-9ae61334f21d_output_0.mp4",
-          "srtContent": "1\n00:00:00,000 --> 00:00:08,000\n야, 너 어제도 폰으로 버튼 누르다가 돈 다 날렸지? 아니, 나만 그런 거 아니잖아. 그냥 잘 안 되는 날도 있는 거지.\n\n2\n00:00:08,000 --> 00:00:16,000\n되는 날 안 되는 날이 아니라, 네가 선택한 곳의 환수율 문제야. 환수율? 그게 뭔데. 그냥 뜨는 거 눌렀는데. 진짜 답답하다. 모르면 맨날 똑같이 당하는 거야.\n\n3\n00:00:16,000 --> 00:00:24,000\n그럼 잘 되는 곳은 어떻게 아는데? 온카스터디 가서 확인해봐. 거기 다 정리돼 있어.\n",
-          "subject": "이거 모르고 돌리면 100% 털린다 #온카스터디 #슬롯 #먹튀검증 #환수율",
-          "caption": "어제도 털렸다? 😭 환수율 확인 안 하면 맨날 똑같지.. #온카스터디 #카지노팁 #안전놀이터 #슬롯머신",
-          "comment": "환수율 개념 모르고 겜하면 진짜 호구 되는 지름길이지."
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
-    ],
-    "상태 업데이트": [
-      {
-        "json": {
-          "Status": "생성 완료",
-          "영상 URL": "http://76.13.182.180:9000/nca-toolkit/adcdbe10-ea16-4e0e-837a-9ae61334f21d_output_0.mp4",
-          "영상URL": "http://76.13.182.180:9000/nca-toolkit/adcdbe10-ea16-4e0e-837a-9ae61334f21d_output_0.mp4",
-          "SRT": "1\n00:00:00,000 --> 00:00:08,000\n야, 너 어제도 폰으로 버튼 누르다가 돈 다 날렸지? 아니, 나만 그런 거 아니잖아. 그냥 잘 안 되는 날도 있는 거지.\n\n2\n00:00:08,000 --> 00:00:16,000\n되는 날 안 되는 날이 아니라, 네가 선택한 곳의 환수율 문제야. 환수율? 그게 뭔데. 그냥 뜨는 거 눌렀는데. 진짜 답답하다. 모르면 맨날 똑같이 당하는 거야.\n\n3\n00:00:16,000 --> 00:00:24,000\n그럼 잘 되는 곳은 어떻게 아는데? 온카스터디 가서 확인해봐. 거기 다 정리돼 있어.\n",
-          "Subject": "이거 모르고 돌리면 100% 털린다 #온카스터디 #슬롯 #먹튀검증 #환수율"
-        },
-        "pairedItem": {
-          "item": 0
-        }
-      }
     ]
   },
-  "versionId": "906751e7-3b73-4b40-9a97-3f2bdd6ef5eb",
-  "activeVersionId": "906751e7-3b73-4b40-9a97-3f2bdd6ef5eb",
-  "versionCounter": 537,
+  "versionId": "3f69eb4c-e67d-44fa-80f6-3ca1a3ecd6c8",
+  "activeVersionId": "3f69eb4c-e67d-44fa-80f6-3ca1a3ecd6c8",
+  "versionCounter": 578,
   "triggerCount": 1,
   "shared": [
     {
@@ -6600,7 +5787,7 @@
             "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
             "projectId": "W6LETsSnBzw4J5Aa",
             "user": {
-              "updatedAt": "2026-02-21T15:49:33.517Z",
+              "updatedAt": "2026-02-23T16:06:42.356Z",
               "createdAt": "2026-02-07T19:04:09.331Z",
               "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
               "email": "hatihoro15@gmail.com",
@@ -6614,8 +5801,8 @@
               "settings": {
                 "userActivated": true,
                 "easyAIWorkflowOnboarded": true,
-                "firstSuccessfulWorkflowId": "jSEDYrkFcWUzJ8Et",
-                "userActivatedAt": 1771639200143,
+                "firstSuccessfulWorkflowId": "jRT8nmDr34S96I1b",
+                "userActivatedAt": 1771833600121,
                 "npsSurvey": {
                   "waitingForResponse": true,
                   "ignoredCount": 1,
@@ -6624,7 +5811,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-02-21",
+              "lastActiveAt": "2026-02-22",
               "isPending": false
             }
           }
@@ -6634,9 +5821,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-21T16:45:29.587Z",
-    "createdAt": "2026-02-21T16:45:29.587Z",
-    "versionId": "906751e7-3b73-4b40-9a97-3f2bdd6ef5eb",
+    "updatedAt": "2026-02-23T16:15:54.369Z",
+    "createdAt": "2026-02-23T16:15:54.369Z",
+    "versionId": "3f69eb4c-e67d-44fa-80f6-3ca1a3ecd6c8",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -6653,8 +5840,8 @@
         "type": "n8n-nodes-base.scheduleTrigger",
         "typeVersion": 1.3,
         "position": [
-          -3216,
-          1552
+          -3504,
+          1600
         ],
         "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
         "name": "스케줄 트리거"
@@ -6665,7 +5852,7 @@
         "name": "When clicking ‘Execute workflow’",
         "type": "n8n-nodes-base.manualTrigger",
         "position": [
-          -3168,
+          -3152,
           1328
         ],
         "typeVersion": 1
@@ -6692,7 +5879,7 @@
         "type": "@n8n/n8n-nodes-langchain.googleGemini",
         "typeVersion": 1.1,
         "position": [
-          -2800,
+          -2784,
           1328
         ],
         "id": "0f0b8cab-e649-4c60-afba-6991b2a30901",
@@ -6711,7 +5898,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2448,
+          -2432,
           1328
         ],
         "id": "debd624e-66b9-4443-8544-002d62bd2da6",
@@ -6815,7 +6002,7 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.7,
         "position": [
-          -2224,
+          -2208,
           1328
         ],
         "id": "ad97017d-7051-4a32-a9d2-9ba6d5276e01",
@@ -6834,7 +6021,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1776,
+          -1760,
           1328
         ],
         "id": "624571a3-41be-44cb-a4cd-1b5f40b89fec",
@@ -6854,7 +6041,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -1328,
+          -1312,
           1328
         ],
         "id": "img-gen-001",
@@ -6873,7 +6060,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -1104,
+          -1088,
           1328
         ],
         "id": "img-wait-001",
@@ -6890,7 +6077,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -880,
+          -864,
           1328
         ],
         "id": "img-result-001",
@@ -6909,7 +6096,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -896,
+          -880,
           2176
         ],
         "id": "98d0499e-0f4e-43d0-a80d-f65128036951",
@@ -6938,7 +6125,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -672,
+          -656,
           2176
         ],
         "id": "c9c85671-3eb2-4fa5-a158-74cf8d4613fb",
@@ -6951,7 +6138,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -448,
+          -432,
           2176
         ],
         "id": "0abbc265-f782-44cd-8a9a-6462e14753c8",
@@ -6965,7 +6152,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -224,
+          -208,
           2176
         ],
         "id": "7bf9dedf-711a-47f7-b00a-2980c09c9574",
@@ -7060,7 +6247,7 @@
         "type": "n8n-nodes-base.googleSheets",
         "typeVersion": 4.7,
         "position": [
-          0,
+          16,
           2176
         ],
         "id": "9d065d63-6fbc-4c9e-9bf2-7b06ec695e4c",
@@ -7079,7 +6266,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2000,
+          -1984,
           1328
         ],
         "id": "20787f47-c724-4ea1-bfbf-1243c574a1c7",
@@ -7092,7 +6279,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -656,
+          -640,
           1328
         ],
         "id": "nano_url_extract",
@@ -7107,7 +6294,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1552,
+          -1536,
           1328
         ]
       },
@@ -7120,7 +6307,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2448,
+          -2432,
           1616
         ]
       },
@@ -7140,7 +6327,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -2224,
+          -2208,
           1616
         ],
         "credentials": {
@@ -7160,7 +6347,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -2000,
+          -1984,
           1616
         ],
         "webhookId": "c82dfe2d-8cd1-43b5-8407-b5fb5f3b82d7"
@@ -7177,7 +6364,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -1776,
+          -1760,
           1616
         ],
         "credentials": {
@@ -7219,7 +6406,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -1376,
+          -1360,
           1616
         ]
       },
@@ -7232,7 +6419,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -1136,
+          -1120,
           1632
         ],
         "webhookId": "a13742be-e399-4a95-92ee-9b978949ef28"
@@ -7246,7 +6433,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -880,
+          -864,
           1600
         ]
       },
@@ -7259,7 +6446,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -656,
+          -640,
           1600
         ],
         "webhookId": "e836bbd9-d700-47f4-b59a-21c5959c1d30"
@@ -7273,7 +6460,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -432,
+          -416,
           1600
         ]
       },
@@ -7286,7 +6473,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2464,
+          -2448,
           1920
         ]
       },
@@ -7306,7 +6493,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -2240,
+          -2224,
           1920
         ],
         "credentials": {
@@ -7326,7 +6513,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -2016,
+          -2000,
           1920
         ],
         "webhookId": "d2407170-d76d-4dd5-9eef-9be53fde87d9"
@@ -7343,7 +6530,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -1792,
+          -1776,
           1920
         ],
         "credentials": {
@@ -7385,7 +6572,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -1392,
+          -1376,
           1920
         ]
       },
@@ -7398,7 +6585,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -1136,
+          -1120,
           1936
         ],
         "webhookId": "f5b50b19-c70e-4206-95a7-5b63f8984d76"
@@ -7412,7 +6599,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -896,
+          -880,
           1904
         ]
       },
@@ -7425,7 +6612,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -672,
+          -656,
           1904
         ],
         "webhookId": "3cd50ace-887f-4a96-a157-ce8b19e41d31"
@@ -7439,7 +6626,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -448,
+          -432,
           1904
         ]
       },
@@ -7452,7 +6639,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2464,
+          -2448,
           2192
         ]
       },
@@ -7472,7 +6659,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -2240,
+          -2224,
           2192
         ],
         "credentials": {
@@ -7492,7 +6679,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -2016,
+          -2000,
           2192
         ],
         "webhookId": "e249c3c0-0416-4e17-8865-73c8829ce2b3"
@@ -7509,7 +6696,7 @@
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.3,
         "position": [
-          -1792,
+          -1776,
           2192
         ],
         "credentials": {
@@ -7551,7 +6738,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -1360,
+          -1344,
           2192
         ]
       },
@@ -7564,7 +6751,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -1120,
+          -1104,
           2208
         ],
         "webhookId": "425f17f7-a44b-49c9-9b2b-90d6a61190fc"
@@ -7578,7 +6765,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1552,
+          -1536,
           1616
         ]
       },
@@ -7591,7 +6778,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1568,
+          -1552,
           1920
         ]
       },
@@ -7604,7 +6791,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -1568,
+          -1552,
           2192
         ]
       },
@@ -7639,7 +6826,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -432,
+          -416,
           1328
         ]
       },
@@ -7652,7 +6839,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          -176,
+          -160,
           1344
         ],
         "webhookId": "31e22254-2dba-4faa-8e40-a566c24ffc6e"
@@ -7688,7 +6875,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -192,
+          -176,
           1600
         ]
       },
@@ -7701,7 +6888,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          64,
+          80,
           1616
         ],
         "webhookId": "d958b8c2-2524-4e91-a0da-a1dd619289aa"
@@ -7737,7 +6924,7 @@
         "type": "n8n-nodes-base.if",
         "typeVersion": 2,
         "position": [
-          -208,
+          -192,
           1904
         ]
       },
@@ -7750,7 +6937,7 @@
         "type": "n8n-nodes-base.wait",
         "typeVersion": 1.1,
         "position": [
-          32,
+          48,
           1920
         ],
         "webhookId": "90d602d6-1c87-43f8-bf90-ad3ef0cf1093"
@@ -7762,11 +6949,32 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          -2992,
+          -2976,
           1328
         ],
         "id": "jm-cat-select",
         "name": "카테고리 선택"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "jRT8nmDr34S96I1b",
+            "mode": "list",
+            "cachedResultName": "온카스터디 스토리짤 v7 (할머니+Mike)"
+          },
+          "options": {
+            "waitForSubWorkflow": false
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          -3152,
+          1520
+        ],
+        "id": "exec-grandma-node",
+        "name": "할머니 워크플로우 실행"
       }
     ],
     "connections": {
@@ -7885,17 +7093,6 @@
           ]
         ]
       },
-      "When clicking ‘Execute workflow’": {
-        "main": [
-          [
-            {
-              "node": "AI 콘텐츠 생성",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
       "참조 이미지 프롬프트": {
         "main": [
           [
@@ -7911,7 +7108,7 @@
         "main": [
           [
             {
-              "node": "카테고리 선택",
+              "node": "할머니 워크플로우 실행",
               "type": "main",
               "index": 0
             }
@@ -8347,13 +7544,7 @@
       },
       "스케줄 트리거": {
         "main": [
-          [
-            {
-              "node": "카테고리 선택",
-              "type": "main",
-              "index": 0
-            }
-          ]
+          []
         ]
       },
       "카테고리 선택": {
@@ -8361,6 +7552,17 @@
           [
             {
               "node": "AI 콘텐츠 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "할머니 워크플로우 실행": {
+        "main": [
+          [
+            {
+              "node": "카테고리 선택",
               "type": "main",
               "index": 0
             }
@@ -8374,10 +7576,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-21T16:45:29.669Z",
-        "id": 501,
+        "createdAt": "2026-02-23T16:15:54.454Z",
+        "id": 508,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "906751e7-3b73-4b40-9a97-3f2bdd6ef5eb",
+        "versionId": "3f69eb4c-e67d-44fa-80f6-3ca1a3ecd6c8",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }

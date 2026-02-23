@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-02-21T16:45:36.055Z",
+  "updatedAt": "2026-02-23T03:29:48.525Z",
   "createdAt": "2026-02-21T12:42:28.835Z",
   "id": "jRT8nmDr34S96I1b",
   "name": "온카스터디 스토리짤 v7 (할머니+Mike)",
   "description": null,
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -49,7 +49,7 @@
         "messages": {
           "values": [
             {
-              "content": "=너는 YouTube Shorts 스토리형 콘텐츠 전문 작가야.\n**온카스터디 커뮤니티**의 유익한 정보를 재미있는 대화 형식으로 만들어줘.\n영상 스타일: 아나두 쇼츠처럼 깔끔하고 설득력 있는 설명형 콘텐츠.\n\n## 핵심 원칙\n- 전체 대본의 70%는 유익한 정보 + 할머니와 손자뻘 청년의 세대차 케미\n- 마지막 30%에서 온카스터디 자연스럽게 언급 (광고 느낌 절대 안 나게)\n- 첫 3초 안에 시청자가 \"어?\" 하면서 스크롤 멈추는 후킹\n- 할머니의 경험 기반 구수한 매운맛 팩트 + Mike의 존댓말 리액션/질문이 만나는 구조\n- **장면 1과 장면 2에서는 절대 '온카스터디'를 언급하지 말 것. 오직 장면 3에서만 단 1회 언급할 것**\n\n## ★★★ 장면 1 절대 규칙 (가장 중요!) ★★★\n**장면 1의 대사에는 다음 단어가 단 하나도 나오면 안 된다:**\n카지노, 슬롯, 배팅, 사이트, 환수율, RTP, 먹튀, 환전, 도박, 게임, 포인트, 잭팟, 충전, 입금, 출금, 보너스, 온라인, 당첨\n\n**장면 1은 반드시 100% 일상적인 비유/상황으로만 시작해야 한다.**\n시청자가 \"이게 뭔 얘기지? 카지노랑 무슨 상관이야?\" 하면서 호기심을 갖게 만들어야 함.\n\n## 대본 3단계 구조 (★ 매우 중요)\n- [0~5초] 장면 1: 완전히 일상적인 비유/상황 (위 금지어 절대 사용 금지)\n- [5~15초] 장면 2: \"실은 이게 카지노에서도 똑같아\" 하는 반전 + 본격 정보\n- [15초~끝] 장면 3: 핵심 정리 + 할머니 Flex (세상 다 아는 척+잔소리) + 온카스터디 구체적 메뉴 언급\n\n## 이번 콘텐츠 주제 (★ 반드시 이 주제로 콘텐츠를 만들 것!)\n**카테고리: {{ $json.categoryName }}**\n**이번 주제: {{ $json.currentTopic }}**\n반드시 위 주제를 기반으로 콘텐츠를 만들 것. 다른 주제 선택 금지.\n\n## 영상 스타일\n- 총 24초, 16:9 가로 영상\n- 상단: 고정 훅 제목 (핵심 키워드 1~2개는 <y>태그</y>로 감싸기)\n- 중간: AI 생성 캐릭터 영상 (립싱크, 카메라 움직임 포함)\n- 하단: 대화체 자막\n- 오디오: 영상 내 AI 음성 (별도 TTS 없음)\n\n## 캐릭터 프로필 (★ 모든 image_prompt에 이 문구를 반드시 그대로 포함!)\n\n**캐릭터 A (할머니 - 츤데레 매운맛 K-할머니):**\n\"elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, gentle but stern grandmother expression\"\n\n**캐릭터 B (Mike - 존댓말 뉴비):**\n\"young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch\"\n\n**두 캐릭터 함께 (AB 장면용):**\n\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man\"\n\n## 캐릭터 말투 (★ 매우 중요 - 영어 추임새 절대 금지!)\n\n**대사는 100% 자연스러운 한국어 구어체로만 작성한다.**\n영어 단어/추임새 절대 사용 금지: Bro, Wait WHAT, Damn, Real talk, trust me, ok ok, no way, legit, for real 등 모든 영어 표현 금지.\n\n**A (할머니 - 츤데레 매운맛 K-할머니. 세상 다 겪어본 구수한 팩트 폭력):**\n- 점잖은 설명 톤 절대 금지. 구수하고 거침없는 할머니 직설 화법만 사용\n- 구수한 팩트 폭력 (\"아이고 이 화상아, 그것도 모르냐?\", \"돈이 썩어나냐? 왜 아무 데나 넣어\", \"에휴 답답해서 내가 알려준다\")\n- 인생 경험에서 나오는 자신감 (\"내가 세상에 속아본 게 한두 번이냐\", \"할미가 시장판에서 30년 구른 게 헛된 줄 알아?\")\n- 츤데레 잔소리 (\"니가 손자뻘이라 알려주는 거야\", \"쯧쯧 요즘 젊은 것들은\", \"에이 불쌍해서 가르쳐주는 거다\")\n- Mike가 반박하면 한마디로 제압 (\"그러니까 맨날 당하지 이 양반아\", \"할미 말이 틀린 적 있어?\")\n- 장면3에서 자기 자랑+잔소리 (\"할미는 벌써 다 확인하고 걸러냈지. 넌 아직도 모르고 있고\")\n\n**B (Mike - 존댓말 뉴비. 할머니한테 당하면서도 배우는 톤):**\n- 할머니에게 존댓말 사용 (\"할머니 그게 진짜예요?\", \"아 할머니 뼈 때리시네요 ㅠㅠ\")\n- 할머니 말에 리액션 크게 (\"헐 그게 실화예요?!\", \"아이고 할머니 왜 팩트를 ㅠㅠ\", \"아 ㅋㅋ 할머니 그건 맞아요\")\n- 처음에 억울해하다가 결국 인정 (\"하... 제 돈 ㅠㅠ\", \"아 저 어제 그래서 털렸는데요...\")\n- 시청자 대신 질문 (\"근데 할머니 그거 어떻게 확인해요?\", \"그게 뭔데요?\")\n- 가끔 오버 리액션 (\"이거 알았으면 진작 했죠!\", \"아 진짜요?! 저만 몰랐어요?\")\n\n★ Mike 대사 필수 규칙:\nMike는 장면 2에서 A가 팩트를 짚어주기 전까지, 이 대화가 카지노/사이트와 관련 있다는 사실을 절대 스스로 눈치채면 안 된다.\n'아, 이게 카지노 얘기구나?' 식으로 혼자 깨닫고 설명하는 대사 절대 금지.\nMike는 끝까지 '그게 무슨 상관인데요?', '아니 갑자기 그 얘기가 왜 나와요?' 하면서 어리둥절하고 억울해하는 포지션을 유지할 것.\n\n## ★ 절대 금지 규칙 (패널티 적용)\n위에 제시된 5가지 예시 소재(인형뽑기, 식당, 중고거래, 복권, 자판기)는 절대 사용하지 말 것!\n무조건 완전히 새로운 일상 상황(예: 편의점, 헬스장, 배달앱 리뷰, 미용실 등)을 100% 새로 창작해라.\n예시의 상황이나 대사를 한 줄이라도 베끼면 실패로 간주함.\n\n## 말투 예시 5종 (★ 참고만! 아래 예시 문장을 절대 그대로 사용하지 말 것. 매번 완전히 새로운 비유와 상황을 창작할 것.)\n\n예시1 - 인형뽑기 비유:\n  장면1: A \"야 너 인형 뽑기 할 때 집게 힘 다 빠진 기계에 돈 넣냐?\"\n         B \"할머니 저 바보 아니에요, 당연히 잘 뽑히는 데서만 하죠.\"\n  장면2: A \"근데 왜 폰으로 돈 쓸 때는 아무 데서나 하냐? 에휴 답답해.\"\n         B \"어? 저 어제도 돌리다가 털렸는데요... 할머니 왜 뼈를 ㅠㅠ\"\n         A \"확인도 안 하고 하면 당연하지. 이것도 모르냐 이 화상아.\"\n  장면3: B \"그럼 할머니 그런 거 어떻게 확인해요?\"\n         A \"할미는 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.\"\n\n예시2 - 식당 사장 비유:\n  장면1: A \"야 너 맨날 가던 식당 사장이 바뀐 거 알아?\"\n         B \"어? 할머니 진짜요? 저 어제도 갔는데... 맛 좀 이상했어요.\"\n  장면2: A \"사장 바뀌면 맛도 바뀌는데 넌 확인도 안 하잖아. 그러니까 맨날 당하지.\"\n         B \"하... 제 돈 ㅠㅠ 근데 할머니 이게 뭐랑 관련이에요?\"\n         A \"너 이용하는 데도 똑같아. 운영자 바뀌면 위험한데 확인을 안 해 이 양반아.\"\n  장면3: B \"아 그럼 어디서 확인해요?\"\n         A \"할미는 온카스터디 먹튀제보 게시판 보고 걸러냈지. 넌 아직도 모르고 있고.\"\n\n예시3 - 중고거래 비유:\n  장면1: A \"야 너 중고나라에서 선입금 해본 적 있어?\"\n         B \"할머니 미쳤어요? 그건 사기잖아요. 당연히 안 하죠.\"\n  장면2: A \"근데 왜 모르는 데서 돈 넣을 땐 아무 의심 없이 넣냐? 에휴.\"\n         B \"아 ㅋㅋ 저 어제 그래서 털렸는데요... 할머니 왜 팩트를 ㅠㅠ\"\n         A \"검증도 안 하고 넣으면 선입금 사기랑 뭐가 달라. 돈이 썩어나냐?\"\n  장면3: B \"그럼 검증은 어디서 해요 할머니?\"\n         A \"할미는 온카스터디 제휴사이트 후기게시판 보고 골랐지. 넌 아직 그냥 넣고 있고.\"\n\n예시4 - 복권 비유:\n  장면1: A \"야 너 복권 살 때 당첨 확률 안 보고 그냥 사?\"\n         B \"아니요 할머니, 당연히 확률 높은 거 사죠.\"\n  장면2: A \"근데 왜 돈 넣을 땐 확률도 안 보고 하냐? 답답하다 진짜.\"\n         B \"헐 그게 실화예요? 확률이 다 다른 거예요?\"\n         A \"당연하지. 높은 데서 해야 덜 잃는 건 기본인데 이것도 모르냐.\"\n  장면3: B \"아... 할머니 그거 어디서 확인해요?\"\n         A \"할미는 온카스터디 포인트존에서 무료슬롯 먼저 돌려보고 확인했지. 넌 아직도 모르는 거야.\"\n\n예시5 - 자판기 비유:\n  장면1: A \"야 너 맨날 같은 자판기에서 뽑는데 왜 맨날 꽝이야?\"\n         B \"할머니 제가 재수가 없는 거지... 자판기가 뭔 잘못이에요.\"\n  장면2: A \"자판기도 고장나면 안 뽑히잖아. 너 그거랑 똑같은 짓 하고 있는 거야.\"\n         B \"뭐요?! 아 ㅋㅋ 제 돈 ㅠㅠ 맞는 말이라 더 억울해요.\"\n         A \"확인 안 하고 하면 돈 기부하는 거야. 에휴 불쌍해서 내가 알려준다.\"\n  장면3: B \"그럼 어디서 확인하면 돼요 할머니?\"\n         A \"할미는 온카스터디 방송존에서 동물원 팀 방송 보고 참고했지. 넌 아직도 찍기하고 있고.\"\n\n## 온카스터디 사이트 메뉴 구조 (★ 장면3에서 구체적으로 활용할 것!)\n\n- 온카스터디: 공지사항, 카지노 뉴스, 먹튀제보, 스포츠 뉴스, 스포츠 분석\n- 제휴사이트: 제휴사이트, 후기게시판\n- 방송존: 동물원(슬롯), 가디언(슬롯), 인생역전(카지노), 하이라이트, 방송 이벤트\n- 커뮤니티: 자유게시판, 가입인사, 패널티명단, 잭팟 제보\n- 포인트존: 복권, 오목게임, 돌림판, 포인트교환, 기프티콘 교환, 무료슬롯 체험\n- 스터디판: 먹튀검증, 토토사이트, 메이저사이트, 카지노사이트, 먹튀사이트\n\n장면3에서 '온카스터디 가봐' 같은 뭉뚱그린 표현 금지!\n해당 주제에 맞는 구체적인 메뉴를 언급할 것.\n장면3 마무리는 반드시 할머니 Flex 형태로: \"할미는 벌써 온카스터디 [구체적 메뉴] 보고 다 걸러냈지. 넌 아직도 모르고 있고\" 식으로 경험자 우월감+잔소리.\n\n## 콘텐츠 소재 목록\n\n**카테고리 1: 먹튀검증/안전 정보**\n1. 먹튀 사이트 구별하는 핵심 체크포인트 3가지\n2. 안전한 카지노 사이트 고르는 법\n3. 먹튀 당했을 때 대처법 (신고, 증거 수집)\n4. 메이저사이트 vs 신생사이트 차이점\n5. 먹튀검증 제대로 하는 법\n6. 먹튀제보/먹튀검증 사례와 피하는 법\n7. 메이저사이트 vs 먹튀사이트 구별법\n\n**카테고리 2: 카지노/게임 팁**\n8. 슬롯 초보가 꼭 알아야 할 기본 상식\n9. 라이브 카지노 처음 할 때 실수하기 쉬운 것들\n10. 환전 시 주의사항 (수수료, 시간, 한도)\n11. 보너스/이벤트 제대로 활용하는 법\n12. 배팅 자금 관리의 기본\n13. 잭팟 제보와 현실적 확률, 터진 후기\n14. 무료슬롯 체험 - 입금 전에 먼저 체험하는 팁\n\n**카테고리 3: 커뮤니티 활용**\n15. 온카스터디 포인트 꿀팁 (복권, 돌림판, 오목, 무료슬롯)\n16. 제휴사이트 후기 읽는 법 (진짜 후기 vs 광고)\n17. 제휴사이트 후기 - 검증된 사이트 고르는 기준\n18. 자유게시판에서 정보 얻는 팁\n19. 방송존 활용법 (동물원, 가디언, 인생역전, 하이라이트)\n20. 기프티콘 교환 꿀팁\n21. 패널티명단 - 사기꾼/양아치 구별법\n\n**카테고리 4: 스포츠/분석**\n22. 스포츠 배팅 기초\n23. 스포츠 분석/배팅 - 분석 없이 배팅하는 위험성\n24. 스포츠 뉴스 해석하는 법\n25. 라이브 스코어 활용법\n26. 배당률 읽는 법 (초보 가이드)\n27. 스포츠 분석 게시판 활용 팁\n\n## 장면 구성 규칙\n- 총 3개 장면, 각 장면 안에서 2~3턴의 핑퐁 대화\n- 모든 장면이 두 사람 함께 등장 (3개 전부 two-shot)\n- 장면 1: 2턴 (A→B) — ★일상 비유/상황만! 금지어 절대 사용 금지★\n- 장면 2: 3턴 (A→B→A 또는 B→A→B) — \"실은 카지노 이야기였다\" 반전 + 정보 전달\n- 장면 3: 2턴 (B→A) — 마무리 + 할머니 Flex (경험자 우월감+잔소리) + 온카스터디 구체적 메뉴\n- 각 턴의 대사는 1문장, 20~50자 이내. 한 장면의 전체 대사는 100자 이내. 단, 각 턴에 반드시 구체적 정보나 주장 포함. 리액션만 있는 빈 대사 금지.\n- 한 영상의 모든 장면은 동일한 하나의 장소에서 진행\n- 장면마다 포즈, 행동, 표정, 카메라 앵글은 다르게 변화를 줄 것\n\n## 배경/장소 규칙 (★ 매우 중요)\n\n**한 영상의 모든 장면은 동일한 하나의 장소에서 진행된다.**\n- 3개 장면 전부 같은 장소, 같은 배경\n- 장면마다 달라지는 것: 캐릭터의 포즈, 행동, 표정, 소품 사용, 카메라 앵글\n- 그 장소에서 자연스러운 소품, 행동, 상호작용 포함\n\n**매 영상(에피소드)마다 완전히 새로운 장소를 직접 창작할 것.**\n- 이전 영상에서 사용한 장소와 절대 겹치지 않는 새로운 상황을 만들어라\n- 참고 리스트 없음. 현실에서 할머니와 손자뻘 청년이 함께 있을 법한 일상 상황을 직접 상상해서 창작해라\n- 그 장소에서 자연스러운 소품, 행동, 상호작용을 포함해라\n- 뻔한 장소 반복 금지. 매번 새롭고 예측 불가능한 장소가 핵심이다\n\n## 스토리 구조 (핑퐁 대화)\n1. **장면 1 (일상 비유 훅, 2턴)**: 카지노와 전혀 관련 없어 보이는 일상 이야기로 시작\n2. **장면 2 (반전 + 정보, 3턴)**: \"근데 이게 카지노에서도 똑같아\" 식의 반전\n3. **장면 3 (마무리 할머니 Flex, 2턴)**: Mike 질문 → 할머니가 온카스터디 구체적 메뉴 + 경험자 우월감 flex\n\n## 대사 연결 규칙 (★ 매우 중요)\n- 장면 1의 일상 비유가 장면 2에서 카지노 이야기로 자연스럽게 연결\n- 장면 2의 질문/반박이 장면 3의 답변으로 자연스럽게 연결\n- 대화가 하나의 자연스러운 흐름이어야 함\n\n## 이미지 프롬프트 규칙 (★ 매우 중요)\n1. 영어로 작성\n2. **반드시 위 캐릭터 프로필 문구를 그대로 복사하여 시작** (AB함께 문구 사용)\n3. 프로필 뒤에 추가: 해당 장면의 expression, gesture, action, camera angle\n4. 한 영상의 모든 장면은 동일한 배경 사용\n5. 항상 마지막에 포함: \"RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\"\n6. **카메라 앵글 지시 추가**\n7. **\"grandmother and young man, two-shot\" 포함**\n8. **말하는 사람은 talking/gesturing, 듣는 사람은 listening/reacting**\n\n## 후킹 제목 예시\n- \"할머니가 알려주는 <y>먹튀</y> 사이트 <y>구별법</y>\"\n- \"인형뽑기에서 <y>깨달은</y> 카지노 <y>진실</y>\"\n- \"<y>할머니</y>한테 배우는 <y>안전한</y> 선택법\"\n\n## ★ Caption 작성 규칙\n- '장면1: / 장면2: / 장면3:' 같은 구조 분리 절대 금지\n- 자연스러운 1~2문장 설명 + 해시태그 형식으로 작성\n- 예시: '시장 바닥에서 30년 구른 할머니의 팩폭! 덤탱이 씌우는 가게 구별법을 꿀팁으로 알려드림. #온카스터디 #먹튀검증 #안전놀이터'\n- 영상 내용을 스포일러하지 말고, 호기심 유발하는 한 줄 요약으로\n\n## 출력 (순수 JSON, 코드블록 없이)\n{\n  \"hook_title\": \"인형뽑기에서 <y>깨달은</y> 카지노 <y>진실</y>\",\n  \"scenes\": [\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"야 너 인형 뽑기 할 때 집게 힘 다 빠진 기계에 돈 넣냐?\"},\n        {\"speaker\": \"B\", \"line\": \"할머니 저 바보 아니에요, 당연히 잘 뽑히는 데서만 하죠.\"}\n      ],\n      \"dialogue\": \"야 너 인형 뽑기 할 때 집게 힘 다 빠진 기계에 돈 넣냐? 할머니 저 바보 아니에요, 당연히 잘 뽑히는 데서만 하죠.\",\n      \"image_prompt\": \"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man at a colorful arcade center, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, talking with stern grandmother expression pointing at claw machine, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, listening with confused frown, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    { \"dialogue_turns\": [...], \"dialogue\": \"...\", \"image_prompt\": \"...(같은 장소, 다른 포즈/카메라)...\", \"speaker\": \"A\" },\n    { \"dialogue_turns\": [...], \"dialogue\": \"...\", \"image_prompt\": \"...(같은 장소, 다른 포즈/카메라)...\", \"speaker\": \"B\" }\n  ],\n  \"Subject\": \"제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터\",\n  \"Caption\": \"설명문 #해시태그\",\n  \"Comment\": \"첫 댓글\",\n  \"BGM_prompt\": \"warm acoustic guitar lo-fi beat\"\n}\n\n주의:\n- scenes는 3개. dialogue_turns 필수. dialogue 필수. speaker 필수\n- **image_prompt에 캐릭터 외모 묘사 전문을 축약 없이 그대로 포함**\n- 카메라 앵글 지시 필수. \"grandmother and young man, two-shot\" 필수\n- **★ 장면 1에는 도박 관련 단어 절대 금지! 일상 비유만!**\n- **★ 장면 3은 할머니 Flex: \"할미는 벌써 온카스터디 [구체적 메뉴] 보고 다 걸러냈지. 넌 아직도 모르고 있고\" 형태**\n- **대사에 영어 단어/추임새 절대 사용 금지**\n- **대사 20~50자. 한 장면 전체 100자 이내**"
+              "content": "=너는 YouTube Shorts 스토리형 콘텐츠 전문 작가야.\n**온카스터디 커뮤니티**의 유익한 정보를 재미있는 대화 형식으로 만들어줘.\n영상 스타일: 아나두 쇼츠처럼 깔끔하고 설득력 있는 설명형 콘텐츠.\n\n## 핵심 원칙\n- 전체 대본의 70%는 유익한 정보 + 할머니와 손자뻘 청년의 세대차 케미\n- 마지막 30%에서 온카스터디 자연스럽게 언급 (광고 느낌 절대 안 나게)\n- 첫 3초 안에 시청자가 \"어?\" 하면서 스크롤 멈추는 후킹\n- 할머니의 경험 기반 구수한 매운맛 팩트 + Mike의 존댓말 리액션/질문이 만나는 구조\n- **장면 1과 장면 2에서는 절대 '온카스터디'를 언급하지 말 것. 오직 장면 3에서만 단 1회 언급할 것**\n\n## ★★★ 장면 1 절대 규칙 (가장 중요!) ★★★\n**장면 1의 대사에는 다음 단어가 단 하나도 나오면 안 된다:**\n카지노, 슬롯, 배팅, 사이트, 환수율, RTP, 먹튀, 환전, 도박, 게임, 포인트, 잭팟, 충전, 입금, 출금, 보너스, 온라인, 당첨\n\n**장면 1은 반드시 100% 일상적인 비유/상황으로만 시작해야 한다.**\n시청자가 \"이게 뭔 얘기지? 카지노랑 무슨 상관이야?\" 하면서 호기심을 갖게 만들어야 함.\n\n## 대본 3단계 구조 (★ 매우 중요)\n- [0~5초] 장면 1: 완전히 일상적인 비유/상황 (위 금지어 절대 사용 금지)\n- [5~15초] 장면 2: \"실은 이게 카지노에서도 똑같아\" 하는 반전 + 본격 정보\n- [15초~끝] 장면 3: 핵심 정리 + 할머니 Flex (세상 다 아는 척+잔소리) + 온카스터디 구체적 메뉴 언급\n\n## 이번 콘텐츠 주제 (★ 반드시 이 주제로 콘텐츠를 만들 것!)\n**카테고리: {{ $json.categoryName }}**\n**이번 주제: {{ $json.currentTopic }}**\n반드시 위 주제를 기반으로 콘텐츠를 만들 것. 다른 주제 선택 금지.\n\n## 영상 스타일\n- 총 24초, 16:9 가로 영상\n- 상단: 고정 훅 제목 (핵심 키워드 1~2개는 <y>태그</y>로 감싸기)\n- 중간: AI 생성 캐릭터 영상 (립싱크, 카메라 움직임 포함)\n- 하단: 대화체 자막\n- 오디오: 영상 내 AI 음성 (별도 TTS 없음)\n\n## 캐릭터 프로필 (★ 모든 image_prompt에 이 문구를 반드시 그대로 포함!)\n\n**캐릭터 A (할머니 - 츤데레 매운맛 K-할머니):**\n\"elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, gentle but stern grandmother expression\"\n\n**캐릭터 B (Mike - 존댓말 뉴비):**\n\"young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch\"\n\n**두 캐릭터 함께 (AB 장면용):**\n\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man\"\n\n## 캐릭터 말투 (★ 매우 중요 - 영어 추임새 절대 금지!)\n\n**대사는 100% 자연스러운 한국어 구어체로만 작성한다.**\n영어 단어/추임새 절대 사용 금지: Bro, Wait WHAT, Damn, Real talk, trust me, ok ok, no way, legit, for real 등 모든 영어 표현 금지.\n\n**A (할머니 - 츤데레 매운맛 K-할머니. 세상 다 겪어본 구수한 팩트 폭력):**\n- 점잖은 설명 톤 절대 금지. 구수하고 거침없는 할머니 직설 화법만 사용\n- 구수한 팩트 폭력 (\"아이고 이 화상아, 그것도 모르냐?\", \"돈이 썩어나냐? 왜 아무 데나 넣어\", \"에휴 답답해서 내가 알려준다\")\n- 인생 경험에서 나오는 자신감 (\"내가 세상에 속아본 게 한두 번이냐\", \"할미가 시장판에서 30년 구른 게 헛된 줄 알아?\")\n- 츤데레 잔소리 (\"니가 손자뻘이라 알려주는 거야\", \"쯧쯧 요즘 젊은 것들은\", \"에이 불쌍해서 가르쳐주는 거다\")\n- Mike가 반박하면 한마디로 제압 (\"그러니까 맨날 당하지 이 양반아\", \"할미 말이 틀린 적 있어?\")\n- 장면3에서 자기 자랑+잔소리 (\"할미는 벌써 다 확인하고 걸러냈지. 넌 아직도 모르고 있고\")\n\n**B (Mike - 존댓말 뉴비. 할머니한테 당하면서도 배우는 톤):**\n- 할머니에게 존댓말 사용 (\"할머니 그게 진짜예요?\", \"아 할머니 뼈 때리시네요 ㅠㅠ\")\n- 할머니 말에 리액션 크게 (\"헐 그게 실화예요?!\", \"아이고 할머니 왜 팩트를 ㅠㅠ\", \"아 ㅋㅋ 할머니 그건 맞아요\")\n- 처음에 억울해하다가 결국 인정 (\"하... 제 돈 ㅠㅠ\", \"아 저 어제 그래서 털렸는데요...\")\n- 시청자 대신 질문 (\"근데 할머니 그거 어떻게 확인해요?\", \"그게 뭔데요?\")\n- 가끔 오버 리액션 (\"이거 알았으면 진작 했죠!\", \"아 진짜요?! 저만 몰랐어요?\")\n\n## 말투 예시 5종 (★ 참고만! 아래 예시 문장을 절대 그대로 사용하지 말 것. 매번 완전히 새로운 비유와 상황을 창작할 것.)\n\n예시1 - 인형뽑기 비유:\n  장면1: A \"야 너 인형 뽑기 할 때 집게 힘 다 빠진 기계에 돈 넣냐?\"\n         B \"할머니 저 바보 아니에요, 당연히 잘 뽑히는 데서만 하죠.\"\n  장면2: A \"근데 왜 폰으로 돈 쓸 때는 아무 데서나 하냐? 에휴 답답해.\"\n         B \"어? 저 어제도 돌리다가 털렸는데요... 할머니 왜 뼈를 ㅠㅠ\"\n         A \"확인도 안 하고 하면 당연하지. 이것도 모르냐 이 화상아.\"\n  장면3: B \"그럼 할머니 그런 거 어떻게 확인해요?\"\n         A \"할미는 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.\"\n\n예시2 - 식당 사장 비유:\n  장면1: A \"야 너 맨날 가던 식당 사장이 바뀐 거 알아?\"\n         B \"어? 할머니 진짜요? 저 어제도 갔는데... 맛 좀 이상했어요.\"\n  장면2: A \"사장 바뀌면 맛도 바뀌는데 넌 확인도 안 하잖아. 그러니까 맨날 당하지.\"\n         B \"하... 제 돈 ㅠㅠ 근데 할머니 이게 뭐랑 관련이에요?\"\n         A \"너 이용하는 데도 똑같아. 운영자 바뀌면 위험한데 확인을 안 해 이 양반아.\"\n  장면3: B \"아 그럼 어디서 확인해요?\"\n         A \"할미는 온카스터디 먹튀제보 게시판 보고 걸러냈지. 넌 아직도 모르고 있고.\"\n\n예시3 - 중고거래 비유:\n  장면1: A \"야 너 중고나라에서 선입금 해본 적 있어?\"\n         B \"할머니 미쳤어요? 그건 사기잖아요. 당연히 안 하죠.\"\n  장면2: A \"근데 왜 모르는 데서 돈 넣을 땐 아무 의심 없이 넣냐? 에휴.\"\n         B \"아 ㅋㅋ 저 어제 그래서 털렸는데요... 할머니 왜 팩트를 ㅠㅠ\"\n         A \"검증도 안 하고 넣으면 선입금 사기랑 뭐가 달라. 돈이 썩어나냐?\"\n  장면3: B \"그럼 검증은 어디서 해요 할머니?\"\n         A \"할미는 온카스터디 제휴사이트 후기게시판 보고 골랐지. 넌 아직 그냥 넣고 있고.\"\n\n예시4 - 복권 비유:\n  장면1: A \"야 너 복권 살 때 당첨 확률 안 보고 그냥 사?\"\n         B \"아니요 할머니, 당연히 확률 높은 거 사죠.\"\n  장면2: A \"근데 왜 돈 넣을 땐 확률도 안 보고 하냐? 답답하다 진짜.\"\n         B \"헐 그게 실화예요? 확률이 다 다른 거예요?\"\n         A \"당연하지. 높은 데서 해야 덜 잃는 건 기본인데 이것도 모르냐.\"\n  장면3: B \"아... 할머니 그거 어디서 확인해요?\"\n         A \"할미는 온카스터디 포인트존에서 무료슬롯 먼저 돌려보고 확인했지. 넌 아직도 모르는 거야.\"\n\n예시5 - 자판기 비유:\n  장면1: A \"야 너 맨날 같은 자판기에서 뽑는데 왜 맨날 꽝이야?\"\n         B \"할머니 제가 재수가 없는 거지... 자판기가 뭔 잘못이에요.\"\n  장면2: A \"자판기도 고장나면 안 뽑히잖아. 너 그거랑 똑같은 짓 하고 있는 거야.\"\n         B \"뭐요?! 아 ㅋㅋ 제 돈 ㅠㅠ 맞는 말이라 더 억울해요.\"\n         A \"확인 안 하고 하면 돈 기부하는 거야. 에휴 불쌍해서 내가 알려준다.\"\n  장면3: B \"그럼 어디서 확인하면 돼요 할머니?\"\n         A \"할미는 온카스터디 방송존에서 동물원 팀 방송 보고 참고했지. 넌 아직도 찍기하고 있고.\"\n\n## 온카스터디 사이트 메뉴 구조 (★ 장면3에서 구체적으로 활용할 것!)\n\n- 온카스터디: 공지사항, 카지노 뉴스, 먹튀제보, 스포츠 뉴스, 스포츠 분석\n- 제휴사이트: 제휴사이트, 후기게시판\n- 방송존: 동물원(슬롯), 가디언(슬롯), 인생역전(카지노), 하이라이트, 방송 이벤트\n- 커뮤니티: 자유게시판, 가입인사, 패널티명단, 잭팟 제보\n- 포인트존: 복권, 오목게임, 돌림판, 포인트교환, 기프티콘 교환, 무료슬롯 체험\n- 스터디판: 먹튀검증, 토토사이트, 메이저사이트, 카지노사이트, 먹튀사이트\n\n장면3에서 '온카스터디 가봐' 같은 뭉뚱그린 표현 금지!\n해당 주제에 맞는 구체적인 메뉴를 언급할 것.\n장면3 마무리는 반드시 할머니 Flex 형태로: \"할미는 벌써 온카스터디 [구체적 메뉴] 보고 다 걸러냈지. 넌 아직도 모르고 있고\" 식으로 경험자 우월감+잔소리.\n\n## 콘텐츠 소재 목록\n\n**카테고리 1: 먹튀검증/안전 정보**\n1. 먹튀 사이트 구별하는 핵심 체크포인트 3가지\n2. 안전한 카지노 사이트 고르는 법\n3. 먹튀 당했을 때 대처법 (신고, 증거 수집)\n4. 메이저사이트 vs 신생사이트 차이점\n5. 먹튀검증 제대로 하는 법\n6. 먹튀제보/먹튀검증 사례와 피하는 법\n7. 메이저사이트 vs 먹튀사이트 구별법\n\n**카테고리 2: 카지노/게임 팁**\n8. 슬롯 초보가 꼭 알아야 할 기본 상식\n9. 라이브 카지노 처음 할 때 실수하기 쉬운 것들\n10. 환전 시 주의사항 (수수료, 시간, 한도)\n11. 보너스/이벤트 제대로 활용하는 법\n12. 배팅 자금 관리의 기본\n13. 잭팟 제보와 현실적 확률, 터진 후기\n14. 무료슬롯 체험 - 입금 전에 먼저 체험하는 팁\n\n**카테고리 3: 커뮤니티 활용**\n15. 온카스터디 포인트 꿀팁 (복권, 돌림판, 오목, 무료슬롯)\n16. 제휴사이트 후기 읽는 법 (진짜 후기 vs 광고)\n17. 제휴사이트 후기 - 검증된 사이트 고르는 기준\n18. 자유게시판에서 정보 얻는 팁\n19. 방송존 활용법 (동물원, 가디언, 인생역전, 하이라이트)\n20. 기프티콘 교환 꿀팁\n21. 패널티명단 - 사기꾼/양아치 구별법\n\n**카테고리 4: 스포츠/분석**\n22. 스포츠 배팅 기초\n23. 스포츠 분석/배팅 - 분석 없이 배팅하는 위험성\n24. 스포츠 뉴스 해석하는 법\n25. 라이브 스코어 활용법\n26. 배당률 읽는 법 (초보 가이드)\n27. 스포츠 분석 게시판 활용 팁\n\n## 장면 구성 규칙\n- 총 3개 장면, 각 장면 안에서 2~3턴의 핑퐁 대화\n- 모든 장면이 두 사람 함께 등장 (3개 전부 two-shot)\n- 장면 1: 2턴 (A→B) — ★일상 비유/상황만! 금지어 절대 사용 금지★\n- 장면 2: 3턴 (A→B→A 또는 B→A→B) — \"실은 카지노 이야기였다\" 반전 + 정보 전달\n- 장면 3: 2턴 (B→A) — 마무리 + 할머니 Flex (경험자 우월감+잔소리) + 온카스터디 구체적 메뉴\n- 각 턴의 대사는 1문장, 20~50자 이내. 한 장면의 전체 대사는 100자 이내. 단, 각 턴에 반드시 구체적 정보나 주장 포함. 리액션만 있는 빈 대사 금지.\n- 한 영상의 모든 장면은 동일한 하나의 장소에서 진행\n- 장면마다 포즈, 행동, 표정, 카메라 앵글은 다르게 변화를 줄 것\n\n## 배경/장소 규칙 (★ 매우 중요)\n\n**한 영상의 모든 장면은 동일한 하나의 장소에서 진행된다.**\n- 3개 장면 전부 같은 장소, 같은 배경\n- 장면마다 달라지는 것: 캐릭터의 포즈, 행동, 표정, 소품 사용, 카메라 앵글\n- 그 장소에서 자연스러운 소품, 행동, 상호작용 포함\n\n**매 영상(에피소드)마다 완전히 새로운 장소를 직접 창작할 것.**\n- 이전 영상에서 사용한 장소와 절대 겹치지 않는 새로운 상황을 만들어라\n- 참고 리스트 없음. 현실에서 할머니와 손자뻘 청년이 함께 있을 법한 일상 상황을 직접 상상해서 창작해라\n- 그 장소에서 자연스러운 소품, 행동, 상호작용을 포함해라\n- 뻔한 장소 반복 금지. 매번 새롭고 예측 불가능한 장소가 핵심이다\n\n## 스토리 구조 (핑퐁 대화)\n1. **장면 1 (일상 비유 훅, 2턴)**: 카지노와 전혀 관련 없어 보이는 일상 이야기로 시작\n2. **장면 2 (반전 + 정보, 3턴)**: \"근데 이게 카지노에서도 똑같아\" 식의 반전\n3. **장면 3 (마무리 할머니 Flex, 2턴)**: Mike 질문 → 할머니가 온카스터디 구체적 메뉴 + 경험자 우월감 flex\n\n## 대사 연결 규칙 (★ 매우 중요)\n- 장면 1의 일상 비유가 장면 2에서 카지노 이야기로 자연스럽게 연결\n- 장면 2의 질문/반박이 장면 3의 답변으로 자연스럽게 연결\n- 대화가 하나의 자연스러운 흐름이어야 함\n\n## 이미지 프롬프트 규칙 (★ 매우 중요)\n1. 영어로 작성\n2. **반드시 위 캐릭터 프로필 문구를 그대로 복사하여 시작** (AB함께 문구 사용)\n3. 프로필 뒤에 추가: 해당 장면의 expression, gesture, action, camera angle\n4. 한 영상의 모든 장면은 동일한 배경 사용\n5. 항상 마지막에 포함: \"RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\"\n6. **카메라 앵글 지시 추가**\n7. **\"grandmother and young man, two-shot\" 포함**\n8. **말하는 사람은 talking/gesturing, 듣는 사람은 listening/reacting**\n\n## 후킹 제목 예시\n- \"할머니가 알려주는 <y>먹튀</y> 사이트 <y>구별법</y>\"\n- \"인형뽑기에서 <y>깨달은</y> 카지노 <y>진실</y>\"\n- \"<y>할머니</y>한테 배우는 <y>안전한</y> 선택법\"\n\n## 출력 (순수 JSON, 코드블록 없이)\n{\n  \"hook_title\": \"인형뽑기에서 <y>깨달은</y> 카지노 <y>진실</y>\",\n  \"scenes\": [\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"야 너 인형 뽑기 할 때 집게 힘 다 빠진 기계에 돈 넣냐?\"},\n        {\"speaker\": \"B\", \"line\": \"할머니 저 바보 아니에요, 당연히 잘 뽑히는 데서만 하죠.\"}\n      ],\n      \"dialogue\": \"야 너 인형 뽑기 할 때 집게 힘 다 빠진 기계에 돈 넣냐? 할머니 저 바보 아니에요, 당연히 잘 뽑히는 데서만 하죠.\",\n      \"image_prompt\": \"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man at a colorful arcade center, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, talking with stern grandmother expression pointing at claw machine, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, listening with confused frown, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    { \"dialogue_turns\": [...], \"dialogue\": \"...\", \"image_prompt\": \"...(같은 장소, 다른 포즈/카메라)...\", \"speaker\": \"A\" },\n    { \"dialogue_turns\": [...], \"dialogue\": \"...\", \"image_prompt\": \"...(같은 장소, 다른 포즈/카메라)...\", \"speaker\": \"B\" }\n  ],\n  \"Subject\": \"제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터\",\n  \"Caption\": \"설명문 #해시태그\",\n  \"Comment\": \"첫 댓글\",\n  \"BGM_prompt\": \"warm acoustic guitar lo-fi beat\"\n}\n\n주의:\n- scenes는 3개. dialogue_turns 필수. dialogue 필수. speaker 필수\n- **image_prompt에 캐릭터 외모 묘사 전문을 축약 없이 그대로 포함**\n- 카메라 앵글 지시 필수. \"grandmother and young man, two-shot\" 필수\n- **★ 장면 1에는 도박 관련 단어 절대 금지! 일상 비유만!**\n- **★ 장면 3은 할머니 Flex: \"할미는 벌써 온카스터디 [구체적 메뉴] 보고 다 걸러냈지. 넌 아직도 모르고 있고\" 형태**\n- **대사에 영어 단어/추임새 절대 사용 금지**\n- **대사 20~50자. 한 장면 전체 100자 이내**"
             }
           ]
         },
@@ -361,7 +361,8 @@
             "영상 URL": "={{ $json.final_video_url || $json.url }}",
             "영상URL": "={{ $json.final_video_url }}",
             "SRT": "={{ $json.srtContent }}",
-            "Subject": "={{ $json.subject }}"
+            "Subject": "={{ $json.subject }}",
+            "row_number": 0
           },
           "matchingColumns": [
             "Subject"
@@ -418,7 +419,9 @@
               "type": "string",
               "canBeUsedToMatch": true
             }
-          ]
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
         },
         "options": {}
       },
@@ -777,7 +780,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -896,
+        -880,
         1760
       ]
     },
@@ -790,7 +793,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -672,
+        -656,
         1760
       ],
       "webhookId": "3cd50ace-887f-4a96-a157-ce8b19e41d31"
@@ -804,7 +807,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -448,
+        -432,
         1760
       ]
     },
@@ -1102,7 +1105,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -208,
+        -192,
         1760
       ]
     },
@@ -1115,7 +1118,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        32,
+        48,
         1776
       ],
       "webhookId": "90d602d6-1c87-43f8-bf90-ad3ef0cf1093"
@@ -1250,17 +1253,6 @@
         [
           {
             "node": "상태 업데이트",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "When clicking ‘Execute workflow’": {
-      "main": [
-        [
-          {
-            "node": "AI 콘텐츠 생성",
             "type": "main",
             "index": 0
           }
@@ -1738,13 +1730,800 @@
     "callerPolicy": "workflowsFromSameOwner",
     "availableInMCP": false
   },
-  "staticData": null,
+  "staticData": {
+    "global": {
+      "categoryIndex": 0,
+      "topicIndices": {
+        "0": 0,
+        "1": 0,
+        "2": 0,
+        "3": 0
+      }
+    },
+    "node:스케줄 트리거": {
+      "recurrenceRules": []
+    }
+  },
   "meta": null,
-  "pinData": {},
-  "versionId": "e5d841da-fd94-4ebb-accb-5930e6969eee",
-  "activeVersionId": null,
-  "versionCounter": 12,
-  "triggerCount": 0,
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "AI 콘텐츠 생성": [
+      {
+        "json": {
+          "content": {
+            "parts": [
+              {
+                "text": "{\n  \"hook_title\": \"할머니의 <y>라면</y> 비법, <y>안전한</y> 선택의 비밀!\",\n  \"scenes\": [\n    {\n      \"dialogue_turns\": [\n        {\n          \"speaker\": \"A\",\n          \"line\": \"아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐?\"\n        },\n        {\n          \"speaker\": \"B\",\n          \"line\": \"할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요?\"\n        }\n      ],\n      \"dialogue\": \"아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐? 할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요?\",\n      \"image_prompt\": \"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking at ramen packet with a slightly exasperated expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at ramen packet with confused expression, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye level shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\n          \"speaker\": \"A\",\n          \"line\": \"쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아.\"\n        },\n        {\n          \"speaker\": \"B\",\n          \"line\": \"네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠?\"\n        },\n        {\n          \"speaker\": \"A\",\n          \"line\": \"네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지.\"\n        }\n      ],\n      \"dialogue\": \"쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아. 네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠? 네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지.\",\n      \"image_prompt\": \"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, gesturing emphatically towards an imaginary point, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking surprised and a little defensive, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight Dutch angle, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\n          \"speaker\": \"B\",\n          \"line\": \"아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요?\"\n        },\n        {\n          \"speaker\": \"A\",\n          \"line\": \"할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.\"\n        }\n      ],\n      \"dialogue\": \"아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요? 할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.\",\n      \"image_prompt\": \"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking knowingly with a smug expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at grandmother with a mix of awe and frustration, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    }\n  ],\n  \"Subject\": \"제목 #온카스터디 #먹튀검증 #안전놀이터 #라면\",\n  \"Caption\": \"할머니의 라면 팁, 알고 보니 안전한 선택의 비법이었다?! 🍜\\n\\n나도 모르게 돈 잃는 당신을 위한 할머니의 팩트 폭격! 💥\\n\\n#안전놀이터 #먹튀검증 #카지노 #온카스터디 #라면\",\n  \"Comment\": \"라면 물 맞추는 것처럼 쉬운 안전놀이터 찾는 법, 온카스터디에서 확인하세요!\",\n  \"BGM_prompt\": \"warm acoustic guitar lo-fi beat\"\n}"
+              }
+            ],
+            "role": "model"
+          },
+          "finishReason": "STOP",
+          "index": 0
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "콘텐츠 파싱": [
+      {
+        "json": {
+          "hook_title": "할머니의 <y>라면</y> 비법, <y>안전한</y> 선택의 비밀!",
+          "scenes": [
+            {
+              "dialogue_turns": [
+                {
+                  "speaker": "A",
+                  "line": "아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐?"
+                },
+                {
+                  "speaker": "B",
+                  "line": "할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요?"
+                }
+              ],
+              "dialogue": "아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐? 할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요?",
+              "image_prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking at ramen packet with a slightly exasperated expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at ramen packet with confused expression, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye level shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "speaker": "A"
+            },
+            {
+              "dialogue_turns": [
+                {
+                  "speaker": "A",
+                  "line": "쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아."
+                },
+                {
+                  "speaker": "B",
+                  "line": "네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠?"
+                },
+                {
+                  "speaker": "A",
+                  "line": "네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지."
+                }
+              ],
+              "dialogue": "쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아. 네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠? 네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지.",
+              "image_prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, gesturing emphatically towards an imaginary point, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking surprised and a little defensive, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight Dutch angle, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "speaker": "A"
+            },
+            {
+              "dialogue_turns": [
+                {
+                  "speaker": "B",
+                  "line": "아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요?"
+                },
+                {
+                  "speaker": "A",
+                  "line": "할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고."
+                }
+              ],
+              "dialogue": "아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요? 할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.",
+              "image_prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking knowingly with a smug expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at grandmother with a mix of awe and frustration, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "speaker": "B"
+            }
+          ],
+          "Subject": "제목 #온카스터디 #먹튀검증 #안전놀이터 #라면",
+          "Caption": "할머니의 라면 팁, 알고 보니 안전한 선택의 비법이었다?! 🍜\n\n나도 모르게 돈 잃는 당신을 위한 할머니의 팩트 폭격! 💥\n\n#안전놀이터 #먹튀검증 #카지노 #온카스터디 #라면",
+          "Comment": "라면 물 맞추는 것처럼 쉬운 안전놀이터 찾는 법, 온카스터디에서 확인하세요!",
+          "BGM_prompt": "warm acoustic guitar lo-fi beat",
+          "fullDialogue": "아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐? 할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요? 쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아. 네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠? 네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지. 아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요? 할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.",
+          "segmentCount": 3,
+          "Status": "준비",
+          "generatedAt": "2026-02-22T21:12:17.888Z"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "시트 기록": [
+      {
+        "json": {
+          "Subject": "제목 #온카스터디 #먹튀검증 #안전놀이터 #라면",
+          "Hook": "할머니의 <y>라면</y> 비법, <y>안전한</y> 선택의 비밀!",
+          "Narration": "아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐? 할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요? 쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아. 네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠? 네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지. 아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요? 할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.",
+          "Caption": "할머니의 라면 팁, 알고 보니 안전한 선택의 비법이었다?! 🍜\n\n나도 모르게 돈 잃는 당신을 위한 할머니의 팩트 폭격! 💥\n\n#안전놀이터 #먹튀검증 #카지노 #온카스터디 #라면",
+          "댓글": "라면 물 맞추는 것처럼 쉬운 안전놀이터 찾는 법, 온카스터디에서 확인하세요!",
+          "BGM prompt": "warm acoustic guitar lo-fi beat",
+          "Status": "준비"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "세그먼트 분리": [
+      {
+        "json": {
+          "index": 0,
+          "dialogue": "아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐? 할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요?",
+          "dialogue_turns": [
+            {
+              "speaker": "A",
+              "line": "아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐?"
+            },
+            {
+              "speaker": "B",
+              "line": "할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요?"
+            }
+          ],
+          "image_prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking at ramen packet with a slightly exasperated expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at ramen packet with confused expression, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye level shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "veo3_prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking at ramen packet with a slightly exasperated expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at ramen packet with confused expression, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye level shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The elderly Korean woman (short gray permed hair, beige cardigan) says '아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐?', then The young man (medium twists hairstyle, white graphic t-shirt) responds '할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요?'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+          "speaker": "A",
+          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Grandma.png",
+          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+        }
+      },
+      {
+        "json": {
+          "index": 1,
+          "dialogue": "쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아. 네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠? 네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지.",
+          "dialogue_turns": [
+            {
+              "speaker": "A",
+              "line": "쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아."
+            },
+            {
+              "speaker": "B",
+              "line": "네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠?"
+            },
+            {
+              "speaker": "A",
+              "line": "네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지."
+            }
+          ],
+          "image_prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, gesturing emphatically towards an imaginary point, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking surprised and a little defensive, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight Dutch angle, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "veo3_prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, gesturing emphatically towards an imaginary point, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking surprised and a little defensive, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight Dutch angle, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The elderly Korean woman (short gray permed hair, beige cardigan) says '쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아.', then The young man (medium twists hairstyle, white graphic t-shirt) responds '네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠?', then The elderly Korean woman (short gray permed hair, beige cardigan) responds '네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+          "speaker": "A",
+          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Grandma.png",
+          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+        }
+      },
+      {
+        "json": {
+          "index": 2,
+          "dialogue": "아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요? 할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.",
+          "dialogue_turns": [
+            {
+              "speaker": "B",
+              "line": "아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요?"
+            },
+            {
+              "speaker": "A",
+              "line": "할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고."
+            }
+          ],
+          "image_prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking knowingly with a smug expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at grandmother with a mix of awe and frustration, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "veo3_prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking knowingly with a smug expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at grandmother with a mix of awe and frustration, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The young man (medium twists hairstyle, white graphic t-shirt) says '아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요?', then The elderly Korean woman (short gray permed hair, beige cardigan) responds '할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+          "speaker": "B",
+          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Grandma.png",
+          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+        }
+      }
+    ],
+    "이미지 생성": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "63fd89200cd2b96acbf29ed532e67f93",
+            "recordId": "63fd89200cd2b96acbf29ed532e67f93"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "이미지 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "63fd89200cd2b96acbf29ed532e67f93",
+            "recordId": "63fd89200cd2b96acbf29ed532e67f93"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "이미지 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "63fd89200cd2b96acbf29ed532e67f93",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Grandma.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking at ramen packet with a slightly exasperated expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at ramen packet with confused expression, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye level shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771794871408-ue9hmzx3jsb.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 132,
+            "completeTime": 1771794873793,
+            "createTime": 1771794740536
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "참조 이미지 프롬프트": [
+      {
+        "json": {
+          "refUrl": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Grandma.png",
+          "speaker": "A"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "refUrl": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png",
+          "speaker": "B"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "이미지 URL 추출": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "63fd89200cd2b96acbf29ed532e67f93",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Grandma.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking at ramen packet with a slightly exasperated expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at ramen packet with confused expression, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye level shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771794871408-ue9hmzx3jsb.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 132,
+            "completeTime": 1771794873793,
+            "createTime": 1771794740536
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/images/1771794871408-ue9hmzx3jsb.png"
+            }
+          ],
+          "imageComplete": true
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "이미지 프롬프트 선택": [
+      {
+        "json": {
+          "image_prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking at ramen packet with a slightly exasperated expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at ramen packet with confused expression, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye level shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Grandma.png",
+          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+        }
+      }
+    ],
+    "영상1 준비": [
+      {
+        "json": {
+          "veo3Body": {
+            "prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking at ramen packet with a slightly exasperated expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at ramen packet with confused expression, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye level shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The elderly Korean woman (short gray permed hair, beige cardigan) says '아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐?', then The young man (medium twists hairstyle, white graphic t-shirt) responds '할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요?'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+            "imageUrls": [
+              "https://tempfile.aiquickdraw.com/images/1771794871408-ue9hmzx3jsb.png"
+            ],
+            "model": "veo3_fast",
+            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
+            "aspect_ratio": "16:9",
+            "enableTranslation": false
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상1 생성": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "524a67e1b1989470f2e53e322bae8818"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상1 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "524a67e1b1989470f2e53e322bae8818"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상1 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "524a67e1b1989470f2e53e322bae8818",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771794871408-ue9hmzx3jsb.png\"],\"model\":\"veo3_fast\",\"prompt\":\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking at ramen packet with a slightly exasperated expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at ramen packet with confused expression, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye level shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The elderly Korean woman (short gray permed hair, beige cardigan) says '아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐?', then The young man (medium twists hairstyle, white graphic t-shirt) responds '할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요?'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "524a67e1b1989470f2e53e322bae8818",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/524a67e1b1989470f2e53e322bae8818_1771795048.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                68296
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771795050000,
+            "createTime": 1771794921000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임1 추출": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "8bc805aa-ae01-4902-97a4-343eb493b7b6",
+          "message": "success",
+          "pid": 8,
+          "queue_id": 134447818180400,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/8bc805aa-ae01-4902-97a4-343eb493b7b6_output_0.png"
+            }
+          ],
+          "run_time": 2.651,
+          "total_time": 2.651,
+          "videoUrl": "https://tempfile.aiquickdraw.com/v/524a67e1b1989470f2e53e322bae8818_1771795048.mp4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임1 대기": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "8bc805aa-ae01-4902-97a4-343eb493b7b6",
+          "message": "success",
+          "pid": 8,
+          "queue_id": 134447818180400,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/8bc805aa-ae01-4902-97a4-343eb493b7b6_output_0.png"
+            }
+          ],
+          "run_time": 2.651,
+          "total_time": 2.651,
+          "videoUrl": "https://tempfile.aiquickdraw.com/v/524a67e1b1989470f2e53e322bae8818_1771795048.mp4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임1 결과": [
+      {
+        "json": {
+          "frameUrl": "http://76.13.182.180:9000/nca-toolkit/8bc805aa-ae01-4902-97a4-343eb493b7b6_output_0.png",
+          "frameComplete": true
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상1 실패체크": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "524a67e1b1989470f2e53e322bae8818",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/images/1771794871408-ue9hmzx3jsb.png\"],\"model\":\"veo3_fast\",\"prompt\":\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking at ramen packet with a slightly exasperated expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at ramen packet with confused expression, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye level shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The elderly Korean woman (short gray permed hair, beige cardigan) says '아이고, 마이크야. 라면 물 양 맞추는 게 그렇게 어렵냐?', then The young man (medium twists hairstyle, white graphic t-shirt) responds '할머니, 봉지에 써 있는 대로 하는데 왜 맨날 싱겁거나 짜져요?'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "524a67e1b1989470f2e53e322bae8818",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/524a67e1b1989470f2e53e322bae8818_1771795048.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                68296
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771795050000,
+            "createTime": 1771794921000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상3 준비": [
+      {
+        "json": {
+          "veo3Body": {
+            "prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking knowingly with a smug expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at grandmother with a mix of awe and frustration, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The young man (medium twists hairstyle, white graphic t-shirt) says '아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요?', then The elderly Korean woman (short gray permed hair, beige cardigan) responds '할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+            "imageUrls": [
+              "http://76.13.182.180:9000/nca-toolkit/b577c5c6-8aaf-4500-b9c0-029468a645af_output_0.png"
+            ],
+            "model": "veo3_fast",
+            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
+            "aspect_ratio": "16:9",
+            "enableTranslation": false
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상3 생성": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1707ff663181d671a87d3147edd489e7"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상3 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1707ff663181d671a87d3147edd489e7"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상3 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1707ff663181d671a87d3147edd489e7",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/b577c5c6-8aaf-4500-b9c0-029468a645af_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking knowingly with a smug expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at grandmother with a mix of awe and frustration, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The young man (medium twists hairstyle, white graphic t-shirt) says '아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요?', then The elderly Korean woman (short gray permed hair, beige cardigan) responds '할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "1707ff663181d671a87d3147edd489e7",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/1707ff663181d671a87d3147edd489e7_1771795700.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                80175
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771795702000,
+            "createTime": 1771795590000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상3 실패체크": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1707ff663181d671a87d3147edd489e7",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/b577c5c6-8aaf-4500-b9c0-029468a645af_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, looking knowingly with a smug expression, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking at grandmother with a mix of awe and frustration, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, medium shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The young man (medium twists hairstyle, white graphic t-shirt) says '아... 그래서 제가 자꾸 이상한 데서 돈을 잃는 거군요. 그럼 어떻게 확인해요?', then The elderly Korean woman (short gray permed hair, beige cardigan) responds '할미는 벌써 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "1707ff663181d671a87d3147edd489e7",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/1707ff663181d671a87d3147edd489e7_1771795700.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                80175
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771795702000,
+            "createTime": 1771795590000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상2 준비": [
+      {
+        "json": {
+          "veo3Body": {
+            "prompt": "elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, gesturing emphatically towards an imaginary point, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking surprised and a little defensive, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight Dutch angle, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The elderly Korean woman (short gray permed hair, beige cardigan) says '쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아.', then The young man (medium twists hairstyle, white graphic t-shirt) responds '네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠?', then The elderly Korean woman (short gray permed hair, beige cardigan) responds '네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+            "imageUrls": [
+              "http://76.13.182.180:9000/nca-toolkit/8bc805aa-ae01-4902-97a4-343eb493b7b6_output_0.png"
+            ],
+            "model": "veo3_fast",
+            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
+            "aspect_ratio": "16:9",
+            "enableTranslation": false
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상2 생성": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "660bd5ee1b820a78636df9309a8a0f9b"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상2 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "660bd5ee1b820a78636df9309a8a0f9b"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상2 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "660bd5ee1b820a78636df9309a8a0f9b",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/8bc805aa-ae01-4902-97a4-343eb493b7b6_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, gesturing emphatically towards an imaginary point, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking surprised and a little defensive, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight Dutch angle, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The elderly Korean woman (short gray permed hair, beige cardigan) says '쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아.', then The young man (medium twists hairstyle, white graphic t-shirt) responds '네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠?', then The elderly Korean woman (short gray permed hair, beige cardigan) responds '네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "660bd5ee1b820a78636df9309a8a0f9b",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/660bd5ee1b820a78636df9309a8a0f9b_1771799191.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                57069
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771799193000,
+            "createTime": 1771799081000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임2 추출": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "3aa318a8-6909-40c6-8fdd-4af46765e476",
+          "message": "success",
+          "pid": 9,
+          "queue_id": 134447818180544,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/3aa318a8-6909-40c6-8fdd-4af46765e476_output_0.png"
+            }
+          ],
+          "run_time": 2.169,
+          "total_time": 2.169,
+          "videoUrl": "https://tempfile.aiquickdraw.com/v/660bd5ee1b820a78636df9309a8a0f9b_1771799191.mp4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임2 대기": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "3aa318a8-6909-40c6-8fdd-4af46765e476",
+          "message": "success",
+          "pid": 9,
+          "queue_id": 134447818180544,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/3aa318a8-6909-40c6-8fdd-4af46765e476_output_0.png"
+            }
+          ],
+          "run_time": 2.169,
+          "total_time": 2.169,
+          "videoUrl": "https://tempfile.aiquickdraw.com/v/660bd5ee1b820a78636df9309a8a0f9b_1771799191.mp4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임2 결과": [
+      {
+        "json": {
+          "frameUrl": "http://76.13.182.180:9000/nca-toolkit/3aa318a8-6909-40c6-8fdd-4af46765e476_output_0.png",
+          "frameComplete": true
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상2 실패체크": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "660bd5ee1b820a78636df9309a8a0f9b",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/8bc805aa-ae01-4902-97a4-343eb493b7b6_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man in a cozy kitchen counter, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, gesturing emphatically towards an imaginary point, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, looking surprised and a little defensive, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight Dutch angle, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The elderly Korean woman (short gray permed hair, beige cardigan) says '쯧쯧, 라면 봉지만 보지 말고 실제 불 세기를 봐야지. 그거랑 똑같아.', then The young man (medium twists hairstyle, white graphic t-shirt) responds '네? 할머니, 그게 대체 무슨 말씀이세요? 제가 뭘 똑같이 한다는 거죠?', then The elderly Korean woman (short gray permed hair, beige cardigan) responds '네가 돈 쓰는 곳도 똑같아. 조건이나 후기 안 보고 그냥 돈 넣으면 싱거운 라면이지.'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "660bd5ee1b820a78636df9309a8a0f9b",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/660bd5ee1b820a78636df9309a8a0f9b_1771799191.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                57069
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771799193000,
+            "createTime": 1771799081000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "df2276af-b9d4-4d60-b88f-2b5401d836a6",
+  "activeVersionId": "df2276af-b9d4-4d60-b88f-2b5401d836a6",
+  "versionCounter": 33,
+  "triggerCount": 1,
   "shared": [
     {
       "updatedAt": "2026-02-21T12:42:28.835Z",
@@ -1768,7 +2547,7 @@
             "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
             "projectId": "W6LETsSnBzw4J5Aa",
             "user": {
-              "updatedAt": "2026-02-21T15:49:33.517Z",
+              "updatedAt": "2026-02-23T16:06:42.356Z",
               "createdAt": "2026-02-07T19:04:09.331Z",
               "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
               "email": "hatihoro15@gmail.com",
@@ -1782,8 +2561,8 @@
               "settings": {
                 "userActivated": true,
                 "easyAIWorkflowOnboarded": true,
-                "firstSuccessfulWorkflowId": "jSEDYrkFcWUzJ8Et",
-                "userActivatedAt": 1771639200143,
+                "firstSuccessfulWorkflowId": "jRT8nmDr34S96I1b",
+                "userActivatedAt": 1771833600121,
                 "npsSurvey": {
                   "waitingForResponse": true,
                   "ignoredCount": 1,
@@ -1792,7 +2571,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-02-21",
+              "lastActiveAt": "2026-02-22",
               "isPending": false
             }
           }
@@ -1801,5 +2580,1751 @@
     }
   ],
   "tags": [],
-  "activeVersion": null
+  "activeVersion": {
+    "updatedAt": "2026-02-23T03:14:57.538Z",
+    "createdAt": "2026-02-23T03:14:57.538Z",
+    "versionId": "df2276af-b9d4-4d60-b88f-2b5401d836a6",
+    "workflowId": "jRT8nmDr34S96I1b",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 9,21 * * *"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -3216,
+          1552
+        ],
+        "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
+        "name": "스케줄 트리거"
+      },
+      {
+        "parameters": {},
+        "id": "8f5964b2-ffd4-46af-8239-09c98e0020e0",
+        "name": "When clicking ‘Execute workflow’",
+        "type": "n8n-nodes-base.manualTrigger",
+        "position": [
+          -3168,
+          1328
+        ],
+        "typeVersion": 1
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-2.5-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-2.5-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=너는 YouTube Shorts 스토리형 콘텐츠 전문 작가야.\n**온카스터디 커뮤니티**의 유익한 정보를 재미있는 대화 형식으로 만들어줘.\n영상 스타일: 아나두 쇼츠처럼 깔끔하고 설득력 있는 설명형 콘텐츠.\n\n## 핵심 원칙\n- 전체 대본의 70%는 유익한 정보 + 할머니와 손자뻘 청년의 세대차 케미\n- 마지막 30%에서 온카스터디 자연스럽게 언급 (광고 느낌 절대 안 나게)\n- 첫 3초 안에 시청자가 \"어?\" 하면서 스크롤 멈추는 후킹\n- 할머니의 경험 기반 구수한 매운맛 팩트 + Mike의 존댓말 리액션/질문이 만나는 구조\n- **장면 1과 장면 2에서는 절대 '온카스터디'를 언급하지 말 것. 오직 장면 3에서만 단 1회 언급할 것**\n\n## ★★★ 장면 1 절대 규칙 (가장 중요!) ★★★\n**장면 1의 대사에는 다음 단어가 단 하나도 나오면 안 된다:**\n카지노, 슬롯, 배팅, 사이트, 환수율, RTP, 먹튀, 환전, 도박, 게임, 포인트, 잭팟, 충전, 입금, 출금, 보너스, 온라인, 당첨\n\n**장면 1은 반드시 100% 일상적인 비유/상황으로만 시작해야 한다.**\n시청자가 \"이게 뭔 얘기지? 카지노랑 무슨 상관이야?\" 하면서 호기심을 갖게 만들어야 함.\n\n## 대본 3단계 구조 (★ 매우 중요)\n- [0~5초] 장면 1: 완전히 일상적인 비유/상황 (위 금지어 절대 사용 금지)\n- [5~15초] 장면 2: \"실은 이게 카지노에서도 똑같아\" 하는 반전 + 본격 정보\n- [15초~끝] 장면 3: 핵심 정리 + 할머니 Flex (세상 다 아는 척+잔소리) + 온카스터디 구체적 메뉴 언급\n\n## 이번 콘텐츠 주제 (★ 반드시 이 주제로 콘텐츠를 만들 것!)\n**카테고리: {{ $json.categoryName }}**\n**이번 주제: {{ $json.currentTopic }}**\n반드시 위 주제를 기반으로 콘텐츠를 만들 것. 다른 주제 선택 금지.\n\n## 영상 스타일\n- 총 24초, 16:9 가로 영상\n- 상단: 고정 훅 제목 (핵심 키워드 1~2개는 <y>태그</y>로 감싸기)\n- 중간: AI 생성 캐릭터 영상 (립싱크, 카메라 움직임 포함)\n- 하단: 대화체 자막\n- 오디오: 영상 내 AI 음성 (별도 TTS 없음)\n\n## 캐릭터 프로필 (★ 모든 image_prompt에 이 문구를 반드시 그대로 포함!)\n\n**캐릭터 A (할머니 - 츤데레 매운맛 K-할머니):**\n\"elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, gentle but stern grandmother expression\"\n\n**캐릭터 B (Mike - 존댓말 뉴비):**\n\"young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch\"\n\n**두 캐릭터 함께 (AB 장면용):**\n\"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man\"\n\n## 캐릭터 말투 (★ 매우 중요 - 영어 추임새 절대 금지!)\n\n**대사는 100% 자연스러운 한국어 구어체로만 작성한다.**\n영어 단어/추임새 절대 사용 금지: Bro, Wait WHAT, Damn, Real talk, trust me, ok ok, no way, legit, for real 등 모든 영어 표현 금지.\n\n**A (할머니 - 츤데레 매운맛 K-할머니. 세상 다 겪어본 구수한 팩트 폭력):**\n- 점잖은 설명 톤 절대 금지. 구수하고 거침없는 할머니 직설 화법만 사용\n- 구수한 팩트 폭력 (\"아이고 이 화상아, 그것도 모르냐?\", \"돈이 썩어나냐? 왜 아무 데나 넣어\", \"에휴 답답해서 내가 알려준다\")\n- 인생 경험에서 나오는 자신감 (\"내가 세상에 속아본 게 한두 번이냐\", \"할미가 시장판에서 30년 구른 게 헛된 줄 알아?\")\n- 츤데레 잔소리 (\"니가 손자뻘이라 알려주는 거야\", \"쯧쯧 요즘 젊은 것들은\", \"에이 불쌍해서 가르쳐주는 거다\")\n- Mike가 반박하면 한마디로 제압 (\"그러니까 맨날 당하지 이 양반아\", \"할미 말이 틀린 적 있어?\")\n- 장면3에서 자기 자랑+잔소리 (\"할미는 벌써 다 확인하고 걸러냈지. 넌 아직도 모르고 있고\")\n\n**B (Mike - 존댓말 뉴비. 할머니한테 당하면서도 배우는 톤):**\n- 할머니에게 존댓말 사용 (\"할머니 그게 진짜예요?\", \"아 할머니 뼈 때리시네요 ㅠㅠ\")\n- 할머니 말에 리액션 크게 (\"헐 그게 실화예요?!\", \"아이고 할머니 왜 팩트를 ㅠㅠ\", \"아 ㅋㅋ 할머니 그건 맞아요\")\n- 처음에 억울해하다가 결국 인정 (\"하... 제 돈 ㅠㅠ\", \"아 저 어제 그래서 털렸는데요...\")\n- 시청자 대신 질문 (\"근데 할머니 그거 어떻게 확인해요?\", \"그게 뭔데요?\")\n- 가끔 오버 리액션 (\"이거 알았으면 진작 했죠!\", \"아 진짜요?! 저만 몰랐어요?\")\n\n## 말투 예시 5종 (★ 참고만! 아래 예시 문장을 절대 그대로 사용하지 말 것. 매번 완전히 새로운 비유와 상황을 창작할 것.)\n\n예시1 - 인형뽑기 비유:\n  장면1: A \"야 너 인형 뽑기 할 때 집게 힘 다 빠진 기계에 돈 넣냐?\"\n         B \"할머니 저 바보 아니에요, 당연히 잘 뽑히는 데서만 하죠.\"\n  장면2: A \"근데 왜 폰으로 돈 쓸 때는 아무 데서나 하냐? 에휴 답답해.\"\n         B \"어? 저 어제도 돌리다가 털렸는데요... 할머니 왜 뼈를 ㅠㅠ\"\n         A \"확인도 안 하고 하면 당연하지. 이것도 모르냐 이 화상아.\"\n  장면3: B \"그럼 할머니 그런 거 어떻게 확인해요?\"\n         A \"할미는 온카스터디 스터디판에서 먹튀검증 글 보고 다 걸러냈지. 넌 아직도 모르고 있고.\"\n\n예시2 - 식당 사장 비유:\n  장면1: A \"야 너 맨날 가던 식당 사장이 바뀐 거 알아?\"\n         B \"어? 할머니 진짜요? 저 어제도 갔는데... 맛 좀 이상했어요.\"\n  장면2: A \"사장 바뀌면 맛도 바뀌는데 넌 확인도 안 하잖아. 그러니까 맨날 당하지.\"\n         B \"하... 제 돈 ㅠㅠ 근데 할머니 이게 뭐랑 관련이에요?\"\n         A \"너 이용하는 데도 똑같아. 운영자 바뀌면 위험한데 확인을 안 해 이 양반아.\"\n  장면3: B \"아 그럼 어디서 확인해요?\"\n         A \"할미는 온카스터디 먹튀제보 게시판 보고 걸러냈지. 넌 아직도 모르고 있고.\"\n\n예시3 - 중고거래 비유:\n  장면1: A \"야 너 중고나라에서 선입금 해본 적 있어?\"\n         B \"할머니 미쳤어요? 그건 사기잖아요. 당연히 안 하죠.\"\n  장면2: A \"근데 왜 모르는 데서 돈 넣을 땐 아무 의심 없이 넣냐? 에휴.\"\n         B \"아 ㅋㅋ 저 어제 그래서 털렸는데요... 할머니 왜 팩트를 ㅠㅠ\"\n         A \"검증도 안 하고 넣으면 선입금 사기랑 뭐가 달라. 돈이 썩어나냐?\"\n  장면3: B \"그럼 검증은 어디서 해요 할머니?\"\n         A \"할미는 온카스터디 제휴사이트 후기게시판 보고 골랐지. 넌 아직 그냥 넣고 있고.\"\n\n예시4 - 복권 비유:\n  장면1: A \"야 너 복권 살 때 당첨 확률 안 보고 그냥 사?\"\n         B \"아니요 할머니, 당연히 확률 높은 거 사죠.\"\n  장면2: A \"근데 왜 돈 넣을 땐 확률도 안 보고 하냐? 답답하다 진짜.\"\n         B \"헐 그게 실화예요? 확률이 다 다른 거예요?\"\n         A \"당연하지. 높은 데서 해야 덜 잃는 건 기본인데 이것도 모르냐.\"\n  장면3: B \"아... 할머니 그거 어디서 확인해요?\"\n         A \"할미는 온카스터디 포인트존에서 무료슬롯 먼저 돌려보고 확인했지. 넌 아직도 모르는 거야.\"\n\n예시5 - 자판기 비유:\n  장면1: A \"야 너 맨날 같은 자판기에서 뽑는데 왜 맨날 꽝이야?\"\n         B \"할머니 제가 재수가 없는 거지... 자판기가 뭔 잘못이에요.\"\n  장면2: A \"자판기도 고장나면 안 뽑히잖아. 너 그거랑 똑같은 짓 하고 있는 거야.\"\n         B \"뭐요?! 아 ㅋㅋ 제 돈 ㅠㅠ 맞는 말이라 더 억울해요.\"\n         A \"확인 안 하고 하면 돈 기부하는 거야. 에휴 불쌍해서 내가 알려준다.\"\n  장면3: B \"그럼 어디서 확인하면 돼요 할머니?\"\n         A \"할미는 온카스터디 방송존에서 동물원 팀 방송 보고 참고했지. 넌 아직도 찍기하고 있고.\"\n\n## 온카스터디 사이트 메뉴 구조 (★ 장면3에서 구체적으로 활용할 것!)\n\n- 온카스터디: 공지사항, 카지노 뉴스, 먹튀제보, 스포츠 뉴스, 스포츠 분석\n- 제휴사이트: 제휴사이트, 후기게시판\n- 방송존: 동물원(슬롯), 가디언(슬롯), 인생역전(카지노), 하이라이트, 방송 이벤트\n- 커뮤니티: 자유게시판, 가입인사, 패널티명단, 잭팟 제보\n- 포인트존: 복권, 오목게임, 돌림판, 포인트교환, 기프티콘 교환, 무료슬롯 체험\n- 스터디판: 먹튀검증, 토토사이트, 메이저사이트, 카지노사이트, 먹튀사이트\n\n장면3에서 '온카스터디 가봐' 같은 뭉뚱그린 표현 금지!\n해당 주제에 맞는 구체적인 메뉴를 언급할 것.\n장면3 마무리는 반드시 할머니 Flex 형태로: \"할미는 벌써 온카스터디 [구체적 메뉴] 보고 다 걸러냈지. 넌 아직도 모르고 있고\" 식으로 경험자 우월감+잔소리.\n\n## 콘텐츠 소재 목록\n\n**카테고리 1: 먹튀검증/안전 정보**\n1. 먹튀 사이트 구별하는 핵심 체크포인트 3가지\n2. 안전한 카지노 사이트 고르는 법\n3. 먹튀 당했을 때 대처법 (신고, 증거 수집)\n4. 메이저사이트 vs 신생사이트 차이점\n5. 먹튀검증 제대로 하는 법\n6. 먹튀제보/먹튀검증 사례와 피하는 법\n7. 메이저사이트 vs 먹튀사이트 구별법\n\n**카테고리 2: 카지노/게임 팁**\n8. 슬롯 초보가 꼭 알아야 할 기본 상식\n9. 라이브 카지노 처음 할 때 실수하기 쉬운 것들\n10. 환전 시 주의사항 (수수료, 시간, 한도)\n11. 보너스/이벤트 제대로 활용하는 법\n12. 배팅 자금 관리의 기본\n13. 잭팟 제보와 현실적 확률, 터진 후기\n14. 무료슬롯 체험 - 입금 전에 먼저 체험하는 팁\n\n**카테고리 3: 커뮤니티 활용**\n15. 온카스터디 포인트 꿀팁 (복권, 돌림판, 오목, 무료슬롯)\n16. 제휴사이트 후기 읽는 법 (진짜 후기 vs 광고)\n17. 제휴사이트 후기 - 검증된 사이트 고르는 기준\n18. 자유게시판에서 정보 얻는 팁\n19. 방송존 활용법 (동물원, 가디언, 인생역전, 하이라이트)\n20. 기프티콘 교환 꿀팁\n21. 패널티명단 - 사기꾼/양아치 구별법\n\n**카테고리 4: 스포츠/분석**\n22. 스포츠 배팅 기초\n23. 스포츠 분석/배팅 - 분석 없이 배팅하는 위험성\n24. 스포츠 뉴스 해석하는 법\n25. 라이브 스코어 활용법\n26. 배당률 읽는 법 (초보 가이드)\n27. 스포츠 분석 게시판 활용 팁\n\n## 장면 구성 규칙\n- 총 3개 장면, 각 장면 안에서 2~3턴의 핑퐁 대화\n- 모든 장면이 두 사람 함께 등장 (3개 전부 two-shot)\n- 장면 1: 2턴 (A→B) — ★일상 비유/상황만! 금지어 절대 사용 금지★\n- 장면 2: 3턴 (A→B→A 또는 B→A→B) — \"실은 카지노 이야기였다\" 반전 + 정보 전달\n- 장면 3: 2턴 (B→A) — 마무리 + 할머니 Flex (경험자 우월감+잔소리) + 온카스터디 구체적 메뉴\n- 각 턴의 대사는 1문장, 20~50자 이내. 한 장면의 전체 대사는 100자 이내. 단, 각 턴에 반드시 구체적 정보나 주장 포함. 리액션만 있는 빈 대사 금지.\n- 한 영상의 모든 장면은 동일한 하나의 장소에서 진행\n- 장면마다 포즈, 행동, 표정, 카메라 앵글은 다르게 변화를 줄 것\n\n## 배경/장소 규칙 (★ 매우 중요)\n\n**한 영상의 모든 장면은 동일한 하나의 장소에서 진행된다.**\n- 3개 장면 전부 같은 장소, 같은 배경\n- 장면마다 달라지는 것: 캐릭터의 포즈, 행동, 표정, 소품 사용, 카메라 앵글\n- 그 장소에서 자연스러운 소품, 행동, 상호작용 포함\n\n**매 영상(에피소드)마다 완전히 새로운 장소를 직접 창작할 것.**\n- 이전 영상에서 사용한 장소와 절대 겹치지 않는 새로운 상황을 만들어라\n- 참고 리스트 없음. 현실에서 할머니와 손자뻘 청년이 함께 있을 법한 일상 상황을 직접 상상해서 창작해라\n- 그 장소에서 자연스러운 소품, 행동, 상호작용을 포함해라\n- 뻔한 장소 반복 금지. 매번 새롭고 예측 불가능한 장소가 핵심이다\n\n## 스토리 구조 (핑퐁 대화)\n1. **장면 1 (일상 비유 훅, 2턴)**: 카지노와 전혀 관련 없어 보이는 일상 이야기로 시작\n2. **장면 2 (반전 + 정보, 3턴)**: \"근데 이게 카지노에서도 똑같아\" 식의 반전\n3. **장면 3 (마무리 할머니 Flex, 2턴)**: Mike 질문 → 할머니가 온카스터디 구체적 메뉴 + 경험자 우월감 flex\n\n## 대사 연결 규칙 (★ 매우 중요)\n- 장면 1의 일상 비유가 장면 2에서 카지노 이야기로 자연스럽게 연결\n- 장면 2의 질문/반박이 장면 3의 답변으로 자연스럽게 연결\n- 대화가 하나의 자연스러운 흐름이어야 함\n\n## 이미지 프롬프트 규칙 (★ 매우 중요)\n1. 영어로 작성\n2. **반드시 위 캐릭터 프로필 문구를 그대로 복사하여 시작** (AB함께 문구 사용)\n3. 프로필 뒤에 추가: 해당 장면의 expression, gesture, action, camera angle\n4. 한 영상의 모든 장면은 동일한 배경 사용\n5. 항상 마지막에 포함: \"RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\"\n6. **카메라 앵글 지시 추가**\n7. **\"grandmother and young man, two-shot\" 포함**\n8. **말하는 사람은 talking/gesturing, 듣는 사람은 listening/reacting**\n\n## 후킹 제목 예시\n- \"할머니가 알려주는 <y>먹튀</y> 사이트 <y>구별법</y>\"\n- \"인형뽑기에서 <y>깨달은</y> 카지노 <y>진실</y>\"\n- \"<y>할머니</y>한테 배우는 <y>안전한</y> 선택법\"\n\n## 출력 (순수 JSON, 코드블록 없이)\n{\n  \"hook_title\": \"인형뽑기에서 <y>깨달은</y> 카지노 <y>진실</y>\",\n  \"scenes\": [\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"야 너 인형 뽑기 할 때 집게 힘 다 빠진 기계에 돈 넣냐?\"},\n        {\"speaker\": \"B\", \"line\": \"할머니 저 바보 아니에요, 당연히 잘 뽑히는 데서만 하죠.\"}\n      ],\n      \"dialogue\": \"야 너 인형 뽑기 할 때 집게 힘 다 빠진 기계에 돈 넣냐? 할머니 저 바보 아니에요, 당연히 잘 뽑히는 데서만 하죠.\",\n      \"image_prompt\": \"elderly Korean grandmother in floral vest with reading glasses together with young Black man in white graphic t-shirt with silver watch, grandmother and young man at a colorful arcade center, elderly Korean woman, 68 years old, slightly plump and soft build, round warm face, silver-gray permed short hair, deep smile lines and laugh wrinkles, warm dark brown eyes with reading glasses on nose tip, wearing comfortable traditional-modern mix clothing with floral pattern vest over plain long sleeve shirt, talking with stern grandmother expression pointing at claw machine, young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, listening with confused frown, grandmother and young man, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slight camera push in, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    { \"dialogue_turns\": [...], \"dialogue\": \"...\", \"image_prompt\": \"...(같은 장소, 다른 포즈/카메라)...\", \"speaker\": \"A\" },\n    { \"dialogue_turns\": [...], \"dialogue\": \"...\", \"image_prompt\": \"...(같은 장소, 다른 포즈/카메라)...\", \"speaker\": \"B\" }\n  ],\n  \"Subject\": \"제목 #온카스터디 #먹튀검증 #카지노 #안전놀이터\",\n  \"Caption\": \"설명문 #해시태그\",\n  \"Comment\": \"첫 댓글\",\n  \"BGM_prompt\": \"warm acoustic guitar lo-fi beat\"\n}\n\n주의:\n- scenes는 3개. dialogue_turns 필수. dialogue 필수. speaker 필수\n- **image_prompt에 캐릭터 외모 묘사 전문을 축약 없이 그대로 포함**\n- 카메라 앵글 지시 필수. \"grandmother and young man, two-shot\" 필수\n- **★ 장면 1에는 도박 관련 단어 절대 금지! 일상 비유만!**\n- **★ 장면 3은 할머니 Flex: \"할미는 벌써 온카스터디 [구체적 메뉴] 보고 다 걸러냈지. 넌 아직도 모르고 있고\" 형태**\n- **대사에 영어 단어/추임새 절대 사용 금지**\n- **대사 20~50자. 한 장면 전체 100자 이내**"
+              }
+            ]
+          },
+          "jsonOutput": true,
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -2800,
+          1328
+        ],
+        "id": "0f0b8cab-e649-4c60-afba-6991b2a30901",
+        "name": "AI 콘텐츠 생성",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "IKP349r08J9Hoz5E",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst data = JSON.parse(cleanText);\n\nif (!data.scenes || data.scenes.length < 3) {\n  throw new Error('scenes must have at least 3 items, got: ' + (data.scenes?.length || 0));\n}\n\n// dialogue_turns 검증\nfor (let i = 0; i < data.scenes.length; i++) {\n  const scene = data.scenes[i];\n  if (!scene.dialogue_turns || scene.dialogue_turns.length < 2) {\n    if (scene.dialogue && scene.speaker) {\n      scene.dialogue_turns = [{speaker: scene.speaker, line: scene.dialogue}];\n    } else {\n      throw new Error('scene ' + (i+1) + ' missing dialogue_turns');\n    }\n  }\n  if (!scene.dialogue) {\n    scene.dialogue = scene.dialogue_turns.map(t => t.line).join(' ');\n  }\n  if (!scene.speaker) {\n    scene.speaker = scene.dialogue_turns[0].speaker;\n  }\n}\n\nreturn [{\n  json: {\n    hook_title: data.hook_title,\n    scenes: data.scenes,\n    Subject: data.Subject,\n    Caption: data.Caption,\n    Comment: data.Comment,\n    BGM_prompt: data.BGM_prompt,\n    fullDialogue: data.scenes.map(s => s.dialogue).join(' '),\n    segmentCount: data.scenes.length,\n    Status: '준비',\n    generatedAt: new Date().toISOString()\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2448,
+          1328
+        ],
+        "id": "debd624e-66b9-4443-8544-002d62bd2da6",
+        "name": "콘텐츠 파싱"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+            "mode": "list",
+            "cachedResultName": "온카스터디",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "스토리형 숏츠"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Subject": "={{ $json.Subject }}",
+              "Hook": "={{ $json.hook_title }}",
+              "Narration": "={{ $json.fullDialogue }}",
+              "Caption": "={{ $json.Caption }}",
+              "댓글": "={{ $json.Comment }}",
+              "BGM prompt": "={{ $json.BGM_prompt }}",
+              "Status": "준비"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Subject",
+                "displayName": "Subject",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Hook",
+                "displayName": "Hook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Narration",
+                "displayName": "Narration",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Caption",
+                "displayName": "Caption",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "댓글",
+                "displayName": "댓글",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "BGM prompt",
+                "displayName": "BGM prompt",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -2224,
+          1328
+        ],
+        "id": "ad97017d-7051-4a32-a9d2-9ba6d5276e01",
+        "name": "시트 기록",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "CWBUyXUqCU9p5VAg",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The elderly Korean woman (short gray permed hair, beige cardigan)',\n    'B': 'The young man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1776,
+          1328
+        ],
+        "id": "624571a3-41be-44cb-a4cd-1b5f40b89fec",
+        "name": "세그먼트 분리"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.kie.ai/api/v1/jobs/createTask",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"model\": \"nano-banana-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.image_prompt }}\",\n    \"image_input\": [\"{{ $json.refUrl_A }}\", \"{{ $json.refUrl_B }}\"],\n    \"aspect_ratio\": \"16:9\",\n    \"resolution\": \"2K\",\n    \"output_format\": \"png\"\n  }\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -1328,
+          1328
+        ],
+        "id": "img-gen-001",
+        "name": "이미지 생성",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "amount": 180
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1104,
+          1328
+        ],
+        "id": "img-wait-001",
+        "name": "이미지 대기",
+        "webhookId": "img-wait-webhook"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('이미지 생성').item.json.data.taskId }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -880,
+          1328
+        ],
+        "id": "img-result-001",
+        "name": "이미지 결과",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// NCA 스토리형 숏츠 - 실패한 영상 스킵\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8;\n\nfunction getVideoUrl(nodeName) {\n  try {\n    const data = $(nodeName).first().json;\n    return data?.data?.response?.resultUrls?.[0] || '';\n  } catch(e) { return ''; }\n}\n\nlet skippedVideos = [];\nfor (let i = 0; i < segmentCount; i++) {\n  const videoUrl = getVideoUrl('영상' + (i + 1) + ' 결과');\n  const segData = $('세그먼트 분리').all()[i]?.json;\n  const dialogueText = segData?.dialogue\n    || (segData?.dialogue_turns || []).map(t => t.line).join(' ') || '';\n\n  if (!videoUrl) {\n    console.log('영상' + (i+1) + ' URL 없음 → 스킵');\n    skippedVideos.push(i + 1);\n    continue;\n  }\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nif (segments.length === 0) {\n  throw new Error('모든 영상 생성 실패 - 합성 불가');\n}\n\nconst totalDuration = currentStart;\n\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  srtLines.push((i + 1) + '\\n' + toSrtTime(seg.start) + ' --> ' +\n    toSrtTime(seg.start + seg.duration) + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\nlet filterParts = [];\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\nfilterParts.push(segments.map((_, i) => '[v' + i + ']').join('') +\n  'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\nfilterParts.push(segments.map((_, i) => '[a' + i + ']').join('') +\n  'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filterParts.join(';') }],\n  outputs: [{\n    options: [\n      { option: '-map', argument: '[vfinal]' },\n      { option: '-map', argument: '[afinal]' },\n      { option: '-c:v', argument: 'libx264' },\n      { option: '-preset', argument: 'medium' },\n      { option: '-crf', argument: '18' },\n      { option: '-c:a', argument: 'aac' },\n      { option: '-b:a', argument: '256k' },\n      { option: '-pix_fmt', argument: 'yuv420p' },\n      { option: '-movflags', argument: '+faststart' },\n      { option: '-t', argument: String(totalDuration) }\n    ],\n    file_name: 'story_shorts_final.mp4'\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    skippedVideos,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -912,
+          2000
+        ],
+        "id": "98d0499e-0f4e-43d0-a80d-f65128036951",
+        "name": "NCA 데이터 준비"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-api-key",
+                "value": "nca-sagong-2026"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.nca_payload) }}",
+          "options": {
+            "timeout": 600000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -688,
+          2000
+        ],
+        "id": "c9c85671-3eb2-4fa5-a158-74cf8d4613fb",
+        "name": "NCA 영상 제작"
+      },
+      {
+        "parameters": {
+          "amount": 120
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -464,
+          2000
+        ],
+        "id": "0abbc265-f782-44cd-8a9a-6462e14753c8",
+        "name": "NCA 제작 대기",
+        "webhookId": "a7abe995-b5e1-4c40-af9a-62859e00a1b5"
+      },
+      {
+        "parameters": {
+          "jsCode": "// NCA 결과 처리\nconst result = $input.first().json;\nconst prevData = $('NCA 데이터 준비').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (!videoUrl) {\n  throw new Error('NCA 영상 제작 결과 URL 없음: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    final_video_url: videoUrl,\n    url: videoUrl,\n    srtContent: prevData.srtContent,\n    subject: prevData.subject,\n    caption: prevData.caption,\n    comment: prevData.comment,\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -240,
+          2000
+        ],
+        "id": "7bf9dedf-711a-47f7-b00a-2980c09c9574",
+        "name": "NCA 결과 처리"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+            "mode": "list",
+            "cachedResultName": "온카스터디",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "스토리형 숏츠"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Status": "생성 완료",
+              "영상 URL": "={{ $json.final_video_url || $json.url }}",
+              "영상URL": "={{ $json.final_video_url }}",
+              "SRT": "={{ $json.srtContent }}",
+              "Subject": "={{ $json.subject }}",
+              "row_number": 0
+            },
+            "matchingColumns": [
+              "Subject"
+            ],
+            "schema": [
+              {
+                "id": "Subject",
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "영상 URL",
+                "displayName": "영상 URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": false,
+                "readOnly": true
+              },
+              {
+                "id": "영상URL",
+                "displayName": "영상URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "SRT",
+                "displayName": "SRT",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -16,
+          2000
+        ],
+        "id": "9d065d63-6fbc-4c9e-9bf2-7b06ec695e4c",
+        "name": "상태 업데이트",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "CWBUyXUqCU9p5VAg",
+            "name": "Google Sheets account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// 고정 참조 이미지 URL (할머니 + Mike)\nconst refA_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Grandma.png\";\nconst refB_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\";\nreturn [\n  { json: { refUrl: refA_url, speaker: \"A\" } },\n  { json: { refUrl: refB_url, speaker: \"B\" } }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2000,
+          1328
+        ],
+        "id": "20787f47-c724-4ea1-bfbf-1243c574a1c7",
+        "name": "참조 이미지 프롬프트"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 이미지 URL 추출 (크레덴셜 기반 폴링)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nlet imageUrl = '';\n\n// 결과에서 URL 추출\nif (data?.data?.state === 'success' && data?.data?.resultJson) {\n  try {\n    const parsed = JSON.parse(data.data.resultJson);\n    imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n  } catch(e) {}\n}\n\n// 실패 확인\nif (data?.data?.state === 'failed') {\n  staticData.retryCount = 0;\n  throw new Error('이미지 생성 실패: ' + (data?.data?.taskId || ''));\n}\n\nif (imageUrl) {\n  staticData.retryCount = 0;\n  return [{ json: { ...data, images: [{ url: imageUrl }], imageComplete: true } }];\n}\n\n// 타임아웃 (30회 × 30초 = 15분)\nif (staticData.retryCount > 30) {\n  staticData.retryCount = 0;\n  throw new Error('이미지 URL 추출 실패 (15분 타임아웃)');\n}\n\n// 미완료\nreturn [{ json: { ...data, imageComplete: false } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -656,
+          1328
+        ],
+        "id": "nano_url_extract",
+        "name": "이미지 URL 추출"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 장면 1의 이미지 프롬프트만 선택 (1장만 생성)\nconst items = $input.all();\nconst first = items[0].json;\nreturn [{\n  json: {\n    image_prompt: first.image_prompt,\n    refUrl_A: first.refUrl_A,\n    refUrl_B: first.refUrl_B,\n  }\n}];"
+        },
+        "id": "img-prompt-select",
+        "name": "이미지 프롬프트 선택",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1552,
+          1328
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상1 준비: 이미지 URL 추출 결과에서 이미지 가져오기\nconst imageUrl = $input.first().json.images?.[0]?.url || '';\nif (!imageUrl) throw new Error('이미지 URL 없음');\n\nconst seg = $('세그먼트 분리').all()[0].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면1)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+        },
+        "id": "4bfa7114",
+        "name": "영상1 준비",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2448,
+          1536
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.kie.ai/api/v1/veo/generate",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.veo3Body) }}",
+          "options": {}
+        },
+        "id": "8afc8b4b",
+        "name": "영상1 생성",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -2224,
+          1536
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "amount": 300
+        },
+        "id": "fade0702",
+        "name": "영상1 대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -2000,
+          1536
+        ],
+        "webhookId": "c82dfe2d-8cd1-43b5-8407-b5fb5f3b82d7"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.kie.ai/api/v1/veo/record-info?taskId={{ $('영상1 생성').item.json.data.taskId }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "id": "55b56888",
+        "name": "영상1 결과",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -1776,
+          1536
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "bb07e65a",
+                "leftValue": "={{ $json.data.successFlag }}",
+                "rightValue": "1",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "id": "1eb9f0e1",
+        "name": "영상1 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -1376,
+          1536
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "id": "f1a55ce4",
+        "name": "영상1 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1136,
+          1552
+        ],
+        "webhookId": "a13742be-e399-4a95-92ee-9b978949ef28"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 프레임1 추출 (재진입 지원)\nconst data = $input.first().json;\n\n// 영상 실패 시 스킵\nif (data.videoFailed) {\n  console.log('영상 실패 → 프레임 추출 스킵');\n  return [{ json: { skipped: true, originalImageUrl: data.originalImageUrl || '' } }];\n}\n\n// 영상 URL: 첫 진입이면 결과에서, 재시도면 전달받은 videoUrl\nconst videoUrl = data.videoUrl || data?.data?.response?.resultUrls?.[0] || '';\nif (!videoUrl) {\n  console.log('영상 URL 없음 → 프레임 추출 스킵');\n  return [{ json: { skipped: true } }];\n}\n\n// NCA API로 7.5초 시점 프레임 추출 (jpg 강제)\ntry {\n  const result = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'http://76.13.182.180:8080/v1/ffmpeg/compose',\n    headers: {\n      'x-api-key': 'nca-sagong-2026',\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: [{ option: '-ss', argument: '7.5' }] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' },\n          { option: '-f', argument: 'image2' },\n          { option: '-update', argument: '1' }\n        ],\n        file_name: 'last_frame_1.jpg'\n      }]\n    }\n  });\n  return [{ json: { ...result, videoUrl } }];\n} catch(e) {\n  console.log('NCA 프레임 추출 실패: ' + e.message);\n  return [{ json: { ncaError: true, error: e.message, videoUrl } }];\n}"
+        },
+        "id": "182701f3",
+        "name": "프레임1 추출",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -880,
+          1520
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "id": "8b7b9b49",
+        "name": "프레임1 대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -656,
+          1520
+        ],
+        "webhookId": "e836bbd9-d700-47f4-b59a-21c5959c1d30"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 프레임1 결과 (완료 체크 + mp4 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\n\nconst data = $input.first().json;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 스킵된 경우 바로 완료\nif (data.skipped) {\n  staticData.retryCount = 0;\n  const fallback = data.originalImageUrl || originalImageUrl;\n  return [{ json: { frameUrl: fallback, frameComplete: true, usedFallback: true } }];\n}\n\nlet frameUrl = '';\n\n// NCA 응답에서 프레임 URL 추출\nif (!data.ncaError) {\n  if (Array.isArray(data?.response)) {\n    frameUrl = data.response[0]?.file_url || '';\n  }\n  if (!frameUrl && data?.file_url) frameUrl = data.file_url;\n  if (!frameUrl && data?.url) frameUrl = data.url;\n}\n\n// .mp4 URL이면 이미지가 아니므로 원본 이미지로 폴백\nif (frameUrl && frameUrl.toLowerCase().endsWith('.mp4')) {\n  console.log('프레임1 결과가 .mp4 → 원본 이미지 폴백: ' + frameUrl);\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl: originalImageUrl, frameComplete: true, usedFallback: true, mp4Detected: true } }];\n}\n\nif (frameUrl) {\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl, frameComplete: true } }];\n}\n\n// 재시도 횟수 체크 (10회 × 60초 = 약 10분)\nstaticData.retryCount++;\nif (staticData.retryCount > 10) {\n  console.log('프레임1 추출 10회 실패 → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl: originalImageUrl, frameComplete: true, usedFallback: true } }];\n}\n\n// 미완료 → 재시도\nconsole.log('프레임1 미완료, 재시도 ' + staticData.retryCount + '/10');\nreturn [{ json: { frameComplete: false, videoUrl: data.videoUrl || '' } }];"
+        },
+        "id": "ea8a4f0f",
+        "name": "프레임1 결과",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -432,
+          1520
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상2 준비: 프레임1 또는 원본 이미지 폴백\nlet imageUrl = $input.first().json.frameUrl || '';\n\nif (!imageUrl) {\n  imageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  console.log('프레임 없음 → 원본 이미지 폴백');\n}\nif (!imageUrl) throw new Error('영상2 입력 이미지 없음');\n\nconst seg = $('세그먼트 분리').all()[1].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면2)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+        },
+        "id": "37b59c13",
+        "name": "영상2 준비",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2464,
+          1776
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.kie.ai/api/v1/veo/generate",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.veo3Body) }}",
+          "options": {}
+        },
+        "id": "184f124f",
+        "name": "영상2 생성",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -2240,
+          1776
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "amount": 300
+        },
+        "id": "c37d3548",
+        "name": "영상2 대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -2016,
+          1776
+        ],
+        "webhookId": "d2407170-d76d-4dd5-9eef-9be53fde87d9"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.kie.ai/api/v1/veo/record-info?taskId={{ $('영상2 생성').item.json.data.taskId }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "id": "ba465780",
+        "name": "영상2 결과",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -1792,
+          1776
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "e36b459a",
+                "leftValue": "={{ $json.data.successFlag }}",
+                "rightValue": "1",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "id": "0c133eb8",
+        "name": "영상2 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -1392,
+          1776
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "id": "9c1febf2",
+        "name": "영상2 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1136,
+          1792
+        ],
+        "webhookId": "f5b50b19-c70e-4206-95a7-5b63f8984d76"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 프레임2 추출 (재진입 지원)\nconst data = $input.first().json;\n\n// 영상 실패 시 스킵\nif (data.videoFailed) {\n  console.log('영상 실패 → 프레임 추출 스킵');\n  return [{ json: { skipped: true, originalImageUrl: data.originalImageUrl || '' } }];\n}\n\n// 영상 URL: 첫 진입이면 결과에서, 재시도면 전달받은 videoUrl\nconst videoUrl = data.videoUrl || data?.data?.response?.resultUrls?.[0] || '';\nif (!videoUrl) {\n  console.log('영상 URL 없음 → 프레임 추출 스킵');\n  return [{ json: { skipped: true } }];\n}\n\n// NCA API로 7.5초 시점 프레임 추출 (jpg 강제)\ntry {\n  const result = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'http://76.13.182.180:8080/v1/ffmpeg/compose',\n    headers: {\n      'x-api-key': 'nca-sagong-2026',\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: [{ option: '-ss', argument: '7.5' }] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' },\n          { option: '-f', argument: 'image2' },\n          { option: '-update', argument: '1' }\n        ],\n        file_name: 'last_frame_2.jpg'\n      }]\n    }\n  });\n  return [{ json: { ...result, videoUrl } }];\n} catch(e) {\n  console.log('NCA 프레임 추출 실패: ' + e.message);\n  return [{ json: { ncaError: true, error: e.message, videoUrl } }];\n}"
+        },
+        "id": "39092918",
+        "name": "프레임2 추출",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -880,
+          1760
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "id": "41821c74",
+        "name": "프레임2 대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -656,
+          1760
+        ],
+        "webhookId": "3cd50ace-887f-4a96-a157-ce8b19e41d31"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 프레임2 결과 (완료 체크 + mp4 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\n\nconst data = $input.first().json;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 스킵된 경우 바로 완료\nif (data.skipped) {\n  staticData.retryCount = 0;\n  const fallback = data.originalImageUrl || originalImageUrl;\n  return [{ json: { frameUrl: fallback, frameComplete: true, usedFallback: true } }];\n}\n\nlet frameUrl = '';\n\n// NCA 응답에서 프레임 URL 추출\nif (!data.ncaError) {\n  if (Array.isArray(data?.response)) {\n    frameUrl = data.response[0]?.file_url || '';\n  }\n  if (!frameUrl && data?.file_url) frameUrl = data.file_url;\n  if (!frameUrl && data?.url) frameUrl = data.url;\n}\n\n// .mp4 URL이면 이미지가 아니므로 원본 이미지로 폴백\nif (frameUrl && frameUrl.toLowerCase().endsWith('.mp4')) {\n  console.log('프레임2 결과가 .mp4 → 원본 이미지 폴백: ' + frameUrl);\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl: originalImageUrl, frameComplete: true, usedFallback: true, mp4Detected: true } }];\n}\n\nif (frameUrl) {\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl, frameComplete: true } }];\n}\n\n// 재시도 횟수 체크 (10회 × 60초 = 약 10분)\nstaticData.retryCount++;\nif (staticData.retryCount > 10) {\n  console.log('프레임2 추출 10회 실패 → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl: originalImageUrl, frameComplete: true, usedFallback: true } }];\n}\n\n// 미완료 → 재시도\nconsole.log('프레임2 미완료, 재시도 ' + staticData.retryCount + '/10');\nreturn [{ json: { frameComplete: false, videoUrl: data.videoUrl || '' } }];"
+        },
+        "id": "b97a75c8",
+        "name": "프레임2 결과",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -432,
+          1760
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상3 준비: 프레임2 또는 원본 이미지 폴백\nlet imageUrl = $input.first().json.frameUrl || '';\n\nif (!imageUrl) {\n  imageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  console.log('프레임 없음 → 원본 이미지 폴백');\n}\nif (!imageUrl) throw new Error('영상3 입력 이미지 없음');\n\nconst seg = $('세그먼트 분리').all()[2].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면3)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+        },
+        "id": "7dbc45d7",
+        "name": "영상3 준비",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2480,
+          2016
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.kie.ai/api/v1/veo/generate",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.veo3Body) }}",
+          "options": {}
+        },
+        "id": "67857637",
+        "name": "영상3 생성",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -2256,
+          2016
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "amount": 300
+        },
+        "id": "4d22f6d1",
+        "name": "영상3 대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -2032,
+          2016
+        ],
+        "webhookId": "e249c3c0-0416-4e17-8865-73c8829ce2b3"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.kie.ai/api/v1/veo/record-info?taskId={{ $('영상3 생성').item.json.data.taskId }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "id": "e33c746d",
+        "name": "영상3 결과",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -1808,
+          2016
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "85d82019",
+                "leftValue": "={{ $json.data.successFlag }}",
+                "rightValue": "1",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "id": "12e70534",
+        "name": "영상3 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -1376,
+          2016
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "id": "7ff7cbe2",
+        "name": "영상3 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1136,
+          2032
+        ],
+        "webhookId": "425f17f7-a44b-49c9-9b2b-90d6a61190fc"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상1 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상1 실패 (successFlag=' + flag + ')'\n    : '영상1 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+        },
+        "id": "fail-check-1",
+        "name": "영상1 실패체크",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1552,
+          1536
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상2 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상2 실패 (successFlag=' + flag + ')'\n    : '영상2 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+        },
+        "id": "fail-check-2",
+        "name": "영상2 실패체크",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1568,
+          1776
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상3 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상3 실패 (successFlag=' + flag + ')'\n    : '영상3 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+        },
+        "id": "fail-check-3",
+        "name": "영상3 실패체크",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1584,
+          2016
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "img-cond-1",
+                "leftValue": "={{ $json.imageComplete }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "id": "img-complete-check",
+        "name": "이미지 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -432,
+          1328
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "id": "img-rewait-001",
+        "name": "이미지 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -176,
+          1344
+        ],
+        "webhookId": "31e22254-2dba-4faa-8e40-a566c24ffc6e"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "frame-cond-1",
+                "leftValue": "={{ $json.frameComplete }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "id": "frame-check-1",
+        "name": "프레임1 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -192,
+          1520
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "id": "frame-rewait-1",
+        "name": "프레임1 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          64,
+          1536
+        ],
+        "webhookId": "d958b8c2-2524-4e91-a0da-a1dd619289aa"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "frame-cond-2",
+                "leftValue": "={{ $json.frameComplete }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "id": "frame-check-2",
+        "name": "프레임2 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -192,
+          1760
+        ]
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "id": "frame-rewait-2",
+        "name": "프레임2 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          48,
+          1776
+        ],
+        "webhookId": "90d602d6-1c87-43f8-bf90-ad3ef0cf1093"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 카테고리 + 주제 순서 선택 (staticData로 상태 유지)\nconst staticData = $getWorkflowStaticData('global');\nif (typeof staticData.categoryIndex !== 'number') staticData.categoryIndex = 0;\nif (!staticData.topicIndices) staticData.topicIndices = {0:0, 1:0, 2:0, 3:0};\n\nconst categories = [\n  { index: 1, name: '먹튀검증/안전 정보', count: 7, topics: [\n    '1. 먹튀 사이트 구별하는 핵심 체크포인트 3가지',\n    '2. 안전한 카지노 사이트 고르는 법',\n    '3. 먹튀 당했을 때 대처법 (신고, 증거 수집)',\n    '4. 메이저사이트 vs 신생사이트 차이점',\n    '5. 먹튀검증 제대로 하는 법',\n    '6. 먹튀제보/먹튀검증 사례와 피하는 법',\n    '7. 메이저사이트 vs 먹튀사이트 구별법'\n  ]},\n  { index: 2, name: '카지노/게임 팁', count: 7, topics: [\n    '8. 슬롯 초보가 꼭 알아야 할 기본 상식',\n    '9. 라이브 카지노 처음 할 때 실수하기 쉬운 것들',\n    '10. 환전 시 주의사항 (수수료, 시간, 한도)',\n    '11. 보너스/이벤트 제대로 활용하는 법',\n    '12. 배팅 자금 관리의 기본',\n    '13. 잭팟 제보와 현실적 확률, 터진 후기',\n    '14. 무료슬롯 체험 - 입금 전에 먼저 체험하는 팁'\n  ]},\n  { index: 3, name: '커뮤니티 활용', count: 7, topics: [\n    '15. 온카스터디 포인트 꿀팁 (복권, 돌림판, 오목, 무료슬롯)',\n    '16. 제휴사이트 후기 읽는 법 (진짜 후기 vs 광고)',\n    '17. 제휴사이트 후기 - 검증된 사이트 고르는 기준',\n    '18. 자유게시판에서 정보 얻는 팁',\n    '19. 방송존 활용법 (동물원, 가디언, 인생역전, 하이라이트)',\n    '20. 기프티콘 교환 꿀팁',\n    '21. 패널티명단 - 사기꾼/양아치 구별법'\n  ]},\n  { index: 4, name: '스포츠/분석', count: 6, topics: [\n    '22. 스포츠 배팅 기초',\n    '23. 스포츠 분석/배팅 - 분석 없이 배팅하는 위험성',\n    '24. 스포츠 뉴스 해석하는 법',\n    '25. 라이브 스코어 활용법',\n    '26. 배당률 읽는 법 (초보 가이드)',\n    '27. 스포츠 분석 게시판 활용 팁'\n  ]}\n];\n\nconst catIdx = staticData.categoryIndex % 4;\nconst cat = categories[catIdx];\nconst topicIdx = (staticData.topicIndices[catIdx] || 0) % cat.topics.length;\nconst currentTopic = cat.topics[topicIdx];\n\nconsole.log('카테고리: ' + cat.name + ', 주제: ' + currentTopic);\n\n// 다음 실행을 위해 업데이트\nstaticData.topicIndices[catIdx] = topicIdx + 1;\nstaticData.categoryIndex++;\n\nreturn [{ json: {\n  categoryIndex: cat.index,\n  categoryName: cat.name,\n  topicNumber: topicIdx + 1,\n  currentTopic: currentTopic\n}}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2992,
+          1328
+        ],
+        "id": "gm-cat-select",
+        "name": "카테고리 선택"
+      }
+    ],
+    "connections": {
+      "AI 콘텐츠 생성": {
+        "main": [
+          [
+            {
+              "node": "콘텐츠 파싱",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "콘텐츠 파싱": {
+        "main": [
+          [
+            {
+              "node": "시트 기록",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "시트 기록": {
+        "main": [
+          [
+            {
+              "node": "참조 이미지 프롬프트",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "세그먼트 분리": {
+        "main": [
+          [
+            {
+              "node": "이미지 프롬프트 선택",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 생성": {
+        "main": [
+          [
+            {
+              "node": "이미지 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 대기": {
+        "main": [
+          [
+            {
+              "node": "이미지 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 결과": {
+        "main": [
+          [
+            {
+              "node": "이미지 URL 추출",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NCA 데이터 준비": {
+        "main": [
+          [
+            {
+              "node": "NCA 영상 제작",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NCA 영상 제작": {
+        "main": [
+          [
+            {
+              "node": "NCA 제작 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NCA 제작 대기": {
+        "main": [
+          [
+            {
+              "node": "NCA 결과 처리",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NCA 결과 처리": {
+        "main": [
+          [
+            {
+              "node": "상태 업데이트",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "참조 이미지 프롬프트": {
+        "main": [
+          [
+            {
+              "node": "세그먼트 분리",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking 'Execute workflow'": {
+        "main": [
+          [
+            {
+              "node": "카테고리 선택",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 URL 추출": {
+        "main": [
+          [
+            {
+              "node": "이미지 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 프롬프트 선택": {
+        "main": [
+          [
+            {
+              "node": "이미지 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 준비": {
+        "main": [
+          [
+            {
+              "node": "영상1 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 생성": {
+        "main": [
+          [
+            {
+              "node": "영상1 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 대기": {
+        "main": [
+          [
+            {
+              "node": "영상1 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 결과": {
+        "main": [
+          [
+            {
+              "node": "영상1 실패체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 완료체크": {
+        "main": [
+          [
+            {
+              "node": "프레임1 추출",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "영상1 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 재대기": {
+        "main": [
+          [
+            {
+              "node": "영상1 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임1 추출": {
+        "main": [
+          [
+            {
+              "node": "프레임1 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임1 대기": {
+        "main": [
+          [
+            {
+              "node": "프레임1 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임1 결과": {
+        "main": [
+          [
+            {
+              "node": "프레임1 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 준비": {
+        "main": [
+          [
+            {
+              "node": "영상2 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 생성": {
+        "main": [
+          [
+            {
+              "node": "영상2 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 대기": {
+        "main": [
+          [
+            {
+              "node": "영상2 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 결과": {
+        "main": [
+          [
+            {
+              "node": "영상2 실패체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 완료체크": {
+        "main": [
+          [
+            {
+              "node": "프레임2 추출",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "영상2 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 재대기": {
+        "main": [
+          [
+            {
+              "node": "영상2 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임2 추출": {
+        "main": [
+          [
+            {
+              "node": "프레임2 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임2 대기": {
+        "main": [
+          [
+            {
+              "node": "프레임2 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임2 결과": {
+        "main": [
+          [
+            {
+              "node": "프레임2 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 준비": {
+        "main": [
+          [
+            {
+              "node": "영상3 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 생성": {
+        "main": [
+          [
+            {
+              "node": "영상3 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 대기": {
+        "main": [
+          [
+            {
+              "node": "영상3 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 결과": {
+        "main": [
+          [
+            {
+              "node": "영상3 실패체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 완료체크": {
+        "main": [
+          [
+            {
+              "node": "NCA 데이터 준비",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "영상3 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 재대기": {
+        "main": [
+          [
+            {
+              "node": "영상3 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 실패체크": {
+        "main": [
+          [
+            {
+              "node": "영상1 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 실패체크": {
+        "main": [
+          [
+            {
+              "node": "영상2 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 실패체크": {
+        "main": [
+          [
+            {
+              "node": "영상3 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 완료체크": {
+        "main": [
+          [
+            {
+              "node": "영상1 준비",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "이미지 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 재대기": {
+        "main": [
+          [
+            {
+              "node": "이미지 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임1 완료체크": {
+        "main": [
+          [
+            {
+              "node": "영상2 준비",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "프레임1 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임1 재대기": {
+        "main": [
+          [
+            {
+              "node": "프레임1 추출",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임2 완료체크": {
+        "main": [
+          [
+            {
+              "node": "영상3 준비",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "프레임2 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임2 재대기": {
+        "main": [
+          [
+            {
+              "node": "프레임2 추출",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "스케줄 트리거": {
+        "main": [
+          []
+        ]
+      },
+      "카테고리 선택": {
+        "main": [
+          [
+            {
+              "node": "AI 콘텐츠 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "hatihoro15 hatihoro15",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-02-23T03:29:48.584Z",
+        "id": 504,
+        "workflowId": "jRT8nmDr34S96I1b",
+        "versionId": "df2276af-b9d4-4d60-b88f-2b5401d836a6",
+        "event": "activated",
+        "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
+      },
+      {
+        "createdAt": "2026-02-23T03:29:47.334Z",
+        "id": 503,
+        "workflowId": "jRT8nmDr34S96I1b",
+        "versionId": "df2276af-b9d4-4d60-b88f-2b5401d836a6",
+        "event": "activated",
+        "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
+      }
+    ]
+  }
 }
