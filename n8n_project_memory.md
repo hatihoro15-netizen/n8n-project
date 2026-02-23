@@ -9,6 +9,8 @@
 | 전용 (개선판) | wJEiFv03sCFu4nIB | 기존 |
 | 루믹스 솔루션 영상 (기존) | FxDdRAP0sVh-dAfawM8k1 | 기존 |
 | 숏폼 v2 (이전버전) | aL1VCjROx8RrGk7X | v3으로 대체됨 |
+| 설명형 숏츠 - 온카스터디 | dEtWqwWQPJfwCWiIM0QYd | 활성 (구: 유튜브 광고) |
+| 설명형 숏츠 - 사공픽 | LJPISE4aEat5xu7P | 활성 |
 
 ## 크레덴셜 ID
 | 이름 | ID | 타입 |
@@ -17,8 +19,8 @@
 | Kie.ai | 34ktW72w0p8fCfUQ | httpHeaderAuth |
 | Shotstack | 3oEYwvtDnmFeylkp | httpHeaderAuth |
 | Pexels | 1vPRgFSX7u4ecIy4 | httpHeaderAuth |
-| Google Sheets | ? | googleSheetsOAuth2Api - 사용자가 생성함, ID 미확인 |
-| Google Gemini | ? | googlePalmApi 또는 유사 - 사용자가 생성함, ID 미확인 |
+| Google Sheets | CWBUyXUqCU9p5VAg | googleSheetsOAuth2Api |
+| Google Gemini | IKP349r08J9Hoz5E | googlePalmApi |
 | YouTube | ? | youTubeOAuth2Api - 사용자가 생성함, ID 미확인 |
 
 ## API 선택 (사용자 확정)
