@@ -1,1179 +1,1179 @@
 {
-    "updatedAt": "2026-02-24T05:05:55.362Z",
-    "createdAt": "2026-02-22T21:17:37.563Z",
-    "id": "dEtWqwWQPJfwCWiIM0QYd",
-    "name": "\uc124\uba85\ud615 \uc20f\uce20 - \uc628\uce74\uc2a4\ud130\ub514",
-    "description": null,
-    "active": false,
-    "isArchived": false,
-    "nodes": [
-        {
-            "parameters": {},
-            "type": "n8n-nodes-base.manualTrigger",
-            "typeVersion": 1,
-            "position": [
-                0,
-                304
-            ],
-            "id": "2dfad90a-639d-4d9b-a3b8-08217ee81dd7",
-            "name": "\uc218\ub3d9 \uc2e4\ud589"
-        },
-        {
-            "parameters": {
-                "modelId": {
-                    "__rl": true,
-                    "value": "models/gemini-2.5-flash",
-                    "mode": "list",
-                    "cachedResultName": "models/gemini-2.5-flash"
-                },
-                "messages": {
-                    "values": [
-                        {
-                            "content": "={{ $json.prompt }}"
-                        }
-                    ]
-                },
-                "jsonOutput": true,
-                "builtInTools": {},
-                "options": {}
-            },
-            "type": "@n8n/n8n-nodes-langchain.googleGemini",
-            "typeVersion": 1.1,
-            "position": [
-                912,
-                304
-            ],
-            "id": "5df5ffe5-b4b3-41c7-9149-0cd8c3e069c7",
-            "name": "AI \ucf58\ud150\uce20 \uc0dd\uc131",
-            "credentials": {
-                "googlePalmApi": {
-                    "id": "IKP349r08J9Hoz5E",
-                    "name": "Google Gemini(PaLM) Api account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst data = JSON.parse(cleanText);\n\nif (!data.scenes || data.scenes.length < 5) {\n  throw new Error('scenes must have at least 5 items, got: ' + (data.scenes?.length || 0));\n}\n\n// visual_type, meme_mood \uac80\uc99d \ubc0f \uae30\ubcf8\uac12 \ucc98\ub9ac\nconst VALID_MOODS = ['thinking', 'excited', 'shocked', 'sad', 'angry', 'cool', 'celebrating'];\n\ndata.scenes = data.scenes.map((scene, idx) => {\n  // visual_type\uc774 \uc5c6\uc73c\uba74 \uc704\uce58 \uae30\ubc18 \uae30\ubcf8\uac12 (\ub9e4 3\ubc88\uc9f8 = meme)\n  if (!scene.visual_type || !['image', 'meme'].includes(scene.visual_type)) {\n    scene.visual_type = ((idx + 1) % 3 === 0) ? 'meme' : 'image';\n  }\n\n  // meme\uc778\ub370 meme_mood\uac00 \uc5c6\uc73c\uba74 \uae30\ubcf8\uac12\n  if (scene.visual_type === 'meme') {\n    if (!scene.meme_mood || !VALID_MOODS.includes(scene.meme_mood)) {\n      scene.meme_mood = VALID_MOODS[idx % VALID_MOODS.length];\n    }\n    // meme \uc7a5\uba74\uc740 image_prompt/keyword \ubd88\ud544\uc694\n    scene.image_prompt = scene.image_prompt || '';\n    scene.keyword = scene.keyword || '';\n  } else {\n    // image \uc7a5\uba74\uc740 meme_mood \ubd88\ud544\uc694\n    scene.meme_mood = '';\n    // keyword fallback\n    if (!scene.keyword) {\n      scene.keyword = scene.image_prompt?.split(',')[0] || 'abstract background';\n    }\n  }\n\n  return scene;\n});\n\nconst memeCount = data.scenes.filter(s => s.visual_type === 'meme').length;\nconst imageCount = data.scenes.filter(s => s.visual_type === 'image').length;\n\nreturn [{\n  json: {\n    hook_title: data.hook_title,\n    scenes: data.scenes,\n    Subject: data.Subject,\n    Caption: data.Caption,\n    Comment: data.Comment,\n    fullDialogue: data.scenes.map(s => s.dialogue).join(' '),\n    segmentCount: data.scenes.length,\n    memeCount,\n    imageCount,\n    Status: '\uc0dd\uc131 \uc911',\n    generatedAt: new Date().toISOString(),\n    row_number: $('\uc8fc\uc81c \ud30c\uc2f1').first().json.row_number\n  }\n}];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                1200,
-                304
-            ],
-            "id": "6adeed9a-4c8e-4d81-8578-76b2f46d0527",
-            "name": "\ucf58\ud150\uce20 \ud30c\uc2f1"
-        },
-        {
-            "parameters": {
-                "operation": "append",
-                "documentId": {
-                    "__rl": true,
-                    "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
-                    "mode": "list",
-                    "cachedResultName": "\uc628\uce74\uc2a4\ud130\ub514",
-                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
-                },
-                "sheetName": {
-                    "__rl": true,
-                    "mode": "name",
-                    "value": "\uc124\uba85\ud615 \uc20f\uce20"
-                },
-                "columns": {
-                    "mappingMode": "autoMapInputData",
-                    "value": {}
-                },
-                "options": {}
-            },
-            "type": "n8n-nodes-base.googleSheets",
-            "typeVersion": 4.7,
-            "position": [
-                1504,
-                304
-            ],
-            "id": "d6ea6410-28ee-4aa6-864f-c7c6d32de2a2",
-            "name": "\uc2dc\ud2b8 \uae30\ub85d",
-            "credentials": {
-                "googleSheetsOAuth2Api": {
-                    "id": "CWBUyXUqCU9p5VAg",
-                    "name": "Google Sheets account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsCode": "const data = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json;\nconst scenes = data.scenes || [];\n\nreturn scenes.map((scene, i) => ({\n  json: {\n    index: i,\n    dialogue: scene.dialogue,\n    image_prompt: scene.image_prompt,\n    keyword: scene.keyword || scene.image_prompt?.split(',')[0] || 'abstract background',\n    visual_type: scene.visual_type || 'image',\n    meme_mood: scene.meme_mood || '',\n  }\n}));"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                1808,
-                304
-            ],
-            "id": "3fa1b098-8745-40bd-84c4-63439968242b",
-            "name": "\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac"
-        },
-        {
-            "parameters": {
-                "method": "POST",
-                "url": "http://172.17.0.1:5100/tts",
-                "sendBody": true,
-                "specifyBody": "json",
-                "jsonBody": "={\n  \"text\": {{ JSON.stringify($json.dialogue) }},\n  \"voice\": \"ko-KR-InJoonNeural\",\n  \"rate\": \"+5%\"\n}",
-                "options": {
-                    "timeout": 60000
-                }
-            },
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.2,
-            "position": [
-                2112,
-                112
-            ],
-            "id": "fe8b82fb-797c-4f1f-bf39-801185c734a4",
-            "name": "TTS \uc694\uccad"
-        },
-        {
-            "parameters": {
-                "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const audioUrl = item.json.audio_url;\n  const durationSec = item.json.duration_sec;\n\n  if (!audioUrl) {\n    throw new Error('TTS \uc751\ub2f5\uc5d0 audio_url\uc774 \uc5c6\uc2b5\ub2c8\ub2e4: ' + JSON.stringify(item.json));\n  }\n\n  return {\n    json: {\n      audio_url: audioUrl,\n      duration_sec: durationSec,\n      ...item.json\n    }\n  };\n});"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                2400,
-                112
-            ],
-            "id": "ed11d1b0-d11f-4e98-8f6e-6692cdcc3351",
-            "name": "TTS \uacb0\uacfc \ucc98\ub9ac"
-        },
-        {
-            "parameters": {},
-            "type": "n8n-nodes-base.merge",
-            "typeVersion": 3.2,
-            "position": [
-                3312,
-                304
-            ],
-            "id": "e4169643-cf73-4bb2-8194-ebb35c9e595c",
-            "name": "Merge"
-        },
-        {
-            "parameters": {
-                "aggregate": "aggregateAllItemData",
-                "options": {}
-            },
-            "type": "n8n-nodes-base.aggregate",
-            "typeVersion": 1,
-            "position": [
-                3600,
-                304
-            ],
-            "id": "e9719f9a-8472-4fe5-b527-b1e9cda104a9",
-            "name": "Aggregate"
-        },
-        {
-            "parameters": {
-                "jsCode": "// NCA \uafc0\ud301 \uc20f\uce20: \uc774\ubbf8\uc9c0 + \ubc08 \uc601\uc0c1 \ud63c\ud569 \ud569\uc131 \ud398\uc774\ub85c\ub4dc\nconst hookTitle = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.hook_title;\nconst segmentCount = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.segmentCount;\n\nconst hookClean = hookTitle.replace(/<y>/g, '').replace(/<\\/y>/g, '');\n\nfunction escapeDrawtext(text) {\n  return text\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/'/g, '\\u2019')\n    .replace(/%/g, '%%')\n    .replace(/\"/g, '\\u201D')\n    .replace(/:/g, '\\\\:');\n}\n\nlet segments = [];\nlet currentStart = 0;\n\nfor (let i = 0; i < segmentCount; i++) {\n  const ttsResult = $('TTS \uacb0\uacfc \ucc98\ub9ac').all()[i]?.json;\n  const audioUrl = ttsResult?.audio_url || '';\n  const duration = ttsResult?.duration_sec || 4;\n\n  const imageResult = $('\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c').all()[i]?.json;\n  const imageUrl = imageResult?.images?.[0]?.url || '';\n  const isVideo = imageResult?.is_video || false;\n  const visualType = imageResult?.visual_type || 'image';\n\n  const dialogueText = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all()[i]?.json?.dialogue || '';\n\n  if (!imageUrl) {\n    throw new Error(`\uc138\uadf8\uba3c\ud2b8 ${i+1} \ubbf8\ub514\uc5b4 URL \uc5c6\uc74c`);\n  }\n\n  segments.push({\n    index: i + 1,\n    imageUrl, audioUrl, duration,\n    start: currentStart,\n    dialogueText,\n    isVideo,\n    visualType,\n  });\n  currentStart += duration;\n}\n\nconst totalDuration = currentStart;\n\nlet inputs = [];\nlet inputIndex = 0;\n\n// \ubbf8\ub514\uc5b4 \uc785\ub825 (\uc774\ubbf8\uc9c0 \ub610\ub294 \uc601\uc0c1)\nconst mediaInputs = [];\nfor (const seg of segments) {\n  if (seg.isVideo) {\n    // \ubc08 \uc601\uc0c1: \uc785\ub825 \uc635\uc158 \uc5c6\uc74c (\uc9c1\uc811 \uc77d\uae30)\n    inputs.push({\n      file_url: seg.imageUrl,\n      options: []\n    });\n  } else {\n    // \uc815\uc9c0 \uc774\ubbf8\uc9c0: loop + framerate + duration\n    inputs.push({\n      file_url: seg.imageUrl,\n      options: [\n        { option: \"-loop\", argument: \"1\" },\n        { option: \"-framerate\", argument: \"30\" },\n        { option: \"-t\", argument: String(seg.duration) }\n      ]\n    });\n  }\n  mediaInputs.push({ idx: inputIndex, isVideo: seg.isVideo, duration: seg.duration });\n  inputIndex++;\n}\n\n// \uc624\ub514\uc624 \uc785\ub825\nconst audioInputs = [];\nconst audioSegmentMap = [];\nfor (let i = 0; i < segments.length; i++) {\n  if (segments[i].audioUrl) {\n    inputs.push({ file_url: segments[i].audioUrl, options: [] });\n    audioInputs.push(inputIndex);\n    audioSegmentMap.push(i);\n    inputIndex++;\n  }\n}\n\nlet filterParts = [];\n\n// \ube44\ub514\uc624 \ud544\ud130: \uc774\ubbf8\uc9c0 vs \uc601\uc0c1 \ubd84\uae30\nfor (let i = 0; i < segments.length; i++) {\n  const m = mediaInputs[i];\n  if (m.isVideo) {\n    // \ubc08 \uc601\uc0c1: trim \u2192 scale \u2192 pad\n    filterParts.push(\n      `[${m.idx}:v]trim=duration=${m.duration},setpts=PTS-STARTPTS,` +\n      `scale=1080:1920:force_original_aspect_ratio=decrease,` +\n      `pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,` +\n      `setsar=1,fps=30[v${i}]`\n    );\n  } else {\n    // \uc815\uc9c0 \uc774\ubbf8\uc9c0: scale \u2192 pad\n    filterParts.push(\n      `[${m.idx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,` +\n      `pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,` +\n      `setsar=1,fps=30[v${i}]`\n    );\n  }\n}\n\n// \ube44\ub514\uc624 concat\nconst vLabels = segments.map((_, i) => `[v${i}]`).join('');\nfilterParts.push(`${vLabels}concat=n=${segments.length}:v=1:a=0[vconcat]`);\n\n// \uc624\ub514\uc624 \ud544\ud130\nif (audioInputs.length > 0) {\n  for (let i = 0; i < audioInputs.length; i++) {\n    const aIdx = audioInputs[i];\n    const segIdx = audioSegmentMap[i];\n    filterParts.push(\n      `[${aIdx}:a]atrim=duration=${segments[segIdx].duration},asetpts=PTS-STARTPTS[a${i}]`\n    );\n  }\n  const aLabels = audioInputs.map((_, i) => `[a${i}]`).join('');\n  filterParts.push(`${aLabels}concat=n=${audioInputs.length}:v=0:a=1[aconcat]`);\n}\n\n// \uc790\ub9c9 \uc624\ubc84\ub808\uc774\nconst escapedTitle = escapeDrawtext(hookClean);\n\nlet overlayFilter = `[vconcat]drawbox=y=40:w=1080:h=260:color=#333333@0.80:t=fill,` +\n  `drawtext=text='${escapedTitle}':fontsize=54:fontcolor=white:` +\n  `fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:` +\n  `x=(w-tw)/2:y=110:line_spacing=12`;\n\nfor (const seg of segments) {\n  const subText = escapeDrawtext(seg.dialogueText);\n  const startT = seg.start.toFixed(2);\n  const endT = (seg.start + seg.duration).toFixed(2);\n  overlayFilter += `,drawtext=text='${subText}':fontsize=44:fontcolor=#CCFF00:` +\n    `fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:` +\n    `x=(w-tw)/2:y=h-200:borderw=3:bordercolor=black:` +\n    `enable='between(t,${startT},${endT})'`;\n}\noverlayFilter += '[vfinal]';\nfilterParts.push(overlayFilter);\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs: inputs,\n  filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[aconcat]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"fast\" },\n      { option: \"-crf\", argument: \"23\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"192k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"kkultip_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload,\n    totalDuration,\n    segmentCount: segments.length,\n    hookTitle,\n    subject: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Subject,\n    caption: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Caption,\n    comment: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Comment,\n  }\n}];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                3904,
-                304
-            ],
-            "id": "404f0c26-7e0a-4ea9-9a92-b409b2881a08",
-            "name": "NCA \ub370\uc774\ud130 \uc900\ube44"
-        },
-        {
-            "parameters": {
-                "method": "POST",
-                "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
-                "sendHeaders": true,
-                "headerParameters": {
-                    "parameters": [
-                        {
-                            "name": "x-api-key",
-                            "value": "nca-sagong-2026"
-                        }
-                    ]
-                },
-                "sendBody": true,
-                "specifyBody": "json",
-                "jsonBody": "={{ JSON.stringify($json.nca_payload) }}",
-                "options": {
-                    "timeout": 600000
-                }
-            },
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.3,
-            "position": [
-                4208,
-                304
-            ],
-            "id": "aceed59c-8a84-4d5c-9462-c4029b65e4ae",
-            "name": "NCA \uc601\uc0c1 \uc81c\uc791"
-        },
-        {
-            "parameters": {
-                "amount": 120
-            },
-            "type": "n8n-nodes-base.wait",
-            "typeVersion": 1.1,
-            "position": [
-                4512,
-                304
-            ],
-            "id": "4ef29e6b-9834-46b4-9920-8c0591e82ae2",
-            "name": "NCA \uc81c\uc791 \ub300\uae30",
-            "webhookId": "21f711b5-6ca5-4e2a-9456-b8e3389800e9"
-        },
-        {
-            "parameters": {
-                "jsCode": "// NCA \uacb0\uacfc \ucc98\ub9ac\nconst result = $input.first().json;\nconst prevData = $('NCA \ub370\uc774\ud130 \uc900\ube44').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (!videoUrl) {\n  throw new Error('NCA \uc601\uc0c1 \uc81c\uc791 \uacb0\uacfc URL \uc5c6\uc74c: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    final_video_url: videoUrl,\n    url: videoUrl,\n    subject: prevData.subject,\n    caption: prevData.caption,\n    comment: prevData.comment,\n    topic: $('\uc8fc\uc81c \ud30c\uc2f1').first().json.topic,\n  }\n}];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                4800,
-                304
-            ],
-            "id": "b450da49-f5c0-47b1-b8aa-89ad7451c1e8",
-            "name": "NCA \uacb0\uacfc \ucc98\ub9ac"
-        },
-        {
-            "parameters": {
-                "operation": "update",
-                "documentId": {
-                    "__rl": true,
-                    "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
-                    "mode": "list",
-                    "cachedResultName": "\uc628\uce74\uc2a4\ud130\ub514",
-                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
-                },
-                "sheetName": {
-                    "__rl": true,
-                    "mode": "name",
-                    "value": "\uc124\uba85\ud615 \uc20f\uce20"
-                },
-                "columns": {
-                    "mappingMode": "autoMapInputData",
-                    "value": {},
-                    "matchingColumns": [
-                        "topic"
-                    ],
-                    "schema": [
-                        {
-                            "id": "topic",
-                            "displayName": "topic",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "Status",
-                            "displayName": "Status",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "Hook",
-                            "displayName": "Hook",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "Narration",
-                            "displayName": "Narration",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "Subject",
-                            "displayName": "Subject",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "Caption",
-                            "displayName": "Caption",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "\uc601\uc0c1 URL",
-                            "displayName": "\uc601\uc0c1 URL",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "hook_title",
-                            "displayName": "hook_title",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "scenes",
-                            "displayName": "scenes",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "Comment",
-                            "displayName": "Comment",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "fullDialogue",
-                            "displayName": "fullDialogue",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "segmentCount",
-                            "displayName": "segmentCount",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "generatedAt",
-                            "displayName": "generatedAt",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "final_video_url",
-                            "displayName": "final_video_url",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "url",
-                            "displayName": "url",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "subject",
-                            "displayName": "subject",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "caption",
-                            "displayName": "caption",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "comment",
-                            "displayName": "comment",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "memeCount",
-                            "displayName": "memeCount",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "imageCount",
-                            "displayName": "imageCount",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "row_number",
-                            "displayName": "row_number",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "number",
-                            "canBeUsedToMatch": true,
-                            "readOnly": true,
-                            "removed": false
-                        }
-                    ],
-                    "attemptToConvertTypes": false,
-                    "convertFieldsToString": false
-                },
-                "options": {}
-            },
-            "type": "n8n-nodes-base.googleSheets",
-            "typeVersion": 4.7,
-            "position": [
-                5104,
-                304
-            ],
-            "id": "319950f6-698f-4a59-84d3-04217db6b3b2",
-            "name": "\uc0c1\ud0dc \uc5c5\ub370\uc774\ud2b8",
-            "credentials": {
-                "googleSheetsOAuth2Api": {
-                    "id": "CWBUyXUqCU9p5VAg",
-                    "name": "Google Sheets account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsCode": "const topic = $input.first().json.topic || $input.first().json['\uc8fc\uc81c'] || '';\n\nif (!topic) {\n  throw new Error('topic\uc774 \ube44\uc5b4\uc788\uc2b5\ub2c8\ub2e4. \uc2dc\ud2b8\uc5d0 topic \uceec\ub7fc\uc744 \ud655\uc778\ud558\uc138\uc694.');\n}\n\nconst prompt = `\ub108\ub294 '\uc628\uce74\uc2a4\ud130\ub514' \ucee4\ubba4\ub2c8\ud2f0\uc758 YouTube Shorts \uafc0\ud301 \ucf58\ud150\uce20 \uae30\ud68d\uc790\uc57c.\n\uc544\ub798 \uc8fc\uc81c\ub85c 45~60\ucd08 \ubd84\ub7c9\uc758 \uafc0\ud301 \ub098\ub808\uc774\uc158 \uc20f\uce20 \uc2a4\ud06c\ub9bd\ud2b8\ub97c \uc791\uc131\ud574\uc918.\n\n## \ubc18\ub4dc\uc2dc \uc9c0\ud0ac \uc8fc\uc81c\n${topic}\n\n\uc704 \uc8fc\uc81c\ub97c \uc911\uc2ec\uc73c\ub85c \ucf58\ud150\uce20\ub97c \uc791\uc131\ud558\ub418, \ud6c4\ubc18\ubd80\uc5d0 '\uc628\uce74\uc2a4\ud130\ub514'\ub97c \uc790\uc5f0\uc2a4\ub7fd\uac8c 1~2\ud68c \uc5b8\uae09\ud574 (\uad11\uace0 \ud2f0 \uc5c6\uc774).\n\ubaa8\ub4e0 scene\uc758 dialogue\ub294 \ubc18\ub4dc\uc2dc \"${topic}\" \uc8fc\uc81c\uc640 \uc9c1\uc811 \uad00\ub828\ub41c \ub0b4\uc6a9\uc774\uc5b4\uc57c \ud574.\n\uc8fc\uc81c\uc640 \ubb34\uad00\ud55c \ub0b4\uc6a9(\uc694\ub9ac, \ud328\uc158, \uc5ec\ud589 \ub4f1)\uc740 \uc808\ub300 \ud3ec\ud568\ud558\uc9c0 \ub9c8.\n\n## \uc628\uce74\uc2a4\ud130\ub514 \uc18c\uac1c\n\uc628\uce74\uc2a4\ud130\ub514\ub294 \uba39\ud280\uac80\uc99d \ubc0f \uc548\uc804 \uc815\ubcf4 \uc81c\uacf5 \ucee4\ubba4\ub2c8\ud2f0\uc785\ub2c8\ub2e4.\n\ud575\uc2ec \uae30\ub2a5\uc740 \uc548\uc804\ud55c \uce74\uc9c0\ub178 \uc0ac\uc774\ud2b8\ub97c \uace0\ub97c \uc218 \uc788\ub3c4\ub85d \uac80\uc99d \uc815\ubcf4\ub97c \uacf5\uc720\ud558\uace0, \uba39\ud280 \uc0ac\uc774\ud2b8\ub97c \uad6c\ubcc4\ud558\ub294 \ubc29\ubc95\uc744 \uc548\ub0b4\ud558\ub294 \uac83\uc785\ub2c8\ub2e4.\n\ucee4\ubba4\ub2c8\ud2f0 \uae30\ub2a5\uc73c\ub85c\ub294 \uc790\uc720\uac8c\uc2dc\ud310, \uc81c\ud734\uc0ac\uc774\ud2b8 \ud6c4\uae30, \uc2a4\ud3ec\uce20 \ubd84\uc11d \uac8c\uc2dc\ud310, \ubc29\uc1a1\uc874(\ub3d9\ubb3c\uc6d0, \uac00\ub514\uc5b8, \uc778\uc0dd\uc5ed\uc804, \ud558\uc774\ub77c\uc774\ud2b8) \ub4f1\uc774 \uc788\uace0,\n\ud3ec\uc778\ud2b8 \uc2dc\uc2a4\ud15c\uc744 \ud1b5\ud574 \ubcf5\uad8c, \ub3cc\ub9bc\ud310, \uc624\ubaa9, \ubb34\ub8cc\uc2ac\ub86f \uac19\uc740 \ud65c\ub3d9\ub3c4 \uac00\ub2a5\ud558\uba70, \ud3ec\uc778\ud2b8\ub85c \uae30\ud504\ud2f0\ucf58 \uad50\ud658\ub3c4 \ub429\ub2c8\ub2e4.\n\n\uc8fc\uc81c\uc5d0 \ub530\ub77c \uc628\uce74\uc2a4\ud130\ub514\uc758 \uc801\uc808\ud55c \uae30\ub2a5\uc744 \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc5f0\uacb0\ud574:\n- \uba39\ud280/\uc548\uc804 \uad00\ub828 \uc8fc\uc81c \u2192 \uac80\uc99d \uc815\ubcf4, \uc548\uc804 \uc0ac\uc774\ud2b8 \ucd94\ucc9c\n- \uc2a4\ud3ec\uce20 \uad00\ub828 \uc8fc\uc81c \u2192 \uc2a4\ud3ec\uce20 \ubd84\uc11d \uac8c\uc2dc\ud310\n- \ucee4\ubba4\ub2c8\ud2f0/\uc7ac\ubbf8 \uad00\ub828 \uc8fc\uc81c \u2192 \ud3ec\uc778\ud2b8 \uc2dc\uc2a4\ud15c, \ubbf8\ub2c8\uac8c\uc784, \ubc29\uc1a1\uc874\n- \uc77c\ubc18 \uc815\ubcf4 \uc8fc\uc81c \u2192 \uc790\uc720\uac8c\uc2dc\ud310, \ucee4\ubba4\ub2c8\ud2f0 \ud65c\ub3d9\n\n## \uc601\uc0c1 \uc2a4\ud0c0\uc77c (\uafc0\ud301 \uc20f\uce20 + \ubc08 \ud63c\ud569)\n- \ucd1d 45~60\ucd08, 9:16 \uc138\ub85c \uc601\uc0c1\n- \uc0c1\ub2e8: \uace0\uc815\ub41c \ud6c5 \uc81c\ubaa9 (\ud575\uc2ec \ud0a4\uc6cc\ub4dc 1~2\uac1c\ub294 <y>\ud0dc\uadf8</y>\ub85c \uac10\uc2f8\uae30)\n- \uc911\uac04: \uc815\ubcf4 \uc774\ubbf8\uc9c0 + \ubc08/\ub9ac\uc561\uc158 \uc601\uc0c1 \ubc88\uac08\uc544 \ubc30\uce58\n- \ud558\ub2e8: \ub098\ub808\uc774\uc158 \uc790\ub9c9\n- \uc624\ub514\uc624: TTS \ub098\ub808\uc774\uc158\n\n## \uc7a5\uba74 \uad6c\uc131 \uaddc\uce59 (\ud575\uc2ec!)\n- \ucd1d 8~12\uac1c \uc7a5\uba74\n- \uac01 \uc7a5\uba74\uc5d0 visual_type\uc744 \uc9c0\uc815: \"image\" \ub610\ub294 \"meme\"\n- image: \uc8fc\uc81c \uad00\ub828 \uc815\ubcf4 \uc774\ubbf8\uc9c0 (Pexels\uc5d0\uc11c \uac80\uc0c9)\n- meme: \ubc08/\ub9ac\uc561\uc158 \uc601\uc0c1 (\uac10\uc815 \ud45c\ud604\uc6a9)\n- \uc7a5\uba74\uc758 30~40%\ub97c meme\uc73c\ub85c \uc9c0\uc815\n- \ub9e4 2~3\uac1c image \ub4a4\uc5d0 1\uac1c meme \ubc30\uce58 (\ub9ac\ub4ec\uac10)\n- meme \uc7a5\uba74\uc5d0\ub294 meme_mood\ub97c \uc9c0\uc815: thinking, excited, shocked, sad, angry, cool, celebrating \uc911 \ud0dd1\n- meme \uc7a5\uba74\uc758 dialogue\ub294 \uac10\uc815 \ubc18\uc751\uc774\ub098 \ub9ac\uc561\uc158 \ubb38\uc7a5 (\uc608: \"\uc774\uac70 \uc2e4\ud654\ub0d0?!\", \"\ub300\ubc15...\", \"\uc9c4\uc9dc \uac1c\uafc0\ud301\uc774\ub2e4\")\n\n## \ub098\ub808\uc774\uc158 \uaddc\uce59\n1. \uc2dc\uccad\uc790\ub97c \ub04c\uc5b4\ub2f9\uae30\ub294 \uac15\ub82c\ud55c hook\uc73c\ub85c \uc2dc\uc791 (\uc9c8\ubb38 or \ucda9\uaca9\uc801 \uc0ac\uc2e4)\n2. \"${topic}\" \uc8fc\uc81c\uc758 \ud575\uc2ec \uc815\ubcf4\ub97c \uac04\uacb0\ud558\uac8c \uc804\ub2ec\n3. \uc790\uc5f0\uc2a4\ub7ec\uc6b4 \ud55c\uad6d\uc5b4 \uad6c\uc5b4\uccb4 (\ubc18\ub9d0+\uc874\ub313\ub9d0 \ubbf9\uc2a4, \"~\uac70\ub4e0\uc694\", \"~\uc796\uc544\uc694\")\n4. \ud6c4\ubc18\ubd80\uc5d0 \uc628\uce74\uc2a4\ud130\ub514\ub97c \ud574\uacb0\ucc45\uc73c\ub85c \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc5b8\uae09\n5. CTA\ub85c \ub9c8\ubb34\ub9ac (\"\uc628\uce74\uc2a4\ud130\ub514 \uac80\uc0c9\ud574\ubcf4\uc138\uc694\", \"\ub9c1\ud06c \ud655\uc778\" \ub4f1)\n6. \uac01 \uc7a5\uba74\uc740 3~6\ucd08 \ubd84\ub7c9 (\ud55c \ubb38\uc7a5, \uc9e7\uace0 \uc784\ud329\ud2b8 \uc788\uac8c)\n\n## \uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8 \uaddc\uce59 (visual_type\uc774 \"image\"\uc778 \uacbd\uc6b0\ub9cc)\n- \uc601\uc5b4\ub85c \uc791\uc131\n- \"${topic}\" \uc8fc\uc81c\uc640 \uc9c1\uc811 \uad00\ub828\ub41c \uc2dc\uac01\uc801 \uc7a5\uba74 \ubb18\uc0ac\n- \ud56d\uc0c1 \ud3ec\ud568: \"photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\"\n- \uac10\uc815/\ubd84\uc704\uae30\ub97c \uac15\uc870 (worried, excited, shocked, confident \ub4f1)\n- visual_type\uc774 \"meme\"\uc778 \uacbd\uc6b0 image_prompt\ub294 \ube48 \ubb38\uc790\uc5f4\n\n## \ucd9c\ub825 (\uc21c\uc218 JSON, \ucf54\ub4dc\ube14\ub85d \uc5c6\uc774)\n{\n  \"hook_title\": \"\ud6c5 \uc81c\ubaa9 (15\uc790 \uc774\ub0b4, \ud575\uc2ec \ud0a4\uc6cc\ub4dc <y>\ud0dc\uadf8</y>)\",\n  \"scenes\": [\n    {\n      \"dialogue\": \"\ub098\ub808\uc774\uc158 \ud14d\uc2a4\ud2b8 (\ud55c \ubb38\uc7a5)\",\n      \"image_prompt\": \"\uc601\uc5b4 \uc774\ubbf8\uc9c0 \ud504\ub86c\ud504\ud2b8 (meme\uc774\uba74 \ube48 \ubb38\uc790\uc5f4)\",\n      \"keyword\": \"Pexels \uac80\uc0c9\uc6a9 \uc601\uc5b4 \ud0a4\uc6cc\ub4dc (meme\uc774\uba74 \ube48 \ubb38\uc790\uc5f4)\",\n      \"visual_type\": \"image \ub610\ub294 meme\",\n      \"meme_mood\": \"meme\uc778 \uacbd\uc6b0\ub9cc: thinking/excited/shocked/sad/angry/cool/celebrating\"\n    }\n  ],\n  \"Subject\": \"\uc601\uc0c1 \uc81c\ubaa9 #\uc628\uce74\uc2a4\ud130\ub514 #\uba39\ud280\uac80\uc99d + \uc8fc\uc81c\uad00\ub828 \ud574\uc2dc\ud0dc\uadf8\",\n  \"Caption\": \"\uc601\uc0c1 \uc124\uba85 #\uc628\uce74\uc2a4\ud130\ub514 #\uba39\ud280\uac80\uc99d + \uc8fc\uc81c\uad00\ub828 \ud574\uc2dc\ud0dc\uadf8\",\n  \"Comment\": \"\uad6c\uae00\uc5d0 \uc628\uce74\uc2a4\ud130\ub514 \uac80\uc0c9!\"\n}\n\n\uc8fc\uc758:\n- scenes\ub294 8~12\uac1c\n- visual_type \ud544\uc218: \"image\" \ub610\ub294 \"meme\"\n- meme\uc778 \uc7a5\uba74\uc740 meme_mood \ud544\uc218\n- image\uc778 \uc7a5\uba74\uc740 image_prompt, keyword \ud544\uc218\n- \ubc18\ub4dc\uc2dc \uc704 JSON \ud615\uc2dd \uadf8\ub300\ub85c \ucd9c\ub825\n- \"${topic}\" \uc8fc\uc81c\uc640 \ubb34\uad00\ud55c \ub0b4\uc6a9 \uc808\ub300 \uae08\uc9c0`;\n\nreturn [{\n  json: {\n    prompt,\n    topic,\n    row_number: $input.first().json.row_number,\n    ...$input.first().json\n  }\n}];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                752,
-                304
-            ],
-            "id": "d35c1c7b-3cc8-448b-a309-dbfe73dec39c",
-            "name": "\ud504\ub86c\ud504\ud2b8 \uc0dd\uc131"
-        },
-        {
-            "parameters": {
-                "url": "=https://api.pexels.com/v1/search?query={{ encodeURIComponent($json.keyword || $json.image_prompt?.split(',')[0] || 'abstract background') }}&per_page=1&orientation=portrait",
-                "authentication": "genericCredentialType",
-                "genericAuthType": "httpHeaderAuth",
-                "options": {}
-            },
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.3,
-            "position": [
-                2240,
-                608
-            ],
-            "id": "76aadc3c-5ec1-487b-a68c-6725f0fd4ba6",
-            "name": "\uc774\ubbf8\uc9c0 \uac80\uc0c9",
-            "credentials": {
-                "httpHeaderAuth": {
-                    "id": "1vPRgFSX7u4ecIy4",
-                    "name": "Pexels"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsCode": "// \ubc08 \uce74\ud0c8\ub85c\uadf8: MinIO\uc5d0 \ud638\uc2a4\ud305\ub41c \ubc08/\ub9ac\uc561\uc158 \uc601\uc0c1 URL\nconst MEME_CATALOG = {\n  thinking: [\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_01.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_02.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_03.mp4',\n  ],\n  excited: [\n    'http://76.13.182.180:9000/memes/excited/meme_excited_01.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_02.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_03.mp4',\n  ],\n  shocked: [\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_01.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_02.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_03.mp4',\n  ],\n  sad: [\n    'http://76.13.182.180:9000/memes/sad/meme_sad_01.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_02.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_03.mp4',\n  ],\n  angry: [\n    'http://76.13.182.180:9000/memes/angry/meme_angry_01.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_02.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_03.mp4',\n  ],\n  cool: [\n    'http://76.13.182.180:9000/memes/cool/meme_cool_01.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_02.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_03.mp4',\n  ],\n  celebrating: [\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_01.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_02.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_03.mp4',\n  ],\n};\n\nconst items = $input.all();\nconst segAll = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all();\n\nreturn items.map((item, i) => {\n  const data = item.json;\n  const segData = segAll[i]?.json || {};\n  const visualType = segData.visual_type || data.visual_type || 'image';\n  const memeMood = segData.meme_mood || data.meme_mood || 'thinking';\n\n  if (visualType === 'meme') {\n    const catalog = MEME_CATALOG[memeMood] || MEME_CATALOG.thinking;\n    const randomIdx = Math.floor(Math.random() * catalog.length);\n    const memeUrl = catalog[randomIdx];\n    return {\n      json: {\n        ...data,\n        visual_type: 'meme',\n        meme_mood: memeMood,\n        images: [{ url: memeUrl }],\n        is_video: true,\n      }\n    };\n  } else {\n    const photos = data.photos || [];\n    let imageUrl = '';\n    if (photos.length > 0) {\n      imageUrl = photos[0].src?.portrait || photos[0].src?.large || photos[0].src?.medium || '';\n    }\n    if (!imageUrl) {\n      imageUrl = 'https://images.pexels.com/photos/1229861/pexels-photo-1229861.jpeg?auto=compress&cs=tinysrgb&w=1080';\n    }\n    return {\n      json: {\n        ...data,\n        visual_type: 'image',\n        meme_mood: '',\n        images: [{ url: imageUrl }],\n        is_video: false,\n      }\n    };\n  }\n});"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                2864,
-                576
-            ],
-            "id": "417f9a14-190f-48d9-a466-fde992082665",
-            "name": "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c"
-        },
-        {
-            "parameters": {
-                "modelId": {
-                    "__rl": true,
-                    "value": "models/gemini-2.5-flash",
-                    "mode": "list",
-                    "cachedResultName": "models/gemini-2.5-flash"
-                },
-                "messages": {
-                    "values": [
-                        {
-                            "content": "\ub108\ub294 '\uc628\uce74\uc2a4\ud130\ub514' \ucee4\ubba4\ub2c8\ud2f0\uc758 YouTube Shorts \uc8fc\uc81c \uae30\ud68d\uc790\uc57c.\n\n\uc628\uce74\uc2a4\ud130\ub514\ub294 \uba39\ud280\uac80\uc99d \ubc0f \uc548\uc804 \uc815\ubcf4 \uc81c\uacf5 \ucee4\ubba4\ub2c8\ud2f0\ub85c, \ub2e4\uc74c \uae30\ub2a5\uc744 \uac00\uc9c0\uace0 \uc788\uc5b4:\n- \ud575\uc2ec: \uc548\uc804\ud55c \uce74\uc9c0\ub178 \uc0ac\uc774\ud2b8 \uac80\uc99d, \uba39\ud280 \uc0ac\uc774\ud2b8 \uad6c\ubcc4\ubc95\n- \ucee4\ubba4\ub2c8\ud2f0: \uc790\uc720\uac8c\uc2dc\ud310, \uc81c\ud734\uc0ac\uc774\ud2b8 \ud6c4\uae30, \uc2a4\ud3ec\uce20 \ubd84\uc11d \uac8c\uc2dc\ud310, \ubc29\uc1a1\uc874(\ub3d9\ubb3c\uc6d0, \uac00\ub514\uc5b8, \uc778\uc0dd\uc5ed\uc804, \ud558\uc774\ub77c\uc774\ud2b8)\n- \ud3ec\uc778\ud2b8 \uc2dc\uc2a4\ud15c: \ubcf5\uad8c, \ub3cc\ub9bc\ud310, \uc624\ubaa9, \ubb34\ub8cc\uc2ac\ub86f, \uae30\ud504\ud2f0\ucf58 \uad50\ud658\n\n\uc544\ub798 \uce74\ud14c\uace0\ub9ac \uc911 \ub79c\ub364\uc73c\ub85c \ud558\ub098\ub97c \uace8\ub77c\uc11c YouTube Shorts\uc5d0 \uc801\ud569\ud55c \uc8fc\uc81c 1\uac1c\ub97c \uc0dd\uc131\ud574\uc918:\n1. \uba39\ud280\uac80\uc99d/\uc548\uc804 \uc815\ubcf4 (\uc608: \uba39\ud280\uc0ac\uc774\ud2b8 \ud2b9\uc9d5, \uc548\uc804\ub180\uc774\ud130 \uace0\ub974\ub294 \ubc95)\n2. \uc628\ub77c\uc778 \uce74\uc9c0\ub178 \ud301 (\uc608: \ucda9\uc804 \ubcf4\ub108\uc2a4 \ud568\uc815, \ucd9c\uae08 \ube60\ub978 \uc0ac\uc774\ud2b8 \ud2b9\uc9d5)\n3. \uc2a4\ud3ec\uce20 \ubd84\uc11d (\uc608: \ucd95\uad6c \ubc30\ud305 \ucd08\ubcf4 \uac00\uc774\ub4dc, \uc5b8\ub354\uc624\ubc84 \ubd84\uc11d\ubc95)\n4. \ucee4\ubba4\ub2c8\ud2f0 \ud65c\uc6a9 (\uc608: \ud3ec\uc778\ud2b8 \ubaa8\uc73c\ub294 \uafc0\ud301, \uc81c\ud734\uc0ac\uc774\ud2b8 \ud6c4\uae30 \ud65c\uc6a9\ubc95)\n5. \uc0ac\uae30 \uc608\ubc29 (\uc608: \uac00\uc785\ucf54\ub4dc \uc0ac\uae30 \uc218\ubc95, \ud154\ub808\uadf8\ub7a8 \uc0ac\uae30 \uc8fc\uc758\ubcf4)\n\n\ucd9c\ub825 \ud615\uc2dd (\uc21c\uc218 JSON\ub9cc, \ucf54\ub4dc\ube14\ub85d \uc5c6\uc774):\n{\"topic\": \"\uc8fc\uc81c \ud14d\uc2a4\ud2b8 (15~30\uc790)\"}"
-                        }
-                    ]
-                },
-                "jsonOutput": true,
-                "builtInTools": {},
-                "options": {}
-            },
-            "type": "@n8n/n8n-nodes-langchain.googleGemini",
-            "typeVersion": 1.1,
-            "position": [
-                224,
-                304
-            ],
-            "id": "f691c2b0-ba9e-41de-b342-ddf6ea0d4a09",
-            "name": "AI \uc8fc\uc81c \uc0dd\uc131",
-            "credentials": {
-                "googlePalmApi": {
-                    "id": "IKP349r08J9Hoz5E",
-                    "name": "Google Gemini(PaLM) Api account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst data = JSON.parse(cleanText);\n\nif (!data.topic) {\n  throw new Error('AI \uc8fc\uc81c \uc0dd\uc131 \uacb0\uacfc\uc5d0 topic\uc774 \uc5c6\uc2b5\ub2c8\ub2e4: ' + cleanText);\n}\n\nreturn [{\n  json: {\n    topic: data.topic,\n    row_number: null\n  }\n}];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                560,
-                304
-            ],
-            "id": "a15bf7bf-1820-45d4-ae9c-f38db2d345f7",
-            "name": "\uc8fc\uc81c \ud30c\uc2f1"
-        }
-    ],
-    "connections": {
-        "\uc218\ub3d9 \uc2e4\ud589": {
-            "main": [
-                [
-                    {
-                        "node": "AI \uc8fc\uc81c \uc0dd\uc131",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "AI \ucf58\ud150\uce20 \uc0dd\uc131": {
-            "main": [
-                [
-                    {
-                        "node": "\ucf58\ud150\uce20 \ud30c\uc2f1",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\ucf58\ud150\uce20 \ud30c\uc2f1": {
-            "main": [
-                [
-                    {
-                        "node": "\uc2dc\ud2b8 \uae30\ub85d",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc2dc\ud2b8 \uae30\ub85d": {
-            "main": [
-                [
-                    {
-                        "node": "\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac": {
-            "main": [
-                [
-                    {
-                        "node": "TTS \uc694\uccad",
-                        "type": "main",
-                        "index": 0
-                    },
-                    {
-                        "node": "\uc774\ubbf8\uc9c0 \uac80\uc0c9",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "TTS \uc694\uccad": {
-            "main": [
-                [
-                    {
-                        "node": "TTS \uacb0\uacfc \ucc98\ub9ac",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "TTS \uacb0\uacfc \ucc98\ub9ac": {
-            "main": [
-                [
-                    {
-                        "node": "Merge",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Merge": {
-            "main": [
-                [
-                    {
-                        "node": "Aggregate",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Aggregate": {
-            "main": [
-                [
-                    {
-                        "node": "NCA \ub370\uc774\ud130 \uc900\ube44",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "NCA \ub370\uc774\ud130 \uc900\ube44": {
-            "main": [
-                [
-                    {
-                        "node": "NCA \uc601\uc0c1 \uc81c\uc791",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "NCA \uc601\uc0c1 \uc81c\uc791": {
-            "main": [
-                [
-                    {
-                        "node": "NCA \uc81c\uc791 \ub300\uae30",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "NCA \uc81c\uc791 \ub300\uae30": {
-            "main": [
-                [
-                    {
-                        "node": "NCA \uacb0\uacfc \ucc98\ub9ac",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "NCA \uacb0\uacfc \ucc98\ub9ac": {
-            "main": [
-                [
-                    {
-                        "node": "\uc0c1\ud0dc \uc5c5\ub370\uc774\ud2b8",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\ud504\ub86c\ud504\ud2b8 \uc0dd\uc131": {
-            "main": [
-                [
-                    {
-                        "node": "AI \ucf58\ud150\uce20 \uc0dd\uc131",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc774\ubbf8\uc9c0 \uac80\uc0c9": {
-            "main": [
-                [
-                    {
-                        "node": "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c": {
-            "main": [
-                [
-                    {
-                        "node": "Merge",
-                        "type": "main",
-                        "index": 1
-                    }
-                ]
-            ]
-        },
-        "AI \uc8fc\uc81c \uc0dd\uc131": {
-            "main": [
-                [
-                    {
-                        "node": "\uc8fc\uc81c \ud30c\uc2f1",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc8fc\uc81c \ud30c\uc2f1": {
-            "main": [
-                [
-                    {
-                        "node": "\ud504\ub86c\ud504\ud2b8 \uc0dd\uc131",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        }
+  "updatedAt": "2026-02-24T05:05:55.362Z",
+  "createdAt": "2026-02-22T21:17:37.563Z",
+  "id": "itUlZJ2rZfGqkxty",
+  "name": "설명형 숏츠 - 온카스터디",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        304
+      ],
+      "id": "2dfad90a-639d-4d9b-a3b8-08217ee81dd7",
+      "name": "수동 실행"
     },
-    "settings": {
-        "executionOrder": "v1",
-        "callerPolicy": "workflowsFromSameOwner",
-        "availableInMCP": false
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        912,
+        304
+      ],
+      "id": "5df5ffe5-b4b3-41c7-9149-0cd8c3e069c7",
+      "name": "AI 콘텐츠 생성",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
     },
-    "staticData": null,
-    "meta": null,
-    "pinData": {
-        "\uc774\ubbf8\uc9c0 \ub300\uae30": [
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst data = JSON.parse(cleanText);\n\nif (!data.scenes || data.scenes.length < 5) {\n  throw new Error('scenes must have at least 5 items, got: ' + (data.scenes?.length || 0));\n}\n\n// visual_type, meme_mood 검증 및 기본값 처리\nconst VALID_MOODS = ['thinking', 'excited', 'shocked', 'sad', 'angry', 'cool', 'celebrating'];\n\ndata.scenes = data.scenes.map((scene, idx) => {\n  // visual_type이 없으면 위치 기반 기본값 (매 3번째 = meme)\n  if (!scene.visual_type || !['image', 'meme'].includes(scene.visual_type)) {\n    scene.visual_type = ((idx + 1) % 3 === 0) ? 'meme' : 'image';\n  }\n\n  // meme인데 meme_mood가 없으면 기본값\n  if (scene.visual_type === 'meme') {\n    if (!scene.meme_mood || !VALID_MOODS.includes(scene.meme_mood)) {\n      scene.meme_mood = VALID_MOODS[idx % VALID_MOODS.length];\n    }\n    // meme 장면은 image_prompt/keyword 불필요\n    scene.image_prompt = scene.image_prompt || '';\n    scene.keyword = scene.keyword || '';\n  } else {\n    // image 장면은 meme_mood 불필요\n    scene.meme_mood = '';\n    // keyword fallback\n    if (!scene.keyword) {\n      scene.keyword = scene.image_prompt?.split(',')[0] || 'abstract background';\n    }\n  }\n\n  return scene;\n});\n\nconst memeCount = data.scenes.filter(s => s.visual_type === 'meme').length;\nconst imageCount = data.scenes.filter(s => s.visual_type === 'image').length;\n\nreturn [{\n  json: {\n    hook_title: data.hook_title,\n    scenes: data.scenes,\n    Subject: data.Subject,\n    Caption: data.Caption,\n    Comment: data.Comment,\n    fullDialogue: data.scenes.map(s => s.dialogue).join(' '),\n    segmentCount: data.scenes.length,\n    memeCount,\n    imageCount,\n    Status: '생성 중',\n    generatedAt: new Date().toISOString(),\n    row_number: $('주제 파싱').first().json.row_number\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        304
+      ],
+      "id": "6adeed9a-4c8e-4d81-8578-76b2f46d0527",
+      "name": "콘텐츠 파싱"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+          "mode": "list",
+          "cachedResultName": "온카스터디",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "설명형 숏츠"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1504,
+        304
+      ],
+      "id": "d6ea6410-28ee-4aa6-864f-c7c6d32de2a2",
+      "name": "시트 기록",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\nreturn scenes.map((scene, i) => ({\n  json: {\n    index: i,\n    dialogue: scene.dialogue,\n    image_prompt: scene.image_prompt,\n    keyword: scene.keyword || scene.image_prompt?.split(',')[0] || 'abstract background',\n    visual_type: scene.visual_type || 'image',\n    meme_mood: scene.meme_mood || '',\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1808,
+        304
+      ],
+      "id": "3fa1b098-8745-40bd-84c4-63439968242b",
+      "name": "세그먼트 분리"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:5100/tts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": {{ JSON.stringify($json.dialogue) }},\n  \"voice\": \"ko-KR-HyunsuNeural\",\n  \"rate\": \"+15%\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2112,
+        112
+      ],
+      "id": "fe8b82fb-797c-4f1f-bf39-801185c734a4",
+      "name": "TTS 요청"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const audioUrl = item.json.audio_url;\n  const durationSec = item.json.duration_sec;\n\n  if (!audioUrl) {\n    throw new Error('TTS 응답에 audio_url이 없습니다: ' + JSON.stringify(item.json));\n  }\n\n  return {\n    json: {\n      audio_url: audioUrl,\n      duration_sec: durationSec,\n      ...item.json\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2400,
+        112
+      ],
+      "id": "ed11d1b0-d11f-4e98-8f6e-6692cdcc3351",
+      "name": "TTS 결과 처리"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3312,
+        304
+      ],
+      "id": "e4169643-cf73-4bb2-8194-ebb35c9e595c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3600,
+        304
+      ],
+      "id": "e9719f9a-8472-4fe5-b527-b1e9cda104a9",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// NCA 꿀팁 숏츠: 이미지 + 밈 영상 혼합 합성 페이로드\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\nconst hookClean = hookTitle.replace(/<y>/g, '').replace(/<\\/y>/g, '');\n\nfunction escapeDrawtext(text) {\n  return text\n    .replace(/\\\\/g, '\\\\\\\\')\n    .replace(/'/g, '\\u2019')\n    .replace(/%/g, '%%')\n    .replace(/\"/g, '\\u201D')\n    .replace(/:/g, '\\\\:');\n}\n\n// 자막 줄바꿈: 14자마다 줄바꿈\nfunction wrapSubtitle(text, maxLen) {\n  if (text.length <= maxLen) return text;\n  let lines = [];\n  let current = '';\n  for (const ch of text) {\n    current += ch;\n    if (current.length >= maxLen) {\n      lines.push(current);\n      current = '';\n    }\n  }\n  if (current) lines.push(current);\n  return lines.join('\\n');\n}\n\nlet segments = [];\nlet currentStart = 0;\n\nfor (let i = 0; i < segmentCount; i++) {\n  const ttsResult = $('TTS 결과 처리').all()[i]?.json;\n  const audioUrl = ttsResult?.audio_url || '';\n  const duration = ttsResult?.duration_sec || 3;\n\n  const imageResult = $('이미지 URL 추출').all()[i]?.json;\n  const imageUrl = imageResult?.images?.[0]?.url || '';\n  const isVideo = imageResult?.is_video || false;\n  const visualType = imageResult?.visual_type || 'image';\n\n  const dialogueText = $('세그먼트 분리').all()[i]?.json?.dialogue || '';\n\n  if (!imageUrl) {\n    throw new Error(`세그먼트 ${i+1} 미디어 URL 없음`);\n  }\n\n  segments.push({\n    index: i + 1,\n    imageUrl, audioUrl, duration,\n    start: currentStart,\n    dialogueText,\n    isVideo,\n    visualType,\n  });\n  currentStart += duration;\n}\n\nconst totalDuration = currentStart;\n\nlet inputs = [];\nlet inputIndex = 0;\n\nconst mediaInputs = [];\nfor (const seg of segments) {\n  if (seg.isVideo) {\n    // 밈 영상: -stream_loop -1 로 무한 루프 (짧은 밈도 duration만큼 재생)\n    inputs.push({\n      file_url: seg.imageUrl,\n      options: [\n        { option: \"-stream_loop\", argument: \"-1\" }\n      ]\n    });\n  } else {\n    inputs.push({\n      file_url: seg.imageUrl,\n      options: [\n        { option: \"-loop\", argument: \"1\" },\n        { option: \"-framerate\", argument: \"30\" },\n        { option: \"-t\", argument: String(seg.duration) }\n      ]\n    });\n  }\n  mediaInputs.push({ idx: inputIndex, isVideo: seg.isVideo, duration: seg.duration });\n  inputIndex++;\n}\n\n// 오디오 입력\nconst audioInputs = [];\nconst audioSegmentMap = [];\nfor (let i = 0; i < segments.length; i++) {\n  if (segments[i].audioUrl) {\n    inputs.push({ file_url: segments[i].audioUrl, options: [] });\n    audioInputs.push(inputIndex);\n    audioSegmentMap.push(i);\n    inputIndex++;\n  }\n}\n\nlet filterParts = [];\n\nfor (let i = 0; i < segments.length; i++) {\n  const m = mediaInputs[i];\n  if (m.isVideo) {\n    filterParts.push(\n      `[${m.idx}:v]trim=duration=${m.duration},setpts=PTS-STARTPTS,` +\n      `scale=1080:1920:force_original_aspect_ratio=decrease,` +\n      `pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,` +\n      `setsar=1,fps=30[v${i}]`\n    );\n  } else {\n    filterParts.push(\n      `[${m.idx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,` +\n      `pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,` +\n      `setsar=1,fps=30[v${i}]`\n    );\n  }\n}\n\n// 비디오 concat\nconst vLabels = segments.map((_, i) => `[v${i}]`).join('');\nfilterParts.push(`${vLabels}concat=n=${segments.length}:v=1:a=0[vconcat]`);\n\n// 오디오 필터\nif (audioInputs.length > 0) {\n  for (let i = 0; i < audioInputs.length; i++) {\n    const aIdx = audioInputs[i];\n    const segIdx = audioSegmentMap[i];\n    filterParts.push(\n      `[${aIdx}:a]atrim=duration=${segments[segIdx].duration},asetpts=PTS-STARTPTS[a${i}]`\n    );\n  }\n  const aLabels = audioInputs.map((_, i) => `[a${i}]`).join('');\n  filterParts.push(`${aLabels}concat=n=${audioInputs.length}:v=0:a=1[aconcat]`);\n}\n\n// 상단 제목: 검은 배경 (불투명), 큰 글씨\nconst escapedTitle = escapeDrawtext(hookClean);\n\nlet overlayFilter = `[vconcat]drawbox=y=40:w=1080:h=280:color=#000000@1.0:t=fill,` +\n  `drawtext=text='${escapedTitle}':fontsize=72:fontcolor=white:` +\n  `fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:` +\n  `x=(w-tw)/2:y=120:line_spacing=12`;\n\n// 하단 자막: 줄바꿈 적용, 빠른 전환에 동기화\nfor (const seg of segments) {\n  const wrapped = wrapSubtitle(seg.dialogueText, 14);\n  const subText = escapeDrawtext(wrapped);\n  const startT = seg.start.toFixed(2);\n  const endT = (seg.start + seg.duration).toFixed(2);\n  overlayFilter += `,drawtext=text='${subText}':fontsize=48:fontcolor=#CCFF00:` +\n    `fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:` +\n    `x=(w-tw)/2:y=h-250:borderw=3:bordercolor=black:` +\n    `enable='between(t,${startT},${endT})'`;\n}\noverlayFilter += '[vfinal]';\nfilterParts.push(overlayFilter);\n\nconst filter_complex = filterParts.join(';');\n\nconst nca_payload = {\n  inputs: inputs,\n  filters: [{ filter: filter_complex }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" },\n      { option: \"-map\", argument: \"[aconcat]\" },\n      { option: \"-c:v\", argument: \"libx264\" },\n      { option: \"-preset\", argument: \"fast\" },\n      { option: \"-crf\", argument: \"23\" },\n      { option: \"-c:a\", argument: \"aac\" },\n      { option: \"-b:a\", argument: \"192k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" },\n      { option: \"-movflags\", argument: \"+faststart\" },\n      { option: \"-t\", argument: String(totalDuration) }\n    ],\n    file_name: \"kkultip_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload,\n    totalDuration,\n    segmentCount: segments.length,\n    hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3904,
+        304
+      ],
+      "id": "404f0c26-7e0a-4ea9-9a92-b409b2881a08",
+      "name": "NCA 데이터 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
             {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "1503a4cbf1ddae90e752c47521883649",
-                        "recordId": "1503a4cbf1ddae90e752c47521883649"
-                    }
-                },
-                "pairedItem": {
-                    "item": 0
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "452b9e625b464d4e1a371df6dfa10aa2",
-                        "recordId": "452b9e625b464d4e1a371df6dfa10aa2"
-                    }
-                },
-                "pairedItem": {
-                    "item": 1
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "ea861c33eade4a52e741b777bbd88a61",
-                        "recordId": "ea861c33eade4a52e741b777bbd88a61"
-                    }
-                },
-                "pairedItem": {
-                    "item": 2
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "9cc0416d54572d032176f06cf9929a03",
-                        "recordId": "9cc0416d54572d032176f06cf9929a03"
-                    }
-                },
-                "pairedItem": {
-                    "item": 3
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "5023f4470322778fbf4a6aa6bebf96bd",
-                        "recordId": "5023f4470322778fbf4a6aa6bebf96bd"
-                    }
-                },
-                "pairedItem": {
-                    "item": 4
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "b6484bc8f94d4acf2e32daed6963d0c8",
-                        "recordId": "b6484bc8f94d4acf2e32daed6963d0c8"
-                    }
-                },
-                "pairedItem": {
-                    "item": 5
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "0f14cae94fab43406208eedd8e03558c",
-                        "recordId": "0f14cae94fab43406208eedd8e03558c"
-                    }
-                },
-                "pairedItem": {
-                    "item": 6
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "2a32e00ddfdb47e32a52fc44d49cc71e",
-                        "recordId": "2a32e00ddfdb47e32a52fc44d49cc71e"
-                    }
-                },
-                "pairedItem": {
-                    "item": 7
-                }
-            },
-            {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "7471c6ef377c56cdaa36657c5652d8a1",
-                        "recordId": "7471c6ef377c56cdaa36657c5652d8a1"
-                    }
-                },
-                "pairedItem": {
-                    "item": 8
-                }
+              "name": "x-api-key",
+              "value": "nca-sagong-2026"
             }
-        ],
-        "\uc774\ubbf8\uc9c0 \uacb0\uacfc": [
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.nca_payload) }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        4208,
+        304
+      ],
+      "id": "aceed59c-8a84-4d5c-9462-c4029b65e4ae",
+      "name": "NCA 영상 제작"
+    },
+    {
+      "parameters": {
+        "amount": 120
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4512,
+        304
+      ],
+      "id": "4ef29e6b-9834-46b4-9920-8c0591e82ae2",
+      "name": "NCA 제작 대기",
+      "webhookId": "21f711b5-6ca5-4e2a-9456-b8e3389800e9"
+    },
+    {
+      "parameters": {
+        "jsCode": "// NCA 결과 처리\nconst result = $input.first().json;\nconst prevData = $('NCA 데이터 준비').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (!videoUrl) {\n  throw new Error('NCA 영상 제작 결과 URL 없음: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    final_video_url: videoUrl,\n    url: videoUrl,\n    subject: prevData.subject,\n    caption: prevData.caption,\n    comment: prevData.comment,\n    topic: $('주제 파싱').first().json.topic,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4800,
+        304
+      ],
+      "id": "b450da49-f5c0-47b1-b8aa-89ad7451c1e8",
+      "name": "NCA 결과 처리"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+          "mode": "list",
+          "cachedResultName": "온카스터디",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "설명형 숏츠"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "topic"
+          ],
+          "schema": [
             {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "1503a4cbf1ddae90e752c47521883649",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A beginner gambler looking confused at a betting slip, worried expression, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809983381-101djt4cy3m.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 45,
-                        "completeTime": 1771809985084,
-                        "createTime": 1771809939685
-                    }
-                },
-                "pairedItem": {
-                    "item": 0
-                }
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "452b9e625b464d4e1a371df6dfa10aa2",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A person throwing money into a black hole, representing wasted bets, chaotic energy, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809998446-s5wceyz7r5n.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 60,
-                        "completeTime": 1771810000289,
-                        "createTime": 1771809939675
-                    }
-                },
-                "pairedItem": {
-                    "item": 1
-                }
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "ea861c33eade4a52e741b777bbd88a61",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A pile of coins quickly diminishing, with a worried person watching, sense of urgency, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771810001896-bxraegd6lue.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 63,
-                        "completeTime": 1771810003554,
-                        "createTime": 1771809939673
-                    }
-                },
-                "pairedItem": {
-                    "item": 2
-                }
+              "id": "Hook",
+              "displayName": "Hook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "9cc0416d54572d032176f06cf9929a03",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A person holding a broken piggy bank with money falling out, frustrated expression, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809980639-oooohx1qk3b.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 42,
-                        "completeTime": 1771809982188,
-                        "createTime": 1771809939772
-                    }
-                },
-                "pairedItem": {
-                    "item": 3
-                }
+              "id": "Narration",
+              "displayName": "Narration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "5023f4470322778fbf4a6aa6bebf96bd",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A magnifying glass hovering over a tiny, complex contract, symbolizing detailed examination, serious tone, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809980465-u5j1w15ikmg.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 42,
-                        "completeTime": 1771809982377,
-                        "createTime": 1771809939746
-                    }
-                },
-                "pairedItem": {
-                    "item": 4
-                }
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "b6484bc8f94d4acf2e32daed6963d0c8",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A shadowy, untrustworthy website interface with question marks, dark and suspicious atmosphere, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809983298-qai8c0s6jmc.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 45,
-                        "completeTime": 1771809985151,
-                        "createTime": 1771809939742
-                    }
-                },
-                "pairedItem": {
-                    "item": 5
-                }
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "0f14cae94fab43406208eedd8e03558c",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A single bright light bulb illuminating a path forward, representing a solution, hopeful mood, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771810100061-024nrj0gra7t.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 161,
-                        "completeTime": 1771810101740,
-                        "createTime": 1771809939748
-                    }
-                },
-                "pairedItem": {
-                    "item": 6
-                }
+              "id": "영상 URL",
+              "displayName": "영상 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "2a32e00ddfdb47e32a52fc44d49cc71e",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A shield icon with a checkmark, symbolizing safety and reliability, confident and secure feeling, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809986634-ra0ci255dw9.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 48,
-                        "completeTime": 1771809988461,
-                        "createTime": 1771809939757
-                    }
-                },
-                "pairedItem": {
-                    "item": 7
-                }
+              "id": "hook_title",
+              "displayName": "hook_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
             },
             {
-                "json": {
-                    "code": 200,
-                    "msg": "success",
-                    "data": {
-                        "taskId": "7471c6ef377c56cdaa36657c5652d8a1",
-                        "model": "nano-banana-pro",
-                        "state": "success",
-                        "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A person confidently pointing towards the viewer, encouraging call to action, friendly and inviting, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
-                        "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809986441-4o3zee71118.png\"]}",
-                        "failCode": null,
-                        "failMsg": null,
-                        "costTime": 48,
-                        "completeTime": 1771809988472,
-                        "createTime": 1771809939708
-                    }
-                },
-                "pairedItem": {
-                    "item": 8
-                }
+              "id": "scenes",
+              "displayName": "scenes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Comment",
+              "displayName": "Comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fullDialogue",
+              "displayName": "fullDialogue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "segmentCount",
+              "displayName": "segmentCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "generatedAt",
+              "displayName": "generatedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "final_video_url",
+              "displayName": "final_video_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "caption",
+              "displayName": "caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "comment",
+              "displayName": "comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "memeCount",
+              "displayName": "memeCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "imageCount",
+              "displayName": "imageCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
             }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        5104,
+        304
+      ],
+      "id": "319950f6-698f-4a59-84d3-04217db6b3b2",
+      "name": "상태 업데이트",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const topic = $input.first().json.topic || $input.first().json['주제'] || '';\n\nif (!topic) {\n  throw new Error('topic이 비어있습니다. 시트에 topic 컬럼을 확인하세요.');\n}\n\nconst prompt = `너는 '온카스터디' 커뮤니티의 YouTube Shorts 꿀팁 콘텐츠 기획자야.\n아래 주제로 25~30초 분량의 빠른 꿀팁 숏츠 스크립트를 작성해줘.\n\n## 반드시 지킬 주제\n${topic}\n\n위 주제를 중심으로 콘텐츠를 작성하되, 후반부에 '온카스터디'를 자연스럽게 1회 언급해.\n모든 scene의 dialogue는 반드시 \"${topic}\" 주제와 직접 관련된 내용이어야 해.\n\n## 온카스터디 소개\n온카스터디는 먹튀검증 및 안전 정보 제공 커뮤니티입니다.\n검증 정보 공유, 먹튀 사이트 구별법 안내, 자유게시판, 제휴사이트 후기, 스포츠 분석,\n포인트 시스템(복권, 돌림판, 기프티콘 교환) 등의 기능이 있습니다.\n\n## 영상 스타일 (빠른 꿀팁 숏츠)\n- 총 25~30초, 9:16 세로 영상\n- 빠른 이미지/밈 전환 (각 장면 2~4초)\n- 상단: 고정된 훅 제목 (검은 배경, 큰 글씨)\n- 중간: 정보 이미지 + 밈 영상 번갈아 배치\n- 하단: 짧은 자막\n- 오디오: 빠른 TTS 나레이션\n\n## 장면 구성 규칙 (핵심!)\n- 총 8~10개 장면 (짧고 빠르게!)\n- 각 장면에 visual_type: \"image\" 또는 \"meme\"\n- image: 주제와 직접 관련된 구체적 이미지\n- meme: 밈/리액션 영상 (감정 표현)\n- 장면의 30~40%를 meme으로 배치\n- 매 2~3개 image 뒤에 1개 meme\n- meme_mood: thinking, excited, shocked, sad, angry, cool, celebrating 중 택1\n- meme dialogue: 짧은 리액션 (\"실화?!\", \"대박!\", \"미쳤다\", \"꿀팁이다!\")\n\n## 나레이션 규칙 (매우 중요!)\n1. 강렬한 hook으로 시작\n2. 각 dialogue는 반드시 12자 이내! (빠른 전환에 맞게 짧게)\n3. 한국어 구어체 (반말+존댓말 믹스)\n4. 핵심만 간결하게\n5. CTA: \"온카스터디 검색!\"\n\n## 이미지 키워드 규칙 (중요!)\n- keyword는 \"${topic}\" 주제와 직접 관련된 구체적인 영어 단어\n- 너무 추상적인 키워드 금지 (예: \"background\", \"abstract\" 금지)\n- 주제의 핵심 사물/행동을 직접 묘사하는 키워드 사용\n- 예: 먹튀 주제 → \"scam warning sign\", \"money fraud\", \"online security\"\n- 예: 스포츠 주제 → \"football stadium\", \"basketball game\", \"sports betting\"\n- image_prompt도 주제와 직접 관련된 구체적 장면 묘사\n\n## 출력 (순수 JSON, 코드블록 없이)\n{\n  \"hook_title\": \"훅 제목 (12자 이내, <y>강조</y>)\",\n  \"scenes\": [\n    {\n      \"dialogue\": \"나레이션 (12자 이내!)\",\n      \"image_prompt\": \"영어 이미지 프롬프트 (meme이면 빈 문자열)\",\n      \"keyword\": \"구체적 영어 키워드 (meme이면 빈 문자열)\",\n      \"visual_type\": \"image 또는 meme\",\n      \"meme_mood\": \"meme인 경우만 감정\"\n    }\n  ],\n  \"Subject\": \"영상 제목 #온카스터디 #먹튀검증 + 해시태그\",\n  \"Caption\": \"영상 설명 #온카스터디 + 해시태그\",\n  \"Comment\": \"구글에 온카스터디 검색!\"\n}\n\n주의:\n- scenes 8~10개\n- 각 dialogue 12자 이내 필수!\n- visual_type, keyword 필수\n- 주제와 무관한 내용 금지`;\n\nreturn [{\n  json: {\n    prompt,\n    topic,\n    row_number: $input.first().json.row_number,\n    ...$input.first().json\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        304
+      ],
+      "id": "d35c1c7b-3cc8-448b-a309-dbfe73dec39c",
+      "name": "프롬프트 생성"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pexels.com/v1/search?query={{ encodeURIComponent($json.keyword || $json.image_prompt?.split(',')[0] || 'abstract background') }}&per_page=3&orientation=portrait",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2240,
+        608
+      ],
+      "id": "76aadc3c-5ec1-487b-a68c-6725f0fd4ba6",
+      "name": "이미지 검색",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1vPRgFSX7u4ecIy4",
+          "name": "Pexels"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 밈 카탈로그: MinIO에 호스팅된 밈/리액션 영상 URL\nconst MEME_CATALOG = {\n  thinking: [\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_01.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_02.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_03.mp4',\n  ],\n  excited: [\n    'http://76.13.182.180:9000/memes/excited/meme_excited_01.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_02.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_03.mp4',\n  ],\n  shocked: [\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_01.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_02.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_03.mp4',\n  ],\n  sad: [\n    'http://76.13.182.180:9000/memes/sad/meme_sad_01.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_02.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_03.mp4',\n  ],\n  angry: [\n    'http://76.13.182.180:9000/memes/angry/meme_angry_01.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_02.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_03.mp4',\n  ],\n  cool: [\n    'http://76.13.182.180:9000/memes/cool/meme_cool_01.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_02.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_03.mp4',\n  ],\n  celebrating: [\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_01.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_02.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_03.mp4',\n  ],\n};\n\nconst items = $input.all();\nconst segAll = $('세그먼트 분리').all();\n\nreturn items.map((item, i) => {\n  const data = item.json;\n  const segData = segAll[i]?.json || {};\n  const visualType = segData.visual_type || data.visual_type || 'image';\n  const memeMood = segData.meme_mood || data.meme_mood || 'thinking';\n\n  if (visualType === 'meme') {\n    const catalog = MEME_CATALOG[memeMood] || MEME_CATALOG.thinking;\n    const randomIdx = Math.floor(Math.random() * catalog.length);\n    const memeUrl = catalog[randomIdx];\n    return {\n      json: {\n        ...data,\n        visual_type: 'meme',\n        meme_mood: memeMood,\n        images: [{ url: memeUrl }],\n        is_video: true,\n      }\n    };\n  } else {\n    const photos = data.photos || [];\n    let imageUrl = '';\n    if (photos.length > 0) {\n      const randPhoto = photos[Math.floor(Math.random() * photos.length)];\n      imageUrl = randPhoto.src?.portrait || randPhoto.src?.large || randPhoto.src?.medium || '';\n    }\n    if (!imageUrl) {\n      imageUrl = 'https://images.pexels.com/photos/1229861/pexels-photo-1229861.jpeg?auto=compress&cs=tinysrgb&w=1080';\n    }\n    return {\n      json: {\n        ...data,\n        visual_type: 'image',\n        meme_mood: '',\n        images: [{ url: imageUrl }],\n        is_video: false,\n      }\n    };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2864,
+        576
+      ],
+      "id": "417f9a14-190f-48d9-a466-fde992082665",
+      "name": "이미지 URL 추출"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "너는 '온카스터디' 커뮤니티의 YouTube Shorts 주제 기획자야.\n\n온카스터디는 먹튀검증 및 안전 정보 제공 커뮤니티로, 다음 기능을 가지고 있어:\n- 핵심: 안전한 카지노 사이트 검증, 먹튀 사이트 구별법\n- 커뮤니티: 자유게시판, 제휴사이트 후기, 스포츠 분석 게시판, 방송존(동물원, 가디언, 인생역전, 하이라이트)\n- 포인트 시스템: 복권, 돌림판, 오목, 무료슬롯, 기프티콘 교환\n\n아래 카테고리 중 랜덤으로 하나를 골라서 YouTube Shorts에 적합한 주제 1개를 생성해줘:\n1. 먹튀검증/안전 정보 (예: 먹튀사이트 특징, 안전놀이터 고르는 법)\n2. 온라인 카지노 팁 (예: 충전 보너스 함정, 출금 빠른 사이트 특징)\n3. 스포츠 분석 (예: 축구 배팅 초보 가이드, 언더오버 분석법)\n4. 커뮤니티 활용 (예: 포인트 모으는 꿀팁, 제휴사이트 후기 활용법)\n5. 사기 예방 (예: 가입코드 사기 수법, 텔레그램 사기 주의보)\n\n출력 형식 (순수 JSON만, 코드블록 없이):\n{\"topic\": \"주제 텍스트 (15~30자)\"}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        304
+      ],
+      "id": "f691c2b0-ba9e-41de-b342-ddf6ea0d4a09",
+      "name": "AI 주제 생성",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst data = JSON.parse(cleanText);\n\nif (!data.topic) {\n  throw new Error('AI 주제 생성 결과에 topic이 없습니다: ' + cleanText);\n}\n\nreturn [{\n  json: {\n    topic: data.topic,\n    row_number: null\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        304
+      ],
+      "id": "a15bf7bf-1820-45d4-ae9c-f38db2d345f7",
+      "name": "주제 파싱"
+    }
+  ],
+  "connections": {
+    "수동 실행": {
+      "main": [
+        [
+          {
+            "node": "AI 주제 생성",
+            "type": "main",
+            "index": 0
+          }
         ]
+      ]
     },
-    "versionId": "fb3abaeb-038b-4a0f-9cff-359a2616a71c",
-    "activeVersionId": null,
-    "versionCounter": 99,
-    "triggerCount": 1,
-    "shared": [
-        {
-            "updatedAt": "2026-02-22T21:17:37.563Z",
-            "createdAt": "2026-02-22T21:17:37.563Z",
-            "role": "workflow:owner",
-            "workflowId": "dEtWqwWQPJfwCWiIM0QYd",
-            "projectId": "W6LETsSnBzw4J5Aa",
-            "project": {
-                "updatedAt": "2026-02-09T04:42:12.235Z",
-                "createdAt": "2026-02-07T19:04:11.494Z",
-                "id": "W6LETsSnBzw4J5Aa",
-                "name": "hatihoro15 hatihoro15 <hatihoro15@gmail.com>",
-                "type": "personal",
-                "icon": null,
-                "description": null,
-                "creatorId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
-                "projectRelations": [
-                    {
-                        "updatedAt": "2026-02-07T19:04:11.494Z",
-                        "createdAt": "2026-02-07T19:04:11.494Z",
-                        "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
-                        "projectId": "W6LETsSnBzw4J5Aa",
-                        "user": {
-                            "updatedAt": "2026-02-23T23:21:00.874Z",
-                            "createdAt": "2026-02-07T19:04:09.331Z",
-                            "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
-                            "email": "hatihoro15@gmail.com",
-                            "firstName": "hatihoro15",
-                            "lastName": "hatihoro15",
-                            "personalizationAnswers": {
-                                "version": "v4",
-                                "personalization_survey_submitted_at": "2026-02-07T19:24:51.818Z",
-                                "personalization_survey_n8n_version": "2.6.4"
-                            },
-                            "settings": {
-                                "userActivated": true,
-                                "easyAIWorkflowOnboarded": true,
-                                "firstSuccessfulWorkflowId": "dEtWqwWQPJfwCWiIM0QYd",
-                                "userActivatedAt": 1771888859109,
-                                "npsSurvey": {
-                                    "waitingForResponse": true,
-                                    "ignoredCount": 1,
-                                    "lastShownAt": 1771060625309
-                                }
-                            },
-                            "disabled": false,
-                            "mfaEnabled": false,
-                            "lastActiveAt": "2026-02-23",
-                            "isPending": false
-                        }
-                    }
-                ]
-            }
+    "AI 콘텐츠 생성": {
+      "main": [
+        [
+          {
+            "node": "콘텐츠 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "콘텐츠 파싱": {
+      "main": [
+        [
+          {
+            "node": "시트 기록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "시트 기록": {
+      "main": [
+        [
+          {
+            "node": "세그먼트 분리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "세그먼트 분리": {
+      "main": [
+        [
+          {
+            "node": "TTS 요청",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "이미지 검색",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 요청": {
+      "main": [
+        [
+          {
+            "node": "TTS 결과 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 결과 처리": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "NCA 데이터 준비",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 데이터 준비": {
+      "main": [
+        [
+          {
+            "node": "NCA 영상 제작",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 영상 제작": {
+      "main": [
+        [
+          {
+            "node": "NCA 제작 대기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 제작 대기": {
+      "main": [
+        [
+          {
+            "node": "NCA 결과 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 결과 처리": {
+      "main": [
+        [
+          {
+            "node": "상태 업데이트",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "프롬프트 생성": {
+      "main": [
+        [
+          {
+            "node": "AI 콘텐츠 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 검색": {
+      "main": [
+        [
+          {
+            "node": "이미지 URL 추출",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 URL 추출": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI 주제 생성": {
+      "main": [
+        [
+          {
+            "node": "주제 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "주제 파싱": {
+      "main": [
+        [
+          {
+            "node": "프롬프트 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "이미지 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1503a4cbf1ddae90e752c47521883649",
+            "recordId": "1503a4cbf1ddae90e752c47521883649"
+          }
+        },
+        "pairedItem": {
+          "item": 0
         }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "452b9e625b464d4e1a371df6dfa10aa2",
+            "recordId": "452b9e625b464d4e1a371df6dfa10aa2"
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "ea861c33eade4a52e741b777bbd88a61",
+            "recordId": "ea861c33eade4a52e741b777bbd88a61"
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "9cc0416d54572d032176f06cf9929a03",
+            "recordId": "9cc0416d54572d032176f06cf9929a03"
+          }
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "5023f4470322778fbf4a6aa6bebf96bd",
+            "recordId": "5023f4470322778fbf4a6aa6bebf96bd"
+          }
+        },
+        "pairedItem": {
+          "item": 4
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "b6484bc8f94d4acf2e32daed6963d0c8",
+            "recordId": "b6484bc8f94d4acf2e32daed6963d0c8"
+          }
+        },
+        "pairedItem": {
+          "item": 5
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "0f14cae94fab43406208eedd8e03558c",
+            "recordId": "0f14cae94fab43406208eedd8e03558c"
+          }
+        },
+        "pairedItem": {
+          "item": 6
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "2a32e00ddfdb47e32a52fc44d49cc71e",
+            "recordId": "2a32e00ddfdb47e32a52fc44d49cc71e"
+          }
+        },
+        "pairedItem": {
+          "item": 7
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "7471c6ef377c56cdaa36657c5652d8a1",
+            "recordId": "7471c6ef377c56cdaa36657c5652d8a1"
+          }
+        },
+        "pairedItem": {
+          "item": 8
+        }
+      }
     ],
-    "tags": [],
-    "activeVersion": null
+    "이미지 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "1503a4cbf1ddae90e752c47521883649",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A beginner gambler looking confused at a betting slip, worried expression, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809983381-101djt4cy3m.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 45,
+            "completeTime": 1771809985084,
+            "createTime": 1771809939685
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "452b9e625b464d4e1a371df6dfa10aa2",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A person throwing money into a black hole, representing wasted bets, chaotic energy, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809998446-s5wceyz7r5n.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 60,
+            "completeTime": 1771810000289,
+            "createTime": 1771809939675
+          }
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "ea861c33eade4a52e741b777bbd88a61",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A pile of coins quickly diminishing, with a worried person watching, sense of urgency, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771810001896-bxraegd6lue.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 63,
+            "completeTime": 1771810003554,
+            "createTime": 1771809939673
+          }
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "9cc0416d54572d032176f06cf9929a03",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A person holding a broken piggy bank with money falling out, frustrated expression, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809980639-oooohx1qk3b.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 42,
+            "completeTime": 1771809982188,
+            "createTime": 1771809939772
+          }
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "5023f4470322778fbf4a6aa6bebf96bd",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A magnifying glass hovering over a tiny, complex contract, symbolizing detailed examination, serious tone, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809980465-u5j1w15ikmg.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 42,
+            "completeTime": 1771809982377,
+            "createTime": 1771809939746
+          }
+        },
+        "pairedItem": {
+          "item": 4
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "b6484bc8f94d4acf2e32daed6963d0c8",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A shadowy, untrustworthy website interface with question marks, dark and suspicious atmosphere, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809983298-qai8c0s6jmc.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 45,
+            "completeTime": 1771809985151,
+            "createTime": 1771809939742
+          }
+        },
+        "pairedItem": {
+          "item": 5
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "0f14cae94fab43406208eedd8e03558c",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A single bright light bulb illuminating a path forward, representing a solution, hopeful mood, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771810100061-024nrj0gra7t.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 161,
+            "completeTime": 1771810101740,
+            "createTime": 1771809939748
+          }
+        },
+        "pairedItem": {
+          "item": 6
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "2a32e00ddfdb47e32a52fc44d49cc71e",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A shield icon with a checkmark, symbolizing safety and reliability, confident and secure feeling, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809986634-ra0ci255dw9.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 48,
+            "completeTime": 1771809988461,
+            "createTime": 1771809939757
+          }
+        },
+        "pairedItem": {
+          "item": 7
+        }
+      },
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "7471c6ef377c56cdaa36657c5652d8a1",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[],\\\"aspect_ratio\\\":\\\"9:16\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"A person confidently pointing towards the viewer, encouraging call to action, friendly and inviting, photorealistic, cinematic lighting, 4k quality, portrait orientation 9:16\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/images/1771809986441-4o3zee71118.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 48,
+            "completeTime": 1771809988472,
+            "createTime": 1771809939708
+          }
+        },
+        "pairedItem": {
+          "item": 8
+        }
+      }
+    ]
+  },
+  "versionId": "fb3abaeb-038b-4a0f-9cff-359a2616a71c",
+  "activeVersionId": null,
+  "versionCounter": 99,
+  "triggerCount": 1,
+  "shared": [
+    {
+      "updatedAt": "2026-02-22T21:17:37.563Z",
+      "createdAt": "2026-02-22T21:17:37.563Z",
+      "role": "workflow:owner",
+      "workflowId": "dEtWqwWQPJfwCWiIM0QYd",
+      "projectId": "W6LETsSnBzw4J5Aa",
+      "project": {
+        "updatedAt": "2026-02-09T04:42:12.235Z",
+        "createdAt": "2026-02-07T19:04:11.494Z",
+        "id": "W6LETsSnBzw4J5Aa",
+        "name": "hatihoro15 hatihoro15 <hatihoro15@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-07T19:04:11.494Z",
+            "createdAt": "2026-02-07T19:04:11.494Z",
+            "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+            "projectId": "W6LETsSnBzw4J5Aa",
+            "user": {
+              "updatedAt": "2026-02-23T23:21:00.874Z",
+              "createdAt": "2026-02-07T19:04:09.331Z",
+              "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+              "email": "hatihoro15@gmail.com",
+              "firstName": "hatihoro15",
+              "lastName": "hatihoro15",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-02-07T19:24:51.818Z",
+                "personalization_survey_n8n_version": "2.6.4"
+              },
+              "settings": {
+                "userActivated": true,
+                "easyAIWorkflowOnboarded": true,
+                "firstSuccessfulWorkflowId": "dEtWqwWQPJfwCWiIM0QYd",
+                "userActivatedAt": 1771888859109,
+                "npsSurvey": {
+                  "waitingForResponse": true,
+                  "ignoredCount": 1,
+                  "lastShownAt": 1771060625309
+                }
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-23",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
 }

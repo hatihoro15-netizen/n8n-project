@@ -1,25 +1,28 @@
 #!/bin/bash
-# YouTube 광고 자동화 프로젝트 - 품질 검사 스크립트
+# n8n 워크플로우 프로젝트 - 품질 검사 스크립트
 # 실행: ./scripts/quality-check.sh
+# 자동 실행: PostToolUse 훅 (Bash 도구 사용 후)
 
 PROJECT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 ERRORS=0
 
 echo "========================================="
-echo " Quality Check - YouTube 광고 프로젝트"
+echo " Quality Check - n8n 워크플로우 프로젝트"
 echo "========================================="
 
 # 1. JSON 문법 검사
 echo ""
 echo "[1/5] JSON 문법 검사..."
+JSON_ERRORS=0
 for f in "$PROJECT_DIR"/*.json; do
     [ -f "$f" ] || continue
     if ! python3 -m json.tool "$f" > /dev/null 2>&1; then
-        echo "  FAIL: $f"
+        echo "  FAIL: $(basename "$f")"
+        JSON_ERRORS=$((JSON_ERRORS + 1))
         ERRORS=$((ERRORS + 1))
     fi
 done
-if [ $ERRORS -eq 0 ]; then
+if [ $JSON_ERRORS -eq 0 ]; then
     echo "  PASS: 모든 JSON 파일 정상"
 fi
 
@@ -30,7 +33,7 @@ PY_ERRORS=0
 for f in "$PROJECT_DIR"/*.py; do
     [ -f "$f" ] || continue
     if ! python3 -c "import py_compile; py_compile.compile('$f', doraise=True)" 2>/dev/null; then
-        echo "  FAIL: $f"
+        echo "  FAIL: $(basename "$f")"
         PY_ERRORS=$((PY_ERRORS + 1))
         ERRORS=$((ERRORS + 1))
     fi
@@ -45,14 +48,14 @@ echo "[3/5] 하드코딩 검사..."
 HC_ERRORS=0
 for f in "$PROJECT_DIR"/*.py "$PROJECT_DIR"/*.js; do
     [ -f "$f" ] || continue
-    # IP 하드코딩 검사 (localhost, 0.0.0.0 제외)
-    if grep -En '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' "$f" | grep -v '127.0.0.1\|0.0.0.0\|localhost' | grep -v '^ *#' | grep -v '^ *//' > /dev/null 2>&1; then
-        echo "  WARN: IP 하드코딩 의심 - $f"
+    # IP 하드코딩 검사 (127.0.0.1, 0.0.0.0, 172.17.0.1 제외)
+    if grep -En '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' "$f" | grep -v '127.0.0.1\|0.0.0.0\|172.17.0.1\|localhost' | grep -v '^ *#' | grep -v '^ *//' > /dev/null 2>&1; then
+        echo "  WARN: IP 하드코딩 의심 - $(basename "$f")"
         HC_ERRORS=$((HC_ERRORS + 1))
     fi
     # password= 하드코딩 검사
     if grep -En 'password *= *["'"'"'][^"'"'"']+["'"'"']' "$f" | grep -v '^ *#' | grep -v '^ *//' > /dev/null 2>&1; then
-        echo "  WARN: 비밀번호 하드코딩 의심 - $f"
+        echo "  WARN: 비밀번호 하드코딩 의심 - $(basename "$f")"
         HC_ERRORS=$((HC_ERRORS + 1))
     fi
 done
@@ -67,7 +70,7 @@ JS_ERRORS=0
 for f in "$PROJECT_DIR"/*.js; do
     [ -f "$f" ] || continue
     if ! node --check "$f" 2>/dev/null; then
-        echo "  FAIL: $f"
+        echo "  FAIL: $(basename "$f")"
         JS_ERRORS=$((JS_ERRORS + 1))
         ERRORS=$((ERRORS + 1))
     fi
@@ -79,6 +82,7 @@ fi
 # 5. 필수 파일 존재 검사
 echo ""
 echo "[5/5] 필수 파일 존재 검사..."
+FILE_ERRORS=0
 REQUIRED_FILES=(
     "CLAUDE.md"
     "PROGRESS.md"
@@ -93,10 +97,13 @@ REQUIRED_FILES=(
 for f in "${REQUIRED_FILES[@]}"; do
     if [ ! -f "$PROJECT_DIR/$f" ]; then
         echo "  FAIL: $f 누락"
+        FILE_ERRORS=$((FILE_ERRORS + 1))
         ERRORS=$((ERRORS + 1))
     fi
 done
-echo "  PASS: 필수 파일 모두 존재"
+if [ $FILE_ERRORS -eq 0 ]; then
+    echo "  PASS: 필수 파일 모두 존재"
+fi
 
 # 결과 요약
 echo ""
