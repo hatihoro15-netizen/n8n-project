@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-23T22:36:10.824Z",
+  "updatedAt": "2026-02-24T00:40:32.928Z",
   "createdAt": "2026-02-16T06:29:45.385Z",
   "id": "jSEDYrkFcWUzJ8Et",
   "name": "온카스터디 스토리, 짤 (Jay+Mike)",
@@ -34,7 +34,7 @@
       "name": "When clicking ‘Execute workflow’",
       "type": "n8n-nodes-base.manualTrigger",
       "position": [
-        -3152,
+        -3232,
         1328
       ],
       "typeVersion": 1
@@ -198,7 +198,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
+        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The man in the black hoodie with gold chain (short fade haircut)',\n    'B': 'The man in the white t-shirt with silver watch (twists hairstyle)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1143,7 +1143,7 @@
       "typeVersion": 1,
       "position": [
         -3152,
-        1128
+        1136
       ],
       "id": "ewt-jay-trigger-001",
       "name": "Execute Workflow Trigger"
@@ -1732,6 +1732,17 @@
       ]
     },
     "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "카테고리 선택",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
       "main": [
         [
           {
@@ -5750,11 +5761,940 @@
           }
         ]
       }
+    ],
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {}
+      }
+    ],
+    "AI 콘텐츠 생성": [
+      {
+        "json": {
+          "content": {
+            "parts": [
+              {
+                "text": "{\n  \"hook_title\": \"일상 <y>호구</y> 당한 썰 풀면 무조건 털린다?\",\n  \"scenes\": [\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"B\", \"line\": \"아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ\"},\n        {\"speaker\": \"A\", \"line\": \"ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지\"}\n      ],\n      \"dialogue\": \"아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting at a messy table in a college dorm room, surrounded by scattered textbooks and empty snack wrappers. Jay is leaning back, arms crossed, a knowing smirk on his face. Mike is hunched forward, gesturing wildly with frustration, pointing at his phone screen. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, looking at Mike with amusement. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, showing his phone to Jay with an exasperated expression. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye-level camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"B\", \"line\": \"아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ\"},\n        {\"speaker\": \"A\", \"line\": \"그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네\"},\n        {\"speaker\": \"B\", \"line\": \"하... 킹받네... 그럼 어떻게 걸러야 되는데?\"}\n      ],\n      \"dialogue\": \"아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ 그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네 하... 킹받네... 그럼 어떻게 걸러야 되는데?\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same college dorm room, the atmosphere more tense. Jay is now leaning forward, pointing a finger at Mike, his expression stern but not angry. Mike is recoiling slightly, his mouth slightly open in disbelief, rubbing his head. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, intense focused expression, wearing black premium hoodie, gold chain necklace, gesturing emphatically. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, slightly worried expression, wearing white oversized graphic t-shirt with silver watch, looking at Jay, trying to understand. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly high angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ\"},\n        {\"speaker\": \"B\", \"line\": \"뼈 맞았네... 당장 가본다 ㅠ\"}\n      ],\n      \"dialogue\": \"나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ 뼈 맞았네... 당장 가본다 ㅠ\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the college dorm room, the tension resolved. Jay is now smiling, giving a thumbs up. Mike is looking at his phone with a determined expression, nodding. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, friendly confident smile, wearing black premium hoodie, gold chain necklace, giving a reassuring gesture. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, determined focused expression, holding his phone, wearing white oversized graphic t-shirt with silver watch. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly low angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    }\n  ],\n  \"Subject\": \"일상 호구 당한 썰 풀면 무조건 털린다? #온카스터디 #먹튀검증 #안전놀이터\",\n  \"Caption\": \"믿었던 인스타 광고에 호구 당한 썰... 이걸로 카지노 사이트 걸러도 될까?\",\n  \"Comment\": \"와, 나도 인스타 광고 때문에 돈 날린 적 있는데...\",\n  \"BGM_prompt\": \"chill lo-fi hip hop beat\"\n}"
+              }
+            ],
+            "role": "model"
+          },
+          "finishReason": "STOP",
+          "index": 0
+        }
+      }
+    ],
+    "콘텐츠 파싱": [
+      {
+        "json": {
+          "hook_title": "일상 <y>호구</y> 당한 썰 풀면 무조건 털린다?",
+          "scenes": [
+            {
+              "dialogue_turns": [
+                {
+                  "speaker": "B",
+                  "line": "아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ"
+                },
+                {
+                  "speaker": "A",
+                  "line": "ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지"
+                }
+              ],
+              "dialogue": "아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지",
+              "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting at a messy table in a college dorm room, surrounded by scattered textbooks and empty snack wrappers. Jay is leaning back, arms crossed, a knowing smirk on his face. Mike is hunched forward, gesturing wildly with frustration, pointing at his phone screen. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, looking at Mike with amusement. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, showing his phone to Jay with an exasperated expression. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye-level camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "speaker": "B"
+            },
+            {
+              "dialogue_turns": [
+                {
+                  "speaker": "B",
+                  "line": "아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ"
+                },
+                {
+                  "speaker": "A",
+                  "line": "그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네"
+                },
+                {
+                  "speaker": "B",
+                  "line": "하... 킹받네... 그럼 어떻게 걸러야 되는데?"
+                }
+              ],
+              "dialogue": "아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ 그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네 하... 킹받네... 그럼 어떻게 걸러야 되는데?",
+              "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same college dorm room, the atmosphere more tense. Jay is now leaning forward, pointing a finger at Mike, his expression stern but not angry. Mike is recoiling slightly, his mouth slightly open in disbelief, rubbing his head. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, intense focused expression, wearing black premium hoodie, gold chain necklace, gesturing emphatically. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, slightly worried expression, wearing white oversized graphic t-shirt with silver watch, looking at Jay, trying to understand. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly high angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "speaker": "A"
+            },
+            {
+              "dialogue_turns": [
+                {
+                  "speaker": "A",
+                  "line": "나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ"
+                },
+                {
+                  "speaker": "B",
+                  "line": "뼈 맞았네... 당장 가본다 ㅠ"
+                }
+              ],
+              "dialogue": "나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ 뼈 맞았네... 당장 가본다 ㅠ",
+              "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the college dorm room, the tension resolved. Jay is now smiling, giving a thumbs up. Mike is looking at his phone with a determined expression, nodding. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, friendly confident smile, wearing black premium hoodie, gold chain necklace, giving a reassuring gesture. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, determined focused expression, holding his phone, wearing white oversized graphic t-shirt with silver watch. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly low angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+              "speaker": "B"
+            }
+          ],
+          "Subject": "일상 호구 당한 썰 풀면 무조건 털린다? #온카스터디 #먹튀검증 #안전놀이터",
+          "Caption": "믿었던 인스타 광고에 호구 당한 썰... 이걸로 카지노 사이트 걸러도 될까?",
+          "Comment": "와, 나도 인스타 광고 때문에 돈 날린 적 있는데...",
+          "BGM_prompt": "chill lo-fi hip hop beat",
+          "fullDialogue": "아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지 아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ 그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네 하... 킹받네... 그럼 어떻게 걸러야 되는데? 나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ 뼈 맞았네... 당장 가본다 ㅠ",
+          "segmentCount": 3,
+          "Status": "준비",
+          "generatedAt": "2026-02-23T23:47:00.954Z"
+        }
+      }
+    ],
+    "시트 기록": [
+      {
+        "json": {
+          "Subject": "일상 호구 당한 썰 풀면 무조건 털린다? #온카스터디 #먹튀검증 #안전놀이터",
+          "Hook": "일상 <y>호구</y> 당한 썰 풀면 무조건 털린다?",
+          "Narration": "아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지 아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ 그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네 하... 킹받네... 그럼 어떻게 걸러야 되는데? 나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ 뼈 맞았네... 당장 가본다 ㅠ",
+          "Caption": "믿었던 인스타 광고에 호구 당한 썰... 이걸로 카지노 사이트 걸러도 될까?",
+          "댓글": "와, 나도 인스타 광고 때문에 돈 날린 적 있는데...",
+          "BGM prompt": "chill lo-fi hip hop beat",
+          "Status": "준비"
+        }
+      }
+    ],
+    "카테고리 선택": [
+      {
+        "json": {
+          "categoryIndex": 1,
+          "categoryName": "먹튀검증/안전 정보",
+          "topicNumber": 1,
+          "currentTopic": "1. 먹튀 사이트 구별하는 핵심 체크포인트 3가지"
+        }
+      }
+    ],
+    "세그먼트 분리": [
+      {
+        "json": {
+          "index": 0,
+          "dialogue": "아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지",
+          "dialogue_turns": [
+            {
+              "speaker": "B",
+              "line": "아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ"
+            },
+            {
+              "speaker": "A",
+              "line": "ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지"
+            }
+          ],
+          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting at a messy table in a college dorm room, surrounded by scattered textbooks and empty snack wrappers. Jay is leaning back, arms crossed, a knowing smirk on his face. Mike is hunched forward, gesturing wildly with frustration, pointing at his phone screen. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, looking at Mike with amusement. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, showing his phone to Jay with an exasperated expression. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye-level camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting at a messy table in a college dorm room, surrounded by scattered textbooks and empty snack wrappers. Jay is leaning back, arms crossed, a knowing smirk on his face. Mike is hunched forward, gesturing wildly with frustration, pointing at his phone screen. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, looking at Mike with amusement. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, showing his phone to Jay with an exasperated expression. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye-level camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ', then The first man (short fade haircut, black hoodie, gold chain) responds 'ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+          "speaker": "B",
+          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
+          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+        }
+      },
+      {
+        "json": {
+          "index": 1,
+          "dialogue": "아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ 그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네 하... 킹받네... 그럼 어떻게 걸러야 되는데?",
+          "dialogue_turns": [
+            {
+              "speaker": "B",
+              "line": "아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ"
+            },
+            {
+              "speaker": "A",
+              "line": "그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네"
+            },
+            {
+              "speaker": "B",
+              "line": "하... 킹받네... 그럼 어떻게 걸러야 되는데?"
+            }
+          ],
+          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same college dorm room, the atmosphere more tense. Jay is now leaning forward, pointing a finger at Mike, his expression stern but not angry. Mike is recoiling slightly, his mouth slightly open in disbelief, rubbing his head. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, intense focused expression, wearing black premium hoodie, gold chain necklace, gesturing emphatically. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, slightly worried expression, wearing white oversized graphic t-shirt with silver watch, looking at Jay, trying to understand. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly high angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same college dorm room, the atmosphere more tense. Jay is now leaning forward, pointing a finger at Mike, his expression stern but not angry. Mike is recoiling slightly, his mouth slightly open in disbelief, rubbing his head. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, intense focused expression, wearing black premium hoodie, gold chain necklace, gesturing emphatically. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, slightly worried expression, wearing white oversized graphic t-shirt with silver watch, looking at Jay, trying to understand. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly high angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ', then The first man (short fade haircut, black hoodie, gold chain) responds '그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네', then The second man (medium twists hairstyle, white graphic t-shirt) responds '하... 킹받네... 그럼 어떻게 걸러야 되는데?'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+          "speaker": "A",
+          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
+          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+        }
+      },
+      {
+        "json": {
+          "index": 2,
+          "dialogue": "나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ 뼈 맞았네... 당장 가본다 ㅠ",
+          "dialogue_turns": [
+            {
+              "speaker": "A",
+              "line": "나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ"
+            },
+            {
+              "speaker": "B",
+              "line": "뼈 맞았네... 당장 가본다 ㅠ"
+            }
+          ],
+          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the college dorm room, the tension resolved. Jay is now smiling, giving a thumbs up. Mike is looking at his phone with a determined expression, nodding. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, friendly confident smile, wearing black premium hoodie, gold chain necklace, giving a reassuring gesture. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, determined focused expression, holding his phone, wearing white oversized graphic t-shirt with silver watch. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly low angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "veo3_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the college dorm room, the tension resolved. Jay is now smiling, giving a thumbs up. Mike is looking at his phone with a determined expression, nodding. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, friendly confident smile, wearing black premium hoodie, gold chain necklace, giving a reassuring gesture. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, determined focused expression, holding his phone, wearing white oversized graphic t-shirt with silver watch. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly low angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ', then The second man (medium twists hairstyle, white graphic t-shirt) responds '뼈 맞았네... 당장 가본다 ㅠ'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+          "speaker": "B",
+          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
+          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+        }
+      }
+    ],
+    "이미지 생성": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "fc9378347d1a9b8c2c8a29ff4a561560",
+            "recordId": "fc9378347d1a9b8c2c8a29ff4a561560"
+          }
+        }
+      }
+    ],
+    "참조 이미지 프롬프트": [
+      {
+        "json": {
+          "refUrl": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
+          "speaker": "A"
+        }
+      },
+      {
+        "json": {
+          "refUrl": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png",
+          "speaker": "B"
+        }
+      }
+    ],
+    "이미지 프롬프트 선택": [
+      {
+        "json": {
+          "image_prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting at a messy table in a college dorm room, surrounded by scattered textbooks and empty snack wrappers. Jay is leaning back, arms crossed, a knowing smirk on his face. Mike is hunched forward, gesturing wildly with frustration, pointing at his phone screen. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, looking at Mike with amusement. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, showing his phone to Jay with an exasperated expression. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye-level camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI",
+          "refUrl_A": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png",
+          "refUrl_B": "https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png"
+        }
+      }
+    ],
+    "이미지 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "fc9378347d1a9b8c2c8a29ff4a561560",
+            "recordId": "fc9378347d1a9b8c2c8a29ff4a561560"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "이미지 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "fc9378347d1a9b8c2c8a29ff4a561560",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting at a messy table in a college dorm room, surrounded by scattered textbooks and empty snack wrappers. Jay is leaning back, arms crossed, a knowing smirk on his face. Mike is hunched forward, gesturing wildly with frustration, pointing at his phone screen. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, looking at Mike with amusement. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, showing his phone to Jay with an exasperated expression. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye-level camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/r/fc9378347d1a9b8c2c8a29ff4a561560_1771890532_nj4gtl0h.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 111,
+            "completeTime": 1771890534340,
+            "createTime": 1771890422926
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "NCA 데이터 준비": [
+      {
+        "json": {
+          "nca_payload": {
+            "inputs": [
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/v/052a8767c86af76651ea03c9bc10183a_1771890798.mp4",
+                "options": []
+              },
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/v/a53ed40f8286dd33ad493ccec9b2a6cf_1771891041.mp4",
+                "options": []
+              },
+              {
+                "file_url": "https://tempfile.aiquickdraw.com/v/93e787ed20dfd9c322b6a3047536d911_1771891523.mp4",
+                "options": []
+              }
+            ],
+            "filters": [
+              {
+                "filter": "[0:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v0];[0:a]atrim=duration=8,asetpts=PTS-STARTPTS[a0];[1:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v1];[1:a]atrim=duration=8,asetpts=PTS-STARTPTS[a1];[2:v]trim=duration=8,setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v2];[2:a]atrim=duration=8,asetpts=PTS-STARTPTS[a2];[v0][v1][v2]concat=n=3:v=1:a=0[vfinal];[a0][a1][a2]concat=n=3:v=0:a=1[afinal]"
+              }
+            ],
+            "outputs": [
+              {
+                "options": [
+                  {
+                    "option": "-map",
+                    "argument": "[vfinal]"
+                  },
+                  {
+                    "option": "-map",
+                    "argument": "[afinal]"
+                  },
+                  {
+                    "option": "-c:v",
+                    "argument": "libx264"
+                  },
+                  {
+                    "option": "-preset",
+                    "argument": "medium"
+                  },
+                  {
+                    "option": "-crf",
+                    "argument": "18"
+                  },
+                  {
+                    "option": "-c:a",
+                    "argument": "aac"
+                  },
+                  {
+                    "option": "-b:a",
+                    "argument": "256k"
+                  },
+                  {
+                    "option": "-pix_fmt",
+                    "argument": "yuv420p"
+                  },
+                  {
+                    "option": "-movflags",
+                    "argument": "+faststart"
+                  },
+                  {
+                    "option": "-t",
+                    "argument": "24"
+                  }
+                ],
+                "file_name": "story_shorts_final.mp4"
+              }
+            ]
+          },
+          "totalDuration": 24,
+          "srtContent": "1\n00:00:00,000 --> 00:00:08,000\n아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지\n\n2\n00:00:08,000 --> 00:00:16,000\n아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ 그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네 하... 킹받네... 그럼 어떻게 걸러야 되는데?\n\n3\n00:00:16,000 --> 00:00:24,000\n나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ 뼈 맞았네... 당장 가본다 ㅠ\n",
+          "segmentCount": 3,
+          "hookTitle": "일상 <y>호구</y> 당한 썰 풀면 무조건 털린다?",
+          "skippedVideos": [],
+          "subject": "일상 호구 당한 썰 풀면 무조건 털린다? #온카스터디 #먹튀검증 #안전놀이터",
+          "caption": "믿었던 인스타 광고에 호구 당한 썰... 이걸로 카지노 사이트 걸러도 될까?",
+          "comment": "와, 나도 인스타 광고 때문에 돈 날린 적 있는데..."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "NCA 영상 제작": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "a9fc4dca-f7a5-48a8-9271-7d8c7ed01f0c",
+          "message": "success",
+          "pid": 9,
+          "queue_id": 134447818180544,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/a9fc4dca-f7a5-48a8-9271-7d8c7ed01f0c_output_0.mp4"
+            }
+          ],
+          "run_time": 36.915,
+          "total_time": 36.915
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "NCA 제작 대기": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "a9fc4dca-f7a5-48a8-9271-7d8c7ed01f0c",
+          "message": "success",
+          "pid": 9,
+          "queue_id": 134447818180544,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/a9fc4dca-f7a5-48a8-9271-7d8c7ed01f0c_output_0.mp4"
+            }
+          ],
+          "run_time": 36.915,
+          "total_time": 36.915
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "NCA 결과 처리": [
+      {
+        "json": {
+          "final_video_url": "http://76.13.182.180:9000/nca-toolkit/a9fc4dca-f7a5-48a8-9271-7d8c7ed01f0c_output_0.mp4",
+          "url": "http://76.13.182.180:9000/nca-toolkit/a9fc4dca-f7a5-48a8-9271-7d8c7ed01f0c_output_0.mp4",
+          "srtContent": "1\n00:00:00,000 --> 00:00:08,000\n아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지\n\n2\n00:00:08,000 --> 00:00:16,000\n아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ 그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네 하... 킹받네... 그럼 어떻게 걸러야 되는데?\n\n3\n00:00:16,000 --> 00:00:24,000\n나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ 뼈 맞았네... 당장 가본다 ㅠ\n",
+          "subject": "일상 호구 당한 썰 풀면 무조건 털린다? #온카스터디 #먹튀검증 #안전놀이터",
+          "caption": "믿었던 인스타 광고에 호구 당한 썰... 이걸로 카지노 사이트 걸러도 될까?",
+          "comment": "와, 나도 인스타 광고 때문에 돈 날린 적 있는데..."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "상태 업데이트": [
+      {
+        "json": {
+          "Status": "생성 완료",
+          "영상 URL": "http://76.13.182.180:9000/nca-toolkit/a9fc4dca-f7a5-48a8-9271-7d8c7ed01f0c_output_0.mp4",
+          "영상URL": "http://76.13.182.180:9000/nca-toolkit/a9fc4dca-f7a5-48a8-9271-7d8c7ed01f0c_output_0.mp4",
+          "SRT": "1\n00:00:00,000 --> 00:00:08,000\n아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지\n\n2\n00:00:08,000 --> 00:00:16,000\n아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ 그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네 하... 킹받네... 그럼 어떻게 걸러야 되는데?\n\n3\n00:00:16,000 --> 00:00:24,000\n나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ 뼈 맞았네... 당장 가본다 ㅠ\n",
+          "Subject": "일상 호구 당한 썰 풀면 무조건 털린다? #온카스터디 #먹튀검증 #안전놀이터",
+          "row_number": 0
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "이미지 URL 추출": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "fc9378347d1a9b8c2c8a29ff4a561560",
+            "model": "nano-banana-pro",
+            "state": "success",
+            "param": "{\"input\":\"{\\\"image_input\\\":[\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\\\",\\\"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\\\"],\\\"aspect_ratio\\\":\\\"16:9\\\",\\\"output_format\\\":\\\"png\\\",\\\"prompt\\\":\\\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting at a messy table in a college dorm room, surrounded by scattered textbooks and empty snack wrappers. Jay is leaning back, arms crossed, a knowing smirk on his face. Mike is hunched forward, gesturing wildly with frustration, pointing at his phone screen. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, looking at Mike with amusement. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, showing his phone to Jay with an exasperated expression. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye-level camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\\\",\\\"resolution\\\":\\\"2K\\\"}\",\"model\":\"nano-banana-pro\"}",
+            "resultJson": "{\"resultUrls\":[\"https://tempfile.aiquickdraw.com/r/fc9378347d1a9b8c2c8a29ff4a561560_1771890532_nj4gtl0h.png\"]}",
+            "failCode": null,
+            "failMsg": null,
+            "costTime": 111,
+            "completeTime": 1771890534340,
+            "createTime": 1771890422926
+          },
+          "images": [
+            {
+              "url": "https://tempfile.aiquickdraw.com/r/fc9378347d1a9b8c2c8a29ff4a561560_1771890532_nj4gtl0h.png"
+            }
+          ],
+          "imageComplete": true
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상1 준비": [
+      {
+        "json": {
+          "veo3Body": {
+            "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting at a messy table in a college dorm room, surrounded by scattered textbooks and empty snack wrappers. Jay is leaning back, arms crossed, a knowing smirk on his face. Mike is hunched forward, gesturing wildly with frustration, pointing at his phone screen. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, looking at Mike with amusement. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, showing his phone to Jay with an exasperated expression. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye-level camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ', then The first man (short fade haircut, black hoodie, gold chain) responds 'ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+            "imageUrls": [
+              "https://tempfile.aiquickdraw.com/r/fc9378347d1a9b8c2c8a29ff4a561560_1771890532_nj4gtl0h.png"
+            ],
+            "model": "veo3_fast",
+            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
+            "aspect_ratio": "16:9",
+            "enableTranslation": false
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상1 생성": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "052a8767c86af76651ea03c9bc10183a"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상1 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "052a8767c86af76651ea03c9bc10183a"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상1 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "052a8767c86af76651ea03c9bc10183a",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/r/fc9378347d1a9b8c2c8a29ff4a561560_1771890532_nj4gtl0h.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting at a messy table in a college dorm room, surrounded by scattered textbooks and empty snack wrappers. Jay is leaning back, arms crossed, a knowing smirk on his face. Mike is hunched forward, gesturing wildly with frustration, pointing at his phone screen. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, looking at Mike with amusement. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, showing his phone to Jay with an exasperated expression. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye-level camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ', then The first man (short fade haircut, black hoodie, gold chain) responds 'ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "052a8767c86af76651ea03c9bc10183a",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/052a8767c86af76651ea03c9bc10183a_1771890798.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                82671
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771890800000,
+            "createTime": 1771890628000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임1 추출": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "0a14b9da-00ba-4c44-badc-902a2c735742",
+          "message": "success",
+          "pid": 9,
+          "queue_id": 134447818180544,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/0a14b9da-00ba-4c44-badc-902a2c735742_output_0.png"
+            }
+          ],
+          "run_time": 1.157,
+          "total_time": 1.157,
+          "videoUrl": "https://tempfile.aiquickdraw.com/v/052a8767c86af76651ea03c9bc10183a_1771890798.mp4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임1 대기": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "0a14b9da-00ba-4c44-badc-902a2c735742",
+          "message": "success",
+          "pid": 9,
+          "queue_id": 134447818180544,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/0a14b9da-00ba-4c44-badc-902a2c735742_output_0.png"
+            }
+          ],
+          "run_time": 1.157,
+          "total_time": 1.157,
+          "videoUrl": "https://tempfile.aiquickdraw.com/v/052a8767c86af76651ea03c9bc10183a_1771890798.mp4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임1 결과": [
+      {
+        "json": {
+          "frameUrl": "http://76.13.182.180:9000/nca-toolkit/0a14b9da-00ba-4c44-badc-902a2c735742_output_0.png",
+          "frameComplete": true
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상2 준비": [
+      {
+        "json": {
+          "veo3Body": {
+            "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same college dorm room, the atmosphere more tense. Jay is now leaning forward, pointing a finger at Mike, his expression stern but not angry. Mike is recoiling slightly, his mouth slightly open in disbelief, rubbing his head. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, intense focused expression, wearing black premium hoodie, gold chain necklace, gesturing emphatically. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, slightly worried expression, wearing white oversized graphic t-shirt with silver watch, looking at Jay, trying to understand. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly high angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ', then The first man (short fade haircut, black hoodie, gold chain) responds '그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네', then The second man (medium twists hairstyle, white graphic t-shirt) responds '하... 킹받네... 그럼 어떻게 걸러야 되는데?'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+            "imageUrls": [
+              "http://76.13.182.180:9000/nca-toolkit/0a14b9da-00ba-4c44-badc-902a2c735742_output_0.png"
+            ],
+            "model": "veo3_fast",
+            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
+            "aspect_ratio": "16:9",
+            "enableTranslation": false
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상2 생성": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "a53ed40f8286dd33ad493ccec9b2a6cf"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상2 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "a53ed40f8286dd33ad493ccec9b2a6cf"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상2 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "a53ed40f8286dd33ad493ccec9b2a6cf",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/0a14b9da-00ba-4c44-badc-902a2c735742_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same college dorm room, the atmosphere more tense. Jay is now leaning forward, pointing a finger at Mike, his expression stern but not angry. Mike is recoiling slightly, his mouth slightly open in disbelief, rubbing his head. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, intense focused expression, wearing black premium hoodie, gold chain necklace, gesturing emphatically. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, slightly worried expression, wearing white oversized graphic t-shirt with silver watch, looking at Jay, trying to understand. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly high angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ', then The first man (short fade haircut, black hoodie, gold chain) responds '그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네', then The second man (medium twists hairstyle, white graphic t-shirt) responds '하... 킹받네... 그럼 어떻게 걸러야 되는데?'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "a53ed40f8286dd33ad493ccec9b2a6cf",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/a53ed40f8286dd33ad493ccec9b2a6cf_1771891041.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                37594
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771891043000,
+            "createTime": 1771890960000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임2 추출": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "0ccad156-0351-4cb0-bbef-198ba2d92c2b",
+          "message": "success",
+          "pid": 9,
+          "queue_id": 134447818180544,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/0ccad156-0351-4cb0-bbef-198ba2d92c2b_output_0.png"
+            }
+          ],
+          "run_time": 1.902,
+          "total_time": 1.902,
+          "videoUrl": "https://tempfile.aiquickdraw.com/v/a53ed40f8286dd33ad493ccec9b2a6cf_1771891041.mp4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임2 대기": [
+      {
+        "json": {
+          "build_number": 219,
+          "code": 200,
+          "endpoint": "/v1/ffmpeg/compose",
+          "id": null,
+          "job_id": "0ccad156-0351-4cb0-bbef-198ba2d92c2b",
+          "message": "success",
+          "pid": 9,
+          "queue_id": 134447818180544,
+          "queue_length": 0,
+          "queue_time": 0,
+          "response": [
+            {
+              "file_url": "http://76.13.182.180:9000/nca-toolkit/0ccad156-0351-4cb0-bbef-198ba2d92c2b_output_0.png"
+            }
+          ],
+          "run_time": 1.902,
+          "total_time": 1.902,
+          "videoUrl": "https://tempfile.aiquickdraw.com/v/a53ed40f8286dd33ad493ccec9b2a6cf_1771891041.mp4"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프레임2 결과": [
+      {
+        "json": {
+          "frameUrl": "http://76.13.182.180:9000/nca-toolkit/0ccad156-0351-4cb0-bbef-198ba2d92c2b_output_0.png",
+          "frameComplete": true
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상3 준비": [
+      {
+        "json": {
+          "veo3Body": {
+            "prompt": "young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the college dorm room, the tension resolved. Jay is now smiling, giving a thumbs up. Mike is looking at his phone with a determined expression, nodding. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, friendly confident smile, wearing black premium hoodie, gold chain necklace, giving a reassuring gesture. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, determined focused expression, holding his phone, wearing white oversized graphic t-shirt with silver watch. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly low angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ', then The second man (medium twists hairstyle, white graphic t-shirt) responds '뼈 맞았네... 당장 가본다 ㅠ'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.",
+            "imageUrls": [
+              "http://76.13.182.180:9000/nca-toolkit/0ccad156-0351-4cb0-bbef-198ba2d92c2b_output_0.png"
+            ],
+            "model": "veo3_fast",
+            "generationType": "FIRST_AND_LAST_FRAMES_2_VIDEO",
+            "aspect_ratio": "16:9",
+            "enableTranslation": false
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상3 생성": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "93e787ed20dfd9c322b6a3047536d911"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상3 대기": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "93e787ed20dfd9c322b6a3047536d911"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상3 결과": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "93e787ed20dfd9c322b6a3047536d911",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/0ccad156-0351-4cb0-bbef-198ba2d92c2b_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the college dorm room, the tension resolved. Jay is now smiling, giving a thumbs up. Mike is looking at his phone with a determined expression, nodding. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, friendly confident smile, wearing black premium hoodie, gold chain necklace, giving a reassuring gesture. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, determined focused expression, holding his phone, wearing white oversized graphic t-shirt with silver watch. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly low angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ', then The second man (medium twists hairstyle, white graphic t-shirt) responds '뼈 맞았네... 당장 가본다 ㅠ'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "93e787ed20dfd9c322b6a3047536d911",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/93e787ed20dfd9c322b6a3047536d911_1771891523.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                21772
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771891525000,
+            "createTime": 1771891293000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상1 실패체크": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "052a8767c86af76651ea03c9bc10183a",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"https://tempfile.aiquickdraw.com/r/fc9378347d1a9b8c2c8a29ff4a561560_1771890532_nj4gtl0h.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends sitting at a messy table in a college dorm room, surrounded by scattered textbooks and empty snack wrappers. Jay is leaning back, arms crossed, a knowing smirk on his face. Mike is hunched forward, gesturing wildly with frustration, pointing at his phone screen. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, looking at Mike with amusement. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, showing his phone to Jay with an exasperated expression. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, eye-level camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '아 진짜, 인스타 광고 보고 다이어트 약 샀는데 완전 사기야 ㅠㅠ', then The first man (short fade haircut, black hoodie, gold chain) responds 'ㅋㅋㅋㅋㅋ 후기 꼼꼼히 안 보고 결제한 네 능지가 문제지'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "052a8767c86af76651ea03c9bc10183a",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/052a8767c86af76651ea03c9bc10183a_1771890798.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                82671
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771890800000,
+            "createTime": 1771890628000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상2 실패체크": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "a53ed40f8286dd33ad493ccec9b2a6cf",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/0a14b9da-00ba-4c44-badc-902a2c735742_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the same college dorm room, the atmosphere more tense. Jay is now leaning forward, pointing a finger at Mike, his expression stern but not angry. Mike is recoiling slightly, his mouth slightly open in disbelief, rubbing his head. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, intense focused expression, wearing black premium hoodie, gold chain necklace, gesturing emphatically. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, slightly worried expression, wearing white oversized graphic t-shirt with silver watch, looking at Jay, trying to understand. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly high angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The second man (medium twists hairstyle, white graphic t-shirt) says '아니, 분명 후기 좋았다고! 사진도 너무 좋았고 ㅠㅠ', then The first man (short fade haircut, black hoodie, gold chain) responds '그럼 카지노 사이트도 후기만 보고 꽂냐? 똑같은 짓 하고 있네', then The second man (medium twists hairstyle, white graphic t-shirt) responds '하... 킹받네... 그럼 어떻게 걸러야 되는데?'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "a53ed40f8286dd33ad493ccec9b2a6cf",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/a53ed40f8286dd33ad493ccec9b2a6cf_1771891041.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                37594
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771891043000,
+            "createTime": 1771890960000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "영상3 실패체크": [
+      {
+        "json": {
+          "code": 200,
+          "msg": "success",
+          "data": {
+            "taskId": "93e787ed20dfd9c322b6a3047536d911",
+            "paramJson": "{\"aspectRatio\":\"16:9\",\"enableFallback\":false,\"enableTranslation\":false,\"generationType\":\"FIRST_AND_LAST_FRAMES_2_VIDEO\",\"imageUrls\":[\"http://76.13.182.180:9000/nca-toolkit/0ccad156-0351-4cb0-bbef-198ba2d92c2b_output_0.png\"],\"model\":\"veo3_fast\",\"prompt\":\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends in the college dorm room, the tension resolved. Jay is now smiling, giving a thumbs up. Mike is looking at his phone with a determined expression, nodding. young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, friendly confident smile, wearing black premium hoodie, gold chain necklace, giving a reassuring gesture. young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, determined focused expression, holding his phone, wearing white oversized graphic t-shirt with silver watch. two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, slightly low angle camera shot, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI. The first man (short fade haircut, black hoodie, gold chain) says '나는 온카스터디 먹튀검증 들어가서 3가지 체크포인트 봤지 ㅋ', then The second man (medium twists hairstyle, white graphic t-shirt) responds '뼈 맞았네... 당장 가본다 ㅠ'. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.\"}",
+            "response": {
+              "taskId": "93e787ed20dfd9c322b6a3047536d911",
+              "resolution": "720p",
+              "originUrls": null,
+              "resultUrls": [
+                "https://tempfile.aiquickdraw.com/v/93e787ed20dfd9c322b6a3047536d911_1771891523.mp4"
+              ],
+              "hasAudioList": [
+                true
+              ],
+              "seeds": [
+                21772
+              ]
+            },
+            "successFlag": 1,
+            "fallbackFlag": false,
+            "completeTime": 1771891525000,
+            "createTime": 1771891293000,
+            "errorCode": null,
+            "errorMessage": null
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
     ]
   },
-  "versionId": "39354be5-be53-49f4-b11b-637fafd7c6c2",
-  "activeVersionId": "39354be5-be53-49f4-b11b-637fafd7c6c2",
-  "versionCounter": 605,
+  "versionId": "454fc8e8-771a-4ac4-864e-10b953d7b409",
+  "activeVersionId": "454fc8e8-771a-4ac4-864e-10b953d7b409",
+  "versionCounter": 616,
   "triggerCount": 0,
   "shared": [
     {
@@ -5779,7 +6719,7 @@
             "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
             "projectId": "W6LETsSnBzw4J5Aa",
             "user": {
-              "updatedAt": "2026-02-23T18:51:35.213Z",
+              "updatedAt": "2026-02-23T23:21:00.874Z",
               "createdAt": "2026-02-07T19:04:09.331Z",
               "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
               "email": "hatihoro15@gmail.com",
@@ -5793,8 +6733,8 @@
               "settings": {
                 "userActivated": true,
                 "easyAIWorkflowOnboarded": true,
-                "firstSuccessfulWorkflowId": "iikEzoCR2zoR87Vz",
-                "userActivatedAt": 1771872693938,
+                "firstSuccessfulWorkflowId": "dEtWqwWQPJfwCWiIM0QYd",
+                "userActivatedAt": 1771888859109,
                 "npsSurvey": {
                   "waitingForResponse": true,
                   "ignoredCount": 1,
@@ -5803,7 +6743,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-02-22",
+              "lastActiveAt": "2026-02-23",
               "isPending": false
             }
           }
@@ -5813,9 +6753,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-02-23T22:36:10.825Z",
-    "createdAt": "2026-02-23T22:36:10.825Z",
-    "versionId": "39354be5-be53-49f4-b11b-637fafd7c6c2",
+    "updatedAt": "2026-02-24T00:40:32.930Z",
+    "createdAt": "2026-02-24T00:40:32.930Z",
+    "versionId": "454fc8e8-771a-4ac4-864e-10b953d7b409",
     "workflowId": "jSEDYrkFcWUzJ8Et",
     "nodes": [
       {
@@ -5845,7 +6785,7 @@
         "name": "When clicking ‘Execute workflow’",
         "type": "n8n-nodes-base.manualTrigger",
         "position": [
-          -3152,
+          -3232,
           1328
         ],
         "typeVersion": 1
@@ -6009,7 +6949,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
+          "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The man in the black hoodie with gold chain (short fade haircut)',\n    'B': 'The man in the white t-shirt with silver watch (twists hairstyle)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
         },
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
@@ -6954,7 +7894,7 @@
         "typeVersion": 1,
         "position": [
           -3152,
-          1128
+          1136
         ],
         "id": "ewt-jay-trigger-001",
         "name": "Execute Workflow Trigger"
@@ -7552,6 +8492,17 @@
             }
           ]
         ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "카테고리 선택",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "hatihoro15 hatihoro15",
@@ -7560,10 +8511,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-02-23T22:36:10.920Z",
-        "id": 531,
+        "createdAt": "2026-02-24T00:40:33.030Z",
+        "id": 545,
         "workflowId": "jSEDYrkFcWUzJ8Et",
-        "versionId": "39354be5-be53-49f4-b11b-637fafd7c6c2",
+        "versionId": "454fc8e8-771a-4ac4-864e-10b953d7b409",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }

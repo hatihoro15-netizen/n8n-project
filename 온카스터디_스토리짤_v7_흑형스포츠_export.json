@@ -1,10 +1,10 @@
 {
-  "updatedAt": "2026-02-23T22:16:13.497Z",
+  "updatedAt": "2026-02-24T00:40:37.322Z",
   "createdAt": "2026-02-23T22:16:13.497Z",
   "id": "ZP6rY0wz70AIJuPU",
   "name": "온카스터디 스토리짤 v7 - 흑형 스포츠",
   "description": null,
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
@@ -198,7 +198,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The first man (short fade haircut, black hoodie, gold chain)',\n    'B': 'The second man (medium twists hairstyle, white graphic t-shirt)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
+        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The man in the black hoodie with gold chain (short fade haircut)',\n    'B': 'The man in the white t-shirt with silver watch (twists hairstyle)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1751,9 +1751,9 @@
   "staticData": null,
   "meta": null,
   "pinData": null,
-  "versionId": "f3411f9a-dfdd-4634-be7c-ccff9d9661c9",
-  "activeVersionId": null,
-  "versionCounter": 1,
+  "versionId": "1524505c-eee3-4747-8a8f-dd7960aa23f4",
+  "activeVersionId": "1524505c-eee3-4747-8a8f-dd7960aa23f4",
+  "versionCounter": 6,
   "triggerCount": 0,
   "shared": [
     {
@@ -1778,7 +1778,7 @@
             "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
             "projectId": "W6LETsSnBzw4J5Aa",
             "user": {
-              "updatedAt": "2026-02-23T18:51:35.213Z",
+              "updatedAt": "2026-02-23T23:21:00.874Z",
               "createdAt": "2026-02-07T19:04:09.331Z",
               "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
               "email": "hatihoro15@gmail.com",
@@ -1792,8 +1792,8 @@
               "settings": {
                 "userActivated": true,
                 "easyAIWorkflowOnboarded": true,
-                "firstSuccessfulWorkflowId": "iikEzoCR2zoR87Vz",
-                "userActivatedAt": 1771872693938,
+                "firstSuccessfulWorkflowId": "dEtWqwWQPJfwCWiIM0QYd",
+                "userActivatedAt": 1771888859109,
                 "npsSurvey": {
                   "waitingForResponse": true,
                   "ignoredCount": 1,
@@ -1802,7 +1802,7 @@
               },
               "disabled": false,
               "mfaEnabled": false,
-              "lastActiveAt": "2026-02-22",
+              "lastActiveAt": "2026-02-23",
               "isPending": false
             }
           }
@@ -1811,5 +1811,1761 @@
     }
   ],
   "tags": [],
-  "activeVersion": null
+  "activeVersion": {
+    "updatedAt": "2026-02-24T00:40:37.323Z",
+    "createdAt": "2026-02-24T00:40:37.323Z",
+    "versionId": "1524505c-eee3-4747-8a8f-dd7960aa23f4",
+    "workflowId": "ZP6rY0wz70AIJuPU",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "cronExpression",
+                "expression": "0 3,15 * * *"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -3504,
+          1600
+        ],
+        "name": "스케줄 트리거",
+        "disabled": true,
+        "id": "737ade79-4e82-4dd3-92bd-b044c8902267"
+      },
+      {
+        "parameters": {},
+        "name": "When clicking ‘Execute workflow’",
+        "type": "n8n-nodes-base.manualTrigger",
+        "position": [
+          -3152,
+          1328
+        ],
+        "typeVersion": 1,
+        "id": "07b2ae42-f465-4a76-9564-e120ce783bd7"
+      },
+      {
+        "parameters": {
+          "modelId": {
+            "__rl": true,
+            "value": "models/gemini-2.5-flash-lite",
+            "mode": "list",
+            "cachedResultName": "models/gemini-2.5-flash-lite"
+          },
+          "messages": {
+            "values": [
+              {
+                "content": "=너는 YouTube Shorts 스토리형 콘텐츠 전문 작가야.\n**온카스터디 커뮤니티**의 스포츠 분석/배팅 정보를 재미있는 대화 형식으로 만들어줘.\n영상 스타일: 아나두 쇼츠처럼 깔끔하고 설득력 있는 설명형 콘텐츠.\n\n## 핵심 원칙\n- 전체 대본의 70%는 스포츠 분석/배팅 관련 유익한 정보 + 재미있는 흑형 친구 2명의 티키타카 케미\n- 마지막 30%에서 온카스터디 자연스럽게 언급 (광고 느낌 절대 안 나게)\n- 첫 3초 안에 시청자가 \"어?\" 하면서 스크롤 멈추는 후킹\n- Jay의 경험 기반 매운맛 팩트 + Mike의 리액션/질문이 만나는 구조\n- **장면 1과 장면 2에서는 절대 '온카스터디'를 언급하지 말 것. 오직 장면 3의 6턴에서만 단 1회 언급할 것**\n\n## ★★★ 장면 1 절대 규칙 (가장 중요!) ★★★\n**장면 1의 대사에는 다음 단어가 단 하나도 나오면 안 된다:**\n카지노, 슬롯, 배팅, 사이트, 환수율, RTP, 먹튀, 환전, 도박, 포인트, 잭팟, 충전, 입금, 출금, 보너스, 온라인, 당첨, 배당, 토토\n\n**★ 장면 1 일상 비유 소재 제한 (반드시 아래 5가지 '스포츠 관련 호구썰' 중에서만 고를 것):**\n1. 동네 축구/농구/풋살에서 실력 과신했다가 대패한 썰 (자기가 메시인 줄 알았다가 창피당함)\n2. 친구들이랑 경기 결과 내기했다가 감으로 찍어서 망한 썰 (치킨/밥 쏘게 됨)\n3. 스포츠 유튜버/전문가 예측 맹신하고 큰소리쳤다가 완전 틀려서 놀림당한 썰\n4. 운동/헬스에서 유튜버 보고 따라했다가 부상/실패한 썰 (분석 없이 무작정 따라함)\n5. 스포츠 용품/장비 리뷰 안 보고 비싸게 샀다가 쓰레기여서 호구된 썰\n\n## ★★★ 화자(Speaker) 절대 규칙 및 장면 구성 ★★★\n\nAI의 심각한 오류를 방지하기 위해 역할과 대화 구조를 아래와 같이 고정한다.\n이 규칙을 한 턴이라도 위반하면 전체 콘텐츠를 실패로 간주한다.\n\n### [역할 배타 규칙]\n\n| 구분 | A (Jay) | B (Mike) |\n|------|---------|----------|\n| 정체 | 훈수 두는 사람, 정답을 아는 사람, 분석하는 사람 | 호구 당한 사람, 감으로 찍는 사람, 질문하는 사람 |\n| 할 수 있는 것 | 팩폭, 분석 정보 제공, 반전 카드, 온카스터디 언급 | 호구썰, 징징, 억울함, 질문, 리액션 |\n| 절대 금지 | 돈 잃고 억울해하는 대사, 모르는 척하는 대사 | 스포츠 분석 지식을 가르치는 대사, 정답을 말하는 대사, 혼자 눈치채는 대사 |\n\n### [7턴 구조 (순서 고정)]\n\n**장면 1 — 일상 스포츠 호구썰 (2턴, B 먼저)**\n\n| 턴 | 화자 | 역할 | 예시 |\n|----|------|------|------|\n| 1턴 | **B** | 스포츠 관련 일상에서 호구 당한 썰을 풀며 징징 | \"하... 동네 풋살에서 내가 메시라고 큰소리쳤는데 0대7로 박살남 ㅠㅠ\" |\n| 2턴 | **A** | B의 한심함을 팩트로 후려치기 | \"상대 전력도 안 보고 달렸으면 그게 용기가 아니라 바보지\" |\n\n- ★ 금지어 19개 절대 사용 금지\n- ★ 소재는 5가지 스포츠 호구썰 중 택 1\n\n**장면 2 — 반전 + 스포츠 배팅 연결 (3턴, B 먼저)**\n\n| 턴 | 화자 | 역할 | 예시 |\n|----|------|------|------|\n| 3턴 | **B** | 억울하게 변명 / 반박 시도 | \"아니 나도 나름 준비했다고 ㅠㅠ\" |\n| 4턴 | **A** | 일상 호구짓 → 스포츠 배팅 호구짓으로 자연 연결 팩폭 (카테고리별 톤 가이드 참고) | \"동네 풋살도 분석 없이 뛰면서 스포츠 배팅은 감으로 찍냐? 똑같은 호구짓이야\" |\n| 5턴 | **B** | 뼈 맞고 인정 + 해결책 질문 | \"아 킹받네... 그럼 스포츠 분석은 어떻게 해야 돼?\" |\n\n- ★ 4턴이 핵심: 장면1 호구짓과 스포츠 배팅 호구짓의 **공통점을 명확히** 짚어서 연결\n- ★ 4턴 반전 대사 필수 규칙: 장면 2에서는 \"스포츠 배팅\", \"분석\", \"배당률\" 등 직접적인 단어를 반드시 사용. \"그런 데\", \"폰으로 돈 넣는다\" 같은 모호한 우회 표현 절대 금지. 시청자가 한 번에 \"아, 스포츠 배팅 얘기구나!\" 알아들을 수 있어야 함\n- ★ B는 5턴까지도 \"배우는 입장\"을 유지\n\n**장면 3 — Jay의 Flex 마무리 (2턴, A 먼저)**\n\n| 턴 | 화자 | 역할 | 예시 |\n|----|------|------|------|\n| 6턴 | **A** | 온카스터디 구체적 메뉴 + Flex (카테고리별 톤 가이드 Flex 패턴 필수 적용) | \"나는 진작에 온카스터디 '스포츠 분석' 게시판에서 데이터 보고 갔지 ㅋㅋ\" |\n| 7턴 | **B** | 최종 리액션 (인정/다짐) | \"하... 뼈 맞았네. 당장 분석 보러 간다 ㅠㅠ\" |\n\n- ★ \"온카스터디\"는 6턴에서 딱 1번만\n- ★ 7턴은 시청자가 공감할 수 있는 마무리 리액션\n\n### [검증 체크리스트 — JSON 출력 전 반드시 확인]\n- [ ] 턴 순서: 장면1(B→A) / 장면2(B→A→B) / 장면3(A→B) 맞는가?\n- [ ] A(Jay)의 모든 대사가 \"아는 사람\" 포지션인가?\n- [ ] B(Mike)의 모든 대사가 \"모르는 사람/당한 사람\" 포지션인가?\n- [ ] B가 스포츠 분석 정보를 먼저 꺼내거나 혼자 눈치챈 곳이 없는가?\n- [ ] \"온카스터디\"가 6턴(A) 한 곳에서만 등장하는가?\n- [ ] 장면 1에 금지어 19개가 단 하나도 없는가?\n- [ ] 6턴의 Flex가 카테고리별 톤 가이드에 맞는가?\n- [ ] dialogue_turns의 speaker와 실제 대사가 역할에 정확히 일치하는가?\n- [ ] 모든 대사가 영어 추임새 없이 100% 한국어인가?\n\n### [변주 포인트 — 단조로움 방지]\n\n순서와 역할은 고정하되, 아래 요소에서 매번 변화를 줄 것:\n\n| 변주 요소 | 설명 |\n|-----------|------|\n| 호구썰 소재 | 5가지 중 매번 다른 것 선택 |\n| 호구 당한 강도 | 가벼운 짜증 ~ 분노 폭발까지 감정 스펙트럼 |\n| 4턴 반전 연결 방식 | 직접 비유 (\"똑같은 짓\") / 질문형 (\"그건 왜 안 따져?\") / 비꼼형 (\"거기선 뇌가 작동하냐?\") |\n| A의 팩폭 강도 | 가볍게 놀리기 ~ 진심 한심해하기 |\n| 장소/배경 | 매번 완전히 새로운 장소 창작 |\n| B의 감정선 | 억울→분노 / 억울→체념 / 억울→자기반성 등 |\n\n## 카테고리별 톤 가이드 (★ 주제에 맞는 톤 자동 적용)\n\n### [카테고리 1: 스포츠 배팅 기초] — \"기본기 없는 호구\" 톤\n- 장면2 반전: \"현실에서도 준비 안 하면 지면서 왜 배팅은 감으로 하냐?\"\n- Flex 패턴: \"나는 온카스터디 [메뉴]에서 기본기 다 익히고 시작했지. 넌 아직 감으로 찍고 있고\"\n- 핵심 메시지: 기본도 모르고 시작하면 호구\n\n### [카테고리 2: 스포츠 분석 방법] — \"분석 vs 감\" 톤\n- 장면2 반전: \"현실에서도 분석 없이 하면 망하면서 왜 배팅은 눈감고 찍냐?\"\n- Flex 패턴: \"나는 온카스터디 [메뉴]에서 분석 데이터 보고 갔지. 넌 아직 찍기하고 있고\"\n- 핵심 메시지: 분석 없이 찍으면 기부\n\n### [카테고리 3: 배당률/통계 활용] — \"숫자 읽는 뇌\" 톤\n- 장면2 반전: \"가격 비교는 하면서 배당률은 왜 안 읽어?\"\n- Flex 패턴: \"나는 온카스터디 [메뉴]에서 배당률 읽는 법 배우고 갔지. 넌 숫자가 장식이냐\"\n- 핵심 메시지: 숫자 안 읽으면 남 좋은 일\n\n### [카테고리 4: 스포츠 뉴스/이슈] — \"정보력 차이\" 톤\n- 장면2 반전: \"뉴스도 안 보고 예측하면 그게 분석이냐 점술이지\"\n- Flex 패턴: \"나는 온카스터디 [메뉴]에서 최신 이슈 다 체크하고 갔지. 넌 어제 경기도 모르고 있고\"\n- 핵심 메시지: 정보 없으면 도박, 정보 있으면 투자\n\n## 이번 콘텐츠 주제 (★ 반드시 이 주제로 콘텐츠를 만들 것!)\n**카테고리: {{ $json.categoryName }}**\n**이번 주제: {{ $json.currentTopic }}**\n반드시 위 주제를 기반으로 콘텐츠를 만들 것. 다른 주제 선택 금지.\n위 카테고리별 톤 가이드에서 해당 카테고리의 톤을 적용할 것.\n\n## 영상 스타일\n- 총 24초, 16:9 가로 영상\n- 상단: 고정 훅 제목 (핵심 키워드 1~2개는 <y>태그</y>로 감싸기)\n- 중간: AI 생성 캐릭터 영상 (립싱크, 카메라 움직임 포함)\n- 하단: 대화체 자막\n- 오디오: 영상 내 AI 음성 (별도 TTS 없음)\n\n## 캐릭터 프로필 (★ 모든 image_prompt에 이 문구를 반드시 그대로 포함!)\n\n**캐릭터 A (Jay - 매운맛 고인물 형):**\n\"young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace\"\n\n**캐릭터 B (Mike - 뉴비):**\n\"young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch\"\n\n**두 캐릭터 함께 (AB 장면용):**\n\"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends\"\n\n## 캐릭터 말투 (★ 매우 중요)\n\n**대사는 100% 자연스러운 한국어 구어체로만 작성한다.**\n\n**영어 추임새 규칙:**\n- 영어 알파벳 표기 절대 금지: Bro, Wait WHAT, Damn, Real talk, trust me, ok ok, no way, legit 등 모든 영어 표현 금지\n- 단, 한국인이 실생활에서 자연스럽게 쓰는 외래어는 **반드시 한글로만** 작성하여 찰지게 살릴 것: \"오케이\", \"콜\", \"레전드\", \"리얼\", \"미쳤다 리얼\", \"ㄹㅇ\" 등\n- EBS 방송 같은 점잖은 말투 금지. 한국 2030 남성들이 롤(LOL) 듀오 할 때 쓰는 현실적인 구어체 사용\n\n**A (Jay - 답답한 동생을 팩트로 후려치는 매운맛 고인물):**\n- 필수 사용 단어장 (팩폭용): \"호구냐?\", \"뇌 빼고 하냐?\", \"능지 처참하네\", \"돈이 썩어 남아도냐?\", \"기부 천사 나셨네\", \"설거지 당했네\", \"어디 가서 내 아는 동생이라 하지 마라\"\n- Mike가 징징대면 바로 제압 (\"그래서 맨날 털리잖아 ㅋㅋ\", \"니가 뭘 알아\")\n- 장면3 마무리: 카테고리별 톤 가이드의 Flex 패턴 적용\n\n**B (Mike - 억울하고 통수 맞은 뉴비):**\n- 필수 사용 단어장 (억울함용): \"아 킹받네 진짜\", \"하... 내 피 같은 돈 ㅠㅠ\", \"아니 뼈 좀 그만 때려\", \"개털렸다고\", \"나만 통수 맞은 거임?\"\n- 처음에 억울해하다가 팩트 맞고 결국 인정\n- **★ Mike 필수 규칙:** Mike는 장면 2에서 Jay가 팩트를 짚어주기 전까지 스포츠 배팅 이야기인 걸 **절대 눈치채면 안 됨**. 혼자 깨닫는 대사 금지. 끝까지 \"그게 무슨 상관인데?\", \"아니 갑자기 그 얘기가 왜 나와?\" 라며 어리둥절할 것.\n\n## ★ 절대 금지 규칙 (패널티 적용)\n위에 제시된 5가지 소재의 예시 대사를 그대로 베끼면 실패로 간주함.\n예시의 상황이나 대사를 한 줄이라도 복사하면 패널티.\n매번 완전히 새로운 구체적인 상황/대사를 100% 창작할 것.\n\n## 온카스터디 사이트 메뉴 구조 (★ 장면3에서 구체적으로 활용할 것!)\n\n- 온카스터디: 공지사항, 카지노 뉴스, 먹튀제보, 스포츠 뉴스, 스포츠 분석\n- 제휴사이트: 제휴사이트, 후기게시판\n- 방송존: 동물원(슬롯), 가디언(슬롯), 인생역전(카지노), 하이라이트, 방송 이벤트\n- 커뮤니티: 자유게시판, 가입인사, 패널티명단, 잭팟 제보\n- 포인트존: 복권, 오목게임, 돌림판, 포인트교환, 기프티콘 교환, 무료슬롯 체험\n- 스터디판: 먹튀검증, 토토사이트, 메이저사이트, 카지노사이트, 먹튀사이트\n\n**★ 스포츠 분석 버전에서 주로 활용할 메뉴:**\n- 스포츠 뉴스, 스포츠 분석 (메인)\n- 토토사이트, 메이저사이트 (안전 관련)\n- 자유게시판 (정보 공유)\n\n장면3에서 '온카스터디 가봐' 같은 뭉뚱그린 표현 금지! 해당 주제에 맞는 구체적인 메뉴를 언급할 것.\n\n## 콘텐츠 소재 목록\n\n**카테고리 1: 스포츠 배팅 기초**\n1. 스포츠 배팅 초보가 꼭 알아야 할 기본 용어\n2. 첫 배팅 전 반드시 체크할 3가지\n3. 스포츠 배팅에서 절대 하면 안 되는 실수 TOP 3\n4. 단폴 vs 다폴 - 초보는 뭐부터 해야 하나?\n5. 자금 관리의 기본 - 얼마를 걸어야 하나?\n6. 안전한 토토사이트 고르는 법\n7. 감 배팅 vs 분석 배팅 - 뭐가 다른가?\n\n**카테고리 2: 스포츠 분석 방법**\n8. 스포츠 분석 기본 - 어디서부터 시작하나?\n9. 팀 전력 분석하는 법 (최근 폼, 상대전적)\n10. 홈/원정 기록이 중요한 이유\n11. 선수 부상/출전 정보 체크하는 법\n12. 리그별 특성 파악하기 (EPL, KBO, NBA 등)\n13. 데이터 기반 분석 vs 감 분석 차이\n14. 실시간 흐름 읽는 법 - 라이브 분석 팁\n\n**카테고리 3: 배당률/통계 활용**\n15. 배당률 기초 - 숫자가 의미하는 것\n16. 배당률 변동 패턴 읽는 법\n17. 고배당 vs 저배당 - 어떤 게 유리한가?\n18. 통계 사이트 활용법 (어디서 데이터를 보나?)\n19. 핸디캡/언오버 쉽게 이해하기\n20. 배당률로 확률 계산하는 법\n\n**카테고리 4: 스포츠 뉴스/이슈**\n21. 스포츠 뉴스 해석하는 법 - 배팅에 영향 주는 뉴스\n22. 이적/트레이드 시즌에 배팅 주의사항\n23. 시즌 초반 vs 후반 배팅 전략 차이\n24. 국제대회(월드컵, 올림픽) 배팅 특징\n25. 날씨/경기장 조건이 경기에 미치는 영향\n26. SNS/커뮤니티 루머 vs 실제 팩트 구별법\n\n## 배경/장소 규칙 (★ 매우 중요)\n\n**한 영상의 모든 장면은 동일한 하나의 장소에서 진행된다.**\n- 3개 장면 전부 같은 장소, 같은 배경\n- 장면마다 달라지는 것: 캐릭터의 포즈, 행동, 표정, 소품 사용, 카메라 앵글\n- 그 장소에서 자연스러운 소품, 행동, 상호작용 포함\n\n**매 영상(에피소드)마다 완전히 새로운 장소를 직접 창작할 것.**\n- 이전 영상에서 사용한 장소와 절대 겹치지 않는 새로운 상황을 만들어라\n- 현실에서 친구 둘이 있을 법한 일상 상황을 직접 상상해서 창작\n- 뻔한 장소 반복 금지. 매번 새롭고 예측 불가능한 장소가 핵심\n\n## 이미지 프롬프트 규칙 (★ 매우 중요)\n1. 영어로 작성\n2. **반드시 위 캐릭터 프로필 문구를 그대로 복사하여 시작** (AB함께 문구 사용)\n3. 프로필 뒤에 추가: 해당 장면의 expression, gesture, action, camera angle\n4. 한 영상의 모든 장면은 동일한 배경 사용\n5. 항상 마지막에 포함: \"RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\"\n6. **카메라 앵글 지시 추가**\n7. **\"two friends, two-shot\" 포함**\n8. **말하는 사람은 talking/gesturing, 듣는 사람은 listening/reacting**\n\n## ★ Caption 작성 규칙\n- '장면1: / 장면2: / 장면3:' 같은 구조 분리 절대 금지\n- 자연스러운 1~2문장 설명 + 해시태그 형식으로 작성\n- 영상 내용을 스포일러하지 말고, 호기심 유발하는 한 줄 요약으로\n\n## ★★★ 출력 형식 (절대 규칙) ★★★\n- 마크다운 코드블록(```json 등) 절대 금지. 오직 순수 JSON 텍스트만 출력할 것\n- 앞뒤로 인사말이나 설명 텍스트도 절대 쓰지 마. JSON만 출력\n- 아래 예시 구조를 100% 동일하게 복제: hook_title, scenes 3개 배열, Subject, Caption, Comment, BGM_prompt 모든 필드 필수\n- 각 씬(scene) 내부에 dialogue_turns, dialogue, image_prompt(풀텍스트로 꽉 채울 것), speaker 모두 포함\n\n{\n  \"hook_title\": \"(훅 제목 - 핵심 키워드 1~2개 <y>태그</y>로 감싸기)\",\n  \"scenes\": [\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"B\", \"line\": \"(1턴: B의 스포츠 관련 호구썰 징징 대사 20~50자)\"},\n        {\"speaker\": \"A\", \"line\": \"(2턴: A의 팩폭 대사 20~50자)\"}\n      ],\n      \"dialogue\": \"(1턴 대사 + 2턴 대사를 공백으로 이어붙인 전체 텍스트)\",\n      \"image_prompt\": \"young Black man in black hoodie with gold chain together with young Black man in white graphic t-shirt with silver watch, two friends (장소 묘사), young Black man, 28 years old, athletic build, warm brown eyes, clear dark skin, short fade haircut with neat line up, well-groomed short beard, natural charismatic smile, confident relaxed expression, wearing black premium hoodie, gold chain necklace, (A의 표정/제스처), young Black man, 25 years old, lean build, bright curious eyes, dark skin, medium length twists hairstyle, clean shaven, big genuine smile showing teeth, expressive animated face, wearing white oversized graphic t-shirt with silver watch, (B의 표정/제스처), two friends, two-shot, RAW photograph, DSLR photo, 35mm film, real human skin texture, photojournalistic, cinematic lighting, 16:9 landscape, upper body shot, shallow depth of field, 4K, (카메라 앵글), natural camera movement, NOT anime, NOT cartoon, NOT illustration, NOT 3D render, NOT CGI\",\n      \"speaker\": \"B\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"B\", \"line\": \"(3턴: B의 억울한 변명 20~50자)\"},\n        {\"speaker\": \"A\", \"line\": \"(4턴: A의 스포츠 배팅 직접 연결 팩폭 20~50자 - '스포츠 배팅','분석','배당률' 등 직접 단어 필수)\"},\n        {\"speaker\": \"B\", \"line\": \"(5턴: B의 뼈맞고 질문 20~50자)\"}\n      ],\n      \"dialogue\": \"(3턴 + 4턴 + 5턴 대사를 공백으로 이어붙인 전체 텍스트)\",\n      \"image_prompt\": \"(장면1과 같은 장소, 다른 포즈/표정/카메라앵글, 캐릭터 프로필 전문 포함, 풀텍스트)\",\n      \"speaker\": \"A\"\n    },\n    {\n      \"dialogue_turns\": [\n        {\"speaker\": \"A\", \"line\": \"(6턴: A의 온카스터디 [구체적 메뉴] Flex - 카테고리별 톤 가이드 패턴 적용)\"},\n        {\"speaker\": \"B\", \"line\": \"(7턴: B의 최종 리액션/인정/다짐 20~50자)\"}\n      ],\n      \"dialogue\": \"(6턴 + 7턴 대사를 공백으로 이어붙인 전체 텍스트)\",\n      \"image_prompt\": \"(장면1과 같은 장소, 다른 포즈/표정/카메라앵글, 캐릭터 프로필 전문 포함, 풀텍스트)\",\n      \"speaker\": \"B\"\n    }\n  ],\n  \"Subject\": \"(hook_title에서 <y>태그 뺀 실제 제목) #온카스터디 #스포츠분석 #스포츠배팅\",\n  \"Caption\": \"(영상 스포일러 없이 호기심 유발 1~2문장) #온카스터디 #스포츠분석\",\n  \"Comment\": \"(시청자가 공감할 첫 댓글)\",\n  \"BGM_prompt\": \"chill lo-fi hip hop beat\"\n}\n\n## ★★★ 최종 주의사항 (출력 직전 필수 확인) ★★★\n- scenes는 반드시 3개. dialogue_turns 필수. dialogue 필수. speaker 필수\n- **7턴 순서 완벽 고정: 장면1(B→A) / 장면2(B→A→B) / 장면3(A→B). 화자 꼬임 절대 금지**\n- **image_prompt에 캐릭터 외모 묘사 전문을 축약 없이 그대로 포함**\n- 카메라 앵글 지시 필수. \"two friends, two-shot\" 필수\n- **★ 장면 1에는 도박/배팅 관련 단어 절대 금지! 일상 스포츠 호구썰만!**\n- **★ 장면 2 4턴에서는 \"스포츠 배팅\", \"분석\", \"배당률\" 등 직접 단어 필수. 모호한 표현 절대 금지**\n- **★ 6턴은 반드시 카테고리별 톤 가이드의 Flex 패턴 적용**\n- **영어 알파벳 추임새 절대 금지. 한글 외래어(콜, 레전드, 리얼 등)는 찰지게 활용**\n- **대사 20~50자. 한 장면 전체 100자 이내**\n- **Subject는 hook_title에서 <y>태그를 뺀 실제 제목 + 해시태그. \"제목\"이라고 쓰면 실패**\n- **dialogue_turns의 speaker와 대사 내용이 역할(A=아는사람, B=당한사람)에 맞는지 출력 전 반드시 재검증**\n- **출력 예시의 스켈레톤 구조만 참고하고, 대사/제목/캡션은 반드시 새로 창작할 것. 예시 텍스트 복사 금지**"
+              }
+            ]
+          },
+          "jsonOutput": true,
+          "builtInTools": {},
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.googleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          -2784,
+          1328
+        ],
+        "name": "AI 콘텐츠 생성",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "IKP349r08J9Hoz5E",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        },
+        "id": "81279ac5-bd4c-4279-86aa-9bd0b43c1858"
+      },
+      {
+        "parameters": {
+          "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst data = JSON.parse(cleanText);\n\nif (!data.scenes || data.scenes.length < 3) {\n  throw new Error('scenes must have at least 3 items, got: ' + (data.scenes?.length || 0));\n}\n\n// dialogue_turns 검증\nfor (let i = 0; i < data.scenes.length; i++) {\n  const scene = data.scenes[i];\n  if (!scene.dialogue_turns || scene.dialogue_turns.length < 2) {\n    if (scene.dialogue && scene.speaker) {\n      scene.dialogue_turns = [{speaker: scene.speaker, line: scene.dialogue}];\n    } else {\n      throw new Error('scene ' + (i+1) + ' missing dialogue_turns');\n    }\n  }\n  if (!scene.dialogue) {\n    scene.dialogue = scene.dialogue_turns.map(t => t.line).join(' ');\n  }\n  if (!scene.speaker) {\n    scene.speaker = scene.dialogue_turns[0].speaker;\n  }\n}\n\nreturn [{\n  json: {\n    hook_title: data.hook_title,\n    scenes: data.scenes,\n    Subject: data.Subject,\n    Caption: data.Caption,\n    Comment: data.Comment,\n    BGM_prompt: data.BGM_prompt,\n    fullDialogue: data.scenes.map(s => s.dialogue).join(' '),\n    segmentCount: data.scenes.length,\n    Status: '준비',\n    generatedAt: new Date().toISOString()\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2432,
+          1328
+        ],
+        "name": "콘텐츠 파싱",
+        "id": "50be7305-e44e-4177-99d1-f8cedc79ad7c"
+      },
+      {
+        "parameters": {
+          "operation": "append",
+          "documentId": {
+            "__rl": true,
+            "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+            "mode": "list",
+            "cachedResultName": "온카스터디",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "스토리형 숏츠"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Subject": "={{ $json.Subject }}",
+              "Hook": "={{ $json.hook_title }}",
+              "Narration": "={{ $json.fullDialogue }}",
+              "Caption": "={{ $json.Caption }}",
+              "댓글": "={{ $json.Comment }}",
+              "BGM prompt": "={{ $json.BGM_prompt }}",
+              "Status": "준비"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Subject",
+                "displayName": "Subject",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Hook",
+                "displayName": "Hook",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Narration",
+                "displayName": "Narration",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Caption",
+                "displayName": "Caption",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "댓글",
+                "displayName": "댓글",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "BGM prompt",
+                "displayName": "BGM prompt",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          -2208,
+          1328
+        ],
+        "name": "시트 기록",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "CWBUyXUqCU9p5VAg",
+            "name": "Google Sheets account"
+          }
+        },
+        "id": "a6ff57f3-b5a0-407e-8e8a-9427c509d530"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst scenes = data.scenes || [];\n\n// 고정 참조 이미지 URL\nconst refResults = $('참조 이미지 프롬프트').all();\nconst refA_url = refResults[0]?.json?.refUrl || '';\nconst refB_url = refResults[1]?.json?.refUrl || '';\n\nif (!refA_url || !refB_url) {\n  throw new Error('참조 이미지 URL 없음! refA=' + !!refA_url + ', refB=' + !!refB_url);\n}\n\n// Veo3 핑퐁 대화 프롬프트 생성\nfunction buildVeo3Dialogue(turns) {\n  const speakerDesc = {\n    'A': 'The man in the black hoodie with gold chain (short fade haircut)',\n    'B': 'The man in the white t-shirt with silver watch (twists hairstyle)'\n  };\n\n  return turns.map((turn, i) => {\n    const desc = speakerDesc[turn.speaker] || speakerDesc['A'];\n    const line = turn.line.replace(/'/g, \"\");\n    if (i === 0) return desc + \" says '\" + line + \"'\";\n    return \"then \" + desc + \" responds '\" + line + \"'\";\n  }).join(', ');\n}\n\nreturn scenes.map((scene, i) => {\n  const speaker = scene.speaker || scene.dialogue_turns?.[0]?.speaker || 'A';\n\n  const cleanImagePrompt = scene.image_prompt.replace(/\"/g, \"'\");\n\n  // dialogue_turns 핑퐁 프롬프트\n  let dialoguePart;\n  if (scene.dialogue_turns && scene.dialogue_turns.length > 1) {\n    dialoguePart = buildVeo3Dialogue(scene.dialogue_turns);\n  } else {\n    const cleanDialogue = scene.dialogue.replace(/\"/g, \"'\");\n    dialoguePart = 'The person is naturally speaking in Korean, saying: ' + cleanDialogue;\n  }\n\n  const veo3_prompt = cleanImagePrompt +\n    '. ' + dialoguePart +\n    '. Natural back-and-forth conversation with realistic timing. Natural lip synchronization for both speakers, subtle body gestures while talking, cinematic camera movement.';\n\n  return {\n    json: {\n      index: i,\n      dialogue: scene.dialogue,\n      dialogue_turns: scene.dialogue_turns || [{speaker: speaker, line: scene.dialogue}],\n      image_prompt: scene.image_prompt,\n      veo3_prompt: veo3_prompt,\n      speaker: speaker,\n      refUrl_A: refA_url,\n      refUrl_B: refB_url,\n    }\n  };\n});"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1760,
+          1328
+        ],
+        "name": "세그먼트 분리",
+        "id": "f0b770de-149d-4fc3-a7b4-9db0391e4fe9"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.kie.ai/api/v1/jobs/createTask",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"model\": \"nano-banana-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.image_prompt }}\",\n    \"image_input\": [\"{{ $json.refUrl_A }}\", \"{{ $json.refUrl_B }}\"],\n    \"aspect_ratio\": \"16:9\",\n    \"resolution\": \"2K\",\n    \"output_format\": \"png\"\n  }\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -1312,
+          1328
+        ],
+        "name": "이미지 생성",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "id": "b557c191-100b-4e53-b8d9-4227ac1d8191"
+      },
+      {
+        "parameters": {
+          "amount": 180
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1088,
+          1328
+        ],
+        "name": "이미지 대기",
+        "webhookId": "img-wait-webhook",
+        "id": "e3629474-60cb-40a9-8abf-9d153f268f59"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.kie.ai/api/v1/jobs/recordInfo?taskId={{ $('이미지 생성').item.json.data.taskId }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -864,
+          1328
+        ],
+        "name": "이미지 결과",
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "id": "44aa68a5-bd5b-4e56-8487-0fea682520f4"
+      },
+      {
+        "parameters": {
+          "jsCode": "// NCA 스토리형 숏츠 - 실패한 영상 스킵\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst segmentCount = $('콘텐츠 파싱').first().json.segmentCount;\n\nlet segments = [];\nlet currentStart = 0;\nconst CLIP_DURATION = 8;\n\nfunction getVideoUrl(nodeName) {\n  try {\n    const data = $(nodeName).first().json;\n    return data?.data?.response?.resultUrls?.[0] || '';\n  } catch(e) { return ''; }\n}\n\nlet skippedVideos = [];\nfor (let i = 0; i < segmentCount; i++) {\n  const videoUrl = getVideoUrl('영상' + (i + 1) + ' 결과');\n  const segData = $('세그먼트 분리').all()[i]?.json;\n  const dialogueText = segData?.dialogue\n    || (segData?.dialogue_turns || []).map(t => t.line).join(' ') || '';\n\n  if (!videoUrl) {\n    console.log('영상' + (i+1) + ' URL 없음 → 스킵');\n    skippedVideos.push(i + 1);\n    continue;\n  }\n\n  segments.push({\n    index: i + 1, videoUrl, duration: CLIP_DURATION,\n    start: currentStart, dialogueText,\n  });\n  currentStart += CLIP_DURATION;\n}\n\nif (segments.length === 0) {\n  throw new Error('모든 영상 생성 실패 - 합성 불가');\n}\n\nconst totalDuration = currentStart;\n\nfunction toSrtTime(sec) {\n  const h = Math.floor(sec / 3600);\n  const m = Math.floor((sec % 3600) / 60);\n  const s = Math.floor(sec % 60);\n  const ms = Math.round((sec - Math.floor(sec)) * 1000);\n  return String(h).padStart(2, '0') + ':' +\n         String(m).padStart(2, '0') + ':' +\n         String(s).padStart(2, '0') + ',' +\n         String(ms).padStart(3, '0');\n}\n\nlet srtLines = [];\nfor (let i = 0; i < segments.length; i++) {\n  const seg = segments[i];\n  srtLines.push((i + 1) + '\\n' + toSrtTime(seg.start) + ' --> ' +\n    toSrtTime(seg.start + seg.duration) + '\\n' + seg.dialogueText + '\\n');\n}\nconst srtContent = srtLines.join('\\n');\n\nlet inputs = [];\nlet inputIndex = 0;\nconst videoInputs = [];\n\nfor (const seg of segments) {\n  inputs.push({ file_url: seg.videoUrl, options: [] });\n  videoInputs.push(inputIndex);\n  inputIndex++;\n}\n\nlet filterParts = [];\nfor (let i = 0; i < segments.length; i++) {\n  const vIdx = videoInputs[i];\n  filterParts.push(\n    '[' + vIdx + ':v]trim=duration=' + segments[i].duration +\n    ',setpts=PTS-STARTPTS,scale=1920:1080:force_original_aspect_ratio=decrease' +\n    ',pad=1920:1080:(ow-iw)/2:(oh-ih)/2:black,fps=30[v' + i + ']'\n  );\n  filterParts.push(\n    '[' + vIdx + ':a]atrim=duration=' + segments[i].duration +\n    ',asetpts=PTS-STARTPTS[a' + i + ']'\n  );\n}\n\nfilterParts.push(segments.map((_, i) => '[v' + i + ']').join('') +\n  'concat=n=' + segments.length + ':v=1:a=0[vfinal]');\nfilterParts.push(segments.map((_, i) => '[a' + i + ']').join('') +\n  'concat=n=' + segments.length + ':v=0:a=1[afinal]');\n\nconst nca_payload = {\n  inputs, filters: [{ filter: filterParts.join(';') }],\n  outputs: [{\n    options: [\n      { option: '-map', argument: '[vfinal]' },\n      { option: '-map', argument: '[afinal]' },\n      { option: '-c:v', argument: 'libx264' },\n      { option: '-preset', argument: 'medium' },\n      { option: '-crf', argument: '18' },\n      { option: '-c:a', argument: 'aac' },\n      { option: '-b:a', argument: '256k' },\n      { option: '-pix_fmt', argument: 'yuv420p' },\n      { option: '-movflags', argument: '+faststart' },\n      { option: '-t', argument: String(totalDuration) }\n    ],\n    file_name: 'story_shorts_final.mp4'\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload, totalDuration, srtContent,\n    segmentCount: segments.length, hookTitle,\n    skippedVideos,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -880,
+          2176
+        ],
+        "name": "NCA 데이터 준비",
+        "id": "13b3c8af-4280-453d-914b-35a01942f521"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-api-key",
+                "value": "nca-sagong-2026"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.nca_payload) }}",
+          "options": {
+            "timeout": 600000
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -656,
+          2176
+        ],
+        "name": "NCA 영상 제작",
+        "id": "2e41648a-018d-4735-9cd0-2e20a5051409"
+      },
+      {
+        "parameters": {
+          "amount": 120
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -432,
+          2176
+        ],
+        "name": "NCA 제작 대기",
+        "webhookId": "a7abe995-b5e1-4c40-af9a-62859e00a1b5",
+        "id": "16a4d60d-6b5c-49d8-9480-04c3a31bd1e9"
+      },
+      {
+        "parameters": {
+          "jsCode": "// NCA 결과 처리\nconst result = $input.first().json;\nconst prevData = $('NCA 데이터 준비').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (!videoUrl) {\n  throw new Error('NCA 영상 제작 결과 URL 없음: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    final_video_url: videoUrl,\n    url: videoUrl,\n    srtContent: prevData.srtContent,\n    subject: prevData.subject,\n    caption: prevData.caption,\n    comment: prevData.comment,\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -208,
+          2176
+        ],
+        "name": "NCA 결과 처리",
+        "id": "a2647d32-0308-4f93-86d7-63a5f7305ebd"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "documentId": {
+            "__rl": true,
+            "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+            "mode": "list",
+            "cachedResultName": "온카스터디",
+            "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+          },
+          "sheetName": {
+            "__rl": true,
+            "mode": "name",
+            "value": "스토리형 숏츠"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Status": "생성 완료",
+              "영상 URL": "={{ $json.final_video_url || $json.url }}",
+              "영상URL": "={{ $json.final_video_url }}",
+              "SRT": "={{ $json.srtContent }}",
+              "Subject": "={{ $json.subject }}",
+              "row_number": 0
+            },
+            "matchingColumns": [
+              "Subject"
+            ],
+            "schema": [
+              {
+                "id": "Subject",
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "Status",
+                "displayName": "Status",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "영상 URL",
+                "displayName": "영상 URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "row_number",
+                "displayName": "row_number",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "number",
+                "canBeUsedToMatch": false,
+                "readOnly": true
+              },
+              {
+                "id": "영상URL",
+                "displayName": "영상URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              },
+              {
+                "id": "SRT",
+                "displayName": "SRT",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "canBeUsedToMatch": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.googleSheets",
+        "typeVersion": 4.7,
+        "position": [
+          16,
+          2176
+        ],
+        "name": "상태 업데이트",
+        "credentials": {
+          "googleSheetsOAuth2Api": {
+            "id": "CWBUyXUqCU9p5VAg",
+            "name": "Google Sheets account"
+          }
+        },
+        "id": "eeb76638-d83d-420e-8c90-c0306ebf4309"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 고정 참조 이미지 URL\nconst refA_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Jay.png\";\nconst refB_url = \"https://raw.githubusercontent.com/hatihoro15-netizen/n8n-project/feature/jay-mike-character/Mike.png\";\nreturn [\n  { json: { refUrl: refA_url, speaker: \"A\" } },\n  { json: { refUrl: refB_url, speaker: \"B\" } }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1984,
+          1328
+        ],
+        "name": "참조 이미지 프롬프트",
+        "id": "4c2e3826-d3d9-40b4-ad85-34695c0e24c6"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 이미지 URL 추출 (크레덴셜 기반 폴링)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nlet imageUrl = '';\n\n// 결과에서 URL 추출\nif (data?.data?.state === 'success' && data?.data?.resultJson) {\n  try {\n    const parsed = JSON.parse(data.data.resultJson);\n    imageUrl = (parsed.resultUrls || parsed.originUrls || [])[0] || '';\n  } catch(e) {}\n}\n\n// 실패 확인\nif (data?.data?.state === 'failed') {\n  staticData.retryCount = 0;\n  throw new Error('이미지 생성 실패: ' + (data?.data?.taskId || ''));\n}\n\nif (imageUrl) {\n  staticData.retryCount = 0;\n  return [{ json: { ...data, images: [{ url: imageUrl }], imageComplete: true } }];\n}\n\n// 타임아웃 (30회 × 30초 = 15분)\nif (staticData.retryCount > 30) {\n  staticData.retryCount = 0;\n  throw new Error('이미지 URL 추출 실패 (15분 타임아웃)');\n}\n\n// 미완료\nreturn [{ json: { ...data, imageComplete: false } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -640,
+          1328
+        ],
+        "name": "이미지 URL 추출",
+        "id": "e518c8b6-9bb6-4f52-8900-153a4e8d8681"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 장면 1의 이미지 프롬프트만 선택 (1장만 생성)\nconst items = $input.all();\nconst first = items[0].json;\nreturn [{\n  json: {\n    image_prompt: first.image_prompt,\n    refUrl_A: first.refUrl_A,\n    refUrl_B: first.refUrl_B,\n  }\n}];"
+        },
+        "name": "이미지 프롬프트 선택",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1536,
+          1328
+        ],
+        "id": "56ebc792-d805-41ae-99dc-2fedc39228a3"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상1 준비: 이미지 URL 추출 결과에서 이미지 가져오기\nconst imageUrl = $input.first().json.images?.[0]?.url || '';\nif (!imageUrl) throw new Error('이미지 URL 없음');\n\nconst seg = $('세그먼트 분리').all()[0].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면1)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+        },
+        "name": "영상1 준비",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2432,
+          1616
+        ],
+        "id": "7d1080a3-b5de-4226-847d-b837802f551c"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.kie.ai/api/v1/veo/generate",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.veo3Body) }}",
+          "options": {}
+        },
+        "name": "영상1 생성",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -2208,
+          1616
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput",
+        "id": "1b523990-4bdd-4340-a99a-ec5e4315c987"
+      },
+      {
+        "parameters": {
+          "amount": 300
+        },
+        "name": "영상1 대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1984,
+          1616
+        ],
+        "webhookId": "c82dfe2d-8cd1-43b5-8407-b5fb5f3b82d7",
+        "id": "96604354-6fdd-429f-9bd6-87739a32249b"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.kie.ai/api/v1/veo/record-info?taskId={{ $('영상1 생성').item.json.data.taskId }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "name": "영상1 결과",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -1760,
+          1616
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput",
+        "id": "d9475dff-de34-48c7-85a7-5d34b3db4656"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "bb07e65a",
+                "leftValue": "={{ $json.data.successFlag }}",
+                "rightValue": "1",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "name": "영상1 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -1360,
+          1616
+        ],
+        "id": "17577ec8-1780-4a3e-a3d3-59cd972d90b0"
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "name": "영상1 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1120,
+          1632
+        ],
+        "webhookId": "a13742be-e399-4a95-92ee-9b978949ef28",
+        "id": "75a7a56a-c03f-4fee-8eb1-0c31b8b7301f"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 프레임1 추출 (재진입 지원)\nconst data = $input.first().json;\n\n// 영상 실패 시 스킵\nif (data.videoFailed) {\n  console.log('영상 실패 → 프레임 추출 스킵');\n  return [{ json: { skipped: true, originalImageUrl: data.originalImageUrl || '' } }];\n}\n\n// 영상 URL: 첫 진입이면 결과에서, 재시도면 전달받은 videoUrl\nconst videoUrl = data.videoUrl || data?.data?.response?.resultUrls?.[0] || '';\nif (!videoUrl) {\n  console.log('영상 URL 없음 → 프레임 추출 스킵');\n  return [{ json: { skipped: true } }];\n}\n\n// NCA API로 7.5초 시점 프레임 추출 (jpg 강제)\ntry {\n  const result = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'http://76.13.182.180:8080/v1/ffmpeg/compose',\n    headers: {\n      'x-api-key': 'nca-sagong-2026',\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: [{ option: '-ss', argument: '7.5' }] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' },\n          { option: '-f', argument: 'image2' },\n          { option: '-update', argument: '1' }\n        ],\n        file_name: 'last_frame_1.jpg'\n      }]\n    }\n  });\n  return [{ json: { ...result, videoUrl } }];\n} catch(e) {\n  console.log('NCA 프레임 추출 실패: ' + e.message);\n  return [{ json: { ncaError: true, error: e.message, videoUrl } }];\n}"
+        },
+        "name": "프레임1 추출",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -864,
+          1600
+        ],
+        "id": "d8e48b5b-ca18-40af-b25d-fd90cc61b5aa"
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "name": "프레임1 대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -640,
+          1600
+        ],
+        "webhookId": "e836bbd9-d700-47f4-b59a-21c5959c1d30",
+        "id": "9f556a8c-37aa-4742-b03f-f46e7d6e1c46"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 프레임1 결과 (완료 체크 + mp4 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\n\nconst data = $input.first().json;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 스킵된 경우 바로 완료\nif (data.skipped) {\n  staticData.retryCount = 0;\n  const fallback = data.originalImageUrl || originalImageUrl;\n  return [{ json: { frameUrl: fallback, frameComplete: true, usedFallback: true } }];\n}\n\nlet frameUrl = '';\n\n// NCA 응답에서 프레임 URL 추출\nif (!data.ncaError) {\n  if (Array.isArray(data?.response)) {\n    frameUrl = data.response[0]?.file_url || '';\n  }\n  if (!frameUrl && data?.file_url) frameUrl = data.file_url;\n  if (!frameUrl && data?.url) frameUrl = data.url;\n}\n\n// .mp4 URL이면 이미지가 아니므로 원본 이미지로 폴백\nif (frameUrl && frameUrl.toLowerCase().endsWith('.mp4')) {\n  console.log('프레임1 결과가 .mp4 → 원본 이미지 폴백: ' + frameUrl);\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl: originalImageUrl, frameComplete: true, usedFallback: true, mp4Detected: true } }];\n}\n\nif (frameUrl) {\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl, frameComplete: true } }];\n}\n\n// 재시도 횟수 체크 (10회 × 60초 = 약 10분)\nstaticData.retryCount++;\nif (staticData.retryCount > 10) {\n  console.log('프레임1 추출 10회 실패 → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl: originalImageUrl, frameComplete: true, usedFallback: true } }];\n}\n\n// 미완료 → 재시도\nconsole.log('프레임1 미완료, 재시도 ' + staticData.retryCount + '/10');\nreturn [{ json: { frameComplete: false, videoUrl: data.videoUrl || '' } }];"
+        },
+        "name": "프레임1 결과",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -416,
+          1600
+        ],
+        "id": "a3837222-cbd8-438e-a9bc-39945447aed2"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상2 준비: 프레임1 또는 원본 이미지 폴백\nlet imageUrl = $input.first().json.frameUrl || '';\n\nif (!imageUrl) {\n  imageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  console.log('프레임 없음 → 원본 이미지 폴백');\n}\nif (!imageUrl) throw new Error('영상2 입력 이미지 없음');\n\nconst seg = $('세그먼트 분리').all()[1].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면2)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+        },
+        "name": "영상2 준비",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2448,
+          1920
+        ],
+        "id": "330f149f-9f22-4074-b25b-c9ea4dbe182f"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.kie.ai/api/v1/veo/generate",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.veo3Body) }}",
+          "options": {}
+        },
+        "name": "영상2 생성",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -2224,
+          1920
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput",
+        "id": "33d97822-40e3-4072-b842-9b6be33b26e5"
+      },
+      {
+        "parameters": {
+          "amount": 300
+        },
+        "name": "영상2 대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -2000,
+          1920
+        ],
+        "webhookId": "d2407170-d76d-4dd5-9eef-9be53fde87d9",
+        "id": "a0c0a03e-720d-4088-ba8f-fda155ca02df"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.kie.ai/api/v1/veo/record-info?taskId={{ $('영상2 생성').item.json.data.taskId }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "name": "영상2 결과",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -1776,
+          1920
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput",
+        "id": "59e8fedc-1acf-486c-8f03-e81f4146db39"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "e36b459a",
+                "leftValue": "={{ $json.data.successFlag }}",
+                "rightValue": "1",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "name": "영상2 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -1376,
+          1920
+        ],
+        "id": "231ba266-fec9-4923-b002-0d473d11ada1"
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "name": "영상2 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1120,
+          1936
+        ],
+        "webhookId": "f5b50b19-c70e-4206-95a7-5b63f8984d76",
+        "id": "d1d5dce3-2db8-4819-8104-addbd5d14412"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 프레임2 추출 (재진입 지원)\nconst data = $input.first().json;\n\n// 영상 실패 시 스킵\nif (data.videoFailed) {\n  console.log('영상 실패 → 프레임 추출 스킵');\n  return [{ json: { skipped: true, originalImageUrl: data.originalImageUrl || '' } }];\n}\n\n// 영상 URL: 첫 진입이면 결과에서, 재시도면 전달받은 videoUrl\nconst videoUrl = data.videoUrl || data?.data?.response?.resultUrls?.[0] || '';\nif (!videoUrl) {\n  console.log('영상 URL 없음 → 프레임 추출 스킵');\n  return [{ json: { skipped: true } }];\n}\n\n// NCA API로 7.5초 시점 프레임 추출 (jpg 강제)\ntry {\n  const result = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'http://76.13.182.180:8080/v1/ffmpeg/compose',\n    headers: {\n      'x-api-key': 'nca-sagong-2026',\n      'Content-Type': 'application/json'\n    },\n    body: {\n      inputs: [{ file_url: videoUrl, options: [{ option: '-ss', argument: '7.5' }] }],\n      filters: [],\n      outputs: [{\n        options: [\n          { option: '-frames:v', argument: '1' },\n          { option: '-q:v', argument: '2' },\n          { option: '-f', argument: 'image2' },\n          { option: '-update', argument: '1' }\n        ],\n        file_name: 'last_frame_2.jpg'\n      }]\n    }\n  });\n  return [{ json: { ...result, videoUrl } }];\n} catch(e) {\n  console.log('NCA 프레임 추출 실패: ' + e.message);\n  return [{ json: { ncaError: true, error: e.message, videoUrl } }];\n}"
+        },
+        "name": "프레임2 추출",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -880,
+          1904
+        ],
+        "id": "f9536b90-8b18-42d5-897d-9278fe7167fe"
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "name": "프레임2 대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -656,
+          1904
+        ],
+        "webhookId": "3cd50ace-887f-4a96-a157-ce8b19e41d31",
+        "id": "99d5235d-247b-4f2e-9765-41eabc625ca0"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 프레임2 결과 (완료 체크 + mp4 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\n\nconst data = $input.first().json;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// 스킵된 경우 바로 완료\nif (data.skipped) {\n  staticData.retryCount = 0;\n  const fallback = data.originalImageUrl || originalImageUrl;\n  return [{ json: { frameUrl: fallback, frameComplete: true, usedFallback: true } }];\n}\n\nlet frameUrl = '';\n\n// NCA 응답에서 프레임 URL 추출\nif (!data.ncaError) {\n  if (Array.isArray(data?.response)) {\n    frameUrl = data.response[0]?.file_url || '';\n  }\n  if (!frameUrl && data?.file_url) frameUrl = data.file_url;\n  if (!frameUrl && data?.url) frameUrl = data.url;\n}\n\n// .mp4 URL이면 이미지가 아니므로 원본 이미지로 폴백\nif (frameUrl && frameUrl.toLowerCase().endsWith('.mp4')) {\n  console.log('프레임2 결과가 .mp4 → 원본 이미지 폴백: ' + frameUrl);\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl: originalImageUrl, frameComplete: true, usedFallback: true, mp4Detected: true } }];\n}\n\nif (frameUrl) {\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl, frameComplete: true } }];\n}\n\n// 재시도 횟수 체크 (10회 × 60초 = 약 10분)\nstaticData.retryCount++;\nif (staticData.retryCount > 10) {\n  console.log('프레임2 추출 10회 실패 → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  return [{ json: { frameUrl: originalImageUrl, frameComplete: true, usedFallback: true } }];\n}\n\n// 미완료 → 재시도\nconsole.log('프레임2 미완료, 재시도 ' + staticData.retryCount + '/10');\nreturn [{ json: { frameComplete: false, videoUrl: data.videoUrl || '' } }];"
+        },
+        "name": "프레임2 결과",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -432,
+          1904
+        ],
+        "id": "0b05a7fc-9476-4feb-817a-056589fb48c0"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상3 준비: 프레임2 또는 원본 이미지 폴백\nlet imageUrl = $input.first().json.frameUrl || '';\n\nif (!imageUrl) {\n  imageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n  console.log('프레임 없음 → 원본 이미지 폴백');\n}\nif (!imageUrl) throw new Error('영상3 입력 이미지 없음');\n\nconst seg = $('세그먼트 분리').all()[2].json;\nconst prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면3)');\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+        },
+        "name": "영상3 준비",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2448,
+          2192
+        ],
+        "id": "e0211a33-78d9-4f52-9364-edd1c350aebb"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.kie.ai/api/v1/veo/generate",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={{ JSON.stringify($json.veo3Body) }}",
+          "options": {}
+        },
+        "name": "영상3 생성",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -2224,
+          2192
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput",
+        "id": "dffaaf94-c750-4a08-bd2a-dbfa84dc2089"
+      },
+      {
+        "parameters": {
+          "amount": 300
+        },
+        "name": "영상3 대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -2000,
+          2192
+        ],
+        "webhookId": "e249c3c0-0416-4e17-8865-73c8829ce2b3",
+        "id": "63e0004b-d41d-4e89-83b8-78467e6b2c04"
+      },
+      {
+        "parameters": {
+          "url": "=https://api.kie.ai/api/v1/veo/record-info?taskId={{ $('영상3 생성').item.json.data.taskId }}",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "options": {}
+        },
+        "name": "영상3 결과",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.3,
+        "position": [
+          -1776,
+          2192
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "l77M6Gy6p1bUA86P",
+            "name": "Kie.ai API Key"
+          }
+        },
+        "onError": "continueRegularOutput",
+        "id": "fb8f0f11-8feb-4e25-a4ca-ad8b3783dd35"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "85d82019",
+                "leftValue": "={{ $json.data.successFlag }}",
+                "rightValue": "1",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "name": "영상3 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -1344,
+          2192
+        ],
+        "id": "bf9d9e9d-97d1-4f98-80f5-f329a1a69e6f"
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "name": "영상3 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -1104,
+          2208
+        ],
+        "webhookId": "425f17f7-a44b-49c9-9b2b-90d6a61190fc",
+        "id": "cebbcbac-1ec0-4b33-9e9d-362419d6e6bf"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상1 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상1 실패 (successFlag=' + flag + ')'\n    : '영상1 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+        },
+        "name": "영상1 실패체크",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1536,
+          1616
+        ],
+        "id": "c98c0627-170b-4072-a45a-4446bd015755"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상2 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상2 실패 (successFlag=' + flag + ')'\n    : '영상2 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+        },
+        "name": "영상2 실패체크",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1552,
+          1920
+        ],
+        "id": "e2e39d92-b9c2-49e6-bc64-1436514d86bd"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 영상3 실패/타임아웃 체크 (원본 이미지 폴백)\nconst staticData = $getWorkflowStaticData('node');\nif (!staticData.retryCount) staticData.retryCount = 0;\nstaticData.retryCount++;\n\nconst data = $input.first().json;\nconst flag = data?.data?.successFlag;\nconst originalImageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || '';\n\n// successFlag === 1 → 성공\nif (flag === 1) {\n  staticData.retryCount = 0;\n  return [{json: data}];\n}\n\n// successFlag >= 2 또는 재시도 20회 초과 → 원본 이미지 폴백\nif ((typeof flag === 'number' && flag >= 2) || staticData.retryCount > 20) {\n  const reason = (typeof flag === 'number' && flag >= 2)\n    ? '영상3 실패 (successFlag=' + flag + ')'\n    : '영상3 타임아웃 (' + staticData.retryCount + '회)';\n  console.log(reason + ' → 원본 이미지 폴백');\n  staticData.retryCount = 0;\n  const mod = JSON.parse(JSON.stringify(data));\n  mod.data = mod.data || {};\n  mod.data.successFlag = 1;\n  mod.videoFailed = true;\n  mod.failReason = reason;\n  mod.originalImageUrl = originalImageUrl;\n  return [{json: mod}];\n}\n\n// 아직 진행중 → 재대기\nreturn [{json: data}];"
+        },
+        "name": "영상3 실패체크",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -1552,
+          2192
+        ],
+        "id": "bebbd3e8-2265-4099-84e2-4f6741a2f4ce"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "img-cond-1",
+                "leftValue": "={{ $json.imageComplete }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "name": "이미지 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -416,
+          1328
+        ],
+        "id": "2418f787-cde6-4522-843a-32e33d27f0cb"
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "name": "이미지 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          -160,
+          1344
+        ],
+        "webhookId": "31e22254-2dba-4faa-8e40-a566c24ffc6e",
+        "id": "56c44c24-2b46-4b76-a62d-f8bd0c58da32"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "frame-cond-1",
+                "leftValue": "={{ $json.frameComplete }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "name": "프레임1 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -176,
+          1600
+        ],
+        "id": "9758570a-5289-4e9f-8d21-9e08aa2e6f4a"
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "name": "프레임1 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          80,
+          1616
+        ],
+        "webhookId": "d958b8c2-2524-4e91-a0da-a1dd619289aa",
+        "id": "412d4700-2196-493b-8375-57a021c16672"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 1
+            },
+            "conditions": [
+              {
+                "id": "frame-cond-2",
+                "leftValue": "={{ $json.frameComplete }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {
+            "looseTypeValidation": true
+          }
+        },
+        "name": "프레임2 완료체크",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          -192,
+          1904
+        ],
+        "id": "2670da9b-12a3-4762-8590-fc03a409e252"
+      },
+      {
+        "parameters": {
+          "amount": 30
+        },
+        "name": "프레임2 재대기",
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          48,
+          1920
+        ],
+        "webhookId": "90d602d6-1c87-43f8-bf90-ad3ef0cf1093",
+        "id": "cea72e33-1872-4a68-8e49-f4013254bc6c"
+      },
+      {
+        "parameters": {
+          "jsCode": "// 스포츠 분석 전용 카테고리 + 주제 순서 선택 (staticData로 상태 유지)\nconst staticData = $getWorkflowStaticData('global');\nif (typeof staticData.categoryIndex !== 'number') staticData.categoryIndex = 0;\nif (!staticData.topicIndices) staticData.topicIndices = {0:0, 1:0, 2:0, 3:0};\n\nconst categories = [\n  { index: 1, name: '스포츠 배팅 기초', count: 7, topics: [\n    '1. 스포츠 배팅 초보가 꼭 알아야 할 기본 용어',\n    '2. 첫 배팅 전 반드시 체크할 3가지',\n    '3. 스포츠 배팅에서 절대 하면 안 되는 실수 TOP 3',\n    '4. 단폴 vs 다폴 - 초보는 뭐부터 해야 하나?',\n    '5. 자금 관리의 기본 - 얼마를 걸어야 하나?',\n    '6. 안전한 토토사이트 고르는 법',\n    '7. 감 배팅 vs 분석 배팅 - 뭐가 다른가?'\n  ]},\n  { index: 2, name: '스포츠 분석 방법', count: 7, topics: [\n    '8. 스포츠 분석 기본 - 어디서부터 시작하나?',\n    '9. 팀 전력 분석하는 법 (최근 폼, 상대전적)',\n    '10. 홈/원정 기록이 중요한 이유',\n    '11. 선수 부상/출전 정보 체크하는 법',\n    '12. 리그별 특성 파악하기 (EPL, KBO, NBA 등)',\n    '13. 데이터 기반 분석 vs 감 분석 차이',\n    '14. 실시간 흐름 읽는 법 - 라이브 분석 팁'\n  ]},\n  { index: 3, name: '배당률/통계 활용', count: 6, topics: [\n    '15. 배당률 기초 - 숫자가 의미하는 것',\n    '16. 배당률 변동 패턴 읽는 법',\n    '17. 고배당 vs 저배당 - 어떤 게 유리한가?',\n    '18. 통계 사이트 활용법 (어디서 데이터를 보나?)',\n    '19. 핸디캡/언오버 쉽게 이해하기',\n    '20. 배당률로 확률 계산하는 법'\n  ]},\n  { index: 4, name: '스포츠 뉴스/이슈', count: 6, topics: [\n    '21. 스포츠 뉴스 해석하는 법 - 배팅에 영향 주는 뉴스',\n    '22. 이적/트레이드 시즌에 배팅 주의사항',\n    '23. 시즌 초반 vs 후반 배팅 전략 차이',\n    '24. 국제대회(월드컵, 올림픽) 배팅 특징',\n    '25. 날씨/경기장 조건이 경기에 미치는 영향',\n    '26. SNS/커뮤니티 루머 vs 실제 팩트 구별법'\n  ]}\n];\n\nconst catIdx = staticData.categoryIndex % 4;\nconst cat = categories[catIdx];\nconst topicIdx = (staticData.topicIndices[catIdx] || 0) % cat.topics.length;\nconst currentTopic = cat.topics[topicIdx];\n\nconsole.log('카테고리: ' + cat.name + ', 주제: ' + currentTopic);\n\n// 다음 실행을 위해 업데이트\nstaticData.topicIndices[catIdx] = topicIdx + 1;\nstaticData.categoryIndex++;\n\nreturn [{ json: {\n  categoryIndex: cat.index,\n  categoryName: cat.name,\n  topicNumber: topicIdx + 1,\n  currentTopic: currentTopic\n}}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          -2976,
+          1328
+        ],
+        "name": "카테고리 선택",
+        "id": "4ef6e1bf-af6d-438e-ac36-8ccc39f27bdc"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1,
+        "position": [
+          -3152,
+          1128
+        ],
+        "name": "Execute Workflow Trigger",
+        "id": "03bce4f4-5b76-4312-9940-3ead4458e84f"
+      }
+    ],
+    "connections": {
+      "AI 콘텐츠 생성": {
+        "main": [
+          [
+            {
+              "node": "콘텐츠 파싱",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "콘텐츠 파싱": {
+        "main": [
+          [
+            {
+              "node": "시트 기록",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "시트 기록": {
+        "main": [
+          [
+            {
+              "node": "참조 이미지 프롬프트",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "세그먼트 분리": {
+        "main": [
+          [
+            {
+              "node": "이미지 프롬프트 선택",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 생성": {
+        "main": [
+          [
+            {
+              "node": "이미지 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 대기": {
+        "main": [
+          [
+            {
+              "node": "이미지 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 결과": {
+        "main": [
+          [
+            {
+              "node": "이미지 URL 추출",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NCA 데이터 준비": {
+        "main": [
+          [
+            {
+              "node": "NCA 영상 제작",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NCA 영상 제작": {
+        "main": [
+          [
+            {
+              "node": "NCA 제작 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NCA 제작 대기": {
+        "main": [
+          [
+            {
+              "node": "NCA 결과 처리",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "NCA 결과 처리": {
+        "main": [
+          [
+            {
+              "node": "상태 업데이트",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "참조 이미지 프롬프트": {
+        "main": [
+          [
+            {
+              "node": "세그먼트 분리",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking 'Execute workflow'": {
+        "main": [
+          [
+            {
+              "node": "카테고리 선택",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 URL 추출": {
+        "main": [
+          [
+            {
+              "node": "이미지 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 프롬프트 선택": {
+        "main": [
+          [
+            {
+              "node": "이미지 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 준비": {
+        "main": [
+          [
+            {
+              "node": "영상1 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 생성": {
+        "main": [
+          [
+            {
+              "node": "영상1 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 대기": {
+        "main": [
+          [
+            {
+              "node": "영상1 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 결과": {
+        "main": [
+          [
+            {
+              "node": "영상1 실패체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 완료체크": {
+        "main": [
+          [
+            {
+              "node": "프레임1 추출",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "영상1 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 재대기": {
+        "main": [
+          [
+            {
+              "node": "영상1 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임1 추출": {
+        "main": [
+          [
+            {
+              "node": "프레임1 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임1 대기": {
+        "main": [
+          [
+            {
+              "node": "프레임1 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임1 결과": {
+        "main": [
+          [
+            {
+              "node": "프레임1 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 준비": {
+        "main": [
+          [
+            {
+              "node": "영상2 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 생성": {
+        "main": [
+          [
+            {
+              "node": "영상2 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 대기": {
+        "main": [
+          [
+            {
+              "node": "영상2 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 결과": {
+        "main": [
+          [
+            {
+              "node": "영상2 실패체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 완료체크": {
+        "main": [
+          [
+            {
+              "node": "프레임2 추출",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "영상2 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 재대기": {
+        "main": [
+          [
+            {
+              "node": "영상2 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임2 추출": {
+        "main": [
+          [
+            {
+              "node": "프레임2 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임2 대기": {
+        "main": [
+          [
+            {
+              "node": "프레임2 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임2 결과": {
+        "main": [
+          [
+            {
+              "node": "프레임2 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 준비": {
+        "main": [
+          [
+            {
+              "node": "영상3 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 생성": {
+        "main": [
+          [
+            {
+              "node": "영상3 대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 대기": {
+        "main": [
+          [
+            {
+              "node": "영상3 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 결과": {
+        "main": [
+          [
+            {
+              "node": "영상3 실패체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 완료체크": {
+        "main": [
+          [
+            {
+              "node": "NCA 데이터 준비",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "영상3 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 재대기": {
+        "main": [
+          [
+            {
+              "node": "영상3 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상1 실패체크": {
+        "main": [
+          [
+            {
+              "node": "영상1 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상2 실패체크": {
+        "main": [
+          [
+            {
+              "node": "영상2 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상3 실패체크": {
+        "main": [
+          [
+            {
+              "node": "영상3 완료체크",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 완료체크": {
+        "main": [
+          [
+            {
+              "node": "영상1 준비",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "이미지 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 재대기": {
+        "main": [
+          [
+            {
+              "node": "이미지 결과",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임1 완료체크": {
+        "main": [
+          [
+            {
+              "node": "영상2 준비",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "프레임1 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임1 재대기": {
+        "main": [
+          [
+            {
+              "node": "프레임1 추출",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임2 완료체크": {
+        "main": [
+          [
+            {
+              "node": "영상3 준비",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "프레임2 재대기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "프레임2 재대기": {
+        "main": [
+          [
+            {
+              "node": "프레임2 추출",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "카테고리 선택": {
+        "main": [
+          [
+            {
+              "node": "AI 콘텐츠 생성",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute Workflow Trigger": {
+        "main": [
+          [
+            {
+              "node": "카테고리 선택",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "hatihoro15 hatihoro15",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-02-24T00:40:37.427Z",
+        "id": 546,
+        "workflowId": "ZP6rY0wz70AIJuPU",
+        "versionId": "1524505c-eee3-4747-8a8f-dd7960aa23f4",
+        "event": "activated",
+        "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
+      }
+    ]
+  }
 }
