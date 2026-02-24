@@ -230,7 +230,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// NCA 결과 처리\nconst result = $input.first().json;\nconst prevData = $('NCA 데이터 준비').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (!videoUrl) {\n  throw new Error('NCA 영상 제작 결과 URL 없음: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    final_video_url: videoUrl,\n    url: videoUrl,\n    subject: prevData.subject,\n    caption: prevData.caption,\n    comment: prevData.comment,\n    topic: $('주제 파싱').first().json.topic,\n  }\n}];"
+        "jsCode": "// NCA 결과 처리\nconst result = $input.first().json;\nconst prevData = $('NCA 데이터 준비').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (\\!videoUrl) {\n  throw new Error('NCA 영상 제작 결과 URL 없음: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    '영상 URL': videoUrl,\n    final_video_url: videoUrl,\n    url: videoUrl,\n    subject: prevData.subject,\n    caption: prevData.caption,\n    comment: prevData.comment,\n    topic: $('주제 파싱').first().json.topic,\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
