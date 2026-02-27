@@ -1,0 +1,868 @@
+{
+  "updatedAt": "2026-02-27T05:23:09.458Z",
+  "createdAt": "2026-02-25T21:09:13.257Z",
+  "id": "vdl0YHQCpt9cXI2f",
+  "name": "[테스트] 설명형 숏츠 - 속도감 25초",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        304
+      ],
+      "id": "2dfad90a-639d-4d9b-a3b8-08217ee81dd7",
+      "name": "수동 실행"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        304
+      ],
+      "id": "5df5ffe5-b4b3-41c7-9149-0cd8c3e069c7",
+      "name": "AI 콘텐츠 생성",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nfunction cleanGeminiJson(raw) {\n  let s = raw.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  const first = s.indexOf('{');\n  const last = s.lastIndexOf('}');\n  if (first !== -1 && last > first) {\n    s = s.substring(first, last + 1);\n  }\n  let result = '';\n  let inStr = false;\n  let esc = false;\n  for (let i = 0; i < s.length; i++) {\n    const c = s[i];\n    if (esc) { result += c; esc = false; continue; }\n    if (c === '\\\\' && inStr) { result += c; esc = true; continue; }\n    if (c === '\"') { inStr = !inStr; result += c; continue; }\n    if (inStr) {\n      if (c === '\\n' || c === '\\r') { result += ' '; continue; }\n      if (c === '\\t') { result += ' '; continue; }\n      if (c.charCodeAt(0) < 0x20) { continue; }\n    }\n    result += c;\n  }\n  result = result.replace(/,(\\s*[}\\]])/g, '$1');\n  return result;\n}\n\nlet cleanText = cleanGeminiJson(text);\nlet data;\n\ntry {\n  data = JSON.parse(cleanText);\n} catch (e1) {\n  try {\n    let fixed = cleanText\n      .replace(/[\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036]/g, '\"')\n      .replace(/[\\u2018\\u2019\\u201A\\u201B\\u2032\\u2035]/g, \"'\")\n      .replace(/^\\uFEFF/, '');\n    data = JSON.parse(fixed);\n  } catch (e2) {\n    const posMatch = e1.message.match(/position (\\d+)/);\n    const pos = posMatch ? parseInt(posMatch[1]) : 0;\n    const start = Math.max(0, pos - 80);\n    const end = Math.min(cleanText.length, pos + 80);\n    const around = cleanText.substring(start, end);\n    throw new Error(\n      `JSON 파싱 실패: ${e1.message}\\n` +\n      `--- 에러 위치(${pos}) 주변 ---\\n${around}\\n` +\n      `처음 300자: ${cleanText.substring(0, 300)}`\n    );\n  }\n}\n\n// images + subtitles 검증\nif (!data.images || data.images.length < 4) {\n  throw new Error('images must have at least 4 items, got: ' + (data.images?.length || 0));\n}\nif (!data.subtitles || data.subtitles.length < 6) {\n  throw new Error('subtitles must have at least 6 items, got: ' + (data.subtitles?.length || 0));\n}\n\nconst VALID_MOODS = ['thinking', 'excited', 'shocked', 'sad', 'angry', 'cool', 'celebrating'];\n\ndata.images = data.images.map((img, idx) => {\n  if (!img.visual_type || !['image', 'meme'].includes(img.visual_type)) {\n    img.visual_type = 'image';\n  }\n  if (img.visual_type === 'meme') {\n    if (!img.meme_mood || !VALID_MOODS.includes(img.meme_mood)) {\n      img.meme_mood = VALID_MOODS[idx % VALID_MOODS.length];\n    }\n  } else {\n    img.meme_mood = '';\n    if (!img.keyword) {\n      img.keyword = 'abstract background';\n    }\n  }\n  return img;\n});\n\nconst fullDialogue = data.subtitles.join(' ');\nconst memeCount = data.images.filter(i => i.visual_type === 'meme').length;\nconst imageCount = data.images.filter(i => i.visual_type === 'image').length;\n\nreturn [{\n  json: {\n    hook_title: data.hook_title,\n    images: data.images,\n    subtitles: data.subtitles,\n    Subject: data.Subject,\n    Caption: data.Caption,\n    Comment: data.Comment,\n    fullDialogue,\n    imageCount: data.images.length,\n    subtitleCount: data.subtitles.length,\n    memeCount,\n    Status: '생성 중',\n    generatedAt: new Date().toISOString(),\n    row_number: $('주제 파싱').first().json.row_number\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        304
+      ],
+      "id": "6adeed9a-4c8e-4d81-8578-76b2f46d0527",
+      "name": "콘텐츠 파싱"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+          "mode": "list",
+          "cachedResultName": "온카스터디",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "설명형 숏츠"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1520,
+        304
+      ],
+      "id": "d6ea6410-28ee-4aa6-864f-c7c6d32de2a2",
+      "name": "시트 기록",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst images = data.images || [];\n\n// images 배열만 세그먼트로 분리 (이미지 검색용)\nreturn images.map((img, i) => ({\n  json: {\n    index: i,\n    keyword: img.keyword || 'abstract background',\n    visual_type: img.visual_type || 'image',\n    meme_mood: img.meme_mood || '',\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        480
+      ],
+      "id": "3fa1b098-8745-40bd-84c4-63439968242b",
+      "name": "세그먼트 분리"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:5100/tts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": {{ JSON.stringify($json.fullDialogue.replace(/<[^>]*>?/gm, '')) }},\n  \"voice\": \"ko-KR-HyunsuNeural\",\n  \"rate\": \"+30%\"\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1984,
+        160
+      ],
+      "id": "fe8b82fb-797c-4f1f-bf39-801185c734a4",
+      "name": "TTS 요청"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const audioUrl = item.json.audio_url;\n  const durationSec = item.json.duration_sec;\n\n  if (!audioUrl) {\n    throw new Error('TTS 응답에 audio_url이 없습니다: ' + JSON.stringify(item.json));\n  }\n\n  return {\n    json: {\n      audio_url: audioUrl,\n      duration_sec: durationSec,\n      ...item.json\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        160
+      ],
+      "id": "ed11d1b0-d11f-4e98-8f6e-6692cdcc3351",
+      "name": "TTS 결과 처리"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2992,
+        336
+      ],
+      "id": "e4169643-cf73-4bb2-8194-ebb35c9e595c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3280,
+        336
+      ],
+      "id": "e9719f9a-8472-4fe5-b527-b1e9cda104a9",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// NCA v8: images + subtitles 분리 구조\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst hookClean = hookTitle.replace(/<[^>]*>?/gm, '');\nconst subtitles = $('콘텐츠 파싱').first().json.subtitles || [];\nconst imageCount = $('콘텐츠 파싱').first().json.imageCount;\n\nconst ttsResult = $('TTS 결과 처리').first().json;\nconst mainAudioUrl = ttsResult.audio_url;\nconst audioDuration = ttsResult.duration_sec;\nconst totalDuration = audioDuration + 0.5;\n\nconst BGM_URL = 'http://76.13.182.180:9000/audio/bgm_25sec.mp3';\nconst SFX_MAP = {\n  whoosh: 'http://76.13.182.180:9000/audio/sfx_whoosh1.mp3',\n  pop: 'http://76.13.182.180:9000/audio/sfx_pop_user.mp3',\n  ding: 'http://76.13.182.180:9000/audio/sfx_ding1.mp3',\n  ding2: 'http://76.13.182.180:9000/audio/sfx_ding2.mp3',\n  ppook: 'http://76.13.182.180:9000/audio/sfx_ppook.wav',\n  wow: 'http://76.13.182.180:9000/audio/sfx_wow.wav'\n};\n\nfunction escapeDrawtext(text) {\n  if (!text) return '';\n  // 이모지 제거 (NanumGothicBold에 이모지 글리프 없음)\n  text = text.replace(/[\\u{1F600}-\\u{1F64F}\\u{1F300}-\\u{1F5FF}\\u{1F680}-\\u{1F6FF}\\u{1F1E0}-\\u{1F1FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}\\u{FE00}-\\u{FE0F}\\u{1F900}-\\u{1F9FF}\\u{1FA00}-\\u{1FA6F}\\u{1FA70}-\\u{1FAFF}\\u{200D}\\u{20E3}\\u{FE0F}]/gu, '').trim();\n  return text.replace(/\\\\/g, '\\\\\\\\').replace(/'/g, '\\u2019').replace(/\"/g, '\\u201D').replace(/:/g, '\\\\:').replace(/;/g, '\\\\;').replace(/,/g, '\\\\,').replace(/\\[/g, '\\\\[').replace(/\\]/g, '\\\\]').replace(/\\n/g, ' ');\n}\nfunction wrapSubtitle(text, maxLen) {\n  if (!text) return '';\n  const words = text.split(' ');\n  let lines = [];\n  let currentLine = '';\n  for (const word of words) {\n    if (currentLine.length + word.length > maxLen && currentLine.length > 0) {\n      lines.push(currentLine.trim());\n      currentLine = word + ' ';\n    } else {\n      currentLine += word + ' ';\n    }\n  }\n  if (currentLine) lines.push(currentLine.trim());\n  return lines.join('\\n');\n}\n\n// === 이미지: audioDuration / imageCount 균등 배분 ===\nconst imgResults = $('이미지 URL 추출').all();\nconst imgDuration = audioDuration / imageCount;\nlet imgSegments = [];\nfor (let i = 0; i < imageCount; i++) {\n  const imgData = imgResults[i]?.json || {};\n  const imageUrl = imgData.images?.[0]?.url || '';\n  const isVideo = imgData.is_video || false;\n  const visualType = imgData.visual_type || 'image';\n  if (!imageUrl) throw new Error(`이미지 ${i+1} URL 없음`);\n  imgSegments.push({\n    index: i,\n    imageUrl,\n    isVideo,\n    visualType,\n    start: i * imgDuration,\n    duration: imgDuration\n  });\n}\n\n// === 자막: 글자 수 비율로 시간 배분 (이미지와 독립) ===\nconst totalChars = subtitles.reduce((sum, s) => {\n  return sum + s.replace(/<[^>]*>?/gm, '').replace(/\\s+/g, '').length;\n}, 0);\n\nlet subSegments = [];\nlet subStart = 0;\nfor (let i = 0; i < subtitles.length; i++) {\n  const raw = subtitles[i];\n  const clean = raw.replace(/<[^>]*>?/gm, '');\n  const chars = clean.replace(/\\s+/g, '').length;\n  const ratio = totalChars > 0 ? chars / totalChars : 1 / subtitles.length;\n  const dur = ratio * audioDuration;\n  subSegments.push({\n    index: i,\n    raw,\n    clean,\n    start: subStart,\n    duration: dur,\n    hasEm: raw.includes('<em>')\n  });\n  subStart += dur;\n}\n\n// === FFmpeg inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst mediaInputs = [];\n\n// 1) 이미지/영상 (4~6개)\nfor (const img of imgSegments) {\n  if (img.isVideo) {\n    inputs.push({ file_url: img.imageUrl, options: [{ option: \"-stream_loop\", argument: \"-1\" }] });\n  } else {\n    inputs.push({ file_url: img.imageUrl, options: [{ option: \"-loop\", argument: \"1\" }, { option: \"-framerate\", argument: \"30\" }, { option: \"-t\", argument: img.duration.toFixed(2) }] });\n  }\n  mediaInputs.push({ idx: inputIndex, isVideo: img.isVideo, duration: img.duration });\n  inputIndex++;\n}\n\n// 2) 통합 TTS\nconst audioIdx = inputIndex;\ninputs.push({ file_url: mainAudioUrl, options: [] });\ninputIndex++;\n\n// 3) BGM\nconst bgmIdx = inputIndex;\ninputs.push({ file_url: BGM_URL, options: [{ option: \"-stream_loop\", argument: \"-1\" }] });\ninputIndex++;\n\n// 4) SFX: 이미지 전환 + 강조 em\nconst sfxInputs = [];\nfor (let i = 0; i < imgSegments.length - 1; i++) {\n  const next = imgSegments[i + 1];\n  let sfxType = 'whoosh';\n  if (next.visualType === 'meme') sfxType = 'ppook';\n  inputs.push({ file_url: SFX_MAP[sfxType], options: [] });\n  sfxInputs.push({ idx: inputIndex, type: sfxType, timeMs: Math.round(next.start * 1000) });\n  inputIndex++;\n}\nfor (const sub of subSegments) {\n  if (sub.hasEm) {\n    const emSfx = /\\d/.test(sub.raw) ? 'ding2' : 'pop';\n    inputs.push({ file_url: SFX_MAP[emSfx], options: [] });\n    sfxInputs.push({ idx: inputIndex, type: emSfx, timeMs: Math.round((sub.start + 0.3) * 1000) });\n    inputIndex++;\n  }\n}\n\n// === FILTER COMPLEX ===\nlet filterParts = [];\n\n// 비디오 스케일 + concat\nfor (let i = 0; i < imgSegments.length; i++) {\n  const m = mediaInputs[i];\n  if (m.isVideo) {\n    filterParts.push(`[${m.idx}:v]trim=duration=${m.duration.toFixed(2)},setpts=PTS-STARTPTS,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30[v${i}]`);\n  } else {\n    filterParts.push(`[${m.idx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30[v${i}]`);\n  }\n}\nconst vLabels = imgSegments.map((_, i) => `[v${i}]`).join('');\nfilterParts.push(`${vLabels}concat=n=${imgSegments.length}:v=1:a=0[vconcat]`);\n\n// 오디오\nfilterParts.push(`[${audioIdx}:a]atrim=duration=${audioDuration},asetpts=PTS-STARTPTS[tts_raw]`);\nfilterParts.push(`[${bgmIdx}:a]atrim=duration=${totalDuration},asetpts=PTS-STARTPTS,volume=0.12,afade=t=out:st=${Math.max(0, totalDuration - 2)}:d=2[bgm]`);\n\n// SFX mix\nconst sfxCount = sfxInputs.length;\nif (sfxCount > 0) {\n  for (let i = 0; i < sfxCount; i++) {\n    const si = sfxInputs[i];\n    filterParts.push(`[${si.idx}:a]atrim=duration=0.3,asetpts=PTS-STARTPTS,volume=0.15,adelay=${si.timeMs}|${si.timeMs}[sfx${i}]`);\n  }\n  const sfxMixLabels = sfxInputs.map((_, i) => `[sfx${i}]`).join('');\n  filterParts.push(`${sfxMixLabels}amix=inputs=${sfxCount}:duration=longest:normalize=0[sfx_mix]`);\n  filterParts.push(`[tts_raw][bgm][sfx_mix]amix=inputs=3:duration=longest:weights=1 0.12 0.4:normalize=0[afinal]`);\n} else {\n  filterParts.push(`[tts_raw][bgm]amix=inputs=2:duration=longest:weights=1 0.12:normalize=0[afinal]`);\n}\n\n// 자막 오버레이 (상단 제목 + 하단 자막 + 훅)\nlet overlayFilter = `[vconcat]drawbox=y=40:w=1080:h=280:color=#000000@1.0:t=fill,drawtext=expansion=none:text='${escapeDrawtext(hookClean)}':fontsize=72:fontcolor=white:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=120:line_spacing=12`;\n\n// 자막 (글자수 비율 기반 타이밍, 이미지 전환과 독립)\nfor (const sub of subSegments) {\n  const subText = escapeDrawtext(wrapSubtitle(sub.clean, 12));\n  const startT = sub.start.toFixed(2);\n  const endT = (sub.start + sub.duration).toFixed(2);\n  overlayFilter += `,drawtext=expansion=none:text='${subText}':fontsize=52:fontcolor=white:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=h-280:borderw=4:bordercolor=black:enable='between(t,${startT},${endT})'`;\n}\n\n// 훅 자막\nconst hookEscaped = escapeDrawtext(wrapSubtitle(hookClean, 13));\nconst hookEndT = 2.5;\noverlayFilter += `,drawbox=y=(h-300)/2:w=1080:h=300:color=#000000@0.7:t=fill:enable='between(t,0,${hookEndT})'`;\noverlayFilter += `,drawtext=expansion=none:text='${hookEscaped}':fontsize=80:fontcolor=#CCFF00:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=(h-th)/2:borderw=4:bordercolor=black:enable='between(t,0,${hookEndT})'`;\noverlayFilter += '[vfinal]';\nfilterParts.push(overlayFilter);\n\nconst nca_payload = {\n  inputs,\n  filters: [{ filter: filterParts.join(';') }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" }, { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" }, { option: \"-preset\", argument: \"fast\" }, { option: \"-crf\", argument: \"23\" },\n      { option: \"-c:a\", argument: \"aac\" }, { option: \"-b:a\", argument: \"192k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" }, { option: \"-movflags\", argument: \"+faststart\" }, { option: \"-t\", argument: totalDuration.toFixed(2) }\n    ],\n    file_name: \"kkultip_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload,\n    totalDuration,\n    imageCount: imgSegments.length,\n    subtitleCount: subSegments.length,\n    hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3584,
+        336
+      ],
+      "id": "404f0c26-7e0a-4ea9-9a92-b409b2881a08",
+      "name": "NCA 데이터 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "nca-sagong-2026"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.nca_payload) }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3888,
+        336
+      ],
+      "id": "aceed59c-8a84-4d5c-9462-c4029b65e4ae",
+      "name": "NCA 영상 제작"
+    },
+    {
+      "parameters": {
+        "amount": 120
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4192,
+        336
+      ],
+      "id": "4ef29e6b-9834-46b4-9920-8c0591e82ae2",
+      "name": "NCA 제작 대기",
+      "webhookId": "21f711b5-6ca5-4e2a-9456-b8e3389800e9"
+    },
+    {
+      "parameters": {
+        "jsCode": "// NCA 결과 처리\nconst result = $input.first().json;\nconst prevData = $('NCA 데이터 준비').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (!videoUrl) {\n  throw new Error('NCA 영상 제작 결과 URL 없음: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    '영상 URL': videoUrl,\n    final_video_url: videoUrl,\n    url: videoUrl,\n    subject: prevData.subject,\n    caption: prevData.caption,\n    comment: prevData.comment,\n    topic: $('주제 파싱').first().json.topic,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4512,
+        336
+      ],
+      "id": "b450da49-f5c0-47b1-b8aa-89ad7451c1e8",
+      "name": "NCA 결과 처리"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+          "mode": "list",
+          "cachedResultName": "온카스터디",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "설명형 숏츠"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "topic"
+          ],
+          "schema": [
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Hook",
+              "displayName": "Hook",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Narration",
+              "displayName": "Narration",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "영상 URL",
+              "displayName": "영상 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "hook_title",
+              "displayName": "hook_title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "scenes",
+              "displayName": "scenes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Comment",
+              "displayName": "Comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "fullDialogue",
+              "displayName": "fullDialogue",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "segmentCount",
+              "displayName": "segmentCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "generatedAt",
+              "displayName": "generatedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "final_video_url",
+              "displayName": "final_video_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "caption",
+              "displayName": "caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "comment",
+              "displayName": "comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "memeCount",
+              "displayName": "memeCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "imageCount",
+              "displayName": "imageCount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4816,
+        336
+      ],
+      "id": "319950f6-698f-4a59-84d3-04217db6b3b2",
+      "name": "상태 업데이트",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const topic = $input.first().json.topic || $input.first().json['주제'] || '';\nif (!topic) {\n  throw new Error('topic이 비어있습니다. 시트에 topic 컬럼을 확인하세요.');\n}\nconst prompt = `너는 유튜브 쇼츠(Shorts) 대본 기획 및 작성 전문가야. 카지노, 슬롯 커뮤니티 '온카스터디' 홍보 영상을 만들어.\n아래 확정된 주제를 바탕으로 35~40초 분량의 숏츠 스크립트를 작성해줘.\n\n## 반드시 지킬 주제\n${topic}\n\n## 핵심 구조: images(화면)와 subtitles(자막)를 분리해!\n- images: 화면에 보여줄 이미지/밈 목록 (4~6개, 천천히 전환)\n- subtitles: 나레이션 자막 목록 (12~20개, 빠르게 쪼개기)\n- 이미지는 천천히 바뀌고, 자막만 빠르게 끊어서 나오는 구조야!\n\n## 자막(subtitles) 쪼개기 규칙 (매우 중요!!! ⭐️⭐️⭐️)\n시청자가 지루하지 않게 자막이 0.5초~1초 단위로 '딱딱 끊어서' 나오게 연출할 거야!\n문장을 길게 쓰지 말고, 한 호흡에 말하는 단어/구절 단위로 아주 잘게 쪼개!\n- 각 subtitle: 반드시 띄어쓰기 포함 '3자 ~ 10자' 이내로 짧게 써!\n- 띄어쓰기 문법 완벽하게 지켜! (예: \"완전먹튀\" ❌ -> \"완전 먹튀\" ✅)\n- 나레이션은 앞 자막과 자연스럽게 이어져야 해! 마침표(.) 찍지 마! 툭 끊기는 말투 금지!\n\n[자막 쪼개기 예시]\n❌ 나쁜 예 (1개에 몰아넣기): \"솔직히 처음엔 몰랐지 충전하고 바로 돌렸는데\"\n✅ 좋은 예 (여러 개로 쪼개기):\n\"솔직히\"\n\"처음엔 몰랐지\"\n\"충전하고\"\n\"바로 돌렸는데\"\n\n## 이미지(images) 규칙\n- 4~6개만! (자막보다 훨씬 적게)\n- keyword는 Pexels에서 검색될 \"직관적인 영어 명사 1~2개\"\n- visual_type: \"image\" 또는 \"meme\" (meme은 최대 2개!)\n- meme일 때 meme_mood: thinking, excited, shocked, sad, angry, cool, celebrating 중 택1\n❌ 나쁜 키워드: \"switch\", \"safety\" (한국어 직역)\n✅ 좋은 키워드: \"smartphone money\", \"hacker\", \"casino chip\", \"angry man\"\n\n## 강조 태그 (효과음 연동)\n- subtitles에서 핵심 단어에 <em>태그</em> 사용!\n- 예: \"<em>먹튀</em> 당함\", \"롤링 <em>3배</em>면\"\n\n## 스토리 흐름\n- 자막 1~4: 훅 (충격적 도입)\n- 자막 5~15: 핵심 (구체적 썰, 수치)\n- 자막 16~20: 마무리 (정리 + 온카스터디 CTA)\n\n## 자연스러운 용어\n❌ 금지: \"보너스 획득\", \"확률 게임\", \"수익 실현\"\n✅ 사용: \"환전\", \"출금\", \"프리스핀\", \"잭팟\", \"먹튀\", \"롤링\", \"충전\", \"제휴사이트\", \"털리다\", \"뽑다\"\n\n## 구체적 수치 필수!\n❌ \"롤링 높으면 위험해\" → ✅ \"롤링 3배 넘으면 의심해\"\n❌ \"출금 느리면 안 좋아\" → ✅ \"출금 24시간 넘기면 도망쳐\"\n\n## 카지노 커뮤니티 핵심 논리\n- '제휴사이트'=안전보장, '패널티 명단'=먹튀리스트\n\n## 출력 형식 (순수 JSON만, 코드블록 없이)\n- JSON 값 안에 쌍따옴표(\")나 줄바꿈 문자를 절대 넣지 마!\n{\n  \"hook_title\": \"첫 화면 노란색 어그로 자막 (15자 내외)\",\n  \"images\": [\n    { \"keyword\": \"영어 명사\", \"visual_type\": \"image\" },\n    { \"keyword\": \"영어 명사\", \"visual_type\": \"meme\", \"meme_mood\": \"shocked\" }\n  ],\n  \"subtitles\": [\n    \"3~10자 짧은 자막\",\n    \"<em>강조</em> 포함 자막\",\n    \"이렇게 쪼개서\"\n  ],\n  \"Subject\": \"제목 #온카스터디 #먹튀검증 #슬롯\",\n  \"Caption\": \"설명 #온카스터디 + 해시태그\",\n  \"Comment\": \"구글에 온카스터디 검색!\"\n}`;\nreturn [{\n  json: {\n    prompt,\n    topic,\n    row_number: $input.first().json.row_number,\n    ...$input.first().json\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        304
+      ],
+      "id": "d35c1c7b-3cc8-448b-a309-dbfe73dec39c",
+      "name": "프롬프트 생성"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pexels.com/v1/search?query={{ encodeURIComponent($json.keyword || $json.image_prompt?.split(',')[0] || 'abstract background') }}&per_page=3&orientation=portrait",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2176,
+        480
+      ],
+      "id": "76aadc3c-5ec1-487b-a68c-6725f0fd4ba6",
+      "name": "이미지 검색",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1vPRgFSX7u4ecIy4",
+          "name": "Pexels"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 밈 카탈로그: MinIO에 호스팅된 밈/리액션 영상 URL (35개)\nconst MEME_CATALOG = {\n  thinking: [\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_01.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_02.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_03.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_04.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_05.mp4',\n  ],\n  excited: [\n    'http://76.13.182.180:9000/memes/excited/meme_excited_01.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_02.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_03.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_04.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_05.mp4',\n  ],\n  shocked: [\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_01.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_02.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_03.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_04.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_05.mp4',\n  ],\n  sad: [\n    'http://76.13.182.180:9000/memes/sad/meme_sad_01.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_02.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_03.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_04.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_05.mp4',\n  ],\n  angry: [\n    'http://76.13.182.180:9000/memes/angry/meme_angry_01.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_02.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_03.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_04.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_05.mp4',\n  ],\n  cool: [\n    'http://76.13.182.180:9000/memes/cool/meme_cool_01.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_02.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_03.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_04.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_05.mp4',\n  ],\n  celebrating: [\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_01.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_02.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_03.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_04.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_05.mp4',\n  ],\n};\n\nconst items = $input.all();\nconst segAll = $('세그먼트 분리').all();\n\nreturn items.map((item, i) => {\n  const data = item.json;\n  const segData = segAll[i]?.json || {};\n  const visualType = segData.visual_type || 'image';\n  const memeMood = segData.meme_mood || 'thinking';\n\n  if (visualType === 'meme') {\n    const catalog = MEME_CATALOG[memeMood] || MEME_CATALOG.thinking;\n    const randomIdx = Math.floor(Math.random() * catalog.length);\n    return {\n      json: {\n        ...data,\n        visual_type: 'meme',\n        meme_mood: memeMood,\n        images: [{ url: catalog[randomIdx] }],\n        is_video: true,\n      }\n    };\n  } else {\n    const photos = data.photos || [];\n    let imageUrl = '';\n    if (photos.length > 0) {\n      const randPhoto = photos[Math.floor(Math.random() * photos.length)];\n      imageUrl = randPhoto.src?.portrait || randPhoto.src?.large || randPhoto.src?.medium || '';\n    }\n    if (!imageUrl) {\n      imageUrl = 'https://images.pexels.com/photos/1229861/pexels-photo-1229861.jpeg?auto=compress&cs=tinysrgb&w=1080';\n    }\n    return {\n      json: {\n        ...data,\n        visual_type: 'image',\n        meme_mood: '',\n        images: [{ url: imageUrl }],\n        is_video: false,\n      }\n    };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        480
+      ],
+      "id": "417f9a14-190f-48d9-a466-fde992082665",
+      "name": "이미지 URL 추출"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "너는 '온카스터디' 커뮤니티의 YouTube Shorts 주제 기획자야.\n\n아래 5가지 핵심 주제 카테고리 중 랜덤으로 하나를 골라서, YouTube Shorts에 적합한 구체적인 영상 주제(topic) 1개를 생성해줘.\n\n## 5가지 카테고리 (랜덤으로 하나 선택)\n1. \"내 돈 지키는 꿀팁\" (안전/먹튀검증 썰) - 활용: 먹튀제보, 패널티 명단, 스터디판\n2. \"돈 안 쓰고 돈 버는 법\" (무료 혜택/앱테크) - 활용: 포인트존, 돌림판, 기프티콘 교환, 무료슬롯 체험\n3. \"대박 터진 썰 푼다\" (리얼 후기/잭팟 인증) - 활용: 잭팟 제보, 후기게시판\n4. \"레전드 방송 하이라이트\" (엔터테인먼트) - 활용: 방송존, 하이라이트\n5. \"오늘의 픽 & 정보 요약\" (스포츠/카지노 뉴스) - 활용: 스포츠 분석, 카지노 뉴스\n\n## 후킹 원칙 (매우 중요!)\ntopic 자체가 \"클릭하고 싶은 제목\"이어야 해.\n밋밋한 정보형 제목 절대 금지!\n\n핵심 원칙:\n- 읽는 순간 \"어? 뭔데?\" 하고 궁금해지는 제목\n- 감정을 자극할 것 (놀람, 공포, 부러움, 호기심)\n- 구체적 숫자나 상황이 들어갈 것\n- 매번 다른 표현과 구조를 사용할 것 (똑같은 패턴 반복 절대 금지!)\n- 주제(topic) 텍스트 내에 자연스럽게 '온카스터디'를 한 번 언급해줘.\n\n참고할 수 있는 감정 트리거 (이것만 쓰지 말고 자유롭게 변형해):\n숫자충격, 손실공포, 비밀폭로, 반전놀람, 대리만족, 분노유발, 비교자극, 긴급속보, 공감유도, 도전심리 등\n\n❌ 이런 제목은 절대 금지:\n- \"먹튀사이트 구별법\" (교과서식)\n- \"안전놀이터 고르는 법\" (평범)\n- \"스포츠 배팅 초보 가이드\" (재미없음)\n\n출력 형식 (순수 JSON만, 코드블록 없이):\n- JSON 값 안에 쌍따옴표(\")나 줄바꿈 문자를 절대 넣지 마!\n{\"topic\": \"후킹 원칙이 적용된 자극적인 쇼츠 주제 20~40자\"}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        64,
+        304
+      ],
+      "id": "f691c2b0-ba9e-41de-b342-ddf6ea0d4a09",
+      "name": "AI 주제 생성",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst data = JSON.parse(cleanText);\n\nif (!data.topic) {\n  throw new Error('AI 주제 생성 결과에 topic이 없습니다: ' + cleanText);\n}\n\nreturn [{\n  json: {\n    topic: data.topic,\n    row_number: null\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        304
+      ],
+      "id": "a15bf7bf-1820-45d4-ae9c-f38db2d345f7",
+      "name": "주제 파싱"
+    }
+  ],
+  "connections": {
+    "수동 실행": {
+      "main": [
+        [
+          {
+            "node": "AI 주제 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 콘텐츠 생성": {
+      "main": [
+        [
+          {
+            "node": "콘텐츠 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "콘텐츠 파싱": {
+      "main": [
+        [
+          {
+            "node": "시트 기록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "시트 기록": {
+      "main": [
+        [
+          {
+            "node": "TTS 요청",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "세그먼트 분리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "세그먼트 분리": {
+      "main": [
+        [
+          {
+            "node": "이미지 검색",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 요청": {
+      "main": [
+        [
+          {
+            "node": "TTS 결과 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 결과 처리": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "NCA 데이터 준비",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 데이터 준비": {
+      "main": [
+        [
+          {
+            "node": "NCA 영상 제작",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 영상 제작": {
+      "main": [
+        [
+          {
+            "node": "NCA 제작 대기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 제작 대기": {
+      "main": [
+        [
+          {
+            "node": "NCA 결과 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 결과 처리": {
+      "main": [
+        [
+          {
+            "node": "상태 업데이트",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "프롬프트 생성": {
+      "main": [
+        [
+          {
+            "node": "AI 콘텐츠 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 검색": {
+      "main": [
+        [
+          {
+            "node": "이미지 URL 추출",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 URL 추출": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI 주제 생성": {
+      "main": [
+        [
+          {
+            "node": "주제 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "주제 파싱": {
+      "main": [
+        [
+          {
+            "node": "프롬프트 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "68eaa9e7-5dab-420e-8630-83c3180ff20a",
+  "activeVersionId": null,
+  "versionCounter": 102,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-25T21:09:13.257Z",
+      "createdAt": "2026-02-25T21:09:13.257Z",
+      "role": "workflow:owner",
+      "workflowId": "vdl0YHQCpt9cXI2f",
+      "projectId": "W6LETsSnBzw4J5Aa",
+      "project": {
+        "updatedAt": "2026-02-09T04:42:12.235Z",
+        "createdAt": "2026-02-07T19:04:11.494Z",
+        "id": "W6LETsSnBzw4J5Aa",
+        "name": "hatihoro15 hatihoro15 <hatihoro15@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-07T19:04:11.494Z",
+            "createdAt": "2026-02-07T19:04:11.494Z",
+            "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+            "projectId": "W6LETsSnBzw4J5Aa",
+            "user": {
+              "updatedAt": "2026-02-26T23:02:07.107Z",
+              "createdAt": "2026-02-07T19:04:09.331Z",
+              "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+              "email": "hatihoro15@gmail.com",
+              "firstName": "hatihoro15",
+              "lastName": "hatihoro15",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-02-07T19:24:51.818Z",
+                "personalization_survey_n8n_version": "2.6.4"
+              },
+              "settings": {
+                "userActivated": true,
+                "easyAIWorkflowOnboarded": true,
+                "firstSuccessfulWorkflowId": "dEtWqwWQPJfwCWiIM0QYd",
+                "userActivatedAt": 1771888859109,
+                "npsSurvey": {
+                  "waitingForResponse": true,
+                  "ignoredCount": 1,
+                  "lastShownAt": 1771060625309
+                }
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-26",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}

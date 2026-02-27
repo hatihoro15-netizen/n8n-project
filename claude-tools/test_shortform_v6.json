@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-02-27T03:12:09.649Z",
+  "updatedAt": "2026-02-27T03:57:28.000Z",
   "createdAt": "2026-02-25T21:09:13.257Z",
   "id": "vdl0YHQCpt9cXI2f",
   "name": "[테스트] 설명형 숏츠 - 속도감 25초",
@@ -22,9 +22,9 @@
       "parameters": {
         "modelId": {
           "__rl": true,
-          "value": "models/gemini-2.5-pro",
+          "value": "models/gemini-2.5-flash",
           "mode": "list",
-          "cachedResultName": "models/gemini-2.5-pro"
+          "cachedResultName": "models/gemini-2.5-flash"
         },
         "messages": {
           "values": [
@@ -547,9 +547,9 @@
       "parameters": {
         "modelId": {
           "__rl": true,
-          "value": "models/gemini-2.5-pro",
+          "value": "models/gemini-2.5-flash",
           "mode": "list",
-          "cachedResultName": "models/gemini-2.5-pro"
+          "cachedResultName": "models/gemini-2.5-flash"
         },
         "messages": {
           "values": [
@@ -803,10 +803,61 @@
   },
   "staticData": null,
   "meta": null,
-  "pinData": {},
-  "versionId": "88e3cc88-a841-47ff-8a51-be48637b61dc",
+  "pinData": {
+    "수동 실행": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프롬프트 생성": [
+      {
+        "json": {
+          "prompt": "너는 유튜브 쇼츠(Shorts) 대본 기획 및 작성 전문가야. 카지노, 슬롯 커뮤니티 '온카스터디' 홍보 영상을 만들어.\n아래 확정된 주제를 바탕으로 35~40초 분량의 숏츠 스크립트를 작성해줘.\n\n## 반드시 지킬 주제\n이거 모르면 50만원 날려요! 온카스터디 긴급 픽 지금 바로 확인!\n\n## 나레이션 & 자막 쪼개기 규칙 (매우 중요!!! ⭐️⭐️⭐️)\n시청자가 지루하지 않게 자막이 0.5초~1초 단위로 '딱딱 끊어서' 나오게 연출할 거야!\n문장을 길게 쓰지 말고, 한 호흡에 말하는 단어/구절 단위로 장면(scene)을 아주 잘게 쪼개!\n- 각 dialogue: 반드시 띄어쓰기 포함 '3자 ~ 10자' 이내로 짧게 써!\n- 띄어쓰기 문법 완벽하게 지켜! (예: \"완전먹튀\" ❌ -> \"완전 먹튀\" ✅)\n\n[자막 쪼개기 예시]\n❌ 나쁜 예 (1개 장면에 몰아넣기): \"솔직히 처음엔 몰랐지 충전하고 바로 돌렸는데\"\n✅ 좋은 예 (여러 장면에 쪼개기):\nscene 1: \"솔직히\"\nscene 2: \"처음엔 몰랐지\"\nscene 3: \"충전하고\"\nscene 4: \"바로 돌렸는데\"\n\n## 장면 구성 (잘게 쪼개니까 개수가 많아짐)\n- 총 18~24개 장면 (문장을 잘게 쪼갠 개수)\n- visual_type: \"image\" 또는 \"meme\" (meme은 전체에서 최대 3개만!)\n\n## 이미지 키워드 유지 규칙\n- 문장이 잘게 쪼개져서 화면이 너무 빨리 바뀌면 어지러우니까, '같은 상황'을 설명하는 구간(scene 2~3개)에서는 keyword를 똑같이 유지해줘!\n\n## 스토리 흐름 (절대 규칙!)\n- 1~4장면: 훅 (충격적 도입, 시선 집중)\n- 5~18장면: 핵심 (구체적 썰, 예시, 수치 - 포인트를 나눠서 타격감 있게)\n- 19~24장면: 마무리 (정리 + 온카스터디로 와라 CTA)\n\n## 자연스러운 용어 (딱딱한 교과서 단어 금지!)\n❌ 금지: \"보너스 획득\", \"확률 게임\", \"수익 실현\", \"안전한 플레이\", \"전략적 선택\"\n✅ 사용: \"환전\", \"출금\", \"프리스핀\", \"잭팟\", \"먹튀\", \"롤링\", \"충전\", \"제휴사이트\", \"털리다\", \"뽑다\"\n\n## 구체적 수치 필수!\n❌ \"롤링 높으면 위험해\" → ✅ \"롤링 3배 넘으면 의심해\"\n❌ \"출금 느리면 안 좋아\" → ✅ \"출금 24시간 넘기면 도망쳐\"\n❌ \"많이 당첨됐대\" → ✅ \"10만 원으로 3천만 원 뽑았대\"\n\n## 카지노 커뮤니티 핵심 논리 (틀리지 마!)\n- '제휴사이트'=안전보장, '패널티 명단'=먹튀리스트 \n\n## 출력 형식 (순수 JSON만, 코드블록 없이)\n{\n  \"hook_title\": \"첫 화면 노란색 어그로 자막 (띄어쓰기 완벽하게, 15자 내외)\",\n  \"scenes\": [\n    {\n      \"dialogue\": \"3~10자 (딱딱 끊어서!)\",\n      \"image_prompt\": \"해당 장면 묘사\",\n      \"keyword\": \"직관적인 영어 명사 1~2개\",\n      \"visual_type\": \"image 또는 meme\",\n      \"meme_mood\": \"meme일 때만\"\n    }\n  ],\n  \"Subject\": \"제목 #온카스터디 #먹튀검증 #슬롯\",\n  \"Caption\": \"설명 #온카스터디 + 해시태그\",\n  \"Comment\": \"구글에 온카스터디 검색!\"\n}",
+          "topic": "이거 모르면 50만원 날려요! 온카스터디 긴급 픽 지금 바로 확인!",
+          "row_number": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "AI 주제 생성": [
+      {
+        "json": {
+          "content": {
+            "parts": [
+              {
+                "text": "{\"topic\": \"이거 모르면 50만원 날려요! 온카스터디 긴급 픽 지금 바로 확인!\"}"
+              }
+            ],
+            "role": "model"
+          },
+          "finishReason": "STOP",
+          "index": 0
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "주제 파싱": [
+      {
+        "json": {
+          "topic": "이거 모르면 50만원 날려요! 온카스터디 긴급 픽 지금 바로 확인!",
+          "row_number": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "5a02e6aa-b9c3-47d8-89be-e48d23f07a93",
   "activeVersionId": null,
-  "versionCounter": 79,
+  "versionCounter": 86,
   "triggerCount": 0,
   "shared": [
     {
