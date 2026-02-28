@@ -1,765 +1,1569 @@
 {
-    "updatedAt": "2026-02-28T00:57:50.668Z",
-    "createdAt": "2026-02-25T21:09:13.257Z",
-    "id": "vdl0YHQCpt9cXI2f",
-    "name": "[\ud14c\uc2a4\ud2b8] \uc124\uba85\ud615 \uc20f\uce20 - \uc18d\ub3c4\uac10 25\ucd08 v15",
-    "description": null,
-    "active": false,
-    "isArchived": false,
-    "nodes": [
-        {
-            "parameters": {},
-            "type": "n8n-nodes-base.manualTrigger",
-            "typeVersion": 1,
-            "position": [
-                -176,
-                304
-            ],
-            "id": "2dfad90a-639d-4d9b-a3b8-08217ee81dd7",
-            "name": "\uc218\ub3d9 \uc2e4\ud589"
+  "updatedAt": "2026-02-28T01:24:00.086Z",
+  "createdAt": "2026-02-25T21:09:13.257Z",
+  "id": "vdl0YHQCpt9cXI2f",
+  "name": "[테스트] 설명형 숏츠 - 속도감 25초 v15",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        304
+      ],
+      "id": "2dfad90a-639d-4d9b-a3b8-08217ee81dd7",
+      "name": "수동 실행"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
         },
-        {
-            "parameters": {
-                "modelId": {
-                    "__rl": true,
-                    "value": "models/gemini-2.5-flash-lite",
-                    "mode": "list",
-                    "cachedResultName": "models/gemini-2.5-flash-lite"
-                },
-                "messages": {
-                    "values": [
-                        {
-                            "content": "={{ $json.prompt }}"
-                        }
-                    ]
-                },
-                "jsonOutput": true,
-                "builtInTools": {},
-                "options": {}
-            },
-            "type": "@n8n/n8n-nodes-langchain.googleGemini",
-            "typeVersion": 1.1,
-            "position": [
-                880,
-                304
-            ],
-            "id": "5df5ffe5-b4b3-41c7-9149-0cd8c3e069c7",
-            "name": "AI \ucf58\ud150\uce20 \uc0dd\uc131",
-            "credentials": {
-                "googlePalmApi": {
-                    "id": "IKP349r08J9Hoz5E",
-                    "name": "Google Gemini(PaLM) Api account"
-                }
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
             }
+          ]
         },
-        {
-            "parameters": {
-                "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nfunction cleanGeminiJson(raw) {\n  let s = raw.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  const first = s.indexOf('{');\n  const last = s.lastIndexOf('}');\n  if (first !== -1 && last > first) {\n    s = s.substring(first, last + 1);\n  }\n  let result = '';\n  let inStr = false;\n  let esc = false;\n  for (let i = 0; i < s.length; i++) {\n    const c = s[i];\n    if (esc) { result += c; esc = false; continue; }\n    if (c === '\\\\' && inStr) { result += c; esc = true; continue; }\n    if (c === '\"') { inStr = !inStr; result += c; continue; }\n    if (inStr) {\n      if (c === '\\n' || c === '\\r') { result += ' '; continue; }\n      if (c === '\\t') { result += ' '; continue; }\n      if (c.charCodeAt(0) < 0x20) { continue; }\n    }\n    result += c;\n  }\n  result = result.replace(/,(\\s*[}\\]])/g, '$1');\n  return result;\n}\n\nlet cleanText = cleanGeminiJson(text);\nlet data;\n\ntry {\n  data = JSON.parse(cleanText);\n} catch (e1) {\n  try {\n    let fixed = cleanText\n      .replace(/[\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036]/g, '\"')\n      .replace(/[\\u2018\\u2019\\u201A\\u201B\\u2032\\u2035]/g, \"'\")\n      .replace(/^\\uFEFF/, '');\n    data = JSON.parse(fixed);\n  } catch (e2) {\n    const posMatch = e1.message.match(/position (\\d+)/);\n    const pos = posMatch ? parseInt(posMatch[1]) : 0;\n    const start = Math.max(0, pos - 80);\n    const end = Math.min(cleanText.length, pos + 80);\n    const around = cleanText.substring(start, end);\n    throw new Error(\n      `JSON \ud30c\uc2f1 \uc2e4\ud328: ${e1.message}\\n` +\n      `--- \uc5d0\ub7ec \uc704\uce58(${pos}) \uc8fc\ubcc0 ---\\n${around}\\n` +\n      `\ucc98\uc74c 300\uc790: ${cleanText.substring(0, 300)}`\n    );\n  }\n}\n\n// images + subtitles \uac80\uc99d\nif (!data.images || data.images.length < 4) {\n  throw new Error('images must have at least 4 items, got: ' + (data.images?.length || 0));\n}\nif (!data.subtitles || data.subtitles.length < 6) {\n  throw new Error('subtitles must have at least 6 items, got: ' + (data.subtitles?.length || 0));\n}\n\nconst VALID_MOODS = ['thinking', 'excited', 'shocked', 'sad', 'angry', 'cool', 'celebrating', 'snacking', 'speechless', 'smoking', 'disappointed', 'thumbsup', 'crying', 'desperate', 'bored', 'suspicious', 'money'];\n\ndata.images = data.images.map((img, idx) => {\n  if (!img.visual_type || !['image', 'meme'].includes(img.visual_type)) {\n    img.visual_type = 'image';\n  }\n  if (img.visual_type === 'meme') {\n    if (!img.meme_mood || !VALID_MOODS.includes(img.meme_mood)) {\n      img.meme_mood = VALID_MOODS[idx % VALID_MOODS.length];\n    }\n  } else {\n    img.meme_mood = '';\n    if (!img.keyword) {\n      img.keyword = 'abstract background';\n    }\n  }\n  return img;\n});\n\n// === v15: \uce74\ud14c\uace0\ub9ac\ubcc4 \uae08\uc9c0\ub2e8\uc5b4 \uac80\uc99d ===\nconst category = $('\uc8fc\uc81c \ud30c\uc2f1').first().json.category || 1;\nconst FORBIDDEN_WORDS = {\n  1: ['\ud3ec\uc778\ud2b8', '\ub3cc\ub9bc\ud310', '\ubcf5\uad8c', '\uae30\ud504\ud2f0\ucf58', '\uc571\ud14c\ud06c', '\uc7ad\ud31f', '\ubc29\uc1a1', '\uc2a4\ud2b8\ub9ac\uba38', '\uc2a4\ud3ec\uce20', '\ubd84\uc11d', '\ud53d'],\n  2: ['\uba39\ud280', '\ud328\ub110\ud2f0', '\uac80\uc99d', '\ub864\ub9c1', '\ucd9c\uae08', '\ucda9\uc804', '\uc7ad\ud31f', '\ub300\ubc15', '\ub2f9\ucca8', '\ubc29\uc1a1', '\uc2a4\ud2b8\ub9ac\uba38', '\uc2a4\ud3ec\uce20', '\ubd84\uc11d'],\n  3: ['\uba39\ud280', '\ud328\ub110\ud2f0', '\uac80\uc99d', '\ub864\ub9c1', '\ucd9c\uae08', '\ud3ec\uc778\ud2b8', '\ub3cc\ub9bc\ud310', '\ubcf5\uad8c', '\uae30\ud504\ud2f0\ucf58', '\uc571\ud14c\ud06c', '\ubc29\uc1a1', '\uc2a4\ud2b8\ub9ac\uba38', '\uc2a4\ud3ec\uce20', '\ubd84\uc11d'],\n  4: ['\uba39\ud280', '\ud328\ub110\ud2f0', '\uac80\uc99d', '\ud3ec\uc778\ud2b8', '\ub3cc\ub9bc\ud310', '\ubcf5\uad8c', '\uae30\ud504\ud2f0\ucf58', '\uc571\ud14c\ud06c', '\uc7ad\ud31f', '\uc2a4\ud3ec\uce20', '\ubd84\uc11d', '\ud53d'],\n  5: ['\uba39\ud280', '\ud328\ub110\ud2f0', '\uac80\uc99d', '\ud3ec\uc778\ud2b8', '\ub3cc\ub9bc\ud310', '\ubcf5\uad8c', '\uae30\ud504\ud2f0\ucf58', '\uc571\ud14c\ud06c', '\uc7ad\ud31f', '\ubc29\uc1a1', '\uc2a4\ud2b8\ub9ac\uba38']\n};\n\nconst forbidden = FORBIDDEN_WORDS[category] || [];\nconst allSubText = data.subtitles.join(' ').replace(/<[^>]*>?/gm, '');\nconst foundForbidden = forbidden.filter(w => allSubText.includes(w));\nif (foundForbidden.length > 0) {\n  throw new Error(`\uce74\ud14c\uace0\ub9ac ${category} \uae08\uc9c0\ub2e8\uc5b4 \uc704\ubc18! [${foundForbidden.join(', ')}] \ubc1c\uacac. \uc7ac\uc0dd\uc131 \ud544\uc694.`);\n}\n\n// === v15: \ub9c8\uc9c0\ub9c9 \uc790\ub9c9 \ubb38\uc7a5 \uc644\uacb0 \uac80\uc99d (\uc885\uacb0\uc5b4\ubbf8 \uae30\ubc18) ===\nconst lastSub = data.subtitles[data.subtitles.length - 1].replace(/<[^>]*>?/gm, '').replace(/[!?~.]/g, '').trim();\nconst KOREAN_ENDINGS = ['\ud574', '\ubd10', '\uc57c', '\ub9c8', '\uc694', '\uc790', '\uc9c0', '\ub108', '\ub428', '\uc784', '\uc74c', '\uac70', '\ub4e0', '\uc8e0', '\uc138\uc694', '\uac00'];\nconst lastChar = lastSub.slice(-1);\nconst lastTwo = lastSub.slice(-2);\nconst hasEnding = KOREAN_ENDINGS.some(e => lastSub.endsWith(e));\nconst isTooShort = lastSub.length < 4;\nif (!hasEnding || isTooShort) {\n  // \uc885\uacb0\uc5b4\ubbf8 \uc5c6\uac70\ub098 \ub108\ubb34 \uc9e7\uc73c\uba74 \u2192 \uc5d0\ub7ec \ub358\uc838\uc11c \uc7ac\uc0dd\uc131 \uc720\ub3c4\n  console.log('\ub9c8\uc9c0\ub9c9 \uc790\ub9c9 \ubbf8\uc644\uc131 \uac10\uc9c0: ' + lastSub);\n  // \uc790\ub3d9 \ubcf4\uc815\ud558\uc9c0 \uc54a\uace0 \uacbd\uace0\ub9cc (AI\uac00 \uc790\uc720\ub86d\uac8c \uc0dd\uc131\ud558\ub3c4\ub85d)\n}\n\nconst fullDialogue = data.subtitles.join(' ');\nconst memeCount = data.images.filter(i => i.visual_type === 'meme').length;\nconst imageCount = data.images.filter(i => i.visual_type === 'image').length;\n\nreturn [{\n  json: {\n    hook_title: data.hook_title,\n    images: data.images,\n    subtitles: data.subtitles,\n    Subject: data.Subject,\n    Caption: data.Caption,\n    Comment: data.Comment,\n    fullDialogue,\n    Narration: fullDialogue,\n    imageCount: data.images.length,\n    subtitleCount: data.subtitles.length,\n    memeCount,\n    Status: '\uc0dd\uc131 \uc911',\n    generatedAt: new Date().toISOString(),\n    topic: $('\uc8fc\uc81c \ud30c\uc2f1').first().json.topic,\n    category: $('\uc8fc\uc81c \ud30c\uc2f1').first().json.category,\n    outroFile: $('\uc8fc\uc81c \ud30c\uc2f1').first().json.outroFile,\n    outroCta: $('\uc8fc\uc81c \ud30c\uc2f1').first().json.outroCta,\n    subtopic: $('\uc8fc\uc81c \ud30c\uc2f1').first().json.subtopic,\n    row_number: $('\uc8fc\uc81c \ud30c\uc2f1').first().json.row_number\n  }\n}];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                1248,
-                304
-            ],
-            "id": "6adeed9a-4c8e-4d81-8578-76b2f46d0527",
-            "name": "\ucf58\ud150\uce20 \ud30c\uc2f1"
-        },
-        {
-            "parameters": {
-                "operation": "append",
-                "documentId": {
-                    "__rl": true,
-                    "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
-                    "mode": "list",
-                    "cachedResultName": "\uc628\uce74\uc2a4\ud130\ub514",
-                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
-                },
-                "sheetName": {
-                    "__rl": true,
-                    "mode": "name",
-                    "value": "\uc124\uba85\ud615 \uc20f\uce20"
-                },
-                "columns": {
-                    "mappingMode": "autoMapInputData",
-                    "value": {}
-                },
-                "options": {}
-            },
-            "type": "n8n-nodes-base.googleSheets",
-            "typeVersion": 4.7,
-            "position": [
-                1520,
-                304
-            ],
-            "id": "d6ea6410-28ee-4aa6-864f-c7c6d32de2a2",
-            "name": "\uc2dc\ud2b8 \uae30\ub85d",
-            "credentials": {
-                "googleSheetsOAuth2Api": {
-                    "id": "CWBUyXUqCU9p5VAg",
-                    "name": "Google Sheets account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsCode": "const data = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json;\nconst images = data.images || [];\n\n// images \ubc30\uc5f4\ub9cc \uc138\uadf8\uba3c\ud2b8\ub85c \ubd84\ub9ac (\uc774\ubbf8\uc9c0 \uac80\uc0c9\uc6a9)\nreturn images.map((img, i) => ({\n  json: {\n    index: i,\n    keyword: img.keyword || 'abstract background',\n    visual_type: img.visual_type || 'image',\n    meme_mood: img.meme_mood || '',\n  }\n}));"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                1792,
-                480
-            ],
-            "id": "3fa1b098-8745-40bd-84c4-63439968242b",
-            "name": "\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac"
-        },
-        {
-            "parameters": {
-                "method": "POST",
-                "url": "http://172.17.0.1:5100/tts",
-                "sendBody": true,
-                "specifyBody": "json",
-                "jsonBody": "={\n  \"text\": {{ JSON.stringify($json.fullDialogue.replace(/<[^>]*>?/gm, '')) }},\n  \"voice_id\": \"tc_6059dad0b83880769a50502f\",\n  \"emotion\": \"happy\",\n  \"tempo\": 1.4\n}",
-                "options": {
-                    "timeout": 60000
-                }
-            },
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.2,
-            "position": [
-                1984,
-                160
-            ],
-            "id": "fe8b82fb-797c-4f1f-bf39-801185c734a4",
-            "name": "TTS \uc694\uccad"
-        },
-        {
-            "parameters": {
-                "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const audioUrl = item.json.audio_url;\n  const durationSec = item.json.duration_sec;\n  const timestamps = item.json.timestamps || [];\n\n  if (!audioUrl) {\n    throw new Error('TTS \uc751\ub2f5\uc5d0 audio_url\uc774 \uc5c6\uc2b5\ub2c8\ub2e4: ' + JSON.stringify(item.json));\n  }\n\n  return {\n    json: {\n      audio_url: audioUrl,\n      duration_sec: durationSec,\n      timestamps,\n      ...item.json\n    }\n  };\n});"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                2368,
-                160
-            ],
-            "id": "ed11d1b0-d11f-4e98-8f6e-6692cdcc3351",
-            "name": "TTS \uacb0\uacfc \ucc98\ub9ac"
-        },
-        {
-            "parameters": {},
-            "type": "n8n-nodes-base.merge",
-            "typeVersion": 3.2,
-            "position": [
-                2992,
-                336
-            ],
-            "id": "e4169643-cf73-4bb2-8194-ebb35c9e595c",
-            "name": "Merge"
-        },
-        {
-            "parameters": {
-                "aggregate": "aggregateAllItemData",
-                "options": {}
-            },
-            "type": "n8n-nodes-base.aggregate",
-            "typeVersion": 1,
-            "position": [
-                3280,
-                336
-            ],
-            "id": "e9719f9a-8472-4fe5-b527-b1e9cda104a9",
-            "name": "Aggregate"
-        },
-        {
-            "parameters": {
-                "jsCode": "// NCA v8: images + subtitles \ubd84\ub9ac \uad6c\uc870\nconst hookTitle = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.hook_title;\nconst hookClean = hookTitle.replace(/<[^>]*>?/gm, '');\nconst subtitles = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.subtitles || [];\nconst imageCount = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.imageCount;\n\nconst ttsResult = $('TTS \uacb0\uacfc \ucc98\ub9ac').first().json;\nconst mainAudioUrl = ttsResult.audio_url;\nconst audioDuration = ttsResult.duration_sec;\nlet totalDuration = audioDuration;  // v15: \ud328\ub529 \uc81c\uac70 (\uac80\uc815\ud654\uba74 \ubc29\uc9c0)\n\nconst BGM_URL = 'http://76.13.182.180:9000/audio/bgm_25sec.mp3';\n\n// === \uc544\uc6c3\ud2b8\ub85c \uc601\uc0c1 (\uce74\ud14c\uace0\ub9ac \uacb0\uc815 \ub178\ub4dc\uc5d0\uc11c \uc0ac\uc804 \uc120\ud0dd) ===\nconst OUTRO_BASE = 'http://76.13.182.180:9000/outro/';\nconst category = $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.category || 1;\nconst outroFile = $('\uc8fc\uc81c \ud30c\uc2f1').first().json.outroFile || '';\nconst outroCta = $('\uc8fc\uc81c \ud30c\uc2f1').first().json.outroCta || '';\nconst outroUrl = outroFile ? OUTRO_BASE + outroFile : '';\nconst SFX_MAP = {\n  whoosh: 'http://76.13.182.180:9000/audio/sfx_whoosh1.mp3',\n  pop: 'http://76.13.182.180:9000/audio/sfx_pop_user.mp3',\n  ding: 'http://76.13.182.180:9000/audio/sfx_ding1.mp3',\n  ding2: 'http://76.13.182.180:9000/audio/sfx_ding2.mp3',\n  ppook: 'http://76.13.182.180:9000/audio/sfx_ppook.wav',\n  wow: 'http://76.13.182.180:9000/audio/sfx_wow.wav'\n};\n\nfunction escapeDrawtext(text) {\n  if (!text) return '';\n  // \uc774\ubaa8\uc9c0 \uc81c\uac70 (NanumGothicBold\uc5d0 \uc774\ubaa8\uc9c0 \uae00\ub9ac\ud504 \uc5c6\uc74c)\n  text = text.replace(/[\\u{1F600}-\\u{1F64F}\\u{1F300}-\\u{1F5FF}\\u{1F680}-\\u{1F6FF}\\u{1F1E0}-\\u{1F1FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}\\u{FE00}-\\u{FE0F}\\u{1F900}-\\u{1F9FF}\\u{1FA00}-\\u{1FA6F}\\u{1FA70}-\\u{1FAFF}\\u{200D}\\u{20E3}\\u{FE0F}]/gu, '').trim();\n  return text.replace(/\\\\/g, '\\\\\\\\').replace(/'/g, '\\u2019').replace(/\"/g, '\\u201D').replace(/:/g, '\\\\:').replace(/;/g, '\\\\;').replace(/,/g, '\\\\,').replace(/\\[/g, '\\\\[').replace(/\\]/g, '\\\\]').replace(/\\n/g, ' ');\n}\nfunction escapeDrawtextMultiline(text) {\n  if (!text) return '';\n  text = text.replace(/[\\u{1F600}-\\u{1F64F}\\u{1F300}-\\u{1F5FF}\\u{1F680}-\\u{1F6FF}\\u{1F1E0}-\\u{1F1FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}\\u{FE00}-\\u{FE0F}\\u{1F900}-\\u{1F9FF}\\u{1FA00}-\\u{1FA6F}\\u{1FA70}-\\u{1FAFF}\\u{200D}\\u{20E3}\\u{FE0F}]/gu, '').trim();\n  return text.replace(/\\\\/g, '\\\\\\\\').replace(/'/g, '\\u2019').replace(/\"/g, '\\u201D').replace(/:/g, '\\\\:').replace(/;/g, '\\\\;').replace(/,/g, '\\\\,').replace(/\\[/g, '\\\\[').replace(/\\]/g, '\\\\]');\n}\nfunction wrapSubtitle(text, maxLen) {\n  if (!text) return '';\n  const words = text.split(' ');\n  let lines = [];\n  let currentLine = '';\n  for (const word of words) {\n    if (currentLine.length + word.length > maxLen && currentLine.length > 0) {\n      lines.push(currentLine.trim());\n      currentLine = word + ' ';\n    } else {\n      currentLine += word + ' ';\n    }\n  }\n  if (currentLine) lines.push(currentLine.trim());\n  return lines.join('\\n');\n}\n\nif (!subtitles || subtitles.length === 0) {\n  throw new Error('subtitles \ubc30\uc5f4\uc774 \ube44\uc5b4\uc788\uc2b5\ub2c8\ub2e4. \ucf58\ud150\uce20 \ud30c\uc2f1 \uacb0\uacfc\ub97c \ud655\uc778\ud558\uc138\uc694.');\n}\n\n// === \uc774\ubbf8\uc9c0: audioDuration / imageCount \uade0\ub4f1 \ubc30\ubd84 ===\nconst imgResults = $('\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c').all();\nconst imgDuration = audioDuration / imageCount;\nlet imgSegments = [];\nfor (let i = 0; i < imageCount; i++) {\n  const imgData = imgResults[i]?.json || {};\n  const imageUrl = imgData.images?.[0]?.url || '';\n  const isVideo = imgData.is_video || false;\n  const visualType = imgData.visual_type || 'image';\n  if (!imageUrl) throw new Error(`\uc774\ubbf8\uc9c0 ${i+1} URL \uc5c6\uc74c`);\n  imgSegments.push({\n    index: i,\n    imageUrl,\n    isVideo,\n    visualType,\n    start: i * imgDuration,\n    duration: imgDuration\n  });\n}\n\n// === \uc790\ub9c9: \uae00\uc790\uc218 \ube44\uc728 + min/max \ubcf4\uc815 \ud0c0\uc774\ubc0d ===\nconst MIN_SUB_DUR = 0.70;\nconst MAX_SUB_DUR = 1.80;\n\n// 1\ub2e8\uacc4: \uae00\uc790\uc218 \ube44\uc728\ub85c rawDur \uacc4\uc0b0\nconst totalChars = subtitles.reduce((sum, s) => {\n  return sum + s.replace(/<[^>]*>?/gm, '').replace(/\\s+/g, '').length;\n}, 0);\n\nlet subMeta = subtitles.map((raw, i) => {\n  const clean = raw.replace(/<[^>]*>?/gm, '');\n  const chars = clean.replace(/\\s+/g, '').length;\n  const ratio = totalChars > 0 ? chars / totalChars : 1 / subtitles.length;\n  const rawDur = ratio * audioDuration;\n  return { index: i, raw, clean, chars, rawDur, hasEm: raw.includes('<em>') };\n});\n\n// 2\ub2e8\uacc4: min/max \ud074\ub7a8\ud504 + \ucc28\uc774 \uacc4\uc0b0\nlet excess = 0;\nlet clampedDurs = subMeta.map(s => {\n  if (s.rawDur < MIN_SUB_DUR) {\n    excess += s.rawDur - MIN_SUB_DUR;\n    return MIN_SUB_DUR;\n  } else if (s.rawDur > MAX_SUB_DUR) {\n    excess += s.rawDur - MAX_SUB_DUR;\n    return MAX_SUB_DUR;\n  }\n  return s.rawDur;\n});\n\n// 3\ub2e8\uacc4: \ud074\ub7a8\ud504 \uc548 \uac78\ub9b0 \uc790\ub9c9\uc5d0 \ube44\ub840 \uc7ac\ubd84\ubc30\nif (Math.abs(excess) > 0.001) {\n  const unclamped = clampedDurs.map((d, i) => d !== MIN_SUB_DUR && d !== MAX_SUB_DUR ? i : -1).filter(i => i >= 0);\n  const unclampedTotal = unclamped.reduce((sum, i) => sum + clampedDurs[i], 0);\n  if (unclampedTotal > 0) {\n    for (const i of unclamped) {\n      const share = (clampedDurs[i] / unclampedTotal) * excess;\n      clampedDurs[i] = Math.max(MIN_SUB_DUR, Math.min(MAX_SUB_DUR, clampedDurs[i] + share));\n    }\n  }\n}\n\n// 4\ub2e8\uacc4: start \uc2dc\uac04 \uc21c\ucc28 \uc7ac\uacc4\uc0b0\nlet subSegments = [];\nlet subStart = 0;\nfor (let i = 0; i < subtitles.length; i++) {\n  subSegments.push({\n    index: i,\n    raw: subMeta[i].raw,\n    clean: subMeta[i].clean,\n    start: subStart,\n    duration: clampedDurs[i],\n    hasEm: subMeta[i].hasEm\n  });\n  subStart += clampedDurs[i];\n}\n\n// === FFmpeg inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst mediaInputs = [];\n\n// 1) \uc774\ubbf8\uc9c0/\uc601\uc0c1 (4~6\uac1c)\nfor (const img of imgSegments) {\n  if (img.isVideo) {\n    inputs.push({ file_url: img.imageUrl, options: [{ option: \"-stream_loop\", argument: \"-1\" }] });\n  } else {\n    inputs.push({ file_url: img.imageUrl, options: [{ option: \"-loop\", argument: \"1\" }, { option: \"-framerate\", argument: \"30\" }, { option: \"-t\", argument: img.duration.toFixed(2) }] });\n  }\n  mediaInputs.push({ idx: inputIndex, isVideo: img.isVideo, duration: img.duration });\n  inputIndex++;\n}\n\n// 2) \ud1b5\ud569 TTS\nconst audioIdx = inputIndex;\ninputs.push({ file_url: mainAudioUrl, options: [] });\ninputIndex++;\n\n// 3) BGM\nconst bgmIdx = inputIndex;\ninputs.push({ file_url: BGM_URL, options: [{ option: \"-stream_loop\", argument: \"-1\" }] });\ninputIndex++;\n\n// 4) \uc544\uc6c3\ud2b8\ub85c \uc601\uc0c1 (\ube44\ub514\uc624\ub9cc \uc0ac\uc6a9, \uc624\ub514\uc624 \ubb34\uc2dc)\nlet outroIdx = -1;\nlet outroDuration = $('\uc8fc\uc81c \ud30c\uc2f1').first().json.outroDuration || 4;\nif (outroUrl) {\n  outroIdx = inputIndex;\n  inputs.push({ file_url: outroUrl, options: [] });\n  inputIndex++;\n}\n\n// 5) SFX: \uc774\ubbf8\uc9c0 \uc804\ud658 + \uac15\uc870 em\nconst sfxInputs = [];\nfor (let i = 0; i < imgSegments.length - 1; i++) {\n  const next = imgSegments[i + 1];\n  let sfxType = 'pop';\n  if (next.visualType === 'meme') sfxType = 'ppook';\n  inputs.push({ file_url: SFX_MAP[sfxType], options: [] });\n  sfxInputs.push({ idx: inputIndex, type: sfxType, timeMs: Math.round(next.start * 1000) });\n  inputIndex++;\n}\nfor (const sub of subSegments) {\n  if (sub.hasEm) {\n    const emSfx = /\\d/.test(sub.raw) ? 'ding2' : 'pop';\n    inputs.push({ file_url: SFX_MAP[emSfx], options: [] });\n    sfxInputs.push({ idx: inputIndex, type: emSfx, timeMs: Math.round((sub.start + 0.3) * 1000) });\n    inputIndex++;\n  }\n}\n\n// === FILTER COMPLEX ===\nlet filterParts = [];\n\n// \ube44\ub514\uc624 \uc2a4\ucf00\uc77c + concat\nfor (let i = 0; i < imgSegments.length; i++) {\n  const m = mediaInputs[i];\n  if (m.isVideo) {\n    filterParts.push(`[${m.idx}:v]trim=duration=${m.duration.toFixed(2)},setpts=PTS-STARTPTS,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30[v${i}]`);\n  } else {\n    filterParts.push(`[${m.idx}:v]scale=1080:1080:force_original_aspect_ratio=increase,crop=1080:1080,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30[v${i}]`);\n  }\n}\nconst vLabels = imgSegments.map((_, i) => `[v${i}]`).join('');\nfilterParts.push(`${vLabels}concat=n=${imgSegments.length}:v=1:a=0[vconcat]`);\n\n// \uc624\ub514\uc624\nfilterParts.push(`[${audioIdx}:a]atrim=duration=${audioDuration},asetpts=PTS-STARTPTS[tts_raw]`);\nfilterParts.push(`[${bgmIdx}:a]atrim=duration=${totalDuration},asetpts=PTS-STARTPTS,volume=0.12,afade=t=out:st=${Math.max(0, totalDuration - 2)}:d=2[bgm]`);\n\n// SFX mix\nconst sfxCount = sfxInputs.length;\nif (sfxCount > 0) {\n  for (let i = 0; i < sfxCount; i++) {\n    const si = sfxInputs[i];\n    filterParts.push(`[${si.idx}:a]atrim=duration=0.3,asetpts=PTS-STARTPTS,volume=0.15,adelay=${si.timeMs}|${si.timeMs}[sfx${i}]`);\n  }\n  const sfxMixLabels = sfxInputs.map((_, i) => `[sfx${i}]`).join('');\n  filterParts.push(`${sfxMixLabels}amix=inputs=${sfxCount}:duration=longest:normalize=0[sfx_mix]`);\n  filterParts.push(`[tts_raw][bgm][sfx_mix]amix=inputs=3:duration=longest:weights=1 1 0.4:normalize=0[amain]`);\n} else {\n  filterParts.push(`[tts_raw][bgm]amix=inputs=2:duration=longest:weights=1 1:normalize=0[amain]`);\n}\n\n// === \uc544\uc6c3\ud2b8\ub85c \ube44\ub514\uc624 concat ===\nif (outroIdx >= 0) {\n  filterParts.push(`[${outroIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=yuv420p,fps=30[voutro]`);\n  filterParts.push(`[vconcat]format=yuv420p[vmain_fmt]`);\n  filterParts.push(`[vmain_fmt][voutro]concat=n=2:v=1:a=0[vwithoutro]`);\n} else {\n  filterParts.push(`[vconcat]null[vwithoutro]`);\n}\n\n// === \uc624\ub514\uc624: \uba54\uc778\ub9cc \uc0ac\uc6a9, \uc544\uc6c3\ud2b8\ub85c \uad6c\uac04\uc740 \ubb34\uc74c \ud328\ub529 ===\nif (outroIdx >= 0) {\n  const fullDuration = totalDuration + outroDuration;\n  filterParts.push(`[amain]apad=whole_dur=${fullDuration.toFixed(2)}[afinal]`);\n} else {\n  filterParts.push(`[amain]anull[afinal]`);\n}\n\n// \uc790\ub9c9 \uc624\ubc84\ub808\uc774 (\uc0c1\ub2e8 \uc81c\ubaa9 + \ud558\ub2e8 \uc790\ub9c9 + \ud6c5)\nlet overlayFilter = `[vwithoutro]drawbox=y=40:w=1080:h=280:color=#000000@1.0:t=fill,drawtext=expansion=none:text='${escapeDrawtext(hookClean)}':fontsize=72:fontcolor=white:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=120:line_spacing=12`;\n\n// \uc790\ub9c9 (\uae00\uc790\uc218 \ube44\uc728 \uae30\ubc18 \ud0c0\uc774\ubc0d, \uc774\ubbf8\uc9c0 \uc804\ud658\uacfc \ub3c5\ub9bd)\nfor (const sub of subSegments) {\n  const subText = escapeDrawtext(wrapSubtitle(sub.clean, 12));\n  const startT = sub.start.toFixed(2);\n  const endT = (sub.start + sub.duration).toFixed(2);\n  overlayFilter += `,drawtext=expansion=none:text='${subText}':fontsize=52:fontcolor=white:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=h-280:borderw=4:bordercolor=black:enable='between(t,${startT},${endT})'`;\n}\n\n// \ud6c5 \uc790\ub9c9\nconst hookEscaped = escapeDrawtextMultiline(wrapSubtitle(hookClean, 10));\nconst hookEndT = 2.5;\noverlayFilter += `,drawbox=y=(h-400)/2:w=1080:h=400:color=#000000@0.7:t=fill:enable='between(t,0,${hookEndT})'`;\noverlayFilter += `,drawtext=expansion=none:text='${hookEscaped}':fontsize=80:fontcolor=#CCFF00:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=(h-th)/2:borderw=4:bordercolor=black:enable='between(t,0,${hookEndT})'`;\n// \uc544\uc6c3\ud2b8\ub85c CTA \uc790\ub9c9 (\uc544\uc6c3\ud2b8\ub85c \uad6c\uac04\uc5d0\ub9cc \ud45c\uc2dc)\nif (outroIdx >= 0) {\n  totalDuration += outroDuration;  // CTA \uacc4\uc0b0 \uc804\uc5d0 \uc544\uc6c3\ud2b8\ub85c \uae38\uc774 \ubc18\uc601\n  const ctaText = escapeDrawtextMultiline(wrapSubtitle(outroCta, 14));\n  const outroStartT = (totalDuration - outroDuration).toFixed(2);\n  const outroEndT = totalDuration.toFixed(2);\n  overlayFilter += `,drawbox=y=h-350:w=1080:h=120:color=#000000@0.7:t=fill:enable='between(t,${outroStartT},${outroEndT})'`;\n  overlayFilter += `,drawtext=expansion=none:text='${ctaText}':fontsize=60:fontcolor=#CCFF00:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=h-320:borderw=3:bordercolor=black:enable='between(t,${outroStartT},${outroEndT})'`;\n}\n\noverlayFilter += '[vfinal]';\nfilterParts.push(overlayFilter);\n\nconst nca_payload = {\n  inputs,\n  filters: [{ filter: filterParts.join(';') }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" }, { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" }, { option: \"-preset\", argument: \"fast\" }, { option: \"-crf\", argument: \"23\" },\n      { option: \"-c:a\", argument: \"aac\" }, { option: \"-b:a\", argument: \"192k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" }, { option: \"-movflags\", argument: \"+faststart\" }, { option: \"-t\", argument: totalDuration.toFixed(2) }\n    ],\n    file_name: \"kkultip_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload,\n    totalDuration,\n    imageCount: imgSegments.length,\n    subtitleCount: subSegments.length,\n    hookTitle,\n    subject: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Subject,\n    caption: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Caption,\n    comment: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.Comment,\n    category,\n    outroFile,\n    debugCategory: {\n      from_contentParsing: $('\ucf58\ud150\uce20 \ud30c\uc2f1').first().json.category,\n      from_topicParsing: $('\uc8fc\uc81c \ud30c\uc2f1').first().json.category,\n      usedCategory: category,\n      selectedOutro: outroFile || 'none',\n      selectedCta: outroCta || 'none'\n    }\n  }\n}];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                3584,
-                336
-            ],
-            "id": "404f0c26-7e0a-4ea9-9a92-b409b2881a08",
-            "name": "NCA \ub370\uc774\ud130 \uc900\ube44"
-        },
-        {
-            "parameters": {
-                "method": "POST",
-                "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
-                "sendHeaders": true,
-                "headerParameters": {
-                    "parameters": [
-                        {
-                            "name": "x-api-key",
-                            "value": "nca-sagong-2026"
-                        }
-                    ]
-                },
-                "sendBody": true,
-                "specifyBody": "json",
-                "jsonBody": "={{ JSON.stringify($json.nca_payload) }}",
-                "options": {
-                    "timeout": 600000
-                }
-            },
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.3,
-            "position": [
-                3888,
-                336
-            ],
-            "id": "aceed59c-8a84-4d5c-9462-c4029b65e4ae",
-            "name": "NCA \uc601\uc0c1 \uc81c\uc791"
-        },
-        {
-            "parameters": {
-                "amount": 10
-            },
-            "type": "n8n-nodes-base.wait",
-            "typeVersion": 1.1,
-            "position": [
-                3920,
-                624
-            ],
-            "id": "4ef29e6b-9834-46b4-9920-8c0591e82ae2",
-            "name": "NCA \uc81c\uc791 \ub300\uae30",
-            "webhookId": "21f711b5-6ca5-4e2a-9456-b8e3389800e9"
-        },
-        {
-            "parameters": {
-                "jsCode": "// NCA \uacb0\uacfc \ucc98\ub9ac\nconst result = $input.first().json;\nconst prevData = $('NCA \ub370\uc774\ud130 \uc900\ube44').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (!videoUrl) {\n  throw new Error('NCA \uc601\uc0c1 \uc81c\uc791 \uacb0\uacfc URL \uc5c6\uc74c: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    '\uc601\uc0c1 URL': videoUrl,\n    Status: '\uc644\ub8cc',\n    topic: $('\uc8fc\uc81c \ud30c\uc2f1').first().json.topic,\n    category: prevData.category,\n    outro_file: prevData.outroFile || '',\n  }\n}];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                4512,
-                336
-            ],
-            "id": "b450da49-f5c0-47b1-b8aa-89ad7451c1e8",
-            "name": "NCA \uacb0\uacfc \ucc98\ub9ac"
-        },
-        {
-            "parameters": {
-                "operation": "update",
-                "documentId": {
-                    "__rl": true,
-                    "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
-                    "mode": "list",
-                    "cachedResultName": "\uc628\uce74\uc2a4\ud130\ub514",
-                    "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
-                },
-                "sheetName": {
-                    "__rl": true,
-                    "mode": "name",
-                    "value": "\uc124\uba85\ud615 \uc20f\uce20"
-                },
-                "columns": {
-                    "mappingMode": "autoMapInputData",
-                    "value": {},
-                    "matchingColumns": [
-                        "topic"
-                    ],
-                    "schema": [
-                        {
-                            "id": "topic",
-                            "displayName": "topic",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "Status",
-                            "displayName": "Status",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "Subject",
-                            "displayName": "Subject",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "Caption",
-                            "displayName": "Caption",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "\uc601\uc0c1 URL",
-                            "displayName": "\uc601\uc0c1 URL",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "Comment",
-                            "displayName": "Comment",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "generatedAt",
-                            "displayName": "generatedAt",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "category",
-                            "displayName": "category",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        },
-                        {
-                            "id": "outro_file",
-                            "displayName": "outro_file",
-                            "required": false,
-                            "defaultMatch": false,
-                            "display": true,
-                            "type": "string",
-                            "canBeUsedToMatch": true,
-                            "removed": false
-                        }
-                    ],
-                    "attemptToConvertTypes": false,
-                    "convertFieldsToString": false
-                },
-                "options": {}
-            },
-            "type": "n8n-nodes-base.googleSheets",
-            "typeVersion": 4.7,
-            "position": [
-                4816,
-                336
-            ],
-            "id": "319950f6-698f-4a59-84d3-04217db6b3b2",
-            "name": "\uc0c1\ud0dc \uc5c5\ub370\uc774\ud2b8",
-            "credentials": {
-                "googleSheetsOAuth2Api": {
-                    "id": "CWBUyXUqCU9p5VAg",
-                    "name": "Google Sheets account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsCode": "const topic = $input.first().json.topic || $input.first().json['\uc8fc\uc81c'] || '';\nif (!topic) {\n  throw new Error('topic\uc774 \ube44\uc5b4\uc788\uc2b5\ub2c8\ub2e4. \uc2dc\ud2b8\uc5d0 topic \uceec\ub7fc\uc744 \ud655\uc778\ud558\uc138\uc694.');\n}\nconst category = $input.first().json.category || 1;\nconst subtopic = $input.first().json.subtopic || '';\n\nconst CATEGORY_GUIDE = {\n  1: `## \uc774 \uc601\uc0c1\uc758 \uc8fc\uc81c: \uba39\ud280\uac80\uc99d/\uc548\uc804\n- \ub2e4\ub8f0 \ub0b4\uc6a9: \uba39\ud280 \ud53c\ud574\uc0ac\ub840, \uac80\uc99d \uacfc\uc815, \ud328\ub110\ud2f0 \uacb0\uacfc, \uc548\uc804\uc0ac\uc774\ud2b8 \uad6c\ubcc4\ubc95\n- \ud575\uc2ec \uc6a9\uc5b4: \uba39\ud280, \ud328\ub110\ud2f0, \uc81c\ud734\uc0ac\uc774\ud2b8, \uac80\uc99d, \ub864\ub9c1, \ucd9c\uae08, \ucda9\uc804\n- \uc2a4\ud1a0\ub9ac \ud750\ub984: \ud53c\ud574\uc0ac\ub840 \u2192 \uc628\uce74\uc2a4\ud130\ub514 \uac80\uc99d\ud300 \ucd9c\ub3d9 \u2192 \ud574\uacb0/\ud328\ub110\ud2f0 \u2192 CTA\n- \uc8fc\uc758: \uc571\ud14c\ud06c/\ud3ec\uc778\ud2b8/\ubc29\uc1a1 \ub0b4\uc6a9 \ub123\uc9c0 \ub9c8`,\n\n  2: `## \uc774 \uc601\uc0c1\uc758 \uc8fc\uc81c: \ubb34\ub8cc \ud61c\ud0dd/\uc571\ud14c\ud06c\n- \ub2e4\ub8f0 \ub0b4\uc6a9: \ud3ec\uc778\ud2b8\uc874 \ud65c\uc6a9\ubc95, \ub3cc\ub9bc\ud310, \ubcf5\uad8c, \uae30\ud504\ud2f0\ucf58 \uad50\ud658, \ubb34\ub8cc \ud61c\ud0dd\n- \ud575\uc2ec \uc6a9\uc5b4: \ud3ec\uc778\ud2b8, \ub3cc\ub9bc\ud310, \ubcf5\uad8c, \uae30\ud504\ud2f0\ucf58, \ubb34\ub8cc, \uc801\ub9bd, \uad50\ud658\n- \uc2a4\ud1a0\ub9ac \ud750\ub984: \uafc0\ud301 \uc18c\uac1c \u2192 \uad6c\uccb4\uc801 \ubc29\ubc95 \u2192 \uc774\ub807\uac8c \ubaa8\uc73c\uba74 \uc774\ub9cc\ud07c \u2192 CTA\n- \uc8fc\uc758: \uce74\uc9c0\ub178/\uba39\ud280/\ub3c4\ubc15/\ub864\ub9c1/\ucd9c\uae08 \uc6a9\uc5b4 \uc808\ub300 \uae08\uc9c0!`,\n\n  3: `## \uc774 \uc601\uc0c1\uc758 \uc8fc\uc81c: \uc7ad\ud31f/\ub300\ubc15 \ud6c4\uae30\n- \ub2e4\ub8f0 \ub0b4\uc6a9: \uc7ad\ud31f \ub2f9\ucca8 \uc0ac\ub840, \uc81c\ubcf4\ud558\uba74 \ud3ec\uc778\ud2b8 5\ucc9c \ubcf4\uc0c1, \ud6c4\uae30 \uacf5\uc720\n- \ud575\uc2ec \uc6a9\uc5b4: \uc7ad\ud31f, \ub300\ubc15, \ub2f9\ucca8, \uc778\uc99d, \uc81c\ubcf4, \ud3ec\uc778\ud2b8 \ubcf4\uc0c1\n- \uc2a4\ud1a0\ub9ac \ud750\ub984: \ub204\uad70\uac00 \ub300\ubc15 \ud130\uc9d0 \u2192 \uc5bc\ub9c8 \ub544\ub294\uc9c0 \u2192 \uc81c\ubcf4\ud558\uba74 \ud3ec\uc778\ud2b8\ub3c4 \u2192 CTA\n- \uc8fc\uc758: \uba39\ud280/\uc571\ud14c\ud06c \ub0b4\uc6a9 \ub123\uc9c0 \ub9c8`,\n\n  4: `## \uc774 \uc601\uc0c1\uc758 \uc8fc\uc81c: \ubc29\uc1a1 \ud558\uc774\ub77c\uc774\ud2b8\n- \ub2e4\ub8f0 \ub0b4\uc6a9: \uc2a4\ud2b8\ub9ac\uba38 \ubc29\uc1a1 \uba85\uc7a5\uba74, \ubc29\uc1a1\uc874 \uc18c\uac1c(\ub3d9\ubb3c\uc6d0/\uac00\ub514\uc5b8/\uc778\uc0dd\uc5ed\uc804)\n- \ud575\uc2ec \uc6a9\uc5b4: \ubc29\uc1a1, \uc2a4\ud2b8\ub9ac\uba38, \ud558\uc774\ub77c\uc774\ud2b8, \uc2e4\uc2dc\uac04, \uc18c\ud1b5, \uc2ac\ub86f, \ubc14\uce74\ub77c\n- \uc2a4\ud1a0\ub9ac \ud750\ub984: \ub808\uc804\ub4dc \uc7a5\uba74 \uc18c\uac1c \u2192 \uc5b4\ub5a4 \ubc29\uc1a1\uc778\uc9c0 \u2192 \uc2e4\uc2dc\uac04 \uc18c\ud1b5 \uac00\ub2a5 \u2192 CTA\n- \uc8fc\uc758: \uba39\ud280/\uc571\ud14c\ud06c \ub0b4\uc6a9 \ub123\uc9c0 \ub9c8`,\n\n  5: `## \uc774 \uc601\uc0c1\uc758 \uc8fc\uc81c: \uc2a4\ud3ec\uce20/\ub274\uc2a4\n- \ub2e4\ub8f0 \ub0b4\uc6a9: \uc2a4\ud3ec\uce20 \uacbd\uae30 \ubd84\uc11d, \uce74\uc9c0\ub178/\uc2a4\ud3ec\uce20 \ub274\uc2a4, \ud53d \uc815\ubcf4\n- \ud575\uc2ec \uc6a9\uc5b4: \ubd84\uc11d, \ud53d, \uc801\uc911, \ubc30\ub2f9, \ucd95\uad6c, \ub18d\uad6c, \uc57c\uad6c, \ub274\uc2a4\n- \uc2a4\ud1a0\ub9ac \ud750\ub984: \ucd5c\uc2e0 \uc18c\uc2dd/\ubd84\uc11d \u2192 \uad6c\uccb4\uc801 \uc815\ubcf4 \u2192 \uc628\uce74\uc2a4\ud130\ub514\uc5d0\uc11c \ub354 \ubcf4\uae30 \u2192 CTA\n- \uc8fc\uc758: \uba39\ud280/\uc571\ud14c\ud06c/\ud3ec\uc778\ud2b8 \ub0b4\uc6a9 \ub123\uc9c0 \ub9c8`\n};\n\nconst FORBIDDEN_MAP = {\n  1: '\ud3ec\uc778\ud2b8, \ub3cc\ub9bc\ud310, \ubcf5\uad8c, \uae30\ud504\ud2f0\ucf58, \uc571\ud14c\ud06c, \uc7ad\ud31f, \ubc29\uc1a1, \uc2a4\ud2b8\ub9ac\uba38, \uc2a4\ud3ec\uce20, \ubd84\uc11d, \ud53d',\n  2: '\uba39\ud280, \ud328\ub110\ud2f0, \uac80\uc99d, \ub864\ub9c1, \ucd9c\uae08, \ucda9\uc804, \uc7ad\ud31f, \ub300\ubc15, \ub2f9\ucca8, \ubc29\uc1a1, \uc2a4\ud2b8\ub9ac\uba38, \uc2a4\ud3ec\uce20, \ubd84\uc11d',\n  3: '\uba39\ud280, \ud328\ub110\ud2f0, \uac80\uc99d, \ub864\ub9c1, \ucd9c\uae08, \ud3ec\uc778\ud2b8, \ub3cc\ub9bc\ud310, \ubcf5\uad8c, \uae30\ud504\ud2f0\ucf58, \uc571\ud14c\ud06c, \ubc29\uc1a1, \uc2a4\ud2b8\ub9ac\uba38, \uc2a4\ud3ec\uce20, \ubd84\uc11d',\n  4: '\uba39\ud280, \ud328\ub110\ud2f0, \uac80\uc99d, \ud3ec\uc778\ud2b8, \ub3cc\ub9bc\ud310, \ubcf5\uad8c, \uae30\ud504\ud2f0\ucf58, \uc571\ud14c\ud06c, \uc7ad\ud31f, \uc2a4\ud3ec\uce20, \ubd84\uc11d, \ud53d',\n  5: '\uba39\ud280, \ud328\ub110\ud2f0, \uac80\uc99d, \ud3ec\uc778\ud2b8, \ub3cc\ub9bc\ud310, \ubcf5\uad8c, \uae30\ud504\ud2f0\ucf58, \uc571\ud14c\ud06c, \uc7ad\ud31f, \ubc29\uc1a1, \uc2a4\ud2b8\ub9ac\uba38'\n};\n\nconst guide = CATEGORY_GUIDE[category] || CATEGORY_GUIDE[1];\nconst forbiddenWords = FORBIDDEN_MAP[category] || FORBIDDEN_MAP[1];\n\nconst subtopicLine = subtopic\n  ? `\\n## \uc9d1\uc911\ud560 \uc11c\ube0c\ud1a0\ud53d (\ub9e4\uc6b0 \uc911\uc694!!!)\\n\uc774 \uc601\uc0c1\uc740 \"${subtopic}\"\uc5d0 \ub300\ud574\uc11c\ub9cc \uc9d1\uc911\ud574\uc11c \ub2e4\ub904!\\n\ub2e4\ub978 \uae30\ub2a5\uc774\ub098 \uc11c\ube44\uc2a4\ub294 \uc5b8\uae09\ud558\uc9c0 \ub9c8! \uc774 \uc8fc\uc81c \ud558\ub098\ub9cc \uae4a\uac8c!\\n`\n  : '';\n\nconst prompt = `\ub108\ub294 \uc720\ud29c\ube0c \uc1fc\uce20(Shorts) \ub300\ubcf8 \uae30\ud68d \ubc0f \uc791\uc131 \uc804\ubb38\uac00\uc57c. \uce74\uc9c0\ub178/\uc2ac\ub86f \ucee4\ubba4\ub2c8\ud2f0 '\uc628\uce74\uc2a4\ud130\ub514' \ud64d\ubcf4 \uc601\uc0c1\uc744 \ub9cc\ub4e4\uc5b4.\n\uc544\ub798 \ud655\uc815\ub41c \uc8fc\uc81c\ub97c \ubc14\ud0d5\uc73c\ub85c 35~40\ucd08 \ubd84\ub7c9\uc758 \uc1fc\uce20 \uc2a4\ud06c\ub9bd\ud2b8\ub97c \uc791\uc131\ud574\uc918.\n\n## \ubc18\ub4dc\uc2dc \uc9c0\ud0ac \uc8fc\uc81c\n${topic}\n\n${guide}\n${subtopicLine}\n\uc704 \uac00\uc774\ub4dc\uc5d0 \uba85\uc2dc\ub41c \ub0b4\uc6a9\ub9cc \ub2e4\ub904! \ub2e4\ub978 \uce74\ud14c\uace0\ub9ac \ub0b4\uc6a9\uc774 \uc11e\uc774\uba74 \uc2e4\ud328\uc57c!\n\n## \u2605\u2605\u2605 \uc808\ub300 \uae08\uc9c0 \uaddc\uce59 (\uc704\ubc18 \uc2dc \uc804\uccb4 \uc2e4\ud328!) \u2605\u2605\u2605\n\ub2e4\uc74c \ub2e8\uc5b4\ub4e4\uc774 subtitles\uc5d0 \ud558\ub098\ub77c\ub3c4 \ud3ec\ud568\ub418\uba74 0\uc810\uc774\uc57c! \uc808\ub300 \uc4f0\uc9c0 \ub9c8!\n\uae08\uc9c0 \ub2e8\uc5b4: ${forbiddenWords}\n\ud55c \ubc88 \ub354 \uac15\uc870: [${forbiddenWords}] \u2190 \uc774 \ub2e8\uc5b4\ub4e4 \uc808\ub300 \uae08\uc9c0!\n\n## \ud575\uc2ec \uad6c\uc870: images(\ud654\uba74)\uc640 subtitles(\uc790\ub9c9)\ub97c \ubd84\ub9ac\ud574!\n- images: \ud654\uba74\uc5d0 \ubcf4\uc5ec\uc904 \uc774\ubbf8\uc9c0/\ubc08 \ubaa9\ub85d (4~6\uac1c, \ucc9c\ucc9c\ud788 \uc804\ud658)\n- subtitles: \ub098\ub808\uc774\uc158 \uc790\ub9c9 \ubaa9\ub85d (12~20\uac1c, \ube60\ub974\uac8c \ucabc\uac1c\uae30)\n- \uc774\ubbf8\uc9c0\ub294 \ucc9c\ucc9c\ud788 \ubc14\ub00c\uace0, \uc790\ub9c9\ub9cc \ube60\ub974\uac8c \ub04a\uc5b4\uc11c \ub098\uc624\ub294 \uad6c\uc870\uc57c!\n\n## \u2605\u2605\u2605 \uc2a4\ud1a0\ub9ac \uc5f0\uacb0 \uaddc\uce59 (\ub9e4\uc6b0 \uc911\uc694!!!) \u2605\u2605\u2605\\nsubtitles \uc804\uccb4\uac00 \ud558\ub098\uc758 \uc774\uc57c\uae30\ub85c \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc774\uc5b4\uc838\uc57c \ud574!\\n\ucc98\uc74c\ubd80\ud130 \ub05d\uae4c\uc9c0 \ud55c \uc0ac\ub78c\uc774 \ub9d0\ud558\ub294 \uac83\ucc98\ub7fc \ud758\ub7ec\uac00\uc57c \ud568!\\n\\n\uc808\ub300 \uae08\uc9c0 \ud328\ud134:\\n- \ud0a4\uc6cc\ub4dc \ub098\uc5f4\uc2dd: \"\ucd95\uad6c \ubc30\ub2f9 \ub300\ubc15 / \ub18d\uad6c \ud53d \uc801\uc911 / \uc57c\uad6c \ub274\uc2a4 \uccb4\ud06c\" \u2190 \uc774\ub7f0 \uac70 \uc808\ub300 \uc548 \ub428!\\n- \uae30\ub2a5 \ub098\uc5f4\uc2dd: \"\ub3cc\ub9bc\ud310\uc73c\ub85c \uc801\ub9bd / \ubcf5\uad8c\uc73c\ub85c \uc801\ub9bd / \uc624\ubaa9\uc73c\ub85c \uc801\ub9bd\" \u2190 \uc774\uac83\ub3c4 \uae08\uc9c0!\\n- \ud64d\ubcf4 \ubb38\uad6c \ub098\uc5f4: \"\ucd9c\uc11d\uccb4\ud06c 1000\uc810 / \ub3cc\ub9bc\ud310 \ucd94\uac00 \uc801\ub9bd / \ubcf5\uad8c \ub300\ubc15 \ucc2c\uc2a4\" \u2190 \uae08\uc9c0!\\n\\n\uc62c\ubc14\ub978 \ud328\ud134:\\n- \ub3c4\uc785(\ucda9\uaca9/\uacf5\uac10) \u2192 \uc0c1\ud669 \uc124\uba85 \u2192 \ud574\uacb0 \uacfc\uc815 \u2192 \uacb0\uacfc \u2192 CTA\\n- \ubaa8\ub4e0 \uc790\ub9c9\uc774 \uc55e\ub4a4 \ubb38\ub9e5\uacfc \uc5f0\uacb0\ub418\uc5b4\uc57c \ud574!\\n- \"\uadfc\ub370\", \"\uadf8\ub798\uc11c\", \"\uacb0\uacfc?\", \"\uc54c\uace0\ubcf4\ub2c8\" \uac19\uc740 \uc5f0\uacb0\uc5b4\ub85c \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc774\uc5b4\uac00!\\n\\n## \uc790\ub9c9(subtitles) \ucabc\uac1c\uae30 \uaddc\uce59 (\ub9e4\uc6b0 \uc911\uc694!!!)\n\uc2dc\uccad\uc790\uac00 \uc9c0\ub8e8\ud558\uc9c0 \uc54a\uac8c \uc790\ub9c9\uc774 0.5\ucd08~1\ucd08 \ub2e8\uc704\ub85c \ub531\ub531 \ub04a\uc5b4\uc11c \ub098\uc624\uac8c \uc5f0\ucd9c\ud560 \uac70\uc57c!\n\ubb38\uc7a5\uc744 \uae38\uac8c \uc4f0\uc9c0 \ub9d0\uace0, \ud55c \ud638\ud761\uc5d0 \ub9d0\ud558\ub294 \ub2e8\uc5b4/\uad6c\uc808 \ub2e8\uc704\ub85c \uc544\uc8fc \uc798\uac8c \ucabc\uac1c!\n- \uac01 subtitle: \ubc18\ub4dc\uc2dc \ub744\uc5b4\uc4f0\uae30 \ud3ec\ud568 3\uc790 ~ 10\uc790 \uc774\ub0b4\ub85c \uc9e7\uac8c \uc368!\n- \ub744\uc5b4\uc4f0\uae30 \ubb38\ubc95 \uc644\ubcbd\ud558\uac8c \uc9c0\ucf1c!\n- \ub098\ub808\uc774\uc158\uc740 \uc55e \uc790\ub9c9\uacfc \uc790\uc5f0\uc2a4\ub7fd\uac8c \uc774\uc5b4\uc838\uc57c \ud574! \ub9c8\uce68\ud45c(.) \ucc0d\uc9c0 \ub9c8!\n\n[\uc790\ub9c9 \ucabc\uac1c\uae30 \uc608\uc2dc]\n\ub098\uc05c \uc608: \"\uc194\uc9c1\ud788 \ucc98\uc74c\uc5d4 \ubab0\ub790\uc9c0 \ucda9\uc804\ud558\uace0 \ubc14\ub85c \ub3cc\ub838\ub294\ub370\"\n\uc88b\uc740 \uc608:\n\"\uc194\uc9c1\ud788\"\n\"\ucc98\uc74c\uc5d4 \ubab0\ub790\uc9c0\"\n\"\ucda9\uc804\ud558\uace0\"\n\"\ubc14\ub85c \ub3cc\ub838\ub294\ub370\"\n\n## \u2605 \ub9c8\uc9c0\ub9c9 \uc790\ub9c9 \uaddc\uce59 \u2605\n- \ub9c8\uc9c0\ub9c9 1~2\uac1c subtitle\uc740 \uc2dc\uccad\uc790\uc758 \ud589\ub3d9\uc744 \uc720\ub3c4\ud558\ub294 \uc644\uacb0\ub41c \ud55c\uad6d\uc5b4 \ubb38\uc7a5\uc774\uc5b4\uc57c \ud574!\n- \ubc18\ub4dc\uc2dc \uc885\uacb0\uc5b4\ubbf8(~\ud574, ~\ud574\ubd10, ~\uc57c, ~\ub9c8, ~\ud558\uc138\uc694, ~\uac00\uc790, ~\ub108 \ub4f1)\ub85c \ub05d\ub098\uc57c \ud574!\n- \ub9e4\ubc88 \ub2e4\ub978 \ud45c\ud604\uc744 \uc790\uc720\ub86d\uac8c \ucc3d\uc791\ud574! \ub611\uac19\uc740 \ud328\ud134 \ubc18\ubcf5 \uae08\uc9c0!\n- \uc808\ub300 \ubb38\uc7a5\uc774 \uc911\uac04\uc5d0 \ub04a\uae30\uba74 \uc548 \ub3fc! \"\ubb34\ub8cc \ud61c\ud0dd \uc9c0\uae08 \ubc14\ub85c\" \uc774\ub7f0 \uc2dd\uc73c\ub85c \ubbf8\uc644\uc131 \uae08\uc9c0!\n\n## \uc774\ubbf8\uc9c0(images) \uaddc\uce59\n- 4~6\uac1c\ub9cc! (\uc790\ub9c9\ubcf4\ub2e4 \ud6e8\uc52c \uc801\uac8c)\n- keyword\ub294 Pexels\uc5d0\uc11c \uac80\uc0c9\ub420 \uc9c1\uad00\uc801\uc778 \uc601\uc5b4 \uba85\uc0ac 1~2\uac1c\n- visual_type: \"image\" \ub610\ub294 \"meme\" (meme\uc740 \ucd5c\ub300 2\uac1c!)\n- meme\uc77c \ub54c meme_mood: thinking, excited, shocked, sad, angry, cool, celebrating, snacking, speechless, smoking, disappointed, thumbsup, crying, desperate, bored, suspicious, money \uc911 \ud0dd1\n\n## \uac15\uc870 \ud0dc\uadf8 (\ud6a8\uacfc\uc74c \uc5f0\ub3d9)\n- subtitles\uc5d0\uc11c \ud575\uc2ec \ub2e8\uc5b4\uc5d0 <em>\ud0dc\uadf8</em> \uc0ac\uc6a9!\n- \uc608: \"<em>\uba39\ud280</em> \ub2f9\ud568\", \"\ub864\ub9c1 <em>3\ubc30</em>\uba74\"\n\n## \uad6c\uccb4\uc801 \uc218\uce58 \ud544\uc218!\n\uc22b\uc790, \uae08\uc561, \uc2dc\uac04 \ub4f1 \uad6c\uccb4\uc801 \uc218\uce58\ub97c \ubc18\ub4dc\uc2dc \ud3ec\ud568\ud574!\n\n## \ucd9c\ub825 \ud615\uc2dd (\uc21c\uc218 JSON\ub9cc, \ucf54\ub4dc\ube14\ub85d \uc5c6\uc774)\n- JSON \uac12 \uc548\uc5d0 \uc30d\ub530\uc634\ud45c(\")\ub098 \uc904\ubc14\uafc8 \ubb38\uc790\ub97c \uc808\ub300 \ub123\uc9c0 \ub9c8!\n{\n  \"hook_title\": \"\uccab \ud654\uba74 \ub178\ub780\uc0c9 \uc5b4\uadf8\ub85c \uc790\ub9c9 (15\uc790 \ub0b4\uc678)\",\n  \"images\": [\n    { \"keyword\": \"\uc601\uc5b4 \uba85\uc0ac\", \"visual_type\": \"image\" },\n    { \"keyword\": \"\uc601\uc5b4 \uba85\uc0ac\", \"visual_type\": \"meme\", \"meme_mood\": \"shocked\" }\n  ],\n  \"subtitles\": [\n    \"3~10\uc790 \uc9e7\uc740 \uc790\ub9c9\",\n    \"<em>\uac15\uc870</em> \ud3ec\ud568 \uc790\ub9c9\",\n    \"\uc774\ub807\uac8c \ucabc\uac1c\uc11c\"\n  ],\n  \"Subject\": \"\uc81c\ubaa9 #\uc628\uce74\uc2a4\ud130\ub514 + \uce74\ud14c\uace0\ub9ac \uad00\ub828 \ud574\uc2dc\ud0dc\uadf8\",\n  \"Caption\": \"\uc124\uba85 #\uc628\uce74\uc2a4\ud130\ub514 + \ud574\uc2dc\ud0dc\uadf8\",\n  \"Comment\": \"\uad6c\uae00\uc5d0 \uc628\uce74\uc2a4\ud130\ub514 \uac80\uc0c9!\"\n}\n\n## \ub9c8\uc9c0\ub9c9 \ud655\uc778! \uae08\uc9c0\ub2e8\uc5b4 [${forbiddenWords}] \ud558\ub098\ub77c\ub3c4 \ub4e4\uc5b4\uac00\uba74 0\uc810!`;\nreturn [{\n  json: {\n    prompt,\n    topic,\n    category,\n    subtopic,\n    outroFile: $input.first().json.outroFile || '',\n    outroCta: $input.first().json.outroCta || '',\n    row_number: $input.first().json.row_number,\n    ...$input.first().json\n  }\n}];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                656,
-                304
-            ],
-            "id": "d35c1c7b-3cc8-448b-a309-dbfe73dec39c",
-            "name": "\ud504\ub86c\ud504\ud2b8 \uc0dd\uc131"
-        },
-        {
-            "parameters": {
-                "url": "=https://api.pexels.com/v1/search?query={{ encodeURIComponent($json.keyword || $json.image_prompt?.split(',')[0] || 'abstract background') }}&per_page=3&orientation=portrait",
-                "authentication": "genericCredentialType",
-                "genericAuthType": "httpHeaderAuth",
-                "options": {}
-            },
-            "type": "n8n-nodes-base.httpRequest",
-            "typeVersion": 4.3,
-            "position": [
-                2176,
-                480
-            ],
-            "id": "76aadc3c-5ec1-487b-a68c-6725f0fd4ba6",
-            "name": "\uc774\ubbf8\uc9c0 \uac80\uc0c9",
-            "credentials": {
-                "httpHeaderAuth": {
-                    "id": "1vPRgFSX7u4ecIy4",
-                    "name": "Pexels"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsCode": "// \ubc08 \uce74\ud0c8\ub85c\uadf8: MinIO\uc5d0 \ud638\uc2a4\ud305\ub41c \ubc08/\ub9ac\uc561\uc158 \uc601\uc0c1 URL (35\uac1c)\nconst MEME_CATALOG = {\n  thinking: [\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_01.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_02.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_03.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_04.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_05.mp4',\n    'http://76.13.182.180:9000/memes/thinking/big_brain_time.png',\n    'http://76.13.182.180:9000/memes/thinking/18d7459865c4bbdeb.mp4',\n    'http://76.13.182.180:9000/memes/thinking/charlie_conspiracy.jpg',\n    'http://76.13.182.180:9000/memes/thinking/hackerman.jpg',\n    'http://76.13.182.180:9000/memes/thinking/sherlock_magnifying.jpg',\n    'http://76.13.182.180:9000/memes/thinking/anime_studying.png',\n    'http://76.13.182.180:9000/memes/thinking/detective_pikachu_twist.png',\n    'http://76.13.182.180:9000/memes/thinking/roll_safe_think.jpg',\n    'http://76.13.182.180:9000/memes/thinking/simpsons_lenny_praying.jpg',\n  ],\n  excited: [\n    'http://76.13.182.180:9000/memes/excited/meme_excited_01.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_02.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_03.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_04.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_05.mp4',\n    'http://76.13.182.180:9000/memes/excited/%EC%A7%90%EC%BA%90%EB%A6%AC%20%ED%82%A4%EB%B3%B4%EB%93%9C.mp4',\n  ],\n  shocked: [\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_01.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_02.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_03.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_04.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_05.mp4',\n    'http://76.13.182.180:9000/memes/shocked/anime_shocked.jpg',\n    'http://76.13.182.180:9000/memes/shocked/surprised_pikachu.jpg',\n    'http://76.13.182.180:9000/memes/shocked/spongebob_shocked.png',\n    'http://76.13.182.180:9000/memes/shocked/cat_shocked.jpg',\n    'http://76.13.182.180:9000/memes/shocked/pepe_shocked.png',\n    'http://76.13.182.180:9000/memes/shocked/the_office_no.jpg',\n    'http://76.13.182.180:9000/memes/shocked/oprah_surprised.jpg',\n  ],\n  sad: [\n    'http://76.13.182.180:9000/memes/sad/meme_sad_01.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_02.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_03.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_04.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_05.mp4',\n    'http://76.13.182.180:9000/memes/sad/%ED%98%80%20%EB%82%B4%EB%AF%BC%20%EB%A9%8D%ED%95%9C%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/sad/squidward_window.jpg',\n  ],\n  angry: [\n    'http://76.13.182.180:9000/memes/angry/meme_angry_01.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_02.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_03.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_04.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_05.mp4',\n    'http://76.13.182.180:9000/memes/angry/%EB%B9%A8%EA%B0%84%20%EB%B6%84%EB%85%B8%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/angry/table_flip.jpg',\n    'http://76.13.182.180:9000/memes/angry/thanos_snap.png',\n  ],\n  cool: [\n    'http://76.13.182.180:9000/memes/cool/meme_cool_01.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_02.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_03.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_04.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_05.mp4',\n    'http://76.13.182.180:9000/memes/cool/mic_drop.jpg',\n    'http://76.13.182.180:9000/memes/cool/onepiece_admirals.jpg',\n    'http://76.13.182.180:9000/memes/cool/cool_guys_explosion.png',\n    'http://76.13.182.180:9000/memes/cool/tony_stark_sunglasses.jpg',\n    'http://76.13.182.180:9000/memes/cool/pepe_tuxedo_wine.jpg',\n    'http://76.13.182.180:9000/memes/cool/chad_yes.jpg',\n    'http://76.13.182.180:9000/memes/cool/kanye_shrug.jpg',\n  ],\n  celebrating: [\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_01.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_02.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_03.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_04.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_05.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/%ED%8C%8C%ED%8B%B0%EB%AA%A8%EC%9E%90%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/celebrating/leonardo_toast.jpg',\n  ],\n  snacking: [\n    'http://76.13.182.180:9000/memes/snacking/%EA%B3%BC%EC%9E%90%20%EB%A8%B9%EB%8A%94%20%ED%8E%98%ED%8E%98.png',\n  ],\n  speechless: [\n    'http://76.13.182.180:9000/memes/speechless/%22...%22%20%EB%A9%8D%ED%95%9C%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/speechless/nick_young_confused.jpg',\n    'http://76.13.182.180:9000/memes/speechless/joey_confused.jpg',\n    'http://76.13.182.180:9000/memes/speechless/john_travolta_confused.jpg',\n    'http://76.13.182.180:9000/memes/speechless/confused_math.jpg',\n    'http://76.13.182.180:9000/memes/speechless/blinking_guy.jpg',\n  ],\n  smoking: [\n    'http://76.13.182.180:9000/memes/smoking/%EB%8B%B4%EB%B0%B0%20%ED%94%BC%EB%8A%94%20%ED%8E%98%ED%8E%98.png',\n  ],\n  disappointed: [\n    'http://76.13.182.180:9000/memes/disappointed/%EC%8A%A4%ED%8D%BC%EC%8A%A4%20%EC%9C%A0%EB%8B%88%ED%8F%BC%20%EC%9A%B0%EC%9A%B8%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/disappointed/facepalm_picard.jpg',\n  ],\n  thumbsup: [\n    'http://76.13.182.180:9000/memes/thumbsup/%EC%97%84%EC%A7%80%EC%B2%99%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/thumbsup/obama_not_bad.jpg',\n  ],\n  crying: [\n    'http://76.13.182.180:9000/memes/crying/%EC%9A%B0%EB%8A%94%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/crying/pedro_pascal_crying.jpg',\n    'http://76.13.182.180:9000/memes/crying/jordan_crying.jpg',\n    'http://76.13.182.180:9000/memes/crying/pepe_crying.jpg',\n  ],\n  desperate: [\n    'http://76.13.182.180:9000/memes/desperate/%EC%BD%98%EC%84%BC%ED%8A%B8%20%ED%8F%AC%ED%81%AC%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/desperate/this_is_fine_dog.jpg',\n    'http://76.13.182.180:9000/memes/desperate/spongebob_fire.jpg',\n    'http://76.13.182.180:9000/memes/desperate/ron_swanson_computer.mp4',\n  ],\n  bored: [\n    'http://76.13.182.180:9000/memes/bored/%ED%97%A4%EB%93%9C%ED%8F%B0%20%EB%AC%B4%ED%91%9C%EC%A0%95%20%ED%8E%98%ED%8E%98.png',\n    'http://76.13.182.180:9000/memes/bored/jim_halpert_look.jpg',\n    'http://76.13.182.180:9000/memes/bored/cat_newspaper.jpg',\n  ],\n  suspicious: [\n    'http://76.13.182.180:9000/memes/suspicious/%ED%9B%84%EB%93%9C%20%EC%93%B4%20%EC%82%90%EC%A7%84%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/kevin_hart_face.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/side_eye_chloe.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/palpatine_good.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/dark_robot_ai.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/burns_excellent.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/joker_card.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/grinch_smile.jpg',\n  ],\n};\n\nconst items = $input.all();\nconst segAll = $('\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac').all();\n\nreturn items.map((item, i) => {\n  const data = item.json;\n  const segData = segAll[i]?.json || {};\n  const visualType = segData.visual_type || 'image';\n  const memeMood = segData.meme_mood || 'thinking';\n\n  if (visualType === 'meme') {\n    const catalog = MEME_CATALOG[memeMood] || MEME_CATALOG.thinking;\n    const randomIdx = Math.floor(Math.random() * catalog.length);\n    return {\n      json: {\n        ...data,\n        visual_type: 'meme',\n        meme_mood: memeMood,\n        images: [{ url: catalog[randomIdx] }],\n        is_video: catalog[randomIdx].endsWith('.mp4'),\n      }\n    };\n  } else {\n    const photos = data.photos || [];\n    let imageUrl = '';\n    if (photos.length > 0) {\n      const randPhoto = photos[Math.floor(Math.random() * photos.length)];\n      imageUrl = randPhoto.src?.portrait || randPhoto.src?.large || randPhoto.src?.medium || '';\n    }\n    if (!imageUrl) {\n      imageUrl = 'https://images.pexels.com/photos/3021120/pexels-photo-3021120.jpeg?auto=compress&cs=tinysrgb&w=1080';\n    }\n    return {\n      json: {\n        ...data,\n        visual_type: 'image',\n        meme_mood: '',\n        images: [{ url: imageUrl }],\n        is_video: false,\n      }\n      money: [\n    'http://76.13.182.180:9000/memes/money/wolf_wallstreet_money.jpg',\n    'http://76.13.182.180:9000/memes/money/mr_krabs_money.jpg',\n    'http://76.13.182.180:9000/memes/money/make_it_rain.jpg',\n    'http://76.13.182.180:9000/memes/money/stonks_meme.jpg',\n    'http://76.13.182.180:9000/memes/money/shut_up_take_money.jpg',\n    'http://76.13.182.180:9000/memes/money/empty_wallet.jpg',\n    'http://76.13.182.180:9000/memes/money/money_printer.jpg',\n    'http://76.13.182.180:9000/memes/money/scrooge_swimming.jpg',\n  ],\n};\n  }\n});"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                2560,
-                480
-            ],
-            "id": "417f9a14-190f-48d9-a466-fde992082665",
-            "name": "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c"
-        },
-        {
-            "parameters": {
-                "modelId": {
-                    "__rl": true,
-                    "value": "models/gemini-2.5-flash-lite",
-                    "mode": "list",
-                    "cachedResultName": "models/gemini-2.5-flash-lite"
-                },
-                "messages": {
-                    "values": [
-                        {
-                            "content": "\ub108\ub294 '\uc628\uce74\uc2a4\ud130\ub514' \ucee4\ubba4\ub2c8\ud2f0\uc758 YouTube Shorts \uc8fc\uc81c \uae30\ud68d\uc790\uc57c.\n\n\uc544\ub798 5\uac00\uc9c0 \ud575\uc2ec \uc8fc\uc81c \uce74\ud14c\uace0\ub9ac \uc911 **{{ $json.category }}\ubc88 \uce74\ud14c\uace0\ub9ac**\uc5d0 \ud574\ub2f9\ud558\ub294 YouTube Shorts \uc601\uc0c1 \uc8fc\uc81c(topic) 1\uac1c\ub97c \uc0dd\uc131\ud574\uc918.\n\ubc18\ub4dc\uc2dc {{ $json.category }}\ubc88 \uce74\ud14c\uace0\ub9ac\uc758 \ub0b4\uc6a9\uc5d0 \ub9de\ub294 \uc8fc\uc81c\ub97c \ub9cc\ub4e4\uc5b4!\n\n## 5\uac00\uc9c0 \uce74\ud14c\uace0\ub9ac (\ub79c\ub364\uc73c\ub85c \ud558\ub098 \uc120\ud0dd)\n1. \"\ub0b4 \ub3c8 \uc9c0\ud0a4\ub294 \uafc0\ud301\" (\uc548\uc804/\uba39\ud280\uac80\uc99d \uc370) - \ud65c\uc6a9: \uba39\ud280\uc81c\ubcf4, \ud328\ub110\ud2f0 \uba85\ub2e8, \uc2a4\ud130\ub514\ud310\n2. \"\ub3c8 \uc548 \uc4f0\uace0 \ub3c8 \ubc84\ub294 \ubc95\" (\ubb34\ub8cc \ud61c\ud0dd/\uc571\ud14c\ud06c) - \ud65c\uc6a9: \ud3ec\uc778\ud2b8\uc874, \ub3cc\ub9bc\ud310, \uae30\ud504\ud2f0\ucf58 \uad50\ud658, \ubb34\ub8cc\uc2ac\ub86f \uccb4\ud5d8\n3. \"\ub300\ubc15 \ud130\uc9c4 \uc370 \ud47c\ub2e4\" (\ub9ac\uc5bc \ud6c4\uae30/\uc7ad\ud31f \uc778\uc99d) - \ud65c\uc6a9: \uc7ad\ud31f \uc81c\ubcf4, \ud6c4\uae30\uac8c\uc2dc\ud310\n4. \"\ub808\uc804\ub4dc \ubc29\uc1a1 \ud558\uc774\ub77c\uc774\ud2b8\" (\uc5d4\ud130\ud14c\uc778\uba3c\ud2b8) - \ud65c\uc6a9: \ubc29\uc1a1\uc874, \ud558\uc774\ub77c\uc774\ud2b8\n5. \"\uc624\ub298\uc758 \ud53d & \uc815\ubcf4 \uc694\uc57d\" (\uc2a4\ud3ec\uce20/\uce74\uc9c0\ub178 \ub274\uc2a4) - \ud65c\uc6a9: \uc2a4\ud3ec\uce20 \ubd84\uc11d, \uce74\uc9c0\ub178 \ub274\uc2a4\n\n## \ud6c4\ud0b9 \uc6d0\uce59 (\ub9e4\uc6b0 \uc911\uc694!)\ntopic \uc790\uccb4\uac00 \"\ud074\ub9ad\ud558\uace0 \uc2f6\uc740 \uc81c\ubaa9\"\uc774\uc5b4\uc57c \ud574.\n\ubc0b\ubc0b\ud55c \uc815\ubcf4\ud615 \uc81c\ubaa9 \uc808\ub300 \uae08\uc9c0!\n\n\ud575\uc2ec \uc6d0\uce59:\n- \uc77d\ub294 \uc21c\uac04 \"\uc5b4? \ubb54\ub370?\" \ud558\uace0 \uad81\uae08\ud574\uc9c0\ub294 \uc81c\ubaa9\n- \uac10\uc815\uc744 \uc790\uadf9\ud560 \uac83 (\ub180\ub78c, \uacf5\ud3ec, \ubd80\ub7ec\uc6c0, \ud638\uae30\uc2ec)\n- \uad6c\uccb4\uc801 \uc22b\uc790\ub098 \uc0c1\ud669\uc774 \ub4e4\uc5b4\uac08 \uac83\n- \ub9e4\ubc88 \ub2e4\ub978 \ud45c\ud604\uacfc \uad6c\uc870\ub97c \uc0ac\uc6a9\ud560 \uac83 (\ub611\uac19\uc740 \ud328\ud134 \ubc18\ubcf5 \uc808\ub300 \uae08\uc9c0!)\n- \uc8fc\uc81c(topic) \ud14d\uc2a4\ud2b8 \ub0b4\uc5d0 \uc790\uc5f0\uc2a4\ub7fd\uac8c '\uc628\uce74\uc2a4\ud130\ub514'\ub97c \ud55c \ubc88 \uc5b8\uae09\ud574\uc918.\n\n\ucc38\uace0\ud560 \uc218 \uc788\ub294 \uac10\uc815 \ud2b8\ub9ac\uac70 (\uc774\uac83\ub9cc \uc4f0\uc9c0 \ub9d0\uace0 \uc790\uc720\ub86d\uac8c \ubcc0\ud615\ud574):\n\uc22b\uc790\ucda9\uaca9, \uc190\uc2e4\uacf5\ud3ec, \ube44\ubc00\ud3ed\ub85c, \ubc18\uc804\ub180\ub78c, \ub300\ub9ac\ub9cc\uc871, \ubd84\ub178\uc720\ubc1c, \ube44\uad50\uc790\uadf9, \uae34\uae09\uc18d\ubcf4, \uacf5\uac10\uc720\ub3c4, \ub3c4\uc804\uc2ec\ub9ac \ub4f1\n\n\u274c \uc774\ub7f0 \uc81c\ubaa9\uc740 \uc808\ub300 \uae08\uc9c0:\n- \"\uba39\ud280\uc0ac\uc774\ud2b8 \uad6c\ubcc4\ubc95\" (\uad50\uacfc\uc11c\uc2dd)\n- \"\uc548\uc804\ub180\uc774\ud130 \uace0\ub974\ub294 \ubc95\" (\ud3c9\ubc94)\n- \"\uc2a4\ud3ec\uce20 \ubc30\ud305 \ucd08\ubcf4 \uac00\uc774\ub4dc\" (\uc7ac\ubbf8\uc5c6\uc74c)\n\n\ucd9c\ub825 \ud615\uc2dd (\uc21c\uc218 JSON\ub9cc, \ucf54\ub4dc\ube14\ub85d \uc5c6\uc774):\n- JSON \uac12 \uc548\uc5d0 \uc30d\ub530\uc634\ud45c(\")\ub098 \uc904\ubc14\uafc8 \ubb38\uc790\ub97c \uc808\ub300 \ub123\uc9c0 \ub9c8!\n{\"topic\": \"\ud6c4\ud0b9 \uc6d0\uce59\uc774 \uc801\uc6a9\ub41c \uc790\uadf9\uc801\uc778 \uc1fc\uce20 \uc8fc\uc81c 20~40\uc790\"}"
-                        }
-                    ]
-                },
-                "jsonOutput": true,
-                "builtInTools": {},
-                "options": {}
-            },
-            "type": "@n8n/n8n-nodes-langchain.googleGemini",
-            "typeVersion": 1.1,
-            "position": [
-                160,
-                304
-            ],
-            "id": "f691c2b0-ba9e-41de-b342-ddf6ea0d4a09",
-            "name": "AI \uc8fc\uc81c \uc0dd\uc131",
-            "credentials": {
-                "googlePalmApi": {
-                    "id": "IKP349r08J9Hoz5E",
-                    "name": "Google Gemini(PaLM) Api account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst data = JSON.parse(cleanText);\n\nif (!data.topic) {\n  throw new Error('AI \uc8fc\uc81c \uc0dd\uc131 \uacb0\uacfc\uc5d0 topic\uc774 \uc5c6\uc2b5\ub2c8\ub2e4: ' + cleanText);\n}\n\nconst catNode = $('\uce74\ud14c\uace0\ub9ac \uacb0\uc815').first().json;\nreturn [{\n  json: {\n    topic: data.topic,\n    category: catNode.category,\n    outroFile: catNode.outroFile,\n    outroCta: catNode.outroCta,\n    outroDuration: catNode.outroDuration,\n    subtopic: catNode.subtopic,\n    row_number: null\n  }\n}];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                432,
-                304
-            ],
-            "id": "a15bf7bf-1820-45d4-ae9c-f38db2d345f7",
-            "name": "\uc8fc\uc81c \ud30c\uc2f1"
-        },
-        {
-            "parameters": {
-                "jsCode": "const category = Math.floor(Math.random() * 5) + 1;\n\nconst OUTRO_VIDEOS = {\n  1: [\n    { file: 'partner_site.mp4', duration: 3.5, cta: '\uac80\uc99d\ub41c \uc81c\ud734\uc0ac\uc774\ud2b8\uc5d0\uc11c \uc774\uc6a9\ud558\uc138\uc694', subtopic: '\uac80\uc99d\ub41c \uc81c\ud734\uc0ac\uc774\ud2b8 \uc774\uc6a9 \ubc29\ubc95' },\n    { file: 'scam_report.mp4', duration: 3.0, cta: '\uba39\ud280 \ud655\uc778\ud558\uace0 \uac70\ub974\uc138\uc694', subtopic: '\uba39\ud280 \uc81c\ubcf4\uc640 \uac80\uc99d \uacfc\uc815' }\n  ],\n  2: [\n    { file: 'pointzone_game.mp4', duration: 4.53, cta: '\ud3ec\uc778\ud2b8\ub85c \ub2e4\uc591\ud55c \uac8c\uc784 \uc990\uae30\uc138\uc694', subtopic: '\ud3ec\uc778\ud2b8\uc874 \uac8c\uc784\uc73c\ub85c \ud3ec\uc778\ud2b8 \ubaa8\uc73c\ub294 \ubc29\ubc95' },\n    { file: 'pointzone_lottery.mp4', duration: 5.36, cta: '\ubcf5\uad8c\uc73c\ub85c \ud3ec\uc778\ud2b8 \ubaa8\uc544\ubcf4\uc138\uc694', subtopic: '\ubcf5\uad8c\uc73c\ub85c \ud3ec\uc778\ud2b8 \uc801\ub9bd\ud558\ub294 \ubc29\ubc95' },\n    { file: 'pointzone_spin.mp4', duration: 4.07, cta: '\ub3cc\ub9bc\ud310\uc73c\ub85c \ud3ec\uc778\ud2b8 \ubaa8\uc544\ubcf4\uc138\uc694', subtopic: '\ub3cc\ub9bc\ud310\uc73c\ub85c \ud3ec\uc778\ud2b8 \ubaa8\uc73c\ub294 \ubc29\ubc95' },\n    { file: 'gifticon.mp4', duration: 2.5, cta: '\ud3ec\uc778\ud2b8\ub85c \uae30\ud504\ud2f0\ucf58 \uad50\ud658\ud558\uc138\uc694', subtopic: '\ud3ec\uc778\ud2b8\ub97c \uae30\ud504\ud2f0\ucf58\uc73c\ub85c \uad50\ud658\ud558\ub294 \ubc29\ubc95' }\n  ],\n  3: [\n    { file: 'jackpot_report.mp4', duration: 3.77, cta: '\uc7ad\ud31f \uc81c\ubcf4\ud558\uba74 \ud3ec\uc778\ud2b8 5\ucc9c \uc9c0\uae09!', subtopic: '\uc7ad\ud31f \ub2f9\ucca8 \uc0ac\ub840\uc640 \uc81c\ubcf4 \ubc29\ubc95' },\n    { file: 'best_post.mp4', duration: 3.87, cta: '\ubca0\uc2a4\ud2b8 \uae00 \uc62c\ub9ac\uace0 \ud3ec\uc778\ud2b8 \ubc1b\uc790!', subtopic: '\ucee4\ubba4\ub2c8\ud2f0 \ubca0\uc2a4\ud2b8 \uae00\uacfc \uc720\uc800 \ucc38\uc5ec' }\n  ],\n  4: [\n    { file: 'highlight.mp4', duration: 2.77, cta: '\ub193\uce5c \ubc29\uc1a1 \ud558\uc774\ub77c\uc774\ud2b8 \ucc59\uaca8\ubcf4\uc138\uc694', subtopic: '\uc2a4\ud2b8\ub9ac\uba38 \ubc29\uc1a1 \uba85\uc7a5\uba74 \ud558\uc774\ub77c\uc774\ud2b8' },\n    { file: 'live_broadcast.mp4', duration: 4.7, cta: '\uc628\uce74\uc2a4\ud130\ub514 \ubc29\uc1a1\uc874\uc5d0\uc11c \uc2e4\uc2dc\uac04 \uc18c\ud1b5\ud558\uc138\uc694', subtopic: '\uc2e4\uc2dc\uac04 \ubc29\uc1a1\uc874\uc5d0\uc11c \uc2a4\ud2b8\ub9ac\uba38\uc640 \uc18c\ud1b5' }\n  ],\n  5: [\n    { file: 'sports_news.mp4', duration: 3.43, cta: '\ucd5c\uc2e0 \uc2a4\ud3ec\uce20 \ub274\uc2a4 \ud655\uc778\ud558\uc138\uc694', subtopic: '\ucd5c\uc2e0 \uc2a4\ud3ec\uce20 \ub274\uc2a4' },\n    { file: 'casino_news.mp4', duration: 3.2, cta: '\ucd5c\uc2e0 \uce74\uc9c0\ub178 \ub274\uc2a4 \ud655\uc778\ud558\uc138\uc694', subtopic: '\ucd5c\uc2e0 \uce74\uc9c0\ub178/\uac8c\uc784\uc0ac \ub274\uc2a4' },\n    { file: 'sports_analysis.mp4', duration: 3.5, cta: '\uc2a4\ud3ec\uce20 \ubd84\uc11d\uc73c\ub85c \uc801\uc911\ub960 \uc62c\ub9ac\uc138\uc694', subtopic: '\uc2a4\ud3ec\uce20 \uacbd\uae30 \ubd84\uc11d\uacfc \ud53d' }\n  ]\n};\n\nconst outroList = OUTRO_VIDEOS[category] || [];\nlet outroFile = '';\nlet outroCta = '';\nlet subtopic = '';\nlet outroDuration = 0;\nif (outroList.length > 0) {\n  const picked = outroList[Math.floor(Math.random() * outroList.length)];\n  outroFile = picked.file;\n  outroCta = picked.cta;\n  subtopic = picked.subtopic;\n  outroDuration = picked.duration;\n}\n\nreturn [{ json: { category, outroFile, outroCta, subtopic, outroDuration } }];"
-            },
-            "type": "n8n-nodes-base.code",
-            "typeVersion": 2,
-            "position": [
-                0,
-                304
-            ],
-            "id": "01961828-a580-40a5-8844-fe28567c9178",
-            "name": "\uce74\ud14c\uace0\ub9ac \uacb0\uc815"
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        880,
+        304
+      ],
+      "id": "5df5ffe5-b4b3-41c7-9149-0cd8c3e069c7",
+      "name": "AI 콘텐츠 생성",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
         }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nfunction cleanGeminiJson(raw) {\n  let s = raw.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  const first = s.indexOf('{');\n  const last = s.lastIndexOf('}');\n  if (first !== -1 && last > first) {\n    s = s.substring(first, last + 1);\n  }\n  let result = '';\n  let inStr = false;\n  let esc = false;\n  for (let i = 0; i < s.length; i++) {\n    const c = s[i];\n    if (esc) { result += c; esc = false; continue; }\n    if (c === '\\\\' && inStr) { result += c; esc = true; continue; }\n    if (c === '\"') { inStr = !inStr; result += c; continue; }\n    if (inStr) {\n      if (c === '\\n' || c === '\\r') { result += ' '; continue; }\n      if (c === '\\t') { result += ' '; continue; }\n      if (c.charCodeAt(0) < 0x20) { continue; }\n    }\n    result += c;\n  }\n  result = result.replace(/,(\\s*[}\\]])/g, '$1');\n  return result;\n}\n\nlet cleanText = cleanGeminiJson(text);\nlet data;\n\ntry {\n  data = JSON.parse(cleanText);\n} catch (e1) {\n  try {\n    let fixed = cleanText\n      .replace(/[\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036]/g, '\"')\n      .replace(/[\\u2018\\u2019\\u201A\\u201B\\u2032\\u2035]/g, \"'\")\n      .replace(/^\\uFEFF/, '');\n    data = JSON.parse(fixed);\n  } catch (e2) {\n    const posMatch = e1.message.match(/position (\\d+)/);\n    const pos = posMatch ? parseInt(posMatch[1]) : 0;\n    const start = Math.max(0, pos - 80);\n    const end = Math.min(cleanText.length, pos + 80);\n    const around = cleanText.substring(start, end);\n    throw new Error(\n      `JSON 파싱 실패: ${e1.message}\\n` +\n      `--- 에러 위치(${pos}) 주변 ---\\n${around}\\n` +\n      `처음 300자: ${cleanText.substring(0, 300)}`\n    );\n  }\n}\n\n// images + subtitles 검증\nif (!data.images || data.images.length < 4) {\n  throw new Error('images must have at least 4 items, got: ' + (data.images?.length || 0));\n}\nif (!data.subtitles || data.subtitles.length < 6) {\n  throw new Error('subtitles must have at least 6 items, got: ' + (data.subtitles?.length || 0));\n}\n\nconst VALID_MOODS = ['thinking', 'excited', 'shocked', 'sad', 'angry', 'cool', 'celebrating', 'snacking', 'speechless', 'smoking', 'disappointed', 'thumbsup', 'crying', 'desperate', 'bored', 'suspicious', 'money'];\n\ndata.images = data.images.map((img, idx) => {\n  if (!img.visual_type || !['image', 'meme'].includes(img.visual_type)) {\n    img.visual_type = 'image';\n  }\n  if (img.visual_type === 'meme') {\n    if (!img.meme_mood || !VALID_MOODS.includes(img.meme_mood)) {\n      img.meme_mood = VALID_MOODS[idx % VALID_MOODS.length];\n    }\n  } else {\n    img.meme_mood = '';\n    if (!img.keyword) {\n      img.keyword = 'abstract background';\n    }\n  }\n  return img;\n});\n\n// === v15: 카테고리별 금지단어 검증 ===\nconst category = $('주제 파싱').first().json.category || 1;\nconst FORBIDDEN_WORDS = {\n  1: ['포인트', '돌림판', '복권', '기프티콘', '앱테크', '잭팟', '방송', '스트리머', '스포츠', '분석', '픽'],\n  2: ['먹튀', '패널티', '검증', '롤링', '출금', '충전', '잭팟', '대박', '당첨', '방송', '스트리머', '스포츠', '분석'],\n  3: ['먹튀', '패널티', '검증', '롤링', '출금', '포인트', '돌림판', '복권', '기프티콘', '앱테크', '방송', '스트리머', '스포츠', '분석'],\n  4: ['먹튀', '패널티', '검증', '포인트', '돌림판', '복권', '기프티콘', '앱테크', '잭팟', '스포츠', '분석', '픽'],\n  5: ['먹튀', '패널티', '검증', '포인트', '돌림판', '복권', '기프티콘', '앱테크', '잭팟', '방송', '스트리머']\n};\n\nconst forbidden = FORBIDDEN_WORDS[category] || [];\nconst allSubText = data.subtitles.join(' ').replace(/<[^>]*>?/gm, '');\nconst foundForbidden = forbidden.filter(w => allSubText.includes(w));\nif (foundForbidden.length > 0) {\n  throw new Error(`카테고리 ${category} 금지단어 위반! [${foundForbidden.join(', ')}] 발견. 재생성 필요.`);\n}\n\n// === v15: 마지막 자막 문장 완결 검증 (종결어미 기반) ===\nconst lastSub = data.subtitles[data.subtitles.length - 1].replace(/<[^>]*>?/gm, '').replace(/[!?~.]/g, '').trim();\nconst KOREAN_ENDINGS = ['해', '봐', '야', '마', '요', '자', '지', '너', '됨', '임', '음', '거', '든', '죠', '세요', '가'];\nconst lastChar = lastSub.slice(-1);\nconst lastTwo = lastSub.slice(-2);\nconst hasEnding = KOREAN_ENDINGS.some(e => lastSub.endsWith(e));\nconst isTooShort = lastSub.length < 4;\nif (!hasEnding || isTooShort) {\n  // 종결어미 없거나 너무 짧으면 → 에러 던져서 재생성 유도\n  console.log('마지막 자막 미완성 감지: ' + lastSub);\n  // 자동 보정하지 않고 경고만 (AI가 자유롭게 생성하도록)\n}\n\nconst fullDialogue = data.subtitles.join(' ');\nconst memeCount = data.images.filter(i => i.visual_type === 'meme').length;\nconst imageCount = data.images.filter(i => i.visual_type === 'image').length;\n\nreturn [{\n  json: {\n    hook_title: data.hook_title,\n    images: data.images,\n    subtitles: data.subtitles,\n    Subject: data.Subject,\n    Caption: data.Caption,\n    Comment: data.Comment,\n    fullDialogue,\n    Narration: fullDialogue,\n    imageCount: data.images.length,\n    subtitleCount: data.subtitles.length,\n    memeCount,\n    Status: '생성 중',\n    generatedAt: new Date().toISOString(),\n    topic: $('주제 파싱').first().json.topic,\n    category: $('주제 파싱').first().json.category,\n    outroFile: $('주제 파싱').first().json.outroFile,\n    outroCta: $('주제 파싱').first().json.outroCta,\n    subtopic: $('주제 파싱').first().json.subtopic,\n    row_number: $('주제 파싱').first().json.row_number\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1248,
+        304
+      ],
+      "id": "6adeed9a-4c8e-4d81-8578-76b2f46d0527",
+      "name": "콘텐츠 파싱"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+          "mode": "list",
+          "cachedResultName": "온카스터디",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "설명형 숏츠"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1520,
+        304
+      ],
+      "id": "d6ea6410-28ee-4aa6-864f-c7c6d32de2a2",
+      "name": "시트 기록",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst images = data.images || [];\n\n// images 배열만 세그먼트로 분리 (이미지 검색용)\nreturn images.map((img, i) => ({\n  json: {\n    index: i,\n    keyword: img.keyword || 'abstract background',\n    visual_type: img.visual_type || 'image',\n    meme_mood: img.meme_mood || '',\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        480
+      ],
+      "id": "3fa1b098-8745-40bd-84c4-63439968242b",
+      "name": "세그먼트 분리"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:5100/tts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": {{ JSON.stringify($json.fullDialogue.replace(/<[^>]*>?/gm, '')) }},\n  \"voice_id\": \"tc_6059dad0b83880769a50502f\",\n  \"emotion\": \"happy\",\n  \"tempo\": 1.4\n}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1984,
+        160
+      ],
+      "id": "fe8b82fb-797c-4f1f-bf39-801185c734a4",
+      "name": "TTS 요청"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  const audioUrl = item.json.audio_url;\n  const durationSec = item.json.duration_sec;\n  const timestamps = item.json.timestamps || [];\n\n  if (!audioUrl) {\n    throw new Error('TTS 응답에 audio_url이 없습니다: ' + JSON.stringify(item.json));\n  }\n\n  return {\n    json: {\n      audio_url: audioUrl,\n      duration_sec: durationSec,\n      timestamps,\n      ...item.json\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2368,
+        160
+      ],
+      "id": "ed11d1b0-d11f-4e98-8f6e-6692cdcc3351",
+      "name": "TTS 결과 처리"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2992,
+        336
+      ],
+      "id": "e4169643-cf73-4bb2-8194-ebb35c9e595c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3280,
+        336
+      ],
+      "id": "e9719f9a-8472-4fe5-b527-b1e9cda104a9",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// NCA v8: images + subtitles 분리 구조\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst hookClean = hookTitle.replace(/<[^>]*>?/gm, '');\nconst subtitles = $('콘텐츠 파싱').first().json.subtitles || [];\nconst imageCount = $('콘텐츠 파싱').first().json.imageCount;\n\nconst ttsResult = $('TTS 결과 처리').first().json;\nconst mainAudioUrl = ttsResult.audio_url;\nconst audioDuration = ttsResult.duration_sec;\nlet totalDuration = audioDuration;  // v15: 패딩 제거 (검정화면 방지)\n\nconst BGM_URL = 'http://76.13.182.180:9000/audio/bgm_25sec.mp3';\n\n// === 아웃트로 영상 (카테고리 결정 노드에서 사전 선택) ===\nconst OUTRO_BASE = 'http://76.13.182.180:9000/outro/';\nconst category = $('콘텐츠 파싱').first().json.category || 1;\nconst outroFile = $('주제 파싱').first().json.outroFile || '';\nconst outroCta = $('주제 파싱').first().json.outroCta || '';\nconst outroUrl = outroFile ? OUTRO_BASE + outroFile : '';\nconst SFX_MAP = {\n  whoosh: 'http://76.13.182.180:9000/audio/sfx_whoosh1.mp3',\n  pop: 'http://76.13.182.180:9000/audio/sfx_pop_user.mp3',\n  ding: 'http://76.13.182.180:9000/audio/sfx_ding1.mp3',\n  ding2: 'http://76.13.182.180:9000/audio/sfx_ding2.mp3',\n  ppook: 'http://76.13.182.180:9000/audio/sfx_ppook.wav',\n  wow: 'http://76.13.182.180:9000/audio/sfx_wow.wav'\n};\n\nfunction escapeDrawtext(text) {\n  if (!text) return '';\n  // 이모지 제거 (NanumGothicBold에 이모지 글리프 없음)\n  text = text.replace(/[\\u{1F600}-\\u{1F64F}\\u{1F300}-\\u{1F5FF}\\u{1F680}-\\u{1F6FF}\\u{1F1E0}-\\u{1F1FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}\\u{FE00}-\\u{FE0F}\\u{1F900}-\\u{1F9FF}\\u{1FA00}-\\u{1FA6F}\\u{1FA70}-\\u{1FAFF}\\u{200D}\\u{20E3}\\u{FE0F}]/gu, '').trim();\n  return text.replace(/\\\\/g, '\\\\\\\\').replace(/'/g, '\\u2019').replace(/\"/g, '\\u201D').replace(/:/g, '\\\\:').replace(/;/g, '\\\\;').replace(/,/g, '\\\\,').replace(/\\[/g, '\\\\[').replace(/\\]/g, '\\\\]').replace(/\\n/g, ' ');\n}\nfunction escapeDrawtextMultiline(text) {\n  if (!text) return '';\n  text = text.replace(/[\\u{1F600}-\\u{1F64F}\\u{1F300}-\\u{1F5FF}\\u{1F680}-\\u{1F6FF}\\u{1F1E0}-\\u{1F1FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}\\u{FE00}-\\u{FE0F}\\u{1F900}-\\u{1F9FF}\\u{1FA00}-\\u{1FA6F}\\u{1FA70}-\\u{1FAFF}\\u{200D}\\u{20E3}\\u{FE0F}]/gu, '').trim();\n  return text.replace(/\\\\/g, '\\\\\\\\').replace(/'/g, '\\u2019').replace(/\"/g, '\\u201D').replace(/:/g, '\\\\:').replace(/;/g, '\\\\;').replace(/,/g, '\\\\,').replace(/\\[/g, '\\\\[').replace(/\\]/g, '\\\\]');\n}\nfunction wrapSubtitle(text, maxLen) {\n  if (!text) return '';\n  const words = text.split(' ');\n  let lines = [];\n  let currentLine = '';\n  for (const word of words) {\n    if (currentLine.length + word.length > maxLen && currentLine.length > 0) {\n      lines.push(currentLine.trim());\n      currentLine = word + ' ';\n    } else {\n      currentLine += word + ' ';\n    }\n  }\n  if (currentLine) lines.push(currentLine.trim());\n  return lines.join('\\n');\n}\n\nif (!subtitles || subtitles.length === 0) {\n  throw new Error('subtitles 배열이 비어있습니다. 콘텐츠 파싱 결과를 확인하세요.');\n}\n\n// === 이미지: audioDuration / imageCount 균등 배분 ===\nconst imgResults = $('이미지 URL 추출').all();\nconst imgDuration = audioDuration / imageCount;\nlet imgSegments = [];\nfor (let i = 0; i < imageCount; i++) {\n  const imgData = imgResults[i]?.json || {};\n  const imageUrl = imgData.images?.[0]?.url || '';\n  const isVideo = imgData.is_video || false;\n  const visualType = imgData.visual_type || 'image';\n  if (!imageUrl) throw new Error(`이미지 ${i+1} URL 없음`);\n  imgSegments.push({\n    index: i,\n    imageUrl,\n    isVideo,\n    visualType,\n    start: i * imgDuration,\n    duration: imgDuration\n  });\n}\n\n// === 자막: 글자수 비율 + min/max 보정 타이밍 ===\nconst MIN_SUB_DUR = 0.70;\nconst MAX_SUB_DUR = 1.80;\n\n// 1단계: 글자수 비율로 rawDur 계산\nconst totalChars = subtitles.reduce((sum, s) => {\n  return sum + s.replace(/<[^>]*>?/gm, '').replace(/\\s+/g, '').length;\n}, 0);\n\nlet subMeta = subtitles.map((raw, i) => {\n  const clean = raw.replace(/<[^>]*>?/gm, '');\n  const chars = clean.replace(/\\s+/g, '').length;\n  const ratio = totalChars > 0 ? chars / totalChars : 1 / subtitles.length;\n  const rawDur = ratio * audioDuration;\n  return { index: i, raw, clean, chars, rawDur, hasEm: raw.includes('<em>') };\n});\n\n// 2단계: min/max 클램프 + 차이 계산\nlet excess = 0;\nlet clampedDurs = subMeta.map(s => {\n  if (s.rawDur < MIN_SUB_DUR) {\n    excess += s.rawDur - MIN_SUB_DUR;\n    return MIN_SUB_DUR;\n  } else if (s.rawDur > MAX_SUB_DUR) {\n    excess += s.rawDur - MAX_SUB_DUR;\n    return MAX_SUB_DUR;\n  }\n  return s.rawDur;\n});\n\n// 3단계: 클램프 안 걸린 자막에 비례 재분배\nif (Math.abs(excess) > 0.001) {\n  const unclamped = clampedDurs.map((d, i) => d !== MIN_SUB_DUR && d !== MAX_SUB_DUR ? i : -1).filter(i => i >= 0);\n  const unclampedTotal = unclamped.reduce((sum, i) => sum + clampedDurs[i], 0);\n  if (unclampedTotal > 0) {\n    for (const i of unclamped) {\n      const share = (clampedDurs[i] / unclampedTotal) * excess;\n      clampedDurs[i] = Math.max(MIN_SUB_DUR, Math.min(MAX_SUB_DUR, clampedDurs[i] + share));\n    }\n  }\n}\n\n// 4단계: start 시간 순차 재계산\nlet subSegments = [];\nlet subStart = 0;\nfor (let i = 0; i < subtitles.length; i++) {\n  subSegments.push({\n    index: i,\n    raw: subMeta[i].raw,\n    clean: subMeta[i].clean,\n    start: subStart,\n    duration: clampedDurs[i],\n    hasEm: subMeta[i].hasEm\n  });\n  subStart += clampedDurs[i];\n}\n\n// === FFmpeg inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst mediaInputs = [];\n\n// 1) 이미지/영상 (4~6개)\nfor (const img of imgSegments) {\n  if (img.isVideo) {\n    inputs.push({ file_url: img.imageUrl, options: [{ option: \"-stream_loop\", argument: \"-1\" }] });\n  } else {\n    inputs.push({ file_url: img.imageUrl, options: [{ option: \"-loop\", argument: \"1\" }, { option: \"-framerate\", argument: \"30\" }, { option: \"-t\", argument: img.duration.toFixed(2) }] });\n  }\n  mediaInputs.push({ idx: inputIndex, isVideo: img.isVideo, duration: img.duration });\n  inputIndex++;\n}\n\n// 2) 통합 TTS\nconst audioIdx = inputIndex;\ninputs.push({ file_url: mainAudioUrl, options: [] });\ninputIndex++;\n\n// 3) BGM\nconst bgmIdx = inputIndex;\ninputs.push({ file_url: BGM_URL, options: [{ option: \"-stream_loop\", argument: \"-1\" }] });\ninputIndex++;\n\n// 4) 아웃트로 영상 (비디오만 사용, 오디오 무시)\nlet outroIdx = -1;\nlet outroDuration = $('주제 파싱').first().json.outroDuration || 4;\nif (outroUrl) {\n  outroIdx = inputIndex;\n  inputs.push({ file_url: outroUrl, options: [] });\n  inputIndex++;\n}\n\n// 5) SFX: 이미지 전환 + 강조 em\nconst sfxInputs = [];\nfor (let i = 0; i < imgSegments.length - 1; i++) {\n  const next = imgSegments[i + 1];\n  let sfxType = 'pop';\n  if (next.visualType === 'meme') sfxType = 'ppook';\n  inputs.push({ file_url: SFX_MAP[sfxType], options: [] });\n  sfxInputs.push({ idx: inputIndex, type: sfxType, timeMs: Math.round(next.start * 1000) });\n  inputIndex++;\n}\nfor (const sub of subSegments) {\n  if (sub.hasEm) {\n    const emSfx = /\\d/.test(sub.raw) ? 'ding2' : 'pop';\n    inputs.push({ file_url: SFX_MAP[emSfx], options: [] });\n    sfxInputs.push({ idx: inputIndex, type: emSfx, timeMs: Math.round((sub.start + 0.3) * 1000) });\n    inputIndex++;\n  }\n}\n\n// === FILTER COMPLEX ===\nlet filterParts = [];\n\n// 비디오 스케일 + concat\nfor (let i = 0; i < imgSegments.length; i++) {\n  const m = mediaInputs[i];\n  if (m.isVideo) {\n    filterParts.push(`[${m.idx}:v]trim=duration=${m.duration.toFixed(2)},setpts=PTS-STARTPTS,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30[v${i}]`);\n  } else {\n    filterParts.push(`[${m.idx}:v]scale=1080:1080:force_original_aspect_ratio=increase,crop=1080:1080,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30[v${i}]`);\n  }\n}\nconst vLabels = imgSegments.map((_, i) => `[v${i}]`).join('');\nfilterParts.push(`${vLabels}concat=n=${imgSegments.length}:v=1:a=0[vconcat]`);\n\n// 오디오\nfilterParts.push(`[${audioIdx}:a]atrim=duration=${audioDuration},asetpts=PTS-STARTPTS[tts_raw]`);\nfilterParts.push(`[${bgmIdx}:a]atrim=duration=${totalDuration},asetpts=PTS-STARTPTS,volume=0.12,afade=t=out:st=${Math.max(0, totalDuration - 2)}:d=2[bgm]`);\n\n// SFX mix\nconst sfxCount = sfxInputs.length;\nif (sfxCount > 0) {\n  for (let i = 0; i < sfxCount; i++) {\n    const si = sfxInputs[i];\n    filterParts.push(`[${si.idx}:a]atrim=duration=0.3,asetpts=PTS-STARTPTS,volume=0.15,adelay=${si.timeMs}|${si.timeMs}[sfx${i}]`);\n  }\n  const sfxMixLabels = sfxInputs.map((_, i) => `[sfx${i}]`).join('');\n  filterParts.push(`${sfxMixLabels}amix=inputs=${sfxCount}:duration=longest:normalize=0[sfx_mix]`);\n  filterParts.push(`[tts_raw][bgm][sfx_mix]amix=inputs=3:duration=longest:weights=1 1 0.4:normalize=0[amain]`);\n} else {\n  filterParts.push(`[tts_raw][bgm]amix=inputs=2:duration=longest:weights=1 1:normalize=0[amain]`);\n}\n\n// === 아웃트로 비디오 concat ===\nif (outroIdx >= 0) {\n  filterParts.push(`[${outroIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=yuv420p,fps=30[voutro]`);\n  filterParts.push(`[vconcat]format=yuv420p[vmain_fmt]`);\n  filterParts.push(`[vmain_fmt][voutro]concat=n=2:v=1:a=0[vwithoutro]`);\n} else {\n  filterParts.push(`[vconcat]null[vwithoutro]`);\n}\n\n// === 오디오: 메인만 사용, 아웃트로 구간은 무음 패딩 ===\nif (outroIdx >= 0) {\n  const fullDuration = totalDuration + outroDuration;\n  filterParts.push(`[amain]apad=whole_dur=${fullDuration.toFixed(2)}[afinal]`);\n} else {\n  filterParts.push(`[amain]anull[afinal]`);\n}\n\n// 자막 오버레이 (상단 제목 + 하단 자막 + 훅)\nlet overlayFilter = `[vwithoutro]drawbox=y=40:w=1080:h=280:color=#000000@1.0:t=fill,drawtext=expansion=none:text='${escapeDrawtext(hookClean)}':fontsize=72:fontcolor=white:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=120:line_spacing=12`;\n\n// 자막 (글자수 비율 기반 타이밍, 이미지 전환과 독립)\nfor (const sub of subSegments) {\n  const subText = escapeDrawtext(wrapSubtitle(sub.clean, 12));\n  const startT = sub.start.toFixed(2);\n  const endT = (sub.start + sub.duration).toFixed(2);\n  overlayFilter += `,drawtext=expansion=none:text='${subText}':fontsize=52:fontcolor=white:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=h-280:borderw=4:bordercolor=black:enable='between(t,${startT},${endT})'`;\n}\n\n// 훅 자막\nconst hookEscaped = escapeDrawtextMultiline(wrapSubtitle(hookClean, 10));\nconst hookEndT = 2.5;\noverlayFilter += `,drawbox=y=(h-400)/2:w=1080:h=400:color=#000000@0.7:t=fill:enable='between(t,0,${hookEndT})'`;\noverlayFilter += `,drawtext=expansion=none:text='${hookEscaped}':fontsize=80:fontcolor=#CCFF00:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=(h-th)/2:borderw=4:bordercolor=black:enable='between(t,0,${hookEndT})'`;\n// 아웃트로 CTA 자막 (아웃트로 구간에만 표시)\nif (outroIdx >= 0) {\n  totalDuration += outroDuration;  // CTA 계산 전에 아웃트로 길이 반영\n  const ctaText = escapeDrawtextMultiline(wrapSubtitle(outroCta, 14));\n  const outroStartT = (totalDuration - outroDuration).toFixed(2);\n  const outroEndT = totalDuration.toFixed(2);\n  overlayFilter += `,drawbox=y=h-350:w=1080:h=120:color=#000000@0.7:t=fill:enable='between(t,${outroStartT},${outroEndT})'`;\n  overlayFilter += `,drawtext=expansion=none:text='${ctaText}':fontsize=60:fontcolor=#CCFF00:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=h-320:borderw=3:bordercolor=black:enable='between(t,${outroStartT},${outroEndT})'`;\n}\n\noverlayFilter += '[vfinal]';\nfilterParts.push(overlayFilter);\n\nconst nca_payload = {\n  inputs,\n  filters: [{ filter: filterParts.join(';') }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" }, { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" }, { option: \"-preset\", argument: \"fast\" }, { option: \"-crf\", argument: \"23\" },\n      { option: \"-c:a\", argument: \"aac\" }, { option: \"-b:a\", argument: \"192k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" }, { option: \"-movflags\", argument: \"+faststart\" }, { option: \"-t\", argument: totalDuration.toFixed(2) }\n    ],\n    file_name: \"kkultip_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload,\n    totalDuration,\n    imageCount: imgSegments.length,\n    subtitleCount: subSegments.length,\n    hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n    category,\n    outroFile,\n    debugCategory: {\n      from_contentParsing: $('콘텐츠 파싱').first().json.category,\n      from_topicParsing: $('주제 파싱').first().json.category,\n      usedCategory: category,\n      selectedOutro: outroFile || 'none',\n      selectedCta: outroCta || 'none'\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3584,
+        336
+      ],
+      "id": "404f0c26-7e0a-4ea9-9a92-b409b2881a08",
+      "name": "NCA 데이터 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "nca-sagong-2026"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.nca_payload) }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3888,
+        336
+      ],
+      "id": "aceed59c-8a84-4d5c-9462-c4029b65e4ae",
+      "name": "NCA 영상 제작"
+    },
+    {
+      "parameters": {
+        "amount": 10
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3920,
+        624
+      ],
+      "id": "4ef29e6b-9834-46b4-9920-8c0591e82ae2",
+      "name": "NCA 제작 대기",
+      "webhookId": "21f711b5-6ca5-4e2a-9456-b8e3389800e9"
+    },
+    {
+      "parameters": {
+        "jsCode": "// NCA 결과 처리\nconst result = $input.first().json;\nconst prevData = $('NCA 데이터 준비').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (!videoUrl) {\n  throw new Error('NCA 영상 제작 결과 URL 없음: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    '영상 URL': videoUrl,\n    Status: '완료',\n    topic: $('주제 파싱').first().json.topic,\n    category: prevData.category,\n    outro_file: prevData.outroFile || '',\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        336
+      ],
+      "id": "b450da49-f5c0-47b1-b8aa-89ad7451c1e8",
+      "name": "NCA 결과 처리"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+          "mode": "list",
+          "cachedResultName": "온카스터디",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "설명형 숏츠"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "topic"
+          ],
+          "schema": [
+            {
+              "id": "topic",
+              "displayName": "topic",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Subject",
+              "displayName": "Subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Caption",
+              "displayName": "Caption",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "영상 URL",
+              "displayName": "영상 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Comment",
+              "displayName": "Comment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "generatedAt",
+              "displayName": "generatedAt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "outro_file",
+              "displayName": "outro_file",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        4496,
+        336
+      ],
+      "id": "319950f6-698f-4a59-84d3-04217db6b3b2",
+      "name": "상태 업데이트",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const topic = $input.first().json.topic || $input.first().json['주제'] || '';\nif (!topic) {\n  throw new Error('topic이 비어있습니다. 시트에 topic 컬럼을 확인하세요.');\n}\nconst category = $input.first().json.category || 1;\nconst subtopic = $input.first().json.subtopic || '';\n\nconst CATEGORY_GUIDE = {\n  1: `## 이 영상의 주제: 먹튀검증/안전\n- 다룰 내용: 먹튀 피해사례, 검증 과정, 패널티 결과, 안전사이트 구별법\n- 핵심 용어: 먹튀, 패널티, 제휴사이트, 검증, 롤링, 출금, 충전\n- 스토리 흐름: 피해사례 → 온카스터디 검증팀 출동 → 해결/패널티 → CTA\n- 주의: 앱테크/포인트/방송 내용 넣지 마`,\n\n  2: `## 이 영상의 주제: 무료 혜택/앱테크\n- 다룰 내용: 포인트존 활용법, 돌림판, 복권, 기프티콘 교환, 무료 혜택\n- 핵심 용어: 포인트, 돌림판, 복권, 기프티콘, 무료, 적립, 교환\n- 스토리 흐름: 꿀팁 소개 → 구체적 방법 → 이렇게 모으면 이만큼 → CTA\n- 주의: 카지노/먹튀/도박/롤링/출금 용어 절대 금지!`,\n\n  3: `## 이 영상의 주제: 잭팟/대박 후기\n- 다룰 내용: 잭팟 당첨 사례, 제보하면 포인트 5천 보상, 후기 공유\n- 핵심 용어: 잭팟, 대박, 당첨, 인증, 제보, 포인트 보상\n- 스토리 흐름: 누군가 대박 터짐 → 얼마 땄는지 → 제보하면 포인트도 → CTA\n- 주의: 먹튀/앱테크 내용 넣지 마`,\n\n  4: `## 이 영상의 주제: 방송 하이라이트\n- 다룰 내용: 스트리머 방송 명장면, 방송존 소개(동물원/가디언/인생역전)\n- 핵심 용어: 방송, 스트리머, 하이라이트, 실시간, 소통, 슬롯, 바카라\n- 스토리 흐름: 레전드 장면 소개 → 어떤 방송인지 → 실시간 소통 가능 → CTA\n- 주의: 먹튀/앱테크 내용 넣지 마`,\n\n  5: `## 이 영상의 주제: 스포츠/뉴스\n- 다룰 내용: 스포츠 경기 분석, 카지노/스포츠 뉴스, 픽 정보\n- 핵심 용어: 분석, 픽, 적중, 배당, 축구, 농구, 야구, 뉴스\n- 스토리 흐름: 최신 소식/분석 → 구체적 정보 → 온카스터디에서 더 보기 → CTA\n- 주의: 먹튀/앱테크/포인트 내용 넣지 마`\n};\n\nconst FORBIDDEN_MAP = {\n  1: '포인트, 돌림판, 복권, 기프티콘, 앱테크, 잭팟, 방송, 스트리머, 스포츠, 분석, 픽',\n  2: '먹튀, 패널티, 검증, 롤링, 출금, 충전, 잭팟, 대박, 당첨, 방송, 스트리머, 스포츠, 분석',\n  3: '먹튀, 패널티, 검증, 롤링, 출금, 포인트, 돌림판, 복권, 기프티콘, 앱테크, 방송, 스트리머, 스포츠, 분석',\n  4: '먹튀, 패널티, 검증, 포인트, 돌림판, 복권, 기프티콘, 앱테크, 잭팟, 스포츠, 분석, 픽',\n  5: '먹튀, 패널티, 검증, 포인트, 돌림판, 복권, 기프티콘, 앱테크, 잭팟, 방송, 스트리머'\n};\n\nconst guide = CATEGORY_GUIDE[category] || CATEGORY_GUIDE[1];\nconst forbiddenWords = FORBIDDEN_MAP[category] || FORBIDDEN_MAP[1];\n\nconst subtopicLine = subtopic\n  ? `\\n## 집중할 서브토픽 (매우 중요!!!)\\n이 영상은 \"${subtopic}\"에 대해서만 집중해서 다뤄!\\n다른 기능이나 서비스는 언급하지 마! 이 주제 하나만 깊게!\\n`\n  : '';\n\nconst prompt = `너는 유튜브 쇼츠(Shorts) 대본 기획 및 작성 전문가야. 카지노/슬롯 커뮤니티 '온카스터디' 홍보 영상을 만들어.\n아래 확정된 주제를 바탕으로 35~40초 분량의 쇼츠 스크립트를 작성해줘.\n\n## 반드시 지킬 주제\n${topic}\n\n${guide}\n${subtopicLine}\n위 가이드에 명시된 내용만 다뤄! 다른 카테고리 내용이 섞이면 실패야!\n\n## ★★★ 절대 금지 규칙 (위반 시 전체 실패!) ★★★\n다음 단어들이 subtitles에 하나라도 포함되면 0점이야! 절대 쓰지 마!\n금지 단어: ${forbiddenWords}\n한 번 더 강조: [${forbiddenWords}] ← 이 단어들 절대 금지!\n\n## 핵심 구조: images(화면)와 subtitles(자막)를 분리해!\n- images: 화면에 보여줄 이미지/밈 목록 (4~6개, 천천히 전환)\n- subtitles: 나레이션 자막 목록 (12~20개, 빠르게 쪼개기)\n- 이미지는 천천히 바뀌고, 자막만 빠르게 끊어서 나오는 구조야!\n\n## ★★★ 스토리 연결 규칙 (매우 중요!!!) ★★★\\nsubtitles 전체가 하나의 이야기로 자연스럽게 이어져야 해!\\n처음부터 끝까지 한 사람이 말하는 것처럼 흘러가야 함!\\n\\n절대 금지 패턴:\\n- 키워드 나열식: \"축구 배당 대박 / 농구 픽 적중 / 야구 뉴스 체크\" ← 이런 거 절대 안 됨!\\n- 기능 나열식: \"돌림판으로 적립 / 복권으로 적립 / 오목으로 적립\" ← 이것도 금지!\\n- 홍보 문구 나열: \"출석체크 1000점 / 돌림판 추가 적립 / 복권 대박 찬스\" ← 금지!\\n\\n올바른 패턴:\\n- 도입(충격/공감) → 상황 설명 → 해결 과정 → 결과 → CTA\\n- 모든 자막이 앞뒤 문맥과 연결되어야 해!\\n- \"근데\", \"그래서\", \"결과?\", \"알고보니\" 같은 연결어로 자연스럽게 이어가!\\n\\n## 자막(subtitles) 쪼개기 규칙 (매우 중요!!!)\n시청자가 지루하지 않게 자막이 0.5초~1초 단위로 딱딱 끊어서 나오게 연출할 거야!\n문장을 길게 쓰지 말고, 한 호흡에 말하는 단어/구절 단위로 아주 잘게 쪼개!\n- 각 subtitle: 반드시 띄어쓰기 포함 3자 ~ 10자 이내로 짧게 써!\n- 띄어쓰기 문법 완벽하게 지켜!\n- 나레이션은 앞 자막과 자연스럽게 이어져야 해! 마침표(.) 찍지 마!\n\n[자막 쪼개기 예시]\n나쁜 예: \"솔직히 처음엔 몰랐지 충전하고 바로 돌렸는데\"\n좋은 예:\n\"솔직히\"\n\"처음엔 몰랐지\"\n\"충전하고\"\n\"바로 돌렸는데\"\n\n## ★ 마지막 자막 규칙 ★\n- 마지막 1~2개 subtitle은 시청자의 행동을 유도하는 완결된 한국어 문장이어야 해!\n- 반드시 종결어미(~해, ~해봐, ~야, ~마, ~하세요, ~가자, ~너 등)로 끝나야 해!\n- 매번 다른 표현을 자유롭게 창작해! 똑같은 패턴 반복 금지!\n- 절대 문장이 중간에 끊기면 안 돼! \"무료 혜택 지금 바로\" 이런 식으로 미완성 금지!\n\n## 이미지(images) 규칙\n- 4~6개만! (자막보다 훨씬 적게)\n- keyword는 Pexels에서 검색될 직관적인 영어 명사 1~2개\n- visual_type: \"image\" 또는 \"meme\" (meme은 최대 2개!)\n- meme일 때 meme_mood: thinking, excited, shocked, sad, angry, cool, celebrating, snacking, speechless, smoking, disappointed, thumbsup, crying, desperate, bored, suspicious, money 중 택1\n\n## 강조 태그 (효과음 연동)\n- subtitles에서 핵심 단어에 <em>태그</em> 사용!\n- 예: \"<em>먹튀</em> 당함\", \"롤링 <em>3배</em>면\"\n\n## 구체적 수치 필수!\n숫자, 금액, 시간 등 구체적 수치를 반드시 포함해!\n\n## 출력 형식 (순수 JSON만, 코드블록 없이)\n- JSON 값 안에 쌍따옴표(\")나 줄바꿈 문자를 절대 넣지 마!\n{\n  \"hook_title\": \"첫 화면 노란색 어그로 자막 (15자 내외)\",\n  \"images\": [\n    { \"keyword\": \"영어 명사\", \"visual_type\": \"image\" },\n    { \"keyword\": \"영어 명사\", \"visual_type\": \"meme\", \"meme_mood\": \"shocked\" }\n  ],\n  \"subtitles\": [\n    \"3~10자 짧은 자막\",\n    \"<em>강조</em> 포함 자막\",\n    \"이렇게 쪼개서\"\n  ],\n  \"Subject\": \"제목 #온카스터디 + 카테고리 관련 해시태그\",\n  \"Caption\": \"설명 #온카스터디 + 해시태그\",\n  \"Comment\": \"구글에 온카스터디 검색!\"\n}\n\n## 마지막 확인! 금지단어 [${forbiddenWords}] 하나라도 들어가면 0점!`;\nreturn [{\n  json: {\n    prompt,\n    topic,\n    category,\n    subtopic,\n    outroFile: $input.first().json.outroFile || '',\n    outroCta: $input.first().json.outroCta || '',\n    row_number: $input.first().json.row_number,\n    ...$input.first().json\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        304
+      ],
+      "id": "d35c1c7b-3cc8-448b-a309-dbfe73dec39c",
+      "name": "프롬프트 생성"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pexels.com/v1/search?query={{ encodeURIComponent($json.keyword || $json.image_prompt?.split(',')[0] || 'abstract background') }}&per_page=3&orientation=portrait",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        2176,
+        480
+      ],
+      "id": "76aadc3c-5ec1-487b-a68c-6725f0fd4ba6",
+      "name": "이미지 검색",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1vPRgFSX7u4ecIy4",
+          "name": "Pexels"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 밈 카탈로그: MinIO에 호스팅된 밈/리액션 영상 URL (35개)\nconst MEME_CATALOG = {\n  thinking: [\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_01.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_02.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_03.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_04.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_05.mp4',\n    'http://76.13.182.180:9000/memes/thinking/big_brain_time.png',\n    'http://76.13.182.180:9000/memes/thinking/18d7459865c4bbdeb.mp4',\n    'http://76.13.182.180:9000/memes/thinking/charlie_conspiracy.jpg',\n    'http://76.13.182.180:9000/memes/thinking/hackerman.jpg',\n    'http://76.13.182.180:9000/memes/thinking/sherlock_magnifying.jpg',\n    'http://76.13.182.180:9000/memes/thinking/anime_studying.png',\n    'http://76.13.182.180:9000/memes/thinking/detective_pikachu_twist.png',\n    'http://76.13.182.180:9000/memes/thinking/roll_safe_think.jpg',\n    'http://76.13.182.180:9000/memes/thinking/simpsons_lenny_praying.jpg',\n  ],\n  excited: [\n    'http://76.13.182.180:9000/memes/excited/meme_excited_01.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_02.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_03.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_04.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_05.mp4',\n    'http://76.13.182.180:9000/memes/excited/%EC%A7%90%EC%BA%90%EB%A6%AC%20%ED%82%A4%EB%B3%B4%EB%93%9C.mp4',\n  ],\n  shocked: [\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_01.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_02.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_03.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_04.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_05.mp4',\n    'http://76.13.182.180:9000/memes/shocked/anime_shocked.jpg',\n    'http://76.13.182.180:9000/memes/shocked/surprised_pikachu.jpg',\n    'http://76.13.182.180:9000/memes/shocked/spongebob_shocked.png',\n    'http://76.13.182.180:9000/memes/shocked/cat_shocked.jpg',\n    'http://76.13.182.180:9000/memes/shocked/pepe_shocked.png',\n    'http://76.13.182.180:9000/memes/shocked/the_office_no.jpg',\n    'http://76.13.182.180:9000/memes/shocked/oprah_surprised.jpg',\n  ],\n  sad: [\n    'http://76.13.182.180:9000/memes/sad/meme_sad_01.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_02.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_03.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_04.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_05.mp4',\n    'http://76.13.182.180:9000/memes/sad/%ED%98%80%20%EB%82%B4%EB%AF%BC%20%EB%A9%8D%ED%95%9C%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/sad/squidward_window.jpg',\n  ],\n  angry: [\n    'http://76.13.182.180:9000/memes/angry/meme_angry_01.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_02.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_03.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_04.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_05.mp4',\n    'http://76.13.182.180:9000/memes/angry/%EB%B9%A8%EA%B0%84%20%EB%B6%84%EB%85%B8%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/angry/table_flip.jpg',\n    'http://76.13.182.180:9000/memes/angry/thanos_snap.png',\n  ],\n  cool: [\n    'http://76.13.182.180:9000/memes/cool/meme_cool_01.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_02.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_03.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_04.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_05.mp4',\n    'http://76.13.182.180:9000/memes/cool/mic_drop.jpg',\n    'http://76.13.182.180:9000/memes/cool/onepiece_admirals.jpg',\n    'http://76.13.182.180:9000/memes/cool/cool_guys_explosion.png',\n    'http://76.13.182.180:9000/memes/cool/tony_stark_sunglasses.jpg',\n    'http://76.13.182.180:9000/memes/cool/pepe_tuxedo_wine.jpg',\n    'http://76.13.182.180:9000/memes/cool/chad_yes.jpg',\n    'http://76.13.182.180:9000/memes/cool/kanye_shrug.jpg',\n  ],\n  celebrating: [\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_01.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_02.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_03.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_04.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_05.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/%ED%8C%8C%ED%8B%B0%EB%AA%A8%EC%9E%90%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/celebrating/leonardo_toast.jpg',\n  ],\n  money: [\n    'http://76.13.182.180:9000/memes/money/wolf_wallstreet_money.jpg',\n    'http://76.13.182.180:9000/memes/money/mr_krabs_money.jpg',\n    'http://76.13.182.180:9000/memes/money/make_it_rain.jpg',\n    'http://76.13.182.180:9000/memes/money/stonks_meme.jpg',\n    'http://76.13.182.180:9000/memes/money/shut_up_take_money.jpg',\n    'http://76.13.182.180:9000/memes/money/empty_wallet.jpg',\n    'http://76.13.182.180:9000/memes/money/money_printer.jpg',\n    'http://76.13.182.180:9000/memes/money/scrooge_swimming.jpg',\n  ],\n  snacking: [\n    'http://76.13.182.180:9000/memes/snacking/%EA%B3%BC%EC%9E%90%20%EB%A8%B9%EB%8A%94%20%ED%8E%98%ED%8E%98.png',\n  ],\n  speechless: [\n    'http://76.13.182.180:9000/memes/speechless/%22...%22%20%EB%A9%8D%ED%95%9C%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/speechless/nick_young_confused.jpg',\n    'http://76.13.182.180:9000/memes/speechless/joey_confused.jpg',\n    'http://76.13.182.180:9000/memes/speechless/john_travolta_confused.jpg',\n    'http://76.13.182.180:9000/memes/speechless/confused_math.jpg',\n    'http://76.13.182.180:9000/memes/speechless/blinking_guy.jpg',\n  ],\n  smoking: [\n    'http://76.13.182.180:9000/memes/smoking/%EB%8B%B4%EB%B0%B0%20%ED%94%BC%EB%8A%94%20%ED%8E%98%ED%8E%98.png',\n  ],\n  disappointed: [\n    'http://76.13.182.180:9000/memes/disappointed/%EC%8A%A4%ED%8D%BC%EC%8A%A4%20%EC%9C%A0%EB%8B%88%ED%8F%BC%20%EC%9A%B0%EC%9A%B8%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/disappointed/facepalm_picard.jpg',\n  ],\n  thumbsup: [\n    'http://76.13.182.180:9000/memes/thumbsup/%EC%97%84%EC%A7%80%EC%B2%99%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/thumbsup/obama_not_bad.jpg',\n  ],\n  crying: [\n    'http://76.13.182.180:9000/memes/crying/%EC%9A%B0%EB%8A%94%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/crying/pedro_pascal_crying.jpg',\n    'http://76.13.182.180:9000/memes/crying/jordan_crying.jpg',\n    'http://76.13.182.180:9000/memes/crying/pepe_crying.jpg',\n  ],\n  desperate: [\n    'http://76.13.182.180:9000/memes/desperate/%EC%BD%98%EC%84%BC%ED%8A%B8%20%ED%8F%AC%ED%81%AC%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/desperate/this_is_fine_dog.jpg',\n    'http://76.13.182.180:9000/memes/desperate/spongebob_fire.jpg',\n    'http://76.13.182.180:9000/memes/desperate/ron_swanson_computer.mp4',\n  ],\n  bored: [\n    'http://76.13.182.180:9000/memes/bored/%ED%97%A4%EB%93%9C%ED%8F%B0%20%EB%AC%B4%ED%91%9C%EC%A0%95%20%ED%8E%98%ED%8E%98.png',\n    'http://76.13.182.180:9000/memes/bored/jim_halpert_look.jpg',\n    'http://76.13.182.180:9000/memes/bored/cat_newspaper.jpg',\n  ],\n  suspicious: [\n    'http://76.13.182.180:9000/memes/suspicious/%ED%9B%84%EB%93%9C%20%EC%93%B4%20%EC%82%90%EC%A7%84%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/kevin_hart_face.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/side_eye_chloe.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/palpatine_good.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/dark_robot_ai.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/burns_excellent.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/joker_card.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/grinch_smile.jpg',\n  ],\n};\n\nconst items = $input.all();\nconst segAll = $('세그먼트 분리').all();\n\nreturn items.map((item, i) => {\n  const data = item.json;\n  const segData = segAll[i]?.json || {};\n  const visualType = segData.visual_type || 'image';\n  const memeMood = segData.meme_mood || 'thinking';\n\n  if (visualType === 'meme') {\n    const catalog = MEME_CATALOG[memeMood] || MEME_CATALOG.thinking;\n    const randomIdx = Math.floor(Math.random() * catalog.length);\n    return {\n      json: {\n        ...data,\n        visual_type: 'meme',\n        meme_mood: memeMood,\n        images: [{ url: catalog[randomIdx] }],\n        is_video: catalog[randomIdx].endsWith('.mp4'),\n      }\n    };\n  } else {\n    const photos = data.photos || [];\n    let imageUrl = '';\n    if (photos.length > 0) {\n      const randPhoto = photos[Math.floor(Math.random() * photos.length)];\n      imageUrl = randPhoto.src?.portrait || randPhoto.src?.large || randPhoto.src?.medium || '';\n    }\n    if (!imageUrl) {\n      imageUrl = 'https://images.pexels.com/photos/3021120/pexels-photo-3021120.jpeg?auto=compress&cs=tinysrgb&w=1080';\n    }\n    return {\n      json: {\n        ...data,\n        visual_type: 'image',\n        meme_mood: '',\n        images: [{ url: imageUrl }],\n        is_video: false,\n      }\n    };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2560,
+        480
+      ],
+      "id": "417f9a14-190f-48d9-a466-fde992082665",
+      "name": "이미지 URL 추출"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "너는 '온카스터디' 커뮤니티의 YouTube Shorts 주제 기획자야.\n\n아래 5가지 핵심 주제 카테고리 중 **{{ $json.category }}번 카테고리**에 해당하는 YouTube Shorts 영상 주제(topic) 1개를 생성해줘.\n반드시 {{ $json.category }}번 카테고리의 내용에 맞는 주제를 만들어!\n\n## 5가지 카테고리 (랜덤으로 하나 선택)\n1. \"내 돈 지키는 꿀팁\" (안전/먹튀검증 썰) - 활용: 먹튀제보, 패널티 명단, 스터디판\n2. \"돈 안 쓰고 돈 버는 법\" (무료 혜택/앱테크) - 활용: 포인트존, 돌림판, 기프티콘 교환, 무료슬롯 체험\n3. \"대박 터진 썰 푼다\" (리얼 후기/잭팟 인증) - 활용: 잭팟 제보, 후기게시판\n4. \"레전드 방송 하이라이트\" (엔터테인먼트) - 활용: 방송존, 하이라이트\n5. \"오늘의 픽 & 정보 요약\" (스포츠/카지노 뉴스) - 활용: 스포츠 분석, 카지노 뉴스\n\n## 후킹 원칙 (매우 중요!)\ntopic 자체가 \"클릭하고 싶은 제목\"이어야 해.\n밋밋한 정보형 제목 절대 금지!\n\n핵심 원칙:\n- 읽는 순간 \"어? 뭔데?\" 하고 궁금해지는 제목\n- 감정을 자극할 것 (놀람, 공포, 부러움, 호기심)\n- 구체적 숫자나 상황이 들어갈 것\n- 매번 다른 표현과 구조를 사용할 것 (똑같은 패턴 반복 절대 금지!)\n- 주제(topic) 텍스트 내에 자연스럽게 '온카스터디'를 한 번 언급해줘.\n\n참고할 수 있는 감정 트리거 (이것만 쓰지 말고 자유롭게 변형해):\n숫자충격, 손실공포, 비밀폭로, 반전놀람, 대리만족, 분노유발, 비교자극, 긴급속보, 공감유도, 도전심리 등\n\n❌ 이런 제목은 절대 금지:\n- \"먹튀사이트 구별법\" (교과서식)\n- \"안전놀이터 고르는 법\" (평범)\n- \"스포츠 배팅 초보 가이드\" (재미없음)\n\n출력 형식 (순수 JSON만, 코드블록 없이):\n- JSON 값 안에 쌍따옴표(\")나 줄바꿈 문자를 절대 넣지 마!\n{\"topic\": \"후킹 원칙이 적용된 자극적인 쇼츠 주제 20~40자\"}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        304
+      ],
+      "id": "f691c2b0-ba9e-41de-b342-ddf6ea0d4a09",
+      "name": "AI 주제 생성",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\nconst data = JSON.parse(cleanText);\n\nif (!data.topic) {\n  throw new Error('AI 주제 생성 결과에 topic이 없습니다: ' + cleanText);\n}\n\nconst catNode = $('카테고리 결정').first().json;\nreturn [{\n  json: {\n    topic: data.topic,\n    category: catNode.category,\n    outroFile: catNode.outroFile,\n    outroCta: catNode.outroCta,\n    outroDuration: catNode.outroDuration,\n    subtopic: catNode.subtopic,\n    row_number: null\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        304
+      ],
+      "id": "a15bf7bf-1820-45d4-ae9c-f38db2d345f7",
+      "name": "주제 파싱"
+    },
+    {
+      "parameters": {
+        "jsCode": "const category = Math.floor(Math.random() * 5) + 1;\n\nconst OUTRO_VIDEOS = {\n  1: [\n    { file: 'partner_site.mp4', duration: 3.5, cta: '검증된 제휴사이트에서 이용하세요', subtopic: '검증된 제휴사이트 이용 방법' },\n    { file: 'scam_report.mp4', duration: 3.0, cta: '먹튀 확인하고 거르세요', subtopic: '먹튀 제보와 검증 과정' }\n  ],\n  2: [\n    { file: 'pointzone_game.mp4', duration: 4.53, cta: '포인트로 다양한 게임 즐기세요', subtopic: '포인트존 게임으로 포인트 모으는 방법' },\n    { file: 'pointzone_lottery.mp4', duration: 5.36, cta: '복권으로 포인트 모아보세요', subtopic: '복권으로 포인트 적립하는 방법' },\n    { file: 'pointzone_spin.mp4', duration: 4.07, cta: '돌림판으로 포인트 모아보세요', subtopic: '돌림판으로 포인트 모으는 방법' },\n    { file: 'gifticon.mp4', duration: 2.5, cta: '포인트로 기프티콘 교환하세요', subtopic: '포인트를 기프티콘으로 교환하는 방법' }\n  ],\n  3: [\n    { file: 'jackpot_report.mp4', duration: 3.77, cta: '잭팟 제보하면 포인트 5천 지급!', subtopic: '잭팟 당첨 사례와 제보 방법' },\n    { file: 'best_post.mp4', duration: 3.87, cta: '베스트 글 올리고 포인트 받자!', subtopic: '커뮤니티 베스트 글과 유저 참여' }\n  ],\n  4: [\n    { file: 'highlight.mp4', duration: 2.77, cta: '놓친 방송 하이라이트 챙겨보세요', subtopic: '스트리머 방송 명장면 하이라이트' },\n    { file: 'live_broadcast.mp4', duration: 4.7, cta: '온카스터디 방송존에서 실시간 소통하세요', subtopic: '실시간 방송존에서 스트리머와 소통' }\n  ],\n  5: [\n    { file: 'sports_news.mp4', duration: 3.43, cta: '최신 스포츠 뉴스 확인하세요', subtopic: '최신 스포츠 뉴스' },\n    { file: 'casino_news.mp4', duration: 3.2, cta: '최신 카지노 뉴스 확인하세요', subtopic: '최신 카지노/게임사 뉴스' },\n    { file: 'sports_analysis.mp4', duration: 3.5, cta: '스포츠 분석으로 적중률 올리세요', subtopic: '스포츠 경기 분석과 픽' }\n  ]\n};\n\nconst outroList = OUTRO_VIDEOS[category] || [];\nlet outroFile = '';\nlet outroCta = '';\nlet subtopic = '';\nlet outroDuration = 0;\nif (outroList.length > 0) {\n  const picked = outroList[Math.floor(Math.random() * outroList.length)];\n  outroFile = picked.file;\n  outroCta = picked.cta;\n  subtopic = picked.subtopic;\n  outroDuration = picked.duration;\n}\n\nreturn [{ json: { category, outroFile, outroCta, subtopic, outroDuration } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        304
+      ],
+      "id": "01961828-a580-40a5-8844-fe28567c9178",
+      "name": "카테고리 결정"
+    }
+  ],
+  "connections": {
+    "수동 실행": {
+      "main": [
+        [
+          {
+            "node": "카테고리 결정",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 콘텐츠 생성": {
+      "main": [
+        [
+          {
+            "node": "콘텐츠 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "콘텐츠 파싱": {
+      "main": [
+        [
+          {
+            "node": "시트 기록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "시트 기록": {
+      "main": [
+        [
+          {
+            "node": "TTS 요청",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "세그먼트 분리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "세그먼트 분리": {
+      "main": [
+        [
+          {
+            "node": "이미지 검색",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 요청": {
+      "main": [
+        [
+          {
+            "node": "TTS 결과 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 결과 처리": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "NCA 데이터 준비",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 데이터 준비": {
+      "main": [
+        [
+          {
+            "node": "NCA 영상 제작",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 영상 제작": {
+      "main": [
+        [
+          {
+            "node": "NCA 결과 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 제작 대기": {
+      "main": [
+        []
+      ]
+    },
+    "NCA 결과 처리": {
+      "main": [
+        [
+          {
+            "node": "상태 업데이트",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "프롬프트 생성": {
+      "main": [
+        [
+          {
+            "node": "AI 콘텐츠 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 검색": {
+      "main": [
+        [
+          {
+            "node": "이미지 URL 추출",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 URL 추출": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI 주제 생성": {
+      "main": [
+        [
+          {
+            "node": "주제 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "주제 파싱": {
+      "main": [
+        [
+          {
+            "node": "프롬프트 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "카테고리 결정": {
+      "main": [
+        [
+          {
+            "node": "AI 주제 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {
+    "수동 실행": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
     ],
-    "connections": {
-        "\uc218\ub3d9 \uc2e4\ud589": {
-            "main": [
-                [
-                    {
-                        "node": "\uce74\ud14c\uace0\ub9ac \uacb0\uc815",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
+    "AI 콘텐츠 생성": [
+      {
+        "json": {
+          "content": {
+            "parts": [
+              {
+                "text": "{\n  \"hook_title\": \"대박 후기? 온카스터디가 진실을 밝혀드립니다!\",\n  \"images\": [\n    {\n      \"keyword\": \"jackpot\",\n      \"visual_type\": \"image\"\n    },\n    {\n      \"keyword\": \"money falling\",\n      \"visual_type\": \"image\"\n    },\n    {\n      \"keyword\": \"celebrating\",\n      \"visual_type\": \"meme\",\n      \"meme_mood\": \"celebrating\"\n    },\n    {\n      \"keyword\": \"thumbs up\",\n      \"visual_type\": \"meme\",\n      \"meme_mood\": \"thumbsup\"\n    },\n    {\n      \"keyword\": \"online community\",\n      \"visual_type\": \"image\"\n    }\n  ],\n  \"subtitles\": [\n    \"진짜 <em>대박</em> 터졌어요\",\n    \"하루아침에\",\n    \"인생 역전?\",\n    \"얼마나 땄냐구요?\",\n    \"무려 3,500만원!\",\n    \"믿기시나요?\",\n    \"온카스터디에서\",\n    \"인증 후기를 봤어요\",\n    \"이런 <em>대박</em>\",\n    \"꿈꿔왔는데!\",\n    \"당첨 사실을\",\n    \"제보하면\",\n    \"바로 5천 보상!\",\n    \"이거 실화야?\",\n    \"여러분도\",\n    \"당첨 후기\",\n    \"공유해봐요\",\n    \"함께 <em>대박</em>을\",\n    \"꿈꿔봐요\",\n    \"지금 바로 온카스터디 검색!\"\n  ],\n  \"Subject\": \"제목 #온카스터디 #잭팟후기 #대박인증\",\n  \"Caption\": \"온카스터디에서 잭팟 터진 리얼 후기를 만나보세요! 3,500만원 당첨 사례 공개! 제보 시 5천 보상까지! #온카스터디 #잭팟 #당첨 #인증 #제보\",\n  \"Comment\": \"구글에 온카스터디 검색!\"\n}"
+              }
+            ],
+            "role": "model"
+          },
+          "finishReason": "STOP",
+          "index": 0
         },
-        "AI \ucf58\ud150\uce20 \uc0dd\uc131": {
-            "main": [
-                [
-                    {
-                        "node": "\ucf58\ud150\uce20 \ud30c\uc2f1",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\ucf58\ud150\uce20 \ud30c\uc2f1": {
-            "main": [
-                [
-                    {
-                        "node": "\uc2dc\ud2b8 \uae30\ub85d",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc2dc\ud2b8 \uae30\ub85d": {
-            "main": [
-                [
-                    {
-                        "node": "TTS \uc694\uccad",
-                        "type": "main",
-                        "index": 0
-                    },
-                    {
-                        "node": "\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc138\uadf8\uba3c\ud2b8 \ubd84\ub9ac": {
-            "main": [
-                [
-                    {
-                        "node": "\uc774\ubbf8\uc9c0 \uac80\uc0c9",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "TTS \uc694\uccad": {
-            "main": [
-                [
-                    {
-                        "node": "TTS \uacb0\uacfc \ucc98\ub9ac",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "TTS \uacb0\uacfc \ucc98\ub9ac": {
-            "main": [
-                [
-                    {
-                        "node": "Merge",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Merge": {
-            "main": [
-                [
-                    {
-                        "node": "Aggregate",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Aggregate": {
-            "main": [
-                [
-                    {
-                        "node": "NCA \ub370\uc774\ud130 \uc900\ube44",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "NCA \ub370\uc774\ud130 \uc900\ube44": {
-            "main": [
-                [
-                    {
-                        "node": "NCA \uc601\uc0c1 \uc81c\uc791",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "NCA \uc601\uc0c1 \uc81c\uc791": {
-            "main": [
-                [
-                    {
-                        "node": "NCA \uacb0\uacfc \ucc98\ub9ac",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "NCA \uc81c\uc791 \ub300\uae30": {
-            "main": [
-                []
-            ]
-        },
-        "NCA \uacb0\uacfc \ucc98\ub9ac": {
-            "main": [
-                [
-                    {
-                        "node": "\uc0c1\ud0dc \uc5c5\ub370\uc774\ud2b8",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\ud504\ub86c\ud504\ud2b8 \uc0dd\uc131": {
-            "main": [
-                [
-                    {
-                        "node": "AI \ucf58\ud150\uce20 \uc0dd\uc131",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc774\ubbf8\uc9c0 \uac80\uc0c9": {
-            "main": [
-                [
-                    {
-                        "node": "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc774\ubbf8\uc9c0 URL \ucd94\ucd9c": {
-            "main": [
-                [
-                    {
-                        "node": "Merge",
-                        "type": "main",
-                        "index": 1
-                    }
-                ]
-            ]
-        },
-        "AI \uc8fc\uc81c \uc0dd\uc131": {
-            "main": [
-                [
-                    {
-                        "node": "\uc8fc\uc81c \ud30c\uc2f1",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uc8fc\uc81c \ud30c\uc2f1": {
-            "main": [
-                [
-                    {
-                        "node": "\ud504\ub86c\ud504\ud2b8 \uc0dd\uc131",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "\uce74\ud14c\uace0\ub9ac \uacb0\uc815": {
-            "main": [
-                [
-                    {
-                        "node": "AI \uc8fc\uc81c \uc0dd\uc131",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
+        "pairedItem": {
+          "item": 0
         }
-    },
-    "settings": {
-        "executionOrder": "v1",
-        "callerPolicy": "workflowsFromSameOwner",
-        "availableInMCP": false
-    },
-    "staticData": null,
-    "meta": null,
-    "pinData": {},
-    "versionId": "6499ef28-999d-4b71-aeac-867b67e1f173",
-    "activeVersionId": null,
-    "versionCounter": 197,
-    "triggerCount": 0,
-    "shared": [
-        {
-            "updatedAt": "2026-02-25T21:09:13.257Z",
-            "createdAt": "2026-02-25T21:09:13.257Z",
-            "role": "workflow:owner",
-            "workflowId": "vdl0YHQCpt9cXI2f",
+      }
+    ],
+    "콘텐츠 파싱": [
+      {
+        "json": {
+          "hook_title": "대박 후기? 온카스터디가 진실을 밝혀드립니다!",
+          "images": [
+            {
+              "keyword": "jackpot",
+              "visual_type": "image",
+              "meme_mood": ""
+            },
+            {
+              "keyword": "money falling",
+              "visual_type": "image",
+              "meme_mood": ""
+            },
+            {
+              "keyword": "celebrating",
+              "visual_type": "meme",
+              "meme_mood": "celebrating"
+            },
+            {
+              "keyword": "thumbs up",
+              "visual_type": "meme",
+              "meme_mood": "thumbsup"
+            },
+            {
+              "keyword": "online community",
+              "visual_type": "image",
+              "meme_mood": ""
+            }
+          ],
+          "subtitles": [
+            "진짜 <em>대박</em> 터졌어요",
+            "하루아침에",
+            "인생 역전?",
+            "얼마나 땄냐구요?",
+            "무려 3,500만원!",
+            "믿기시나요?",
+            "온카스터디에서",
+            "인증 후기를 봤어요",
+            "이런 <em>대박</em>",
+            "꿈꿔왔는데!",
+            "당첨 사실을",
+            "제보하면",
+            "바로 5천 보상!",
+            "이거 실화야?",
+            "여러분도",
+            "당첨 후기",
+            "공유해봐요",
+            "함께 <em>대박</em>을",
+            "꿈꿔봐요",
+            "지금 바로 온카스터디 검색!"
+          ],
+          "Subject": "제목 #온카스터디 #잭팟후기 #대박인증",
+          "Caption": "온카스터디에서 잭팟 터진 리얼 후기를 만나보세요! 3,500만원 당첨 사례 공개! 제보 시 5천 보상까지! #온카스터디 #잭팟 #당첨 #인증 #제보",
+          "Comment": "구글에 온카스터디 검색!",
+          "fullDialogue": "진짜 <em>대박</em> 터졌어요 하루아침에 인생 역전? 얼마나 땄냐구요? 무려 3,500만원! 믿기시나요? 온카스터디에서 인증 후기를 봤어요 이런 <em>대박</em> 꿈꿔왔는데! 당첨 사실을 제보하면 바로 5천 보상! 이거 실화야? 여러분도 당첨 후기 공유해봐요 함께 <em>대박</em>을 꿈꿔봐요 지금 바로 온카스터디 검색!",
+          "Narration": "진짜 <em>대박</em> 터졌어요 하루아침에 인생 역전? 얼마나 땄냐구요? 무려 3,500만원! 믿기시나요? 온카스터디에서 인증 후기를 봤어요 이런 <em>대박</em> 꿈꿔왔는데! 당첨 사실을 제보하면 바로 5천 보상! 이거 실화야? 여러분도 당첨 후기 공유해봐요 함께 <em>대박</em>을 꿈꿔봐요 지금 바로 온카스터디 검색!",
+          "imageCount": 5,
+          "subtitleCount": 20,
+          "memeCount": 2,
+          "Status": "생성 중",
+          "generatedAt": "2026-02-28T01:12:09.103Z",
+          "topic": "온카스터디 꿀팁: 3초 만에 먹튀사이트 거르는 법 공개!",
+          "category": 3,
+          "outroFile": "jackpot_report.mp4",
+          "outroCta": "잭팟 제보하면 포인트 5천 지급!",
+          "subtopic": "잭팟 당첨 사례와 제보 방법",
+          "row_number": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "시트 기록": [
+      {
+        "json": {
+          "hook_title": "대박 후기? 온카스터디가 진실을 밝혀드립니다!",
+          "images": [
+            {
+              "keyword": "jackpot",
+              "visual_type": "image",
+              "meme_mood": ""
+            },
+            {
+              "keyword": "money falling",
+              "visual_type": "image",
+              "meme_mood": ""
+            },
+            {
+              "keyword": "celebrating",
+              "visual_type": "meme",
+              "meme_mood": "celebrating"
+            },
+            {
+              "keyword": "thumbs up",
+              "visual_type": "meme",
+              "meme_mood": "thumbsup"
+            },
+            {
+              "keyword": "online community",
+              "visual_type": "image",
+              "meme_mood": ""
+            }
+          ],
+          "subtitles": [
+            "진짜 <em>대박</em> 터졌어요",
+            "하루아침에",
+            "인생 역전?",
+            "얼마나 땄냐구요?",
+            "무려 3,500만원!",
+            "믿기시나요?",
+            "온카스터디에서",
+            "인증 후기를 봤어요",
+            "이런 <em>대박</em>",
+            "꿈꿔왔는데!",
+            "당첨 사실을",
+            "제보하면",
+            "바로 5천 보상!",
+            "이거 실화야?",
+            "여러분도",
+            "당첨 후기",
+            "공유해봐요",
+            "함께 <em>대박</em>을",
+            "꿈꿔봐요",
+            "지금 바로 온카스터디 검색!"
+          ],
+          "Subject": "제목 #온카스터디 #잭팟후기 #대박인증",
+          "Caption": "온카스터디에서 잭팟 터진 리얼 후기를 만나보세요! 3,500만원 당첨 사례 공개! 제보 시 5천 보상까지! #온카스터디 #잭팟 #당첨 #인증 #제보",
+          "Comment": "구글에 온카스터디 검색!",
+          "fullDialogue": "진짜 <em>대박</em> 터졌어요 하루아침에 인생 역전? 얼마나 땄냐구요? 무려 3,500만원! 믿기시나요? 온카스터디에서 인증 후기를 봤어요 이런 <em>대박</em> 꿈꿔왔는데! 당첨 사실을 제보하면 바로 5천 보상! 이거 실화야? 여러분도 당첨 후기 공유해봐요 함께 <em>대박</em>을 꿈꿔봐요 지금 바로 온카스터디 검색!",
+          "Narration": "진짜 <em>대박</em> 터졌어요 하루아침에 인생 역전? 얼마나 땄냐구요? 무려 3,500만원! 믿기시나요? 온카스터디에서 인증 후기를 봤어요 이런 <em>대박</em> 꿈꿔왔는데! 당첨 사실을 제보하면 바로 5천 보상! 이거 실화야? 여러분도 당첨 후기 공유해봐요 함께 <em>대박</em>을 꿈꿔봐요 지금 바로 온카스터디 검색!",
+          "imageCount": 5,
+          "subtitleCount": 20,
+          "memeCount": 2,
+          "Status": "생성 중",
+          "generatedAt": "2026-02-28T01:12:09.103Z",
+          "topic": "온카스터디 꿀팁: 3초 만에 먹튀사이트 거르는 법 공개!",
+          "category": 3,
+          "outroFile": "jackpot_report.mp4",
+          "outroCta": "잭팟 제보하면 포인트 5천 지급!",
+          "subtopic": "잭팟 당첨 사례와 제보 방법",
+          "row_number": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "세그먼트 분리": [
+      {
+        "json": {
+          "index": 0,
+          "keyword": "jackpot",
+          "visual_type": "image",
+          "meme_mood": ""
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "index": 1,
+          "keyword": "money falling",
+          "visual_type": "image",
+          "meme_mood": ""
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "index": 2,
+          "keyword": "celebrating",
+          "visual_type": "meme",
+          "meme_mood": "celebrating"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "index": 3,
+          "keyword": "thumbs up",
+          "visual_type": "meme",
+          "meme_mood": "thumbsup"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "index": 4,
+          "keyword": "online community",
+          "visual_type": "image",
+          "meme_mood": ""
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "TTS 요청": [
+      {
+        "json": {
+          "audio_url": "http://76.13.182.180:9000/nca-toolkit/tts/tts_1772241132_bfeea9db.mp3",
+          "duration_sec": 21.3,
+          "timestamps": [
+            {
+              "text": "진짜 대박 터졌어요 하루아침에 인생 역전?",
+              "offset": 0,
+              "duration": 3.223
+            },
+            {
+              "text": "얼마나 땄냐구요?",
+              "offset": 3.223,
+              "duration": 1.261
+            },
+            {
+              "text": "무려 3,500만원!",
+              "offset": 4.484,
+              "duration": 1.541
+            },
+            {
+              "text": "믿기시나요?",
+              "offset": 6.026,
+              "duration": 0.841
+            },
+            {
+              "text": "온카스터디에서 인증 후기를 봤어요 이런 대박 꿈꿔왔는데!",
+              "offset": 6.866,
+              "duration": 4.344
+            },
+            {
+              "text": "당첨 사실을 제보하면 바로 5천 보상!",
+              "offset": 11.211,
+              "duration": 2.943
+            },
+            {
+              "text": "이거 실화야?",
+              "offset": 14.153,
+              "duration": 0.981
+            },
+            {
+              "text": "여러분도 당첨 후기 공유해봐요 함께 대박을 꿈꿔봐요 지금 바로 온카스터디 검색!",
+              "offset": 15.134,
+              "duration": 6.166
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "TTS 결과 처리": [
+      {
+        "json": {
+          "audio_url": "http://76.13.182.180:9000/nca-toolkit/tts/tts_1772241132_bfeea9db.mp3",
+          "duration_sec": 21.3,
+          "timestamps": [
+            {
+              "text": "진짜 대박 터졌어요 하루아침에 인생 역전?",
+              "offset": 0,
+              "duration": 3.223
+            },
+            {
+              "text": "얼마나 땄냐구요?",
+              "offset": 3.223,
+              "duration": 1.261
+            },
+            {
+              "text": "무려 3,500만원!",
+              "offset": 4.484,
+              "duration": 1.541
+            },
+            {
+              "text": "믿기시나요?",
+              "offset": 6.026,
+              "duration": 0.841
+            },
+            {
+              "text": "온카스터디에서 인증 후기를 봤어요 이런 대박 꿈꿔왔는데!",
+              "offset": 6.866,
+              "duration": 4.344
+            },
+            {
+              "text": "당첨 사실을 제보하면 바로 5천 보상!",
+              "offset": 11.211,
+              "duration": 2.943
+            },
+            {
+              "text": "이거 실화야?",
+              "offset": 14.153,
+              "duration": 0.981
+            },
+            {
+              "text": "여러분도 당첨 후기 공유해봐요 함께 대박을 꿈꿔봐요 지금 바로 온카스터디 검색!",
+              "offset": 15.134,
+              "duration": 6.166
+            }
+          ]
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "프롬프트 생성": [
+      {
+        "json": {
+          "prompt": "너는 유튜브 쇼츠(Shorts) 대본 기획 및 작성 전문가야. 카지노/슬롯 커뮤니티 '온카스터디' 홍보 영상을 만들어.\n아래 확정된 주제를 바탕으로 35~40초 분량의 쇼츠 스크립트를 작성해줘.\n\n## 반드시 지킬 주제\n온카스터디 꿀팁: 3초 만에 먹튀사이트 거르는 법 공개!\n\n## 이 영상의 주제: 잭팟/대박 후기\n- 다룰 내용: 잭팟 당첨 사례, 제보하면 포인트 5천 보상, 후기 공유\n- 핵심 용어: 잭팟, 대박, 당첨, 인증, 제보, 포인트 보상\n- 스토리 흐름: 누군가 대박 터짐 → 얼마 땄는지 → 제보하면 포인트도 → CTA\n- 주의: 먹튀/앱테크 내용 넣지 마\n\n## 집중할 서브토픽 (매우 중요!!!)\n이 영상은 \"잭팟 당첨 사례와 제보 방법\"에 대해서만 집중해서 다뤄!\n다른 기능이나 서비스는 언급하지 마! 이 주제 하나만 깊게!\n\n위 가이드에 명시된 내용만 다뤄! 다른 카테고리 내용이 섞이면 실패야!\n\n## ★★★ 절대 금지 규칙 (위반 시 전체 실패!) ★★★\n다음 단어들이 subtitles에 하나라도 포함되면 0점이야! 절대 쓰지 마!\n금지 단어: 먹튀, 패널티, 검증, 롤링, 출금, 포인트, 돌림판, 복권, 기프티콘, 앱테크, 방송, 스트리머, 스포츠, 분석\n한 번 더 강조: [먹튀, 패널티, 검증, 롤링, 출금, 포인트, 돌림판, 복권, 기프티콘, 앱테크, 방송, 스트리머, 스포츠, 분석] ← 이 단어들 절대 금지!\n\n## 핵심 구조: images(화면)와 subtitles(자막)를 분리해!\n- images: 화면에 보여줄 이미지/밈 목록 (4~6개, 천천히 전환)\n- subtitles: 나레이션 자막 목록 (12~20개, 빠르게 쪼개기)\n- 이미지는 천천히 바뀌고, 자막만 빠르게 끊어서 나오는 구조야!\n\n## ★★★ 스토리 연결 규칙 (매우 중요!!!) ★★★\nsubtitles 전체가 하나의 이야기로 자연스럽게 이어져야 해!\n처음부터 끝까지 한 사람이 말하는 것처럼 흘러가야 함!\n\n절대 금지 패턴:\n- 키워드 나열식: \"축구 배당 대박 / 농구 픽 적중 / 야구 뉴스 체크\" ← 이런 거 절대 안 됨!\n- 기능 나열식: \"돌림판으로 적립 / 복권으로 적립 / 오목으로 적립\" ← 이것도 금지!\n- 홍보 문구 나열: \"출석체크 1000점 / 돌림판 추가 적립 / 복권 대박 찬스\" ← 금지!\n\n올바른 패턴:\n- 도입(충격/공감) → 상황 설명 → 해결 과정 → 결과 → CTA\n- 모든 자막이 앞뒤 문맥과 연결되어야 해!\n- \"근데\", \"그래서\", \"결과?\", \"알고보니\" 같은 연결어로 자연스럽게 이어가!\n\n## 자막(subtitles) 쪼개기 규칙 (매우 중요!!!)\n시청자가 지루하지 않게 자막이 0.5초~1초 단위로 딱딱 끊어서 나오게 연출할 거야!\n문장을 길게 쓰지 말고, 한 호흡에 말하는 단어/구절 단위로 아주 잘게 쪼개!\n- 각 subtitle: 반드시 띄어쓰기 포함 3자 ~ 10자 이내로 짧게 써!\n- 띄어쓰기 문법 완벽하게 지켜!\n- 나레이션은 앞 자막과 자연스럽게 이어져야 해! 마침표(.) 찍지 마!\n\n[자막 쪼개기 예시]\n나쁜 예: \"솔직히 처음엔 몰랐지 충전하고 바로 돌렸는데\"\n좋은 예:\n\"솔직히\"\n\"처음엔 몰랐지\"\n\"충전하고\"\n\"바로 돌렸는데\"\n\n## ★ 마지막 자막 규칙 ★\n- 마지막 1~2개 subtitle은 시청자의 행동을 유도하는 완결된 한국어 문장이어야 해!\n- 반드시 종결어미(~해, ~해봐, ~야, ~마, ~하세요, ~가자, ~너 등)로 끝나야 해!\n- 매번 다른 표현을 자유롭게 창작해! 똑같은 패턴 반복 금지!\n- 절대 문장이 중간에 끊기면 안 돼! \"무료 혜택 지금 바로\" 이런 식으로 미완성 금지!\n\n## 이미지(images) 규칙\n- 4~6개만! (자막보다 훨씬 적게)\n- keyword는 Pexels에서 검색될 직관적인 영어 명사 1~2개\n- visual_type: \"image\" 또는 \"meme\" (meme은 최대 2개!)\n- meme일 때 meme_mood: thinking, excited, shocked, sad, angry, cool, celebrating, snacking, speechless, smoking, disappointed, thumbsup, crying, desperate, bored, suspicious, money 중 택1\n\n## 강조 태그 (효과음 연동)\n- subtitles에서 핵심 단어에 <em>태그</em> 사용!\n- 예: \"<em>먹튀</em> 당함\", \"롤링 <em>3배</em>면\"\n\n## 구체적 수치 필수!\n숫자, 금액, 시간 등 구체적 수치를 반드시 포함해!\n\n## 출력 형식 (순수 JSON만, 코드블록 없이)\n- JSON 값 안에 쌍따옴표(\")나 줄바꿈 문자를 절대 넣지 마!\n{\n  \"hook_title\": \"첫 화면 노란색 어그로 자막 (15자 내외)\",\n  \"images\": [\n    { \"keyword\": \"영어 명사\", \"visual_type\": \"image\" },\n    { \"keyword\": \"영어 명사\", \"visual_type\": \"meme\", \"meme_mood\": \"shocked\" }\n  ],\n  \"subtitles\": [\n    \"3~10자 짧은 자막\",\n    \"<em>강조</em> 포함 자막\",\n    \"이렇게 쪼개서\"\n  ],\n  \"Subject\": \"제목 #온카스터디 + 카테고리 관련 해시태그\",\n  \"Caption\": \"설명 #온카스터디 + 해시태그\",\n  \"Comment\": \"구글에 온카스터디 검색!\"\n}\n\n## 마지막 확인! 금지단어 [먹튀, 패널티, 검증, 롤링, 출금, 포인트, 돌림판, 복권, 기프티콘, 앱테크, 방송, 스트리머, 스포츠, 분석] 하나라도 들어가면 0점!",
+          "topic": "온카스터디 꿀팁: 3초 만에 먹튀사이트 거르는 법 공개!",
+          "category": 3,
+          "subtopic": "잭팟 당첨 사례와 제보 방법",
+          "outroFile": "jackpot_report.mp4",
+          "outroCta": "잭팟 제보하면 포인트 5천 지급!",
+          "row_number": null,
+          "outroDuration": 3.77
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "이미지 검색": [
+      {
+        "json": {
+          "page": 1,
+          "per_page": 3,
+          "photos": [
+            {
+              "id": 31862219,
+              "width": 4822,
+              "height": 6028,
+              "url": "https://www.pexels.com/photo/tech-enthusiast-using-gaming-mouse-in-neon-glow-31862219/",
+              "photographer": "UMUT   🆁🅰🆆",
+              "photographer_url": "https://www.pexels.com/@umudicreative",
+              "photographer_id": 420883934,
+              "avg_color": "#234851",
+              "src": {
+                "original": "https://images.pexels.com/photos/31862219/pexels-photo-31862219.jpeg",
+                "large2x": "https://images.pexels.com/photos/31862219/pexels-photo-31862219.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/31862219/pexels-photo-31862219.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/31862219/pexels-photo-31862219.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/31862219/pexels-photo-31862219.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/31862219/pexels-photo-31862219.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/31862219/pexels-photo-31862219.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/31862219/pexels-photo-31862219.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "Hand operating a gaming mouse with vibrant neon lights in an atmospheric tech setting."
+            },
+            {
+              "id": 31139053,
+              "width": 3456,
+              "height": 5184,
+              "url": "https://www.pexels.com/photo/creative-reflection-of-people-by-a-ferry-31139053/",
+              "photographer": "Serdar Göksu",
+              "photographer_url": "https://www.pexels.com/@serdargoksu",
+              "photographer_id": 2575062,
+              "avg_color": "#3A3F3B",
+              "src": {
+                "original": "https://images.pexels.com/photos/31139053/pexels-photo-31139053.jpeg",
+                "large2x": "https://images.pexels.com/photos/31139053/pexels-photo-31139053.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/31139053/pexels-photo-31139053.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/31139053/pexels-photo-31139053.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/31139053/pexels-photo-31139053.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/31139053/pexels-photo-31139053.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/31139053/pexels-photo-31139053.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/31139053/pexels-photo-31139053.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "Artistic reflection of three people near a ferry boat, captured with unique perspective."
+            },
+            {
+              "id": 31681206,
+              "width": 2268,
+              "height": 4032,
+              "url": "https://www.pexels.com/photo/hand-holding-a-stack-of-us-dollar-bills-31681206/",
+              "photographer": "Foroosh Land",
+              "photographer_url": "https://www.pexels.com/@foroosh-land-1955786",
+              "photographer_id": 1955786,
+              "avg_color": "#3B393A",
+              "src": {
+                "original": "https://images.pexels.com/photos/31681206/pexels-photo-31681206.jpeg",
+                "large2x": "https://images.pexels.com/photos/31681206/pexels-photo-31681206.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/31681206/pexels-photo-31681206.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/31681206/pexels-photo-31681206.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/31681206/pexels-photo-31681206.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/31681206/pexels-photo-31681206.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/31681206/pexels-photo-31681206.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/31681206/pexels-photo-31681206.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "Close-up of a hand holding a stack of US dollar bills, indicating wealth or finance."
+            }
+          ],
+          "total_results": 1332,
+          "next_page": "https://api.pexels.com/v1/search?orientation=portrait&page=2&per_page=3&query=jackpot"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      },
+      {
+        "json": {
+          "page": 1,
+          "per_page": 3,
+          "photos": [
+            {
+              "id": 4386420,
+              "width": 4389,
+              "height": 6583,
+              "url": "https://www.pexels.com/photo/american-flag-and-money-falling-down-4386420/",
+              "photographer": "www.kaboompics.com",
+              "photographer_url": "https://www.pexels.com/@karola-g",
+              "photographer_id": 2332540,
+              "avg_color": "#976C70",
+              "src": {
+                "original": "https://images.pexels.com/photos/4386420/pexels-photo-4386420.jpeg",
+                "large2x": "https://images.pexels.com/photos/4386420/pexels-photo-4386420.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/4386420/pexels-photo-4386420.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/4386420/pexels-photo-4386420.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/4386420/pexels-photo-4386420.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/4386420/pexels-photo-4386420.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/4386420/pexels-photo-4386420.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/4386420/pexels-photo-4386420.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "National flag of United States of America on background and dollars falling down"
+            },
+            {
+              "id": 7654610,
+              "width": 3768,
+              "height": 5644,
+              "url": "https://www.pexels.com/photo/woman-sitting-on-an-office-chair-with-money-flying-all-around-her-7654610/",
+              "photographer": "Pavel Danilyuk",
+              "photographer_url": "https://www.pexels.com/@pavel-danilyuk",
+              "photographer_id": 2297095,
+              "avg_color": "#726A60",
+              "src": {
+                "original": "https://images.pexels.com/photos/7654610/pexels-photo-7654610.jpeg",
+                "large2x": "https://images.pexels.com/photos/7654610/pexels-photo-7654610.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/7654610/pexels-photo-7654610.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/7654610/pexels-photo-7654610.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/7654610/pexels-photo-7654610.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/7654610/pexels-photo-7654610.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/7654610/pexels-photo-7654610.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/7654610/pexels-photo-7654610.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "Businesswoman in modern office with falling cash, symbolizing financial success."
+            },
+            {
+              "id": 22857244,
+              "width": 4000,
+              "height": 6000,
+              "url": "https://www.pexels.com/photo/smiling-couple-in-1920s-style-costumes-surrounded-by-falling-banknotes-22857244/",
+              "photographer": "Andres Idda Bianchi",
+              "photographer_url": "https://www.pexels.com/@davincidelasfotos",
+              "photographer_id": 297234446,
+              "avg_color": "#44362D",
+              "src": {
+                "original": "https://images.pexels.com/photos/22857244/pexels-photo-22857244.jpeg",
+                "large2x": "https://images.pexels.com/photos/22857244/pexels-photo-22857244.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/22857244/pexels-photo-22857244.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/22857244/pexels-photo-22857244.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/22857244/pexels-photo-22857244.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/22857244/pexels-photo-22857244.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/22857244/pexels-photo-22857244.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/22857244/pexels-photo-22857244.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "A 1920s style couple in a vintage room with money falling around them, symbolizing prosperity and luxury."
+            }
+          ],
+          "total_results": 8000,
+          "next_page": "https://api.pexels.com/v1/search?orientation=portrait&page=2&per_page=3&query=money+falling"
+        },
+        "pairedItem": {
+          "item": 1
+        }
+      },
+      {
+        "json": {
+          "page": 1,
+          "per_page": 3,
+          "photos": [
+            {
+              "id": 5804994,
+              "width": 3577,
+              "height": 5365,
+              "url": "https://www.pexels.com/photo/a-woman-lighting-the-candles-on-her-birthday-cake-5804994/",
+              "photographer": "Tima Miroshnichenko",
+              "photographer_url": "https://www.pexels.com/@tima-miroshnichenko",
+              "photographer_id": 3088726,
+              "avg_color": "#8B8373",
+              "src": {
+                "original": "https://images.pexels.com/photos/5804994/pexels-photo-5804994.jpeg",
+                "large2x": "https://images.pexels.com/photos/5804994/pexels-photo-5804994.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/5804994/pexels-photo-5804994.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/5804994/pexels-photo-5804994.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/5804994/pexels-photo-5804994.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/5804994/pexels-photo-5804994.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/5804994/pexels-photo-5804994.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/5804994/pexels-photo-5804994.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "A woman enjoys her 25th birthday via video call, surrounded by cake and presents."
+            },
+            {
+              "id": 7826341,
+              "width": 4160,
+              "height": 6240,
+              "url": "https://www.pexels.com/photo/woman-blowing-the-silver-confetti-on-her-hands-7826341/",
+              "photographer": "Nataliya Vaitkevich",
+              "photographer_url": "https://www.pexels.com/@n-voitkevich",
+              "photographer_id": 2906295,
+              "avg_color": "#C9AE79",
+              "src": {
+                "original": "https://images.pexels.com/photos/7826341/pexels-photo-7826341.jpeg",
+                "large2x": "https://images.pexels.com/photos/7826341/pexels-photo-7826341.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/7826341/pexels-photo-7826341.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/7826341/pexels-photo-7826341.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/7826341/pexels-photo-7826341.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/7826341/pexels-photo-7826341.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/7826341/pexels-photo-7826341.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/7826341/pexels-photo-7826341.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "Joyful 50th birthday party scene with a woman celebrating amidst golden balloons and confetti."
+            },
+            {
+              "id": 27613682,
+              "width": 2560,
+              "height": 3841,
+              "url": "https://www.pexels.com/photo/a-woman-holding-a-birthday-cake-with-the-number-41-on-it-27613682/",
+              "photographer": "Алла Мороз",
+              "photographer_url": "https://www.pexels.com/@789201469",
+              "photographer_id": 789201469,
+              "avg_color": "#5C4C4C",
+              "src": {
+                "original": "https://images.pexels.com/photos/27613682/pexels-photo-27613682.jpeg",
+                "large2x": "https://images.pexels.com/photos/27613682/pexels-photo-27613682.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/27613682/pexels-photo-27613682.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/27613682/pexels-photo-27613682.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/27613682/pexels-photo-27613682.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/27613682/pexels-photo-27613682.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/27613682/pexels-photo-27613682.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/27613682/pexels-photo-27613682.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "Woman celebrating 41st birthday with cake and candle indoors."
+            }
+          ],
+          "total_results": 8000,
+          "next_page": "https://api.pexels.com/v1/search?orientation=portrait&page=2&per_page=3&query=celebrating"
+        },
+        "pairedItem": {
+          "item": 2
+        }
+      },
+      {
+        "json": {
+          "page": 1,
+          "per_page": 3,
+          "photos": [
+            {
+              "id": 20585255,
+              "width": 3264,
+              "height": 4928,
+              "url": "https://www.pexels.com/photo/man-hand-with-thumb-up-gesture-20585255/",
+              "photographer": "Michael  koneckiy",
+              "photographer_url": "https://www.pexels.com/@michael-koneckiy-461417719",
+              "photographer_id": 461417719,
+              "avg_color": "#393C33",
+              "src": {
+                "original": "https://images.pexels.com/photos/20585255/pexels-photo-20585255.jpeg",
+                "large2x": "https://images.pexels.com/photos/20585255/pexels-photo-20585255.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/20585255/pexels-photo-20585255.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/20585255/pexels-photo-20585255.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/20585255/pexels-photo-20585255.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/20585255/pexels-photo-20585255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/20585255/pexels-photo-20585255.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/20585255/pexels-photo-20585255.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "A close-up of a hand showing a thumbs up gesture in an outdoor park setting."
+            },
+            {
+              "id": 9017410,
+              "width": 4000,
+              "height": 6000,
+              "url": "https://www.pexels.com/photo/persons-right-hand-doing-a-thumbs-up-9017410/",
+              "photographer": "Kevin  Malik",
+              "photographer_url": "https://www.pexels.com/@kevin-malik",
+              "photographer_id": 80197200,
+              "avg_color": "#C9CDCE",
+              "src": {
+                "original": "https://images.pexels.com/photos/9017410/pexels-photo-9017410.jpeg",
+                "large2x": "https://images.pexels.com/photos/9017410/pexels-photo-9017410.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/9017410/pexels-photo-9017410.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/9017410/pexels-photo-9017410.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/9017410/pexels-photo-9017410.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/9017410/pexels-photo-9017410.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/9017410/pexels-photo-9017410.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/9017410/pexels-photo-9017410.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "A close-up of a hand giving a thumbs-up against a light blue background."
+            },
+            {
+              "id": 8481625,
+              "width": 4480,
+              "height": 6720,
+              "url": "https://www.pexels.com/photo/thumb-finger-in-close-up-photography-8481625/",
+              "photographer": "Sergey  Meshkov",
+              "photographer_url": "https://www.pexels.com/@19x14",
+              "photographer_id": 1650983,
+              "avg_color": "#868A8B",
+              "src": {
+                "original": "https://images.pexels.com/photos/8481625/pexels-photo-8481625.jpeg",
+                "large2x": "https://images.pexels.com/photos/8481625/pexels-photo-8481625.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/8481625/pexels-photo-8481625.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/8481625/pexels-photo-8481625.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/8481625/pexels-photo-8481625.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/8481625/pexels-photo-8481625.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/8481625/pexels-photo-8481625.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/8481625/pexels-photo-8481625.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "A focused shot of a hand making a thumbs up gesture, symbolizing approval or success."
+            }
+          ],
+          "total_results": 8000,
+          "next_page": "https://api.pexels.com/v1/search?orientation=portrait&page=2&per_page=3&query=thumbs+up"
+        },
+        "pairedItem": {
+          "item": 3
+        }
+      },
+      {
+        "json": {
+          "page": 1,
+          "per_page": 3,
+          "photos": [
+            {
+              "id": 6193637,
+              "width": 4004,
+              "height": 6000,
+              "url": "https://www.pexels.com/photo/photo-of-people-having-video-conference-6193637/",
+              "photographer": "Askar Abayev",
+              "photographer_url": "https://www.pexels.com/@askar-abayev",
+              "photographer_id": 3674690,
+              "avg_color": "#69534C",
+              "src": {
+                "original": "https://images.pexels.com/photos/6193637/pexels-photo-6193637.jpeg",
+                "large2x": "https://images.pexels.com/photos/6193637/pexels-photo-6193637.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/6193637/pexels-photo-6193637.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/6193637/pexels-photo-6193637.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/6193637/pexels-photo-6193637.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/6193637/pexels-photo-6193637.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/6193637/pexels-photo-6193637.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/6193637/pexels-photo-6193637.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "Vibrant video call showing engaging online interaction on a laptop."
+            },
+            {
+              "id": 7563690,
+              "width": 4480,
+              "height": 6720,
+              "url": "https://www.pexels.com/photo/person-holding-yellow-and-black-happy-birthday-signage-7563690/",
+              "photographer": "RDNE Stock project",
+              "photographer_url": "https://www.pexels.com/@rdne",
+              "photographer_id": 3149039,
+              "avg_color": "#7F99D1",
+              "src": {
+                "original": "https://images.pexels.com/photos/7563690/pexels-photo-7563690.jpeg",
+                "large2x": "https://images.pexels.com/photos/7563690/pexels-photo-7563690.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/7563690/pexels-photo-7563690.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/7563690/pexels-photo-7563690.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/7563690/pexels-photo-7563690.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/7563690/pexels-photo-7563690.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/7563690/pexels-photo-7563690.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/7563690/pexels-photo-7563690.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "Close-up of a hand holding a 'Share on your social' sign on a vibrant blue backdrop."
+            },
+            {
+              "id": 15226554,
+              "width": 5152,
+              "height": 7728,
+              "url": "https://www.pexels.com/photo/instagram-on-smartphone-15226554/",
+              "photographer": "Connor Scott McManus",
+              "photographer_url": "https://www.pexels.com/@connorscottmcmanus",
+              "photographer_id": 198854184,
+              "avg_color": "#76726F",
+              "src": {
+                "original": "https://images.pexels.com/photos/15226554/pexels-photo-15226554.jpeg",
+                "large2x": "https://images.pexels.com/photos/15226554/pexels-photo-15226554.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+                "large": "https://images.pexels.com/photos/15226554/pexels-photo-15226554.jpeg?auto=compress&cs=tinysrgb&h=650&w=940",
+                "medium": "https://images.pexels.com/photos/15226554/pexels-photo-15226554.jpeg?auto=compress&cs=tinysrgb&h=350",
+                "small": "https://images.pexels.com/photos/15226554/pexels-photo-15226554.jpeg?auto=compress&cs=tinysrgb&h=130",
+                "portrait": "https://images.pexels.com/photos/15226554/pexels-photo-15226554.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800",
+                "landscape": "https://images.pexels.com/photos/15226554/pexels-photo-15226554.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=627&w=1200",
+                "tiny": "https://images.pexels.com/photos/15226554/pexels-photo-15226554.jpeg?auto=compress&cs=tinysrgb&dpr=1&fit=crop&h=200&w=280"
+              },
+              "liked": false,
+              "alt": "Close-up of hand holding smartphone showing Instagram profile on screen."
+            }
+          ],
+          "total_results": 8000,
+          "next_page": "https://api.pexels.com/v1/search?orientation=portrait&page=2&per_page=3&query=online+community"
+        },
+        "pairedItem": {
+          "item": 4
+        }
+      }
+    ],
+    "AI 주제 생성": [
+      {
+        "json": {
+          "content": {
+            "parts": [
+              {
+                "text": "{\"topic\": \"온카스터디 꿀팁: 3초 만에 먹튀사이트 거르는 법 공개!\"}"
+              }
+            ],
+            "role": "model"
+          },
+          "finishReason": "STOP",
+          "index": 0
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "주제 파싱": [
+      {
+        "json": {
+          "topic": "온카스터디 꿀팁: 3초 만에 먹튀사이트 거르는 법 공개!",
+          "category": 3,
+          "outroFile": "jackpot_report.mp4",
+          "outroCta": "잭팟 제보하면 포인트 5천 지급!",
+          "outroDuration": 3.77,
+          "subtopic": "잭팟 당첨 사례와 제보 방법",
+          "row_number": null
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "카테고리 결정": [
+      {
+        "json": {
+          "category": 3,
+          "outroFile": "jackpot_report.mp4",
+          "outroCta": "잭팟 제보하면 포인트 5천 지급!",
+          "subtopic": "잭팟 당첨 사례와 제보 방법",
+          "outroDuration": 3.77
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "9c350488-9b6e-4781-b39c-db69fa32eab4",
+  "activeVersionId": null,
+  "versionCounter": 203,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-25T21:09:13.257Z",
+      "createdAt": "2026-02-25T21:09:13.257Z",
+      "role": "workflow:owner",
+      "workflowId": "vdl0YHQCpt9cXI2f",
+      "projectId": "W6LETsSnBzw4J5Aa",
+      "project": {
+        "updatedAt": "2026-02-09T04:42:12.235Z",
+        "createdAt": "2026-02-07T19:04:11.494Z",
+        "id": "W6LETsSnBzw4J5Aa",
+        "name": "hatihoro15 hatihoro15 <hatihoro15@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-07T19:04:11.494Z",
+            "createdAt": "2026-02-07T19:04:11.494Z",
+            "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
             "projectId": "W6LETsSnBzw4J5Aa",
-            "project": {
-                "updatedAt": "2026-02-09T04:42:12.235Z",
-                "createdAt": "2026-02-07T19:04:11.494Z",
-                "id": "W6LETsSnBzw4J5Aa",
-                "name": "hatihoro15 hatihoro15 <hatihoro15@gmail.com>",
-                "type": "personal",
-                "icon": null,
-                "description": null,
-                "creatorId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
-                "projectRelations": [
-                    {
-                        "updatedAt": "2026-02-07T19:04:11.494Z",
-                        "createdAt": "2026-02-07T19:04:11.494Z",
-                        "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
-                        "projectId": "W6LETsSnBzw4J5Aa",
-                        "user": {
-                            "updatedAt": "2026-02-27T23:00:59.741Z",
-                            "createdAt": "2026-02-07T19:04:09.331Z",
-                            "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
-                            "email": "hatihoro15@gmail.com",
-                            "firstName": "hatihoro15",
-                            "lastName": "hatihoro15",
-                            "personalizationAnswers": {
-                                "version": "v4",
-                                "personalization_survey_submitted_at": "2026-02-07T19:24:51.818Z",
-                                "personalization_survey_n8n_version": "2.6.4"
-                            },
-                            "settings": {
-                                "userActivated": true,
-                                "easyAIWorkflowOnboarded": true,
-                                "firstSuccessfulWorkflowId": "dEtWqwWQPJfwCWiIM0QYd",
-                                "userActivatedAt": 1771888859109,
-                                "npsSurvey": {
-                                    "waitingForResponse": true,
-                                    "ignoredCount": 2,
-                                    "lastShownAt": 1772185245155
-                                }
-                            },
-                            "disabled": false,
-                            "mfaEnabled": false,
-                            "lastActiveAt": "2026-02-27",
-                            "isPending": false
-                        }
-                    }
-                ]
+            "user": {
+              "updatedAt": "2026-02-27T23:00:59.741Z",
+              "createdAt": "2026-02-07T19:04:09.331Z",
+              "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+              "email": "hatihoro15@gmail.com",
+              "firstName": "hatihoro15",
+              "lastName": "hatihoro15",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-02-07T19:24:51.818Z",
+                "personalization_survey_n8n_version": "2.6.4"
+              },
+              "settings": {
+                "userActivated": true,
+                "easyAIWorkflowOnboarded": true,
+                "firstSuccessfulWorkflowId": "dEtWqwWQPJfwCWiIM0QYd",
+                "userActivatedAt": 1771888859109,
+                "npsSurvey": {
+                  "waitingForResponse": true,
+                  "ignoredCount": 2,
+                  "lastShownAt": 1772185245155
+                }
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-27",
+              "isPending": false
             }
-        }
-    ],
-    "tags": [],
-    "activeVersion": null
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
 }
