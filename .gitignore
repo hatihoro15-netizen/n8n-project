@@ -1,5 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build output
+packages/frontend/.next/
+packages/frontend/out/
+packages/backend/dist/
+
+# Environment
+.env
+.env.local
+.env.production
+packages/backend/.env
+packages/frontend/.env.local
+
 # API 키가 포함된 파일
 update_workflows.py
 
-# 시스템 파일
+# System
 .DS_Store
+*.log
+
+# Prisma
+packages/backend/prisma/*.db
+
+# IDE
+.vscode/
+.idea/
+
+# Turbo
+.turbo/

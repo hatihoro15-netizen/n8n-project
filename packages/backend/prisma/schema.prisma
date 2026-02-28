@@ -1,0 +1,168 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Channel {
+  id               String       @id @default(uuid())
+  name             String
+  slug             String       @unique
+  description      String?
+  youtubeChannelId String?      @map("youtube_channel_id")
+  thumbnailUrl     String?      @map("thumbnail_url")
+  isActive         Boolean      @default(true) @map("is_active")
+  createdAt        DateTime     @default(now()) @map("created_at")
+  updatedAt        DateTime     @updatedAt @map("updated_at")
+
+  workflows   Workflow[]
+  productions Production[]
+  analytics   Analytics[]
+
+  @@map("channels")
+}
+
+model Workflow {
+  id                 String       @id @default(uuid())
+  channelId          String       @map("channel_id")
+  n8nWorkflowId      String       @map("n8n_workflow_id")
+  name               String
+  type               WorkflowType
+  webhookPath        String?      @map("webhook_path")
+  webhookUrl         String?      @map("webhook_url")
+  scheduleExpression String?      @map("schedule_expression")
+  isActive           Boolean      @default(true) @map("is_active")
+  createdAt          DateTime     @default(now()) @map("created_at")
+  updatedAt          DateTime     @updatedAt @map("updated_at")
+
+  channel     Channel      @relation(fields: [channelId], references: [id])
+  prompts     Prompt[]
+  productions Production[]
+  characters  WorkflowCharacter[]
+
+  @@map("workflows")
+}
+
+enum WorkflowType {
+  shortform
+  longform
+  story_shorts
+}
+
+model Character {
+  id            String    @id @default(uuid())
+  name          String
+  nameKo        String    @map("name_ko")
+  personality   String?   @db.Text
+  speechStyle   String?   @map("speech_style") @db.Text
+  voiceId       String?   @map("voice_id")
+  voiceSettings Json?     @map("voice_settings")
+  imageUrl      String?   @map("image_url")
+  isActive      Boolean   @default(true) @map("is_active")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  workflows WorkflowCharacter[]
+
+  @@map("characters")
+}
+
+model WorkflowCharacter {
+  workflowId  String   @map("workflow_id")
+  characterId String   @map("character_id")
+  role        String   @default("main")
+
+  workflow  Workflow  @relation(fields: [workflowId], references: [id])
+  character Character @relation(fields: [characterId], references: [id])
+
+  @@id([workflowId, characterId])
+  @@map("workflow_characters")
+}
+
+model Prompt {
+  id         String   @id @default(uuid())
+  workflowId String   @map("workflow_id")
+  nodeName   String   @map("node_name")
+  content    String   @db.Text
+  version    Int      @default(1)
+  isDeployed Boolean  @default(false) @map("is_deployed")
+  deployedAt DateTime? @map("deployed_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  workflow Workflow @relation(fields: [workflowId], references: [id])
+
+  @@map("prompts")
+}
+
+model Production {
+  id               String           @id @default(uuid())
+  workflowId       String           @map("workflow_id")
+  channelId        String           @map("channel_id")
+  title            String?
+  topic            String?
+  status           ProductionStatus @default(pending)
+  n8nExecutionId   String?          @map("n8n_execution_id")
+  assets           Json?
+  youtubeVideoId   String?          @map("youtube_video_id")
+  youtubeUrl       String?          @map("youtube_url")
+  errorMessage     String?          @map("error_message") @db.Text
+  cost             Float?
+  startedAt        DateTime?        @map("started_at")
+  completedAt      DateTime?        @map("completed_at")
+  createdAt        DateTime         @default(now()) @map("created_at")
+  updatedAt        DateTime         @updatedAt @map("updated_at")
+
+  workflow  Workflow  @relation(fields: [workflowId], references: [id])
+  channel   Channel   @relation(fields: [channelId], references: [id])
+  analytics Analytics[]
+
+  @@map("productions")
+}
+
+enum ProductionStatus {
+  pending
+  triggered
+  ai_generating
+  tts_processing
+  image_generating
+  video_rendering
+  uploading
+  completed
+  failed
+}
+
+model Analytics {
+  id               String   @id @default(uuid())
+  productionId     String?  @map("production_id")
+  channelId        String   @map("channel_id")
+  youtubeVideoId   String   @map("youtube_video_id")
+  title            String
+  views            Int      @default(0)
+  likes            Int      @default(0)
+  comments         Int      @default(0)
+  ctr              Float?
+  avgWatchDuration Float?   @map("avg_watch_duration")
+  recordedAt       DateTime @map("recorded_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  production Production? @relation(fields: [productionId], references: [id])
+  channel    Channel     @relation(fields: [channelId], references: [id])
+
+  @@map("analytics")
+}
+
+model Template {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  config      Json
+  isActive    Boolean  @default(true) @map("is_active")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("templates")
+}
