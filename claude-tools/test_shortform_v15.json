@@ -1,8 +1,8 @@
 {
-  "updatedAt": "2026-02-28T07:41:01.614Z",
+  "updatedAt": "2026-02-28T07:53:24.172Z",
   "createdAt": "2026-02-28T03:18:11.701Z",
   "id": "x6xTzHJ9WbUc94ec",
-  "name": "[테스트] 설명형 숏츠 - 속도감 25초 v15 (복제)",
+  "name": "[온카 스터디] 설명형 숏츠 - 속도감 25초 v15",
   "description": null,
   "active": false,
   "isArchived": false,
@@ -684,7 +684,7 @@
   "pinData": null,
   "versionId": "d9a3d850-d9a8-4327-ba5a-ca834f5ee7f9",
   "activeVersionId": null,
-  "versionCounter": 2,
+  "versionCounter": 3,
   "triggerCount": 0,
   "shared": [
     {
