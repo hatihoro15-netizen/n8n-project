@@ -451,7 +451,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const staticData = $getWorkflowStaticData('global');\n\nlet counter = staticData.categoryCounter || 0;\n\nconst OUTRO_VIDEOS = {\n  1: [\n    { file: 'partner_site.mp4', duration: 3.5, cta: '검증된 제휴사이트에서 이용하세요', subtopic: '검증된 제휴사이트 이용 방법' },\n    { file: 'scam_report.mp4', duration: 3.0, cta: '먹튀 확인하고 거르세요', subtopic: '먹튀 제보와 검증 과정' }\n  ],\n  2: [\n    { file: 'pointzone_game.mp4', duration: 4.53, cta: '포인트로 다양한 게임 즐기세요', subtopic: '포인트존 게임으로 포인트 모으는 방법' },\n    { file: 'pointzone_lottery.mp4', duration: 5.36, cta: '복권으로 포인트 모아보세요', subtopic: '복권으로 포인트 적립하는 방법' },\n    { file: 'pointzone_spin.mp4', duration: 4.07, cta: '돌림판으로 포인트 모아보세요', subtopic: '돌림판으로 포인트 모으는 방법' },\n    { file: 'gifticon.mp4', duration: 2.5, cta: '포인트로 기프티콘 교환하세요', subtopic: '포인트를 기프티콘으로 교환하는 방법' }\n  ],\n  3: [\n    { file: 'jackpot_report.mp4', duration: 3.77, cta: '잭팟 제보하면 포인트 5천 지급!', subtopic: '잭팟 당첨 사례와 제보 방법' },\n    { file: 'best_post.mp4', duration: 3.87, cta: '베스트 글 올리고 포인트 받자!', subtopic: '커뮤니티 베스트 글과 유저 참여' }\n  ],\n  4: [\n    { file: 'highlight.mp4', duration: 2.77, cta: '놓친 방송 하이라이트 챙겨보세요', subtopic: '스트리머 방송 명장면 하이라이트' },\n    { file: 'live_broadcast.mp4', duration: 4.7, cta: '온카스터디 방송존에서 실시간 소통하세요', subtopic: '실시간 방송존에서 스트리머와 소통' }\n  ],\n  5: [\n    { file: 'sports_news.mp4', duration: 3.43, cta: '최신 스포츠 뉴스 확인하세요', subtopic: '최신 스포츠 뉴스' },\n    { file: 'casino_news.mp4', duration: 3.2, cta: '최신 카지노 뉴스 확인하세요', subtopic: '최신 카지노/게임사 뉴스' },\n    { file: 'sports_analysis.mp4', duration: 3.5, cta: '스포츠 분석으로 적중률 올리세요', subtopic: '스포츠 경기 분석과 픽' }\n  ]\n};\n\nconst sequence = [];\nfor (let cat = 1; cat <= 5; cat++) {\n  const list = OUTRO_VIDEOS[cat];\n  for (let idx = 0; idx < list.length; idx++) {\n    sequence.push({ category: cat, index: idx });\n  }\n}\n\nconst current = sequence[counter % sequence.length];\nconst category = current.category;\nconst picked = OUTRO_VIDEOS[category][current.index];\n\nstaticData.categoryCounter = counter + 1;\n\nreturn [{ json: {\n  category,\n  outroFile: picked.file,\n  outroCta: picked.cta,\n  subtopic: picked.subtopic,\n  outroDuration: picked.duration,\n  sequenceInfo: `${counter + 1}/13 (카테고리${category}: ${picked.subtopic})`\n}}];"
+        "jsCode": "// 카테고리 순차 순환 - Google Sheets 행 수 기반 카운터\nconst sheetRows = $('카운터 읽기').all();\nconst counter = sheetRows.length;  // 시트에 기록된 행 수 = 지금까지 실행된 횟수\n\nconst OUTRO_VIDEOS = {\n  1: [\n    { file: 'partner_site.mp4', duration: 3.5, cta: '검증된 제휴사이트에서 이용하세요', subtopic: '검증된 제휴사이트 이용 방법' },\n    { file: 'scam_report.mp4', duration: 3.0, cta: '먹튀 확인하고 거르세요', subtopic: '먹튀 제보와 검증 과정' }\n  ],\n  2: [\n    { file: 'pointzone_game.mp4', duration: 4.53, cta: '포인트로 다양한 게임 즐기세요', subtopic: '포인트존 게임으로 포인트 모으는 방법' },\n    { file: 'pointzone_lottery.mp4', duration: 5.36, cta: '복권으로 포인트 모아보세요', subtopic: '복권으로 포인트 적립하는 방법' },\n    { file: 'pointzone_spin.mp4', duration: 4.07, cta: '돌림판으로 포인트 모아보세요', subtopic: '돌림판으로 포인트 모으는 방법' },\n    { file: 'gifticon.mp4', duration: 2.5, cta: '포인트로 기프티콘 교환하세요', subtopic: '포인트를 기프티콘으로 교환하는 방법' }\n  ],\n  3: [\n    { file: 'jackpot_report.mp4', duration: 3.77, cta: '잭팟 제보하면 포인트 5천 지급!', subtopic: '잭팟 당첨 사례와 제보 방법' },\n    { file: 'best_post.mp4', duration: 3.87, cta: '베스트 글 올리고 포인트 받자!', subtopic: '커뮤니티 베스트 글과 유저 참여' }\n  ],\n  4: [\n    { file: 'highlight.mp4', duration: 2.77, cta: '놓친 방송 하이라이트 챙겨보세요', subtopic: '스트리머 방송 명장면 하이라이트' },\n    { file: 'live_broadcast.mp4', duration: 4.7, cta: '온카스터디 방송존에서 실시간 소통하세요', subtopic: '실시간 방송존에서 스트리머와 소통' }\n  ],\n  5: [\n    { file: 'sports_news.mp4', duration: 3.43, cta: '최신 스포츠 뉴스 확인하세요', subtopic: '최신 스포츠 뉴스' },\n    { file: 'casino_news.mp4', duration: 3.2, cta: '최신 카지노 뉴스 확인하세요', subtopic: '최신 카지노/게임사 뉴스' },\n    { file: 'sports_analysis.mp4', duration: 3.5, cta: '스포츠 분석으로 적중률 올리세요', subtopic: '스포츠 경기 분석과 픽' }\n  ]\n};\n\nconst sequence = [];\nfor (let cat = 1; cat <= 5; cat++) {\n  const list = OUTRO_VIDEOS[cat];\n  for (let idx = 0; idx < list.length; idx++) {\n    sequence.push({ category: cat, index: idx });\n  }\n}\n\nconst current = sequence[counter % sequence.length];\nconst category = current.category;\nconst picked = OUTRO_VIDEOS[category][current.index];\n\nreturn [{ json: {\n  category,\n  outroFile: picked.file,\n  outroCta: picked.cta,\n  subtopic: picked.subtopic,\n  outroDuration: picked.duration,\n  sequenceInfo: `${counter + 1}/13 (카테고리${category}: ${picked.subtopic})`\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -461,6 +461,39 @@
       ],
       "id": "01961828-a580-40a5-8844-fe28567c9178",
       "name": "카테고리 결정"
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "documentId": {
+          "__rl": true,
+          "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+          "mode": "list",
+          "cachedResultName": "온카스터디",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "설명형 숏츠"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -88,
+        304
+      ],
+      "id": "counter_read_node_001",
+      "name": "카운터 읽기",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
     }
   ],
   "connections": {
@@ -468,7 +501,7 @@
       "main": [
         [
           {
-            "node": "카테고리 결정",
+            "node": "카운터 읽기",
             "type": "main",
             "index": 0
           }
@@ -661,6 +694,17 @@
         [
           {
             "node": "AI 주제 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "카운터 읽기": {
+      "main": [
+        [
+          {
+            "node": "카테고리 결정",
             "type": "main",
             "index": 0
           }
