@@ -206,7 +206,8 @@
         336
       ],
       "id": "aceed59c-8a84-4d5c-9462-c4029b65e4ae",
-      "name": "NCA 영상 제작"
+      "name": "NCA 영상 제작",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -490,6 +491,121 @@
           "name": "Google Sheets account"
         }
       }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "onca-shortform-v16",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -368,
+        100
+      ],
+      "id": "f8a1d2c3-b4e5-4f67-89ab-cdef01234567",
+      "name": "Webhook",
+      "webhookId": "b7c8d9e0-f1a2-4b3c-8d5e-6f7a8b9c0d1e"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 콜백 데이터 준비\n * Webhook 실행이면 productionId 추출, 수동 실행이면 skipCallback=true\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const webhookData = $('Webhook').first().json;\n  productionId = (webhookData.body && webhookData.body.productionId) || '';\n  skipCallback = !productionId;\n} catch (e) {\n  // 수동 실행이면 Webhook 노드 데이터 없음\n  skipCallback = true;\n}\n\nconst ncaResult = $('NCA 결과 처리').first().json;\nconst videoUrl = ncaResult['영상 URL'] || '';\nconst hookTitle = $('NCA 데이터 준비').first().json.hookTitle || '';\n\nreturn [{\n  json: {\n    productionId,\n    skipCallback,\n    videoUrl,\n    title: hookTitle,\n    status: 'completed'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4816,
+        336
+      ],
+      "id": "c1d2e3f4-a5b6-4c7d-8e9f-0a1b2c3d4e5f",
+      "name": "콜백 데이터 준비"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "cb-check-001",
+              "leftValue": "={{ $json.skipCallback }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        5120,
+        336
+      ],
+      "id": "d2e3f4a5-b6c7-4d8e-9f0a-1b2c3d4e5f6a",
+      "name": "콜백 필요?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status, title: $json.title, videoUrl: $json.videoUrl }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        5408,
+        236
+      ],
+      "id": "e3f4a5b6-c7d8-4e9f-0a1b-2c3d4e5f6a7b",
+      "name": "성공 콜백"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 실패 콜백 준비\n * NCA 영상 제작 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const webhookData = $('Webhook').first().json;\n  productionId = (webhookData.body && webhookData.body.productionId) || '';\n  skipCallback = !productionId;\n} catch (e) {\n  skipCallback = true;\n}\n\nif (skipCallback) {\n  return [];\n}\n\nconst input = $input.first().json;\nconst errorMessage = (input.error && input.error.message) || input.message || 'NCA 영상 제작 실패';\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        640
+      ],
+      "id": "f4a5b6c7-d8e9-4f0a-1b2c-3d4e5f6a7b8c",
+      "name": "실패 콜백 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status, errorMessage: $json.errorMessage }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        4496,
+        640
+      ],
+      "id": "a5b6c7d8-e9f0-4a1b-2c3d-4e5f6a7b8c9d",
+      "name": "실패 콜백"
     }
   ],
   "connections": {
@@ -616,6 +732,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "실패 콜백 준비",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -701,6 +824,61 @@
         [
           {
             "node": "카테고리 결정",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "카운터 읽기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "상태 업데이트": {
+      "main": [
+        [
+          {
+            "node": "콜백 데이터 준비",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "콜백 데이터 준비": {
+      "main": [
+        [
+          {
+            "node": "콜백 필요?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "콜백 필요?": {
+      "main": [
+        [
+          {
+            "node": "성공 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "실패 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "실패 콜백",
             "type": "main",
             "index": 0
           }
