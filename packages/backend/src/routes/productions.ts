@@ -227,8 +227,21 @@ export async function productionRoutes(app: FastifyInstance) {
     return { success: true, data: updated };
   });
 
+  // Status progression order (higher = more advanced)
+  const STATUS_ORDER: Record<string, number> = {
+    pending: 0,
+    started: 1,
+    script_ready: 2,
+    tts_ready: 3,
+    images_ready: 4,
+    rendering: 5,
+    uploading: 6,
+    completed: 7,
+    failed: 8,
+  };
+
   // n8n callback endpoint (no auth - called by n8n)
-  app.post('/api/productions/callback', async (request) => {
+  app.post('/api/productions/callback', async (request, reply) => {
     const {
       productionId,
       status,
@@ -253,14 +266,32 @@ export async function productionRoutes(app: FastifyInstance) {
       errorMessage?: string;
     };
 
-    // Build assets object, merging explicit fields with passed assets
+    // Fetch current production (status + assets)
     const existingProd = await prisma.production.findUnique({
       where: { id: productionId },
-      select: { assets: true },
+      select: { status: true, assets: true },
     });
 
+    if (!existingProd) {
+      return reply.status(404).send({ success: false, message: 'Production not found' });
+    }
+
+    // Regression guard: skip if incoming status is behind current progress
+    // Exception: 'failed' can always override (error at any stage)
+    const currentOrder = STATUS_ORDER[existingProd.status] ?? -1;
+    const incomingOrder = STATUS_ORDER[status] ?? -1;
+
+    if (status !== 'failed' && incomingOrder <= currentOrder) {
+      logger.info(
+        { productionId, currentStatus: existingProd.status, incomingStatus: status },
+        'Callback ignored: status regression'
+      );
+      return { success: true, skipped: true, message: `Current status (${existingProd.status}) is already ahead of ${status}` };
+    }
+
+    // Build assets object, merging with existing
     const mergedAssets: Record<string, unknown> = {
-      ...((existingProd?.assets as Record<string, unknown>) || {}),
+      ...((existingProd.assets as Record<string, unknown>) || {}),
       ...(assets || {}),
     };
     if (videoUrl) mergedAssets.videoUrl = videoUrl;
