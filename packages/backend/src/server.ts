@@ -42,6 +42,7 @@ async function buildServer() {
   await app.register(cors, {
     origin: config.corsOrigin.split(','),
     credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
 
   // JWT
