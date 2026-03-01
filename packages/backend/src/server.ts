@@ -13,6 +13,7 @@ import { workflowRoutes } from './routes/workflows';
 import { productionRoutes } from './routes/productions';
 import { promptRoutes } from './routes/prompts';
 import { characterRoutes } from './routes/characters';
+import { mediaRoutes } from './routes/media';
 
 // Extend Fastify types
 declare module 'fastify' {
@@ -70,6 +71,7 @@ async function buildServer() {
   await app.register(productionRoutes);
   await app.register(promptRoutes);
   await app.register(characterRoutes);
+  await app.register(mediaRoutes);
 
   return app;
 }

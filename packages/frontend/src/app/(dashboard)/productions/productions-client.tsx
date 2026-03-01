@@ -22,6 +22,7 @@ import {
   Square,
 } from 'lucide-react';
 import Link from 'next/link';
+import { proxyMediaUrl } from '@/lib/media';
 
 export default function ProductionsClient() {
   const [page, setPage] = useState(1);
@@ -47,13 +48,15 @@ export default function ProductionsClient() {
   const getVideoUrl = (assets: unknown) => {
     if (!assets || typeof assets !== 'object') return null;
     const a = assets as Record<string, string>;
-    return a.videoUrl || a.video_url || a.outputUrl || a.output_url || null;
+    const raw = a.videoUrl || a.video_url || a.outputUrl || a.output_url || null;
+    return proxyMediaUrl(raw);
   };
 
   const getThumbnailUrl = (assets: unknown) => {
     if (!assets || typeof assets !== 'object') return null;
     const a = assets as Record<string, string>;
-    return a.thumbnailUrl || a.thumbnail_url || null;
+    const raw = a.thumbnailUrl || a.thumbnail_url || null;
+    return proxyMediaUrl(raw);
   };
 
   const getScript = (assets: unknown) => {

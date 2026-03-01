@@ -13,6 +13,7 @@ import { VideoPlayer } from '@/components/video-player';
 import { useProduction } from '@/hooks/use-dashboard';
 import { ArrowLeft, ExternalLink, Clock, AlertCircle, RefreshCw, Square } from 'lucide-react';
 import { api } from '@/lib/api';
+import { proxyMediaUrl } from '@/lib/media';
 
 export default function ProductionDetailClient() {
   const params = useParams();
@@ -56,17 +57,23 @@ export default function ProductionDetailClient() {
     }
   };
 
-  // Extract video URL from assets
+  // Extract video URL from assets (proxied to avoid mixed content)
   const videoUrl = production?.assets
-    ? (production.assets as Record<string, string>).videoUrl ||
-      (production.assets as Record<string, string>).video_url ||
-      (production.assets as Record<string, string>).outputUrl ||
-      (production.assets as Record<string, string>).output_url
+    ? proxyMediaUrl(
+        (production.assets as Record<string, string>).videoUrl ||
+        (production.assets as Record<string, string>).video_url ||
+        (production.assets as Record<string, string>).outputUrl ||
+        (production.assets as Record<string, string>).output_url ||
+        null
+      )
     : null;
 
   const thumbnailUrl = production?.assets
-    ? (production.assets as Record<string, string>).thumbnailUrl ||
-      (production.assets as Record<string, string>).thumbnail_url
+    ? proxyMediaUrl(
+        (production.assets as Record<string, string>).thumbnailUrl ||
+        (production.assets as Record<string, string>).thumbnail_url ||
+        null
+      )
     : null;
 
   const scriptContent = production?.assets
