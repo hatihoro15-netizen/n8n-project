@@ -13,8 +13,9 @@ export async function mediaRoutes(app: FastifyInstance) {
     }
 
     // Validate allowed origin to prevent open proxy abuse
+    let parsed: URL;
     try {
-      const parsed = new URL(url);
+      parsed = new URL(url);
       if (!ALLOWED_HOSTS.includes(parsed.hostname)) {
         return reply.status(403).send({ success: false, message: 'URL not allowed' });
       }
@@ -45,6 +46,10 @@ export async function mediaRoutes(app: FastifyInstance) {
 
       reply.header('Accept-Ranges', 'bytes');
       reply.header('Cache-Control', 'public, max-age=86400');
+
+      // Extract filename from URL path for Content-Disposition
+      const filename = decodeURIComponent(parsed.pathname.split('/').pop() || 'download');
+      reply.header('Content-Disposition', `inline; filename="${filename}"`);
 
       if (!upstream.body) {
         return reply.send(Buffer.alloc(0));
