@@ -1,0 +1,764 @@
+From fe476371463fb67e8ccf9cd611161dbf6dd99810 Mon Sep 17 00:00:00 2001
+From: N8 Dev <dev@n8n-web.com>
+Date: Sun, 1 Mar 2026 07:05:35 +0000
+Subject: [PATCH] =?UTF-8?q?feat:=20Phase=202=20-=20=EC=A0=9C=EC=9E=91=20?=
+ =?UTF-8?q?=EC=83=81=EC=84=B8=20+=20=EC=98=81=EC=83=81=20=ED=94=8C?=
+ =?UTF-8?q?=EB=A0=88=EC=9D=B4=EC=96=B4=20+=20=EC=A7=84=ED=96=89=20?=
+ =?UTF-8?q?=EC=8A=A4=ED=85=9D=ED=8D=BC?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ packages/backend/src/routes/productions.ts    |  52 +++-
+ .../frontend/src/app/(dashboard)/page.tsx     |  21 +-
+ .../app/(dashboard)/productions/[id]/page.tsx | 273 ++++++++++++++++++
+ .../app/(dashboard)/productions/new/page.tsx  |   4 +-
+ .../src/app/(dashboard)/productions/page.tsx  |   8 +-
+ .../src/components/production-progress.tsx    |  88 ++++++
+ .../frontend/src/components/video-player.tsx  | 168 +++++++++++
+ packages/frontend/src/hooks/use-dashboard.ts  |  19 ++
+ 8 files changed, 615 insertions(+), 18 deletions(-)
+ create mode 100644 packages/frontend/src/app/(dashboard)/productions/[id]/page.tsx
+ create mode 100644 packages/frontend/src/components/production-progress.tsx
+ create mode 100644 packages/frontend/src/components/video-player.tsx
+
+diff --git a/packages/backend/src/routes/productions.ts b/packages/backend/src/routes/productions.ts
+index 0eb6946..d8fb937 100644
+--- a/packages/backend/src/routes/productions.ts
++++ b/packages/backend/src/routes/productions.ts
+@@ -185,20 +185,46 @@ export async function productionRoutes(app: FastifyInstance) {
+ 
+   // n8n callback endpoint (no auth - called by n8n)
+   app.post('/api/productions/callback', async (request) => {
+-    const { productionId, status, title, assets, youtubeVideoId, youtubeUrl, errorMessage } =
+-      request.body as {
+-        productionId: string;
+-        status: string;
+-        title?: string;
+-        assets?: Record<string, unknown>;
+-        youtubeVideoId?: string;
+-        youtubeUrl?: string;
+-        errorMessage?: string;
+-      };
+-
+-    const data: Record<string, unknown> = { status };
++    const {
++      productionId,
++      status,
++      title,
++      assets,
++      videoUrl,
++      thumbnailUrl,
++      script,
++      youtubeVideoId,
++      youtubeUrl,
++      errorMessage,
++    } = request.body as {
++      productionId: string;
++      status: string;
++      title?: string;
++      assets?: Record<string, unknown>;
++      videoUrl?: string;
++      thumbnailUrl?: string;
++      script?: string;
++      youtubeVideoId?: string;
++      youtubeUrl?: string;
++      errorMessage?: string;
++    };
++
++    // Build assets object, merging explicit fields with passed assets
++    const existingProd = await prisma.production.findUnique({
++      where: { id: productionId },
++      select: { assets: true },
++    });
++
++    const mergedAssets: Record<string, unknown> = {
++      ...((existingProd?.assets as Record<string, unknown>) || {}),
++      ...(assets || {}),
++    };
++    if (videoUrl) mergedAssets.videoUrl = videoUrl;
++    if (thumbnailUrl) mergedAssets.thumbnailUrl = thumbnailUrl;
++    if (script) mergedAssets.script = script;
++
++    const data: Record<string, unknown> = { status, assets: mergedAssets };
+     if (title) data.title = title;
+-    if (assets) data.assets = assets;
+     if (youtubeVideoId) data.youtubeVideoId = youtubeVideoId;
+     if (youtubeUrl) data.youtubeUrl = youtubeUrl;
+     if (errorMessage) data.errorMessage = errorMessage;
+diff --git a/packages/frontend/src/app/(dashboard)/page.tsx b/packages/frontend/src/app/(dashboard)/page.tsx
+index 17a3ec9..576b7ca 100644
+--- a/packages/frontend/src/app/(dashboard)/page.tsx
++++ b/packages/frontend/src/app/(dashboard)/page.tsx
+@@ -5,10 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+ import { Badge } from '@/components/ui/badge';
+ import { StatusBadge } from '@/components/status-badge';
+ import { useDashboardStats } from '@/hooks/use-dashboard';
+-import { Play, CheckCircle, XCircle, Clock, Tv } from 'lucide-react';
++import { Play, CheckCircle, XCircle, Clock, Tv, Plus } from 'lucide-react';
+ import Link from 'next/link';
++import { useRouter } from 'next/navigation';
++import { Button } from '@/components/ui/button';
+ 
+ export default function DashboardPage() {
++  const router = useRouter();
+   const { data, isLoading } = useDashboardStats();
+   const stats = data?.data;
+ 
+@@ -44,6 +47,16 @@ export default function DashboardPage() {
+           />
+         </div>
+ 
++        {/* Quick Create */}
++        <div className="flex justify-end">
++          <Link href="/productions/new">
++            <Button size="lg" className="gap-2">
++              <Plus className="h-5 w-5" />
++              영상 제작하기
++            </Button>
++          </Link>
++        </div>
++
+         {/* Channel Cards */}
+         <div>
+           <h2 className="text-lg font-semibold mb-4">채널 현황</h2>
+@@ -120,7 +133,11 @@ export default function DashboardPage() {
+                       </tr>
+                     ) : (
+                       stats?.recentProductions?.map((prod: any) => (
+-                        <tr key={prod.id} className="border-b hover:bg-muted/50">
++                        <tr
++                          key={prod.id}
++                          className="border-b hover:bg-muted/50 cursor-pointer"
++                          onClick={() => router.push(`/productions/${prod.id}`)}
++                        >
+                           <td className="px-4 py-3">
+                             <Badge variant="outline">{prod.channel?.name}</Badge>
+                           </td>
+diff --git a/packages/frontend/src/app/(dashboard)/productions/[id]/page.tsx b/packages/frontend/src/app/(dashboard)/productions/[id]/page.tsx
+new file mode 100644
+index 0000000..399ca6c
+--- /dev/null
++++ b/packages/frontend/src/app/(dashboard)/productions/[id]/page.tsx
+@@ -0,0 +1,273 @@
++'use client';
++
++import { use } from 'react';
++import Link from 'next/link';
++import { Header } from '@/components/layout/header';
++import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
++import { Button } from '@/components/ui/button';
++import { Badge } from '@/components/ui/badge';
++import { StatusBadge } from '@/components/status-badge';
++import { ProductionProgress } from '@/components/production-progress';
++import { VideoPlayer } from '@/components/video-player';
++import { useProduction } from '@/hooks/use-dashboard';
++import { ArrowLeft, ExternalLink, Clock, AlertCircle, RefreshCw } from 'lucide-react';
++import { api } from '@/lib/api';
++import { useState } from 'react';
++
++export default function ProductionDetailPage({
++  params,
++}: {
++  params: Promise<{ id: string }>;
++}) {
++  const { id } = use(params);
++  const { data, isLoading, refetch } = useProduction(id);
++  const production = data?.data;
++  const [retrying, setRetrying] = useState(false);
++
++  const handleRetry = async () => {
++    if (!production) return;
++    setRetrying(true);
++    try {
++      await api.post('/api/productions', {
++        workflowId: production.workflowId,
++        topic: production.topic || undefined,
++      });
++      refetch();
++    } catch {
++      // noop
++    } finally {
++      setRetrying(false);
++    }
++  };
++
++  // Extract video URL from assets
++  const videoUrl = production?.assets
++    ? (production.assets as Record<string, string>).videoUrl ||
++      (production.assets as Record<string, string>).video_url ||
++      (production.assets as Record<string, string>).outputUrl ||
++      (production.assets as Record<string, string>).output_url
++    : null;
++
++  const thumbnailUrl = production?.assets
++    ? (production.assets as Record<string, string>).thumbnailUrl ||
++      (production.assets as Record<string, string>).thumbnail_url
++    : null;
++
++  const scriptContent = production?.assets
++    ? (production.assets as Record<string, string>).script
++    : null;
++
++  if (isLoading) {
++    return (
++      <>
++        <Header title="제작 상세" />
++        <div className="p-6">
++          <div className="animate-pulse space-y-4">
++            <div className="h-8 bg-muted rounded w-48" />
++            <div className="h-64 bg-muted rounded" />
++          </div>
++        </div>
++      </>
++    );
++  }
++
++  if (!production) {
++    return (
++      <>
++        <Header title="제작 상세" />
++        <div className="p-6">
++          <Card>
++            <CardContent className="p-12 text-center text-muted-foreground">
++              <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground/30" />
++              <p>제작 건을 찾을 수 없습니다.</p>
++              <Link href="/productions" className="mt-4 inline-block">
++                <Button variant="outline">목록으로</Button>
++              </Link>
++            </CardContent>
++          </Card>
++        </div>
++      </>
++    );
++  }
++
++  const isInProgress = !['completed', 'failed'].includes(production.status);
++
++  return (
++    <>
++      <Header title={production.title || production.topic || '제작 상세'} />
++      <div className="p-6 space-y-6">
++        {/* Back button */}
++        <Link href="/productions">
++          <Button variant="ghost" size="sm">
++            <ArrowLeft className="h-4 w-4 mr-2" />
++            제작 목록
++          </Button>
++        </Link>
++
++        {/* Progress Stepper */}
++        <Card>
++          <CardContent className="py-6">
++            <ProductionProgress status={production.status} />
++          </CardContent>
++        </Card>
++
++        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
++          {/* Left: Video Player or Status */}
++          <div className="lg:col-span-1">
++            {production.status === 'completed' && videoUrl ? (
++              <VideoPlayer
++                src={videoUrl}
++                poster={thumbnailUrl || undefined}
++                title={production.title || production.topic || undefined}
++              />
++            ) : production.status === 'failed' ? (
++              <Card className="border-red-200 bg-red-50/50">
++                <CardContent className="p-8 text-center">
++                  <AlertCircle className="h-12 w-12 mx-auto mb-4 text-red-400" />
++                  <h3 className="text-lg font-medium text-red-700 mb-2">제작 실패</h3>
++                  <p className="text-sm text-red-600 mb-4">
++                    {production.errorMessage || '알 수 없는 오류가 발생했습니다.'}
++                  </p>
++                  <Button onClick={handleRetry} disabled={retrying} variant="outline">
++                    <RefreshCw className={`h-4 w-4 mr-2 ${retrying ? 'animate-spin' : ''}`} />
++                    {retrying ? '재시도 중...' : '같은 주제로 재시도'}
++                  </Button>
++                </CardContent>
++              </Card>
++            ) : (
++              <Card>
++                <CardContent className="p-8 text-center">
++                  <div className="relative mx-auto w-20 h-20 mb-4">
++                    <div className="absolute inset-0 rounded-full border-4 border-muted" />
++                    <div className="absolute inset-0 rounded-full border-4 border-blue-500 border-t-transparent animate-spin" />
++                  </div>
++                  <h3 className="text-lg font-medium mb-1">영상 제작 중...</h3>
++                  <p className="text-sm text-muted-foreground">
++                    <StatusBadge status={production.status} /> 단계 진행 중
++                  </p>
++                  <p className="text-xs text-muted-foreground mt-2">
++                    자동으로 새로고침됩니다
++                  </p>
++                </CardContent>
++              </Card>
++            )}
++          </div>
++
++          {/* Right: Details */}
++          <div className="lg:col-span-2 space-y-4">
++            {/* Info Card */}
++            <Card>
++              <CardHeader>
++                <CardTitle className="text-base">제작 정보</CardTitle>
++              </CardHeader>
++              <CardContent className="space-y-3">
++                <div className="grid grid-cols-2 gap-3 text-sm">
++                  <div>
++                    <span className="text-muted-foreground">채널</span>
++                    <div className="mt-0.5">
++                      <Badge variant="outline">{production.channel?.name}</Badge>
++                    </div>
++                  </div>
++                  <div>
++                    <span className="text-muted-foreground">워크플로우</span>
++                    <p className="mt-0.5 font-medium">{production.workflow?.name}</p>
++                  </div>
++                  <div>
++                    <span className="text-muted-foreground">상태</span>
++                    <div className="mt-0.5">
++                      <StatusBadge status={production.status} />
++                    </div>
++                  </div>
++                  <div>
++                    <span className="text-muted-foreground">주제</span>
++                    <p className="mt-0.5 font-medium">{production.topic || '-'}</p>
++                  </div>
++                </div>
++
++                {/* Timestamps */}
++                <div className="border-t pt-3 space-y-2">
++                  <div className="flex items-center gap-2 text-sm">
++                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
++                    <span className="text-muted-foreground">생성:</span>
++                    <span>{new Date(production.createdAt).toLocaleString('ko-KR')}</span>
++                  </div>
++                  {production.startedAt && (
++                    <div className="flex items-center gap-2 text-sm">
++                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
++                      <span className="text-muted-foreground">시작:</span>
++                      <span>{new Date(production.startedAt).toLocaleString('ko-KR')}</span>
++                    </div>
++                  )}
++                  {production.completedAt && (
++                    <div className="flex items-center gap-2 text-sm">
++                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
++                      <span className="text-muted-foreground">완료:</span>
++                      <span>{new Date(production.completedAt).toLocaleString('ko-KR')}</span>
++                    </div>
++                  )}
++                  {production.startedAt && production.completedAt && (
++                    <div className="flex items-center gap-2 text-sm">
++                      <Clock className="h-3.5 w-3.5 text-emerald-500" />
++                      <span className="text-muted-foreground">소요:</span>
++                      <span className="font-medium text-emerald-600">
++                        {Math.round(
++                          (new Date(production.completedAt).getTime() -
++                            new Date(production.startedAt).getTime()) /
++                            1000
++                        )}
++                        초
++                      </span>
++                    </div>
++                  )}
++                </div>
++
++                {/* YouTube Link */}
++                {production.youtubeUrl && (
++                  <div className="border-t pt-3">
++                    <a
++                      href={production.youtubeUrl}
++                      target="_blank"
++                      rel="noopener noreferrer"
++                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
++                    >
++                      <ExternalLink className="h-4 w-4" />
++                      YouTube에서 보기
++                    </a>
++                  </div>
++                )}
++              </CardContent>
++            </Card>
++
++            {/* Script Card (if available) */}
++            {scriptContent && (
++              <Card>
++                <CardHeader>
++                  <CardTitle className="text-base">스크립트</CardTitle>
++                </CardHeader>
++                <CardContent>
++                  <pre className="text-xs bg-muted p-3 rounded-lg overflow-auto max-h-64 whitespace-pre-wrap">
++                    {scriptContent}
++                  </pre>
++                </CardContent>
++              </Card>
++            )}
++
++            {/* Error Card */}
++            {production.errorMessage && (
++              <Card className="border-red-200">
++                <CardHeader>
++                  <CardTitle className="text-base text-red-700">에러 로그</CardTitle>
++                </CardHeader>
++                <CardContent>
++                  <pre className="text-xs bg-red-50 text-red-800 p-3 rounded-lg overflow-auto max-h-40 whitespace-pre-wrap">
++                    {production.errorMessage}
++                  </pre>
++                </CardContent>
++              </Card>
++            )}
++          </div>
++        </div>
++      </div>
++    </>
++  );
++}
+diff --git a/packages/frontend/src/app/(dashboard)/productions/new/page.tsx b/packages/frontend/src/app/(dashboard)/productions/new/page.tsx
+index fd5098b..a0fb7dd 100644
+--- a/packages/frontend/src/app/(dashboard)/productions/new/page.tsx
++++ b/packages/frontend/src/app/(dashboard)/productions/new/page.tsx
+@@ -32,11 +32,11 @@ export default function NewProductionPage() {
+     setError('');
+ 
+     try {
+-      await api.post('/api/productions', {
++      const result = await api.post<{ success: boolean; data: { id: string } }>('/api/productions', {
+         workflowId: selectedWorkflow,
+         topic: topic || undefined,
+       });
+-      router.push('/productions');
++      router.push(`/productions/${result.data.id}`);
+     } catch (err) {
+       setError(err instanceof Error ? err.message : '제작 트리거에 실패했습니다.');
+     } finally {
+diff --git a/packages/frontend/src/app/(dashboard)/productions/page.tsx b/packages/frontend/src/app/(dashboard)/productions/page.tsx
+index 4475ff7..8fee194 100644
+--- a/packages/frontend/src/app/(dashboard)/productions/page.tsx
++++ b/packages/frontend/src/app/(dashboard)/productions/page.tsx
+@@ -9,8 +9,10 @@ import { StatusBadge } from '@/components/status-badge';
+ import { useProductions } from '@/hooks/use-dashboard';
+ import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+ import Link from 'next/link';
++import { useRouter } from 'next/navigation';
+ 
+ export default function ProductionsPage() {
++  const router = useRouter();
+   const [page, setPage] = useState(1);
+   const [statusFilter, setStatusFilter] = useState<string | undefined>();
+ 
+@@ -84,7 +86,11 @@ export default function ProductionsPage() {
+                   </tr>
+                 ) : (
+                   productions?.map((prod: any) => (
+-                    <tr key={prod.id} className="border-b hover:bg-muted/50">
++                    <tr
++                      key={prod.id}
++                      className="border-b hover:bg-muted/50 cursor-pointer"
++                      onClick={() => router.push(`/productions/${prod.id}`)}
++                    >
+                       <td className="px-4 py-3">
+                         <Badge variant="outline">{prod.channel?.name}</Badge>
+                       </td>
+diff --git a/packages/frontend/src/components/production-progress.tsx b/packages/frontend/src/components/production-progress.tsx
+new file mode 100644
+index 0000000..c1365f3
+--- /dev/null
++++ b/packages/frontend/src/components/production-progress.tsx
+@@ -0,0 +1,88 @@
++'use client';
++
++import { cn } from '@/lib/utils';
++import { Check, Loader2, X, Circle } from 'lucide-react';
++import type { ProductionStatus } from '@n8n-web/shared';
++
++const STEPS: { key: ProductionStatus; label: string }[] = [
++  { key: 'pending', label: '대기' },
++  { key: 'triggered', label: '시작' },
++  { key: 'ai_generating', label: 'AI 스크립트' },
++  { key: 'tts_processing', label: 'TTS 음성' },
++  { key: 'image_generating', label: '이미지' },
++  { key: 'video_rendering', label: '영상 렌더링' },
++  { key: 'completed', label: '완료' },
++];
++
++const STATUS_ORDER: Record<string, number> = {};
++STEPS.forEach((s, i) => {
++  STATUS_ORDER[s.key] = i;
++});
++
++interface ProductionProgressProps {
++  status: ProductionStatus;
++  className?: string;
++}
++
++export function ProductionProgress({ status, className }: ProductionProgressProps) {
++  const isFailed = status === 'failed';
++  const currentIdx = STATUS_ORDER[status] ?? -1;
++
++  return (
++    <div className={cn('flex items-center gap-1', className)}>
++      {STEPS.map((step, idx) => {
++        const isCompleted = currentIdx > idx;
++        const isCurrent = currentIdx === idx;
++        const isUpcoming = currentIdx < idx;
++
++        return (
++          <div key={step.key} className="flex items-center gap-1">
++            {/* Step indicator */}
++            <div className="flex flex-col items-center gap-1">
++              <div
++                className={cn(
++                  'flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all',
++                  isCompleted && 'border-emerald-500 bg-emerald-500 text-white',
++                  isCurrent && !isFailed && 'border-blue-500 bg-blue-50 text-blue-600',
++                  isCurrent && isFailed && 'border-red-500 bg-red-50 text-red-600',
++                  isUpcoming && 'border-muted-foreground/20 text-muted-foreground/40'
++                )}
++              >
++                {isCompleted ? (
++                  <Check className="h-4 w-4" />
++                ) : isCurrent && isFailed ? (
++                  <X className="h-4 w-4" />
++                ) : isCurrent ? (
++                  <Loader2 className="h-4 w-4 animate-spin" />
++                ) : (
++                  <Circle className="h-3 w-3" />
++                )}
++              </div>
++              <span
++                className={cn(
++                  'text-[10px] font-medium whitespace-nowrap',
++                  isCompleted && 'text-emerald-600',
++                  isCurrent && !isFailed && 'text-blue-600',
++                  isCurrent && isFailed && 'text-red-600',
++                  isUpcoming && 'text-muted-foreground/50'
++                )}
++              >
++                {step.label}
++              </span>
++            </div>
++
++            {/* Connector line */}
++            {idx < STEPS.length - 1 && (
++              <div
++                className={cn(
++                  'h-0.5 w-6 mb-5 rounded-full',
++                  isCompleted ? 'bg-emerald-500' : 'bg-muted-foreground/15'
++                )}
++              />
++            )}
++          </div>
++        );
++      })}
++    </div>
++  );
++}
+diff --git a/packages/frontend/src/components/video-player.tsx b/packages/frontend/src/components/video-player.tsx
+new file mode 100644
+index 0000000..6447f60
+--- /dev/null
++++ b/packages/frontend/src/components/video-player.tsx
+@@ -0,0 +1,168 @@
++'use client';
++
++import { useState, useRef } from 'react';
++import { Play, Pause, Volume2, VolumeX, Maximize, Download, RotateCcw } from 'lucide-react';
++import { cn } from '@/lib/utils';
++
++interface VideoPlayerProps {
++  src: string;
++  poster?: string;
++  title?: string;
++  className?: string;
++}
++
++export function VideoPlayer({ src, poster, title, className }: VideoPlayerProps) {
++  const videoRef = useRef<HTMLVideoElement>(null);
++  const [playing, setPlaying] = useState(false);
++  const [muted, setMuted] = useState(false);
++  const [progress, setProgress] = useState(0);
++  const [duration, setDuration] = useState(0);
++  const [currentTime, setCurrentTime] = useState(0);
++  const [showControls, setShowControls] = useState(true);
++
++  const togglePlay = () => {
++    if (!videoRef.current) return;
++    if (playing) {
++      videoRef.current.pause();
++    } else {
++      videoRef.current.play();
++    }
++    setPlaying(!playing);
++  };
++
++  const toggleMute = () => {
++    if (!videoRef.current) return;
++    videoRef.current.muted = !muted;
++    setMuted(!muted);
++  };
++
++  const handleTimeUpdate = () => {
++    if (!videoRef.current) return;
++    const curr = videoRef.current.currentTime;
++    const dur = videoRef.current.duration;
++    setCurrentTime(curr);
++    setDuration(dur);
++    setProgress(dur ? (curr / dur) * 100 : 0);
++  };
++
++  const handleSeek = (e: React.MouseEvent<HTMLDivElement>) => {
++    if (!videoRef.current) return;
++    const rect = e.currentTarget.getBoundingClientRect();
++    const pct = (e.clientX - rect.left) / rect.width;
++    videoRef.current.currentTime = pct * videoRef.current.duration;
++  };
++
++  const handleEnded = () => setPlaying(false);
++
++  const handleFullscreen = () => {
++    videoRef.current?.requestFullscreen?.();
++  };
++
++  const handleRestart = () => {
++    if (!videoRef.current) return;
++    videoRef.current.currentTime = 0;
++    videoRef.current.play();
++    setPlaying(true);
++  };
++
++  const formatTime = (s: number) => {
++    if (!s || isNaN(s)) return '0:00';
++    const m = Math.floor(s / 60);
++    const sec = Math.floor(s % 60);
++    return `${m}:${sec.toString().padStart(2, '0')}`;
++  };
++
++  return (
++    <div
++      className={cn(
++        'relative bg-black rounded-xl overflow-hidden group aspect-[9/16] max-w-sm mx-auto',
++        className
++      )}
++      onMouseEnter={() => setShowControls(true)}
++      onMouseLeave={() => playing && setShowControls(false)}
++    >
++      <video
++        ref={videoRef}
++        src={src}
++        poster={poster}
++        className="w-full h-full object-contain"
++        onTimeUpdate={handleTimeUpdate}
++        onEnded={handleEnded}
++        onLoadedMetadata={handleTimeUpdate}
++        playsInline
++        onClick={togglePlay}
++      />
++
++      {/* Center play button overlay (when paused) */}
++      {!playing && (
++        <div
++          className="absolute inset-0 flex items-center justify-center cursor-pointer bg-black/20"
++          onClick={togglePlay}
++        >
++          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 text-black shadow-lg hover:scale-110 transition-transform">
++            <Play className="h-8 w-8 ml-1" />
++          </div>
++        </div>
++      )}
++
++      {/* Bottom controls */}
++      <div
++        className={cn(
++          'absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-8 transition-opacity',
++          showControls ? 'opacity-100' : 'opacity-0'
++        )}
++      >
++        {/* Progress bar */}
++        <div
++          className="h-1.5 bg-white/20 rounded-full cursor-pointer mb-3 group/bar"
++          onClick={handleSeek}
++        >
++          <div
++            className="h-full bg-white rounded-full relative"
++            style={{ width: `${progress}%` }}
++          >
++            <div className="absolute right-0 top-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-white opacity-0 group-hover/bar:opacity-100 transition-opacity" />
++          </div>
++        </div>
++
++        <div className="flex items-center justify-between">
++          <div className="flex items-center gap-2">
++            <button onClick={togglePlay} className="text-white hover:text-white/80">
++              {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
++            </button>
++            <button onClick={handleRestart} className="text-white/70 hover:text-white">
++              <RotateCcw className="h-4 w-4" />
++            </button>
++            <button onClick={toggleMute} className="text-white/70 hover:text-white">
++              {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
++            </button>
++            <span className="text-xs text-white/70 tabular-nums">
++              {formatTime(currentTime)} / {formatTime(duration)}
++            </span>
++          </div>
++
++          <div className="flex items-center gap-2">
++            <a
++              href={src}
++              download={title || 'video.mp4'}
++              className="text-white/70 hover:text-white"
++              onClick={(e) => e.stopPropagation()}
++            >
++              <Download className="h-4 w-4" />
++            </a>
++            <button onClick={handleFullscreen} className="text-white/70 hover:text-white">
++              <Maximize className="h-4 w-4" />
++            </button>
++          </div>
++        </div>
++      </div>
++
++      {/* Title overlay */}
++      {title && showControls && (
++        <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/60 to-transparent p-3 pb-8">
++          <p className="text-white text-sm font-medium truncate">{title}</p>
++        </div>
++      )}
++    </div>
++  );
++}
+diff --git a/packages/frontend/src/hooks/use-dashboard.ts b/packages/frontend/src/hooks/use-dashboard.ts
+index c305c30..08972ae 100644
+--- a/packages/frontend/src/hooks/use-dashboard.ts
++++ b/packages/frontend/src/hooks/use-dashboard.ts
+@@ -74,6 +74,25 @@ export function useProductions(params?: { channelId?: string; status?: string; p
+   });
+ }
+ 
++export function useProduction(id: string) {
++  return useQuery({
++    queryKey: ['productions', id],
++    queryFn: () =>
++      api.get<{
++        success: boolean;
++        data: Production & { workflow: Workflow & { channel: Channel }; channel: Channel };
++      }>(`/api/productions/${id}`),
++    enabled: !!id,
++    refetchInterval: (query) => {
++      const status = query.state.data?.data?.status;
++      if (status && !['completed', 'failed'].includes(status)) {
++        return 3000;
++      }
++      return false;
++    },
++  });
++}
++
+ export function useCharacters() {
+   return useQuery({
+     queryKey: ['characters'],
+-- 
+2.43.0
+
