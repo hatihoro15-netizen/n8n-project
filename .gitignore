@@ -29,3 +29,6 @@ packages/backend/prisma/*.db
 
 # Turbo
 .turbo/
+
+# Vercel/Cloudflare build output
+.vercel/
