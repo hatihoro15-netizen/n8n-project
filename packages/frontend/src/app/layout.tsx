@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import type { Metadata } from 'next';
 import { Providers } from '@/components/providers';
 import { AuthGuard } from '@/components/auth-guard';

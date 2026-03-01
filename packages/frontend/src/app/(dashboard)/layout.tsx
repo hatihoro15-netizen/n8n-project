@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import { Sidebar } from '@/components/layout/sidebar';
 
 export default function DashboardLayout({
