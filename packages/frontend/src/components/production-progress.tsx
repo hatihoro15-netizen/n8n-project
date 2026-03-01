@@ -6,11 +6,11 @@ import type { ProductionStatus } from '@n8n-web/shared';
 
 const STEPS: { key: ProductionStatus; label: string }[] = [
   { key: 'pending', label: '대기' },
-  { key: 'triggered', label: '시작' },
-  { key: 'ai_generating', label: 'AI 스크립트' },
-  { key: 'tts_processing', label: 'TTS 음성' },
-  { key: 'image_generating', label: '이미지' },
-  { key: 'video_rendering', label: '영상 렌더링' },
+  { key: 'started', label: '시작' },
+  { key: 'script_ready', label: 'AI 스크립트' },
+  { key: 'tts_ready', label: 'TTS 음성' },
+  { key: 'images_ready', label: '이미지' },
+  { key: 'rendering', label: '영상 렌더링' },
   { key: 'completed', label: '완료' },
 ];
 

@@ -65,11 +65,11 @@ export interface Prompt {
 // --- Production ---
 export type ProductionStatus =
   | 'pending'
-  | 'triggered'
-  | 'ai_generating'
-  | 'tts_processing'
-  | 'image_generating'
-  | 'video_rendering'
+  | 'started'
+  | 'script_ready'
+  | 'tts_ready'
+  | 'images_ready'
+  | 'rendering'
   | 'uploading'
   | 'completed'
   | 'failed';

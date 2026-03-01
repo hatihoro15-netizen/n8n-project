@@ -112,7 +112,7 @@ export async function productionRoutes(app: FastifyInstance) {
 
       await prisma.production.update({
         where: { id: production.id },
-        data: { status: 'triggered', startedAt: new Date() },
+        data: { status: 'started', startedAt: new Date() },
       });
 
       logger.info({ productionId: production.id, workflowId }, 'Production triggered');
@@ -161,7 +161,7 @@ export async function productionRoutes(app: FastifyInstance) {
             workflowId: workflow.id,
             channelId: workflow.channelId,
             topic: item.topic,
-            status: 'triggered',
+            status: 'started',
             startedAt: new Date(),
           },
         });

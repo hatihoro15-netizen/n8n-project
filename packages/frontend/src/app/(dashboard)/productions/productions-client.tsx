@@ -36,7 +36,7 @@ export default function ProductionsClient() {
   const statuses = [
     { value: undefined, label: '전체' },
     { value: 'pending', label: '대기' },
-    { value: 'triggered', label: '시작됨' },
+    { value: 'started', label: '시작됨' },
     { value: 'completed', label: '완료' },
     { value: 'failed', label: '실패' },
   ];
