@@ -1,4 +1,5 @@
 import { FastifyInstance } from 'fastify';
+import { ProductionStatus } from '@prisma/client';
 import { prisma } from '../utils/prisma';
 import { n8nClient } from '../utils/n8n-client';
 import { logger } from '../utils/logger';
@@ -193,6 +194,11 @@ export async function productionRoutes(app: FastifyInstance) {
       errorMessage?: string;
     };
 
+    const validStatuses = Object.values(ProductionStatus);
+    if (!validStatuses.includes(status as ProductionStatus)) {
+      return reply.status(400).send({ success: false, message: `유효하지 않은 상태: ${status}` });
+    }
+
     const production = await prisma.production.findUnique({
       where: { id },
     });
@@ -205,12 +211,13 @@ export async function productionRoutes(app: FastifyInstance) {
       return reply.status(400).send({ success: false, message: '이미 완료되거나 실패한 제작 건입니다.' });
     }
 
+    const newStatus = status as ProductionStatus;
     const updated = await prisma.production.update({
       where: { id },
       data: {
-        status,
+        status: newStatus,
         errorMessage: errorMessage || undefined,
-        completedAt: ['completed', 'failed'].includes(status) ? new Date() : undefined,
+        completedAt: ['completed', 'failed'].includes(newStatus) ? new Date() : undefined,
       },
       include: { workflow: true, channel: true },
     });
