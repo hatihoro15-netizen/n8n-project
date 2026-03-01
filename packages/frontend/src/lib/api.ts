@@ -64,6 +64,13 @@ class ApiClient {
     });
   }
 
+  patch<T>(endpoint: string, body: unknown) {
+    return this.fetch<T>(endpoint, {
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  }
+
   delete<T>(endpoint: string) {
     return this.fetch<T>(endpoint, { method: 'DELETE' });
   }

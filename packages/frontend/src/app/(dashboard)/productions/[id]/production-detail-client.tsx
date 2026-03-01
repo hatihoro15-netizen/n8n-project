@@ -11,7 +11,7 @@ import { StatusBadge } from '@/components/status-badge';
 import { ProductionProgress } from '@/components/production-progress';
 import { VideoPlayer } from '@/components/video-player';
 import { useProduction } from '@/hooks/use-dashboard';
-import { ArrowLeft, ExternalLink, Clock, AlertCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Clock, AlertCircle, RefreshCw, Square } from 'lucide-react';
 import { api } from '@/lib/api';
 
 export default function ProductionDetailClient() {
@@ -20,6 +20,25 @@ export default function ProductionDetailClient() {
   const { data, isLoading, refetch } = useProduction(id);
   const production = data?.data;
   const [retrying, setRetrying] = useState(false);
+  const [aborting, setAborting] = useState(false);
+
+  const isInProgress = production ? !['completed', 'failed'].includes(production.status) : false;
+
+  const handleAbort = async () => {
+    if (!confirm('이 제작을 중단하시겠습니까?')) return;
+    setAborting(true);
+    try {
+      await api.patch(`/api/productions/${id}`, {
+        status: 'failed',
+        errorMessage: '사용자 중단',
+      });
+      refetch();
+    } catch {
+      // noop
+    } finally {
+      setAborting(false);
+    }
+  };
 
   const handleRetry = async () => {
     if (!production) return;
@@ -143,6 +162,16 @@ export default function ProductionDetailClient() {
                   <p className="text-xs text-muted-foreground mt-2">
                     자동으로 새로고침됩니다
                   </p>
+                  <Button
+                    onClick={handleAbort}
+                    disabled={aborting}
+                    variant="outline"
+                    size="sm"
+                    className="mt-4 text-red-600 border-red-200 hover:bg-red-50"
+                  >
+                    <Square className="h-3.5 w-3.5 mr-1.5" />
+                    {aborting ? '중단 중...' : '제작 중단'}
+                  </Button>
                 </CardContent>
               </Card>
             )}

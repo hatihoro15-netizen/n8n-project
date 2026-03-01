@@ -9,6 +9,8 @@ import { StatusBadge } from '@/components/status-badge';
 import { ProductionProgress } from '@/components/production-progress';
 import { VideoPlayer } from '@/components/video-player';
 import { useProductions } from '@/hooks/use-dashboard';
+import { api } from '@/lib/api';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
   ChevronLeft,
@@ -17,6 +19,7 @@ import {
   Clock,
   ExternalLink,
   FileText,
+  Square,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -185,6 +188,27 @@ function AccordionRow({
   thumbnailUrl: string | null;
   script: string | null;
 }) {
+  const [aborting, setAborting] = useState(false);
+  const queryClient = useQueryClient();
+  const isInProgress = !['completed', 'failed'].includes(prod.status);
+
+  const handleAbort = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('이 제작을 중단하시겠습니까?')) return;
+    setAborting(true);
+    try {
+      await api.patch(`/api/productions/${prod.id}`, {
+        status: 'failed',
+        errorMessage: '사용자 중단',
+      });
+      queryClient.invalidateQueries({ queryKey: ['productions'] });
+    } catch {
+      // noop
+    } finally {
+      setAborting(false);
+    }
+  };
+
   return (
     <>
       {/* Main row */}
@@ -216,7 +240,20 @@ function AccordionRow({
           )}
         </td>
         <td className="px-4 py-3">
-          <StatusBadge status={prod.status} />
+          <div className="flex items-center gap-2">
+            <StatusBadge status={prod.status} />
+            {isInProgress && (
+              <button
+                onClick={handleAbort}
+                disabled={aborting}
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
+                title="제작 중단"
+              >
+                <Square className="h-3 w-3" />
+                {aborting ? '...' : '중단'}
+              </button>
+            )}
+          </div>
         </td>
         <td className="px-4 py-3 text-muted-foreground text-xs">
           {prod.startedAt ? new Date(prod.startedAt).toLocaleString('ko-KR') : '-'}

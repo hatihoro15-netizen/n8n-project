@@ -183,6 +183,43 @@ export async function productionRoutes(app: FastifyInstance) {
     return { success: true, data: results };
   });
 
+  // Abort/update production status
+  app.patch('/api/productions/:id', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const { status, errorMessage } = request.body as {
+      status: string;
+      errorMessage?: string;
+    };
+
+    const production = await prisma.production.findUnique({
+      where: { id },
+    });
+
+    if (!production) {
+      return reply.status(404).send({ success: false, message: '제작 건을 찾을 수 없습니다.' });
+    }
+
+    if (['completed', 'failed'].includes(production.status)) {
+      return reply.status(400).send({ success: false, message: '이미 완료되거나 실패한 제작 건입니다.' });
+    }
+
+    const updated = await prisma.production.update({
+      where: { id },
+      data: {
+        status,
+        errorMessage: errorMessage || undefined,
+        completedAt: ['completed', 'failed'].includes(status) ? new Date() : undefined,
+      },
+      include: { workflow: true, channel: true },
+    });
+
+    logger.info({ productionId: id, status, errorMessage }, 'Production status updated manually');
+
+    return { success: true, data: updated };
+  });
+
   // n8n callback endpoint (no auth - called by n8n)
   app.post('/api/productions/callback', async (request) => {
     const {
