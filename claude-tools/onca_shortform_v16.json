@@ -606,6 +606,142 @@
       ],
       "id": "a5b6c7d8-e9f0-4a1b-2c3d-4e5f6a7b8c9d",
       "name": "실패 콜백"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 스크립트 콜백 준비 (script_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\ntry {\n  const webhookData = $('Webhook').first().json;\n  productionId = (webhookData.body && webhookData.body.productionId) || '';\n} catch (e) {\n  return [];\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'script_ready' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        800
+      ],
+      "id": "aa11bb22-cc33-4dd4-ee55-ff6677880011",
+      "name": "스크립트 콜백 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1600,
+        800
+      ],
+      "id": "aa11bb22-cc33-4dd4-ee55-ff6677880012",
+      "name": "스크립트 콜백",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * TTS 콜백 준비 (tts_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\ntry {\n  const webhookData = $('Webhook').first().json;\n  productionId = (webhookData.body && webhookData.body.productionId) || '';\n} catch (e) {\n  return [];\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'tts_ready' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2000,
+        800
+      ],
+      "id": "aa11bb22-cc33-4dd4-ee55-ff6677880021",
+      "name": "TTS 콜백 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2300,
+        800
+      ],
+      "id": "aa11bb22-cc33-4dd4-ee55-ff6677880022",
+      "name": "TTS 콜백",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 이미지 콜백 준비 (images_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\ntry {\n  const webhookData = $('Webhook').first().json;\n  productionId = (webhookData.body && webhookData.body.productionId) || '';\n} catch (e) {\n  return [];\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'images_ready' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2600,
+        800
+      ],
+      "id": "aa11bb22-cc33-4dd4-ee55-ff6677880031",
+      "name": "이미지 콜백 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2900,
+        800
+      ],
+      "id": "aa11bb22-cc33-4dd4-ee55-ff6677880032",
+      "name": "이미지 콜백",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 렌더링 콜백 준비 (rendering)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\ntry {\n  const webhookData = $('Webhook').first().json;\n  productionId = (webhookData.body && webhookData.body.productionId) || '';\n} catch (e) {\n  return [];\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'rendering' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3300,
+        800
+      ],
+      "id": "aa11bb22-cc33-4dd4-ee55-ff6677880041",
+      "name": "렌더링 콜백 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3600,
+        800
+      ],
+      "id": "aa11bb22-cc33-4dd4-ee55-ff6677880042",
+      "name": "렌더링 콜백",
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -636,6 +772,11 @@
         [
           {
             "node": "시트 기록",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "스크립트 콜백 준비",
             "type": "main",
             "index": 0
           }
@@ -687,6 +828,11 @@
             "node": "Merge",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "TTS 콜백 준비",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -718,6 +864,11 @@
         [
           {
             "node": "NCA 영상 제작",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "렌더링 콜백 준비",
             "type": "main",
             "index": 0
           }
@@ -782,6 +933,11 @@
             "node": "Merge",
             "type": "main",
             "index": 1
+          },
+          {
+            "node": "이미지 콜백 준비",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -879,6 +1035,50 @@
         [
           {
             "node": "실패 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "스크립트 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "스크립트 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "TTS 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "이미지 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "렌더링 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "렌더링 콜백",
             "type": "main",
             "index": 0
           }
