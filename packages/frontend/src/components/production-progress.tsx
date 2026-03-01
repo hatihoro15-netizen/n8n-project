@@ -31,9 +31,10 @@ export function ProductionProgress({ status, className }: ProductionProgressProp
   return (
     <div className={cn('flex items-center gap-1', className)}>
       {STEPS.map((step, idx) => {
-        const isCompleted = currentIdx > idx;
-        const isCurrent = currentIdx === idx;
-        const isUpcoming = currentIdx < idx;
+        const isAllDone = status === 'completed';
+        const isCompleted = isAllDone || currentIdx > idx;
+        const isCurrent = !isAllDone && currentIdx === idx;
+        const isUpcoming = !isAllDone && currentIdx < idx;
 
         return (
           <div key={step.key} className="flex items-center gap-1">
