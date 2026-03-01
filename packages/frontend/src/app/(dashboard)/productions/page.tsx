@@ -9,8 +9,10 @@ import { StatusBadge } from '@/components/status-badge';
 import { useProductions } from '@/hooks/use-dashboard';
 import { Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function ProductionsPage() {
+  const router = useRouter();
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
 
@@ -84,7 +86,11 @@ export default function ProductionsPage() {
                   </tr>
                 ) : (
                   productions?.map((prod: any) => (
-                    <tr key={prod.id} className="border-b hover:bg-muted/50">
+                    <tr
+                      key={prod.id}
+                      className="border-b hover:bg-muted/50 cursor-pointer"
+                      onClick={() => router.push(`/productions/${prod.id}`)}
+                    >
                       <td className="px-4 py-3">
                         <Badge variant="outline">{prod.channel?.name}</Badge>
                       </td>

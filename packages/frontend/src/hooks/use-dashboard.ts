@@ -74,6 +74,25 @@ export function useProductions(params?: { channelId?: string; status?: string; p
   });
 }
 
+export function useProduction(id: string) {
+  return useQuery({
+    queryKey: ['productions', id],
+    queryFn: () =>
+      api.get<{
+        success: boolean;
+        data: Production & { workflow: Workflow & { channel: Channel }; channel: Channel };
+      }>(`/api/productions/${id}`),
+    enabled: !!id,
+    refetchInterval: (query) => {
+      const status = query.state.data?.data?.status;
+      if (status && !['completed', 'failed'].includes(status)) {
+        return 3000;
+      }
+      return false;
+    },
+  });
+}
+
 export function useCharacters() {
   return useQuery({
     queryKey: ['characters'],

@@ -185,20 +185,46 @@ export async function productionRoutes(app: FastifyInstance) {
 
   // n8n callback endpoint (no auth - called by n8n)
   app.post('/api/productions/callback', async (request) => {
-    const { productionId, status, title, assets, youtubeVideoId, youtubeUrl, errorMessage } =
-      request.body as {
-        productionId: string;
-        status: string;
-        title?: string;
-        assets?: Record<string, unknown>;
-        youtubeVideoId?: string;
-        youtubeUrl?: string;
-        errorMessage?: string;
-      };
+    const {
+      productionId,
+      status,
+      title,
+      assets,
+      videoUrl,
+      thumbnailUrl,
+      script,
+      youtubeVideoId,
+      youtubeUrl,
+      errorMessage,
+    } = request.body as {
+      productionId: string;
+      status: string;
+      title?: string;
+      assets?: Record<string, unknown>;
+      videoUrl?: string;
+      thumbnailUrl?: string;
+      script?: string;
+      youtubeVideoId?: string;
+      youtubeUrl?: string;
+      errorMessage?: string;
+    };
 
-    const data: Record<string, unknown> = { status };
+    // Build assets object, merging explicit fields with passed assets
+    const existingProd = await prisma.production.findUnique({
+      where: { id: productionId },
+      select: { assets: true },
+    });
+
+    const mergedAssets: Record<string, unknown> = {
+      ...((existingProd?.assets as Record<string, unknown>) || {}),
+      ...(assets || {}),
+    };
+    if (videoUrl) mergedAssets.videoUrl = videoUrl;
+    if (thumbnailUrl) mergedAssets.thumbnailUrl = thumbnailUrl;
+    if (script) mergedAssets.script = script;
+
+    const data: Record<string, unknown> = { status, assets: mergedAssets };
     if (title) data.title = title;
-    if (assets) data.assets = assets;
     if (youtubeVideoId) data.youtubeVideoId = youtubeVideoId;
     if (youtubeUrl) data.youtubeUrl = youtubeUrl;
     if (errorMessage) data.errorMessage = errorMessage;

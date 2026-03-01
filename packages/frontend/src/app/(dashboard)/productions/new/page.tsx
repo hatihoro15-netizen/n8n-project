@@ -32,11 +32,11 @@ export default function NewProductionPage() {
     setError('');
 
     try {
-      await api.post('/api/productions', {
+      const result = await api.post<{ success: boolean; data: { id: string } }>('/api/productions', {
         workflowId: selectedWorkflow,
         topic: topic || undefined,
       });
-      router.push('/productions');
+      router.push(`/productions/${result.data.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : '제작 트리거에 실패했습니다.');
     } finally {

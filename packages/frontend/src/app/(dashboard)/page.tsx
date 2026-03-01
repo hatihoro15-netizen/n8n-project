@@ -5,10 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { StatusBadge } from '@/components/status-badge';
 import { useDashboardStats } from '@/hooks/use-dashboard';
-import { Play, CheckCircle, XCircle, Clock, Tv } from 'lucide-react';
+import { Play, CheckCircle, XCircle, Clock, Tv, Plus } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/button';
 
 export default function DashboardPage() {
+  const router = useRouter();
   const { data, isLoading } = useDashboardStats();
   const stats = data?.data;
 
@@ -42,6 +45,16 @@ export default function DashboardPage() {
             icon={<Clock className="h-4 w-4 text-yellow-600" />}
             loading={isLoading}
           />
+        </div>
+
+        {/* Quick Create */}
+        <div className="flex justify-end">
+          <Link href="/productions/new">
+            <Button size="lg" className="gap-2">
+              <Plus className="h-5 w-5" />
+              영상 제작하기
+            </Button>
+          </Link>
         </div>
 
         {/* Channel Cards */}
@@ -120,7 +133,11 @@ export default function DashboardPage() {
                       </tr>
                     ) : (
                       stats?.recentProductions?.map((prod: any) => (
-                        <tr key={prod.id} className="border-b hover:bg-muted/50">
+                        <tr
+                          key={prod.id}
+                          className="border-b hover:bg-muted/50 cursor-pointer"
+                          onClick={() => router.push(`/productions/${prod.id}`)}
+                        >
                           <td className="px-4 py-3">
                             <Badge variant="outline">{prod.channel?.name}</Badge>
                           </td>
