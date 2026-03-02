@@ -328,7 +328,7 @@
           "name": "Kie.ai API Key"
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -494,7 +494,7 @@
           "name": "Kie.ai API Key"
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -660,7 +660,7 @@
           "name": "Kie.ai API Key"
         }
       },
-      "onError": "continueRegularOutput"
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -945,7 +945,8 @@
           "id": "l77M6Gy6p1bUA86P",
           "name": "Kie.ai API Key"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1115,7 +1116,8 @@
           "id": "IKP349r08J9Hoz5E",
           "name": "Google Gemini(PaLM) Api account"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {},
@@ -1371,7 +1373,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * 실패 콜백 준비\n * NCA 영상 제작 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n  skipCallback = !productionId;\n} catch (e) {\n  skipCallback = true;\n}\n\nif (skipCallback) {\n  return [];\n}\n\nconst input = $input.first().json;\nconst errorMessage = (input.error && input.error.message) || input.message || 'NCA 영상 제작 실패';\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
+        "jsCode": "/**\n * 실패 콜백 준비\n * NCA 영상 제작 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n  skipCallback = !productionId;\n} catch (e) {\n  skipCallback = true;\n}\n\nif (skipCallback) {\n  return [];\n}\n\nconst input = $input.first().json;\nconst errorMessage = (input.error && input.error.message) || input.message || '[NCA 영상 제작]: ' + ((input.error && input.error.message) || input.message || '알 수 없는 에러');\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1401,6 +1403,71 @@
       ],
       "id": "c2fa5b91-0932-46a3-8b52-3d8cfd31b074",
       "name": "실패 콜백"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * AI 콘텐츠 에러 준비\n * AI 콘텐츠 생성 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n  skipCallback = !productionId;\n} catch (e) {\n  skipCallback = true;\n}\n\nif (skipCallback) {\n  return [];\n}\n\nconst input = $input.first().json;\nconst errorMessage = '[AI 콘텐츠 생성]: ' + ((input.error && input.error.message) || input.message || '알 수 없는 에러');\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2800,
+        1728
+      ],
+      "id": "fa2bcee9-8fde-4a22-ab50-86c12f47a0db",
+      "name": "AI 콘텐츠 에러 준비"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 이미지 생성 에러 준비\n * 이미지 생성 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n  skipCallback = !productionId;\n} catch (e) {\n  skipCallback = true;\n}\n\nif (skipCallback) {\n  return [];\n}\n\nconst input = $input.first().json;\nconst errorMessage = '[이미지 생성]: ' + ((input.error && input.error.message) || input.message || '알 수 없는 에러');\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -828,
+        1728
+      ],
+      "id": "d7e63ee7-9b16-42da-bf5b-031074a97234",
+      "name": "이미지 생성 에러 준비"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 영상1 에러 준비\n * 영상1 생성 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n  skipCallback = !productionId;\n} catch (e) {\n  skipCallback = true;\n}\n\nif (skipCallback) {\n  return [];\n}\n\nconst input = $input.first().json;\nconst errorMessage = '[영상1 생성]: ' + ((input.error && input.error.message) || input.message || '알 수 없는 에러');\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2224,
+        1936
+      ],
+      "id": "60e2d40a-f9fb-4375-a576-1c7707a2ae26",
+      "name": "영상1 에러 준비"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 영상2 에러 준비\n * 영상2 생성 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n  skipCallback = !productionId;\n} catch (e) {\n  skipCallback = true;\n}\n\nif (skipCallback) {\n  return [];\n}\n\nconst input = $input.first().json;\nconst errorMessage = '[영상2 생성]: ' + ((input.error && input.error.message) || input.message || '알 수 없는 에러');\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2240,
+        2176
+      ],
+      "id": "cbf0aae8-a101-4693-9e2c-49458cf60c28",
+      "name": "영상2 에러 준비"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 영상3 에러 준비\n * 영상3 생성 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n  skipCallback = !productionId;\n} catch (e) {\n  skipCallback = true;\n}\n\nif (skipCallback) {\n  return [];\n}\n\nconst input = $input.first().json;\nconst errorMessage = '[영상3 생성]: ' + ((input.error && input.error.message) || input.message || '알 수 없는 에러');\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2256,
+        2416
+      ],
+      "id": "138de653-8c6d-472e-8d87-0a4e133b6f24",
+      "name": "영상3 에러 준비"
     }
   ],
   "connections": {
@@ -1626,6 +1693,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "영상3 에러 준비",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1732,6 +1806,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "영상2 에러 준비",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1835,6 +1916,13 @@
         [
           {
             "node": "영상1 대기",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "영상1 에러 준비",
             "type": "main",
             "index": 0
           }
@@ -1971,6 +2059,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "이미지 생성 에러 준비",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -2006,6 +2101,13 @@
         [
           {
             "node": "콘텐츠 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI 콘텐츠 에러 준비",
             "type": "main",
             "index": 0
           }
@@ -2145,6 +2247,61 @@
       ]
     },
     "실패 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "실패 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 콘텐츠 에러 준비": {
+      "main": [
+        [
+          {
+            "node": "실패 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 생성 에러 준비": {
+      "main": [
+        [
+          {
+            "node": "실패 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상1 에러 준비": {
+      "main": [
+        [
+          {
+            "node": "실패 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상2 에러 준비": {
+      "main": [
+        [
+          {
+            "node": "실패 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상3 에러 준비": {
       "main": [
         [
           {
