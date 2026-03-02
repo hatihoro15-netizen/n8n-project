@@ -37,20 +37,35 @@
 - 영상1/2/3 준비: onError → continueErrorOutput + 에러 준비 연결
 - 대상: 3개 워크플로우 전부
 
+### 5. 중간 콜백 병렬→직렬 변경 (`60021e7`)
+- n8n wait/polling 노드에서 병렬 side branch가 실행되지 않는 문제 대응
+- 스크립트 콜백: `콘텐츠 파싱 → 준비 → 콜백 → 시트 기록`
+- 이미지 콜백: `이미지 완료체크 → 준비 → 콜백 → 영상1 준비`
+- 렌더링 콜백: `NCA 데이터 준비 → 준비 → 콜백 → NCA 영상 제작`
+- 콜백 HTTP 노드 onError: continueRegularOutput (콜백 실패해도 메인 흐름 계속)
+- 대상: 3개 워크플로우 전부
+
+## 테스트 결과 (실행 1224, 할머니+Mike)
+- Webhook curl 트리거, productionId: `test-grandma-20260303-001`
+- 영상 3개 모두 성공 → NCA 합성 → 9:16 변환 → 완료
+- 콜백 데이터 준비에서 productionId 정상 추출
+- 성공 콜백 HTTP 404 (테스트 ID라 웹앱 DB에 없음 → 정상)
+- **중간 콜백은 병렬 분기라 실행 안 됨** → 직렬 변경으로 해결 (커밋 5)
+
 ## 알려진 이슈
 
 ### Google Sheets OAuth 토큰 만료
 - 실행 1221에서 `시트 기록` 노드 에러: "authorization grant is invalid, expired, revoked"
 - **조치 필요**: n8n 에디터 → Credentials → Google Sheets → 재연결
 
-### 스크립트 콜백 미실행 (1223)
-- 원인: 실행 시작 시점이 v86.4 업로드 전이라 이전 버전으로 실행됨
-- **해결됨**: 현재 업로드된 버전에는 연결 정상
-
 ### TTS 콜백 노드 없음
 - 할머니+Mike 워크플로우에 TTS 콜백 준비/TTS 콜백 노드 없음
 - Veo3가 직접 음성 생성하는 구조라 TTS 미사용 → 의도된 것일 수 있음
 - 필요 시 추가 검토
+
+### n8n 병렬 분기 제한
+- n8n은 wait/polling 노드가 있는 경로에서 이전 노드의 병렬 side branch를 실행하지 않음
+- 중간 콜백은 반드시 메인 파이프라인에 직렬로 삽입해야 함
 
 ## 흑형스포츠 vs Jay+Mike/할머니+Mike 차이
 - 흑형스포츠는 v86.4 미적용 (실패체크가 "원본 이미지 폴백" 패턴)
