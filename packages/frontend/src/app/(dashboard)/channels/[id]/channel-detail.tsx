@@ -4,16 +4,35 @@ import { useParams } from 'next/navigation';
 import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { StatusBadge } from '@/components/status-badge';
 import { useChannel } from '@/hooks/use-dashboard';
-import { Workflow, ArrowLeft } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+import { Workflow, ArrowLeft, Trash2, Youtube, Plus } from 'lucide-react';
 import Link from 'next/link';
-import { Button } from '@/components/ui/button';
 
 export default function ChannelDetail() {
   const params = useParams();
   const { data, isLoading } = useChannel(params.id as string);
   const channel = data?.data;
+  const queryClient = useQueryClient();
+
+  const handleDeleteWorkflow = async (e: React.MouseEvent, wfId: string, name: string, prodCount: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (prodCount > 0) {
+      alert(`제작 이력이 ${prodCount}건 있어 삭제할 수 없습니다.`);
+      return;
+    }
+    if (!confirm(`"${name}" 워크플로우를 삭제하시겠습니까?`)) return;
+    try {
+      await api.delete(`/api/workflows/${wfId}`);
+      queryClient.invalidateQueries({ queryKey: ['channels', params.id] });
+    } catch (err: any) {
+      alert(err.message || '삭제에 실패했습니다.');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -56,6 +75,7 @@ export default function ChannelDetail() {
           </CardContent>
         </Card>
 
+        {/* 워크플로우 */}
         <div>
           <h2 className="text-lg font-semibold mb-4">워크플로우</h2>
           <div className="grid gap-4 md:grid-cols-2">
@@ -63,14 +83,23 @@ export default function ChannelDetail() {
               <Link key={wf.id} href={`/workflows/${wf.id}`}>
                 <Card className="hover:shadow-md transition-shadow cursor-pointer">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      <Workflow className="h-5 w-5 text-primary" />
-                      <div>
-                        <h3 className="font-medium">{wf.name}</h3>
-                        <p className="text-xs text-muted-foreground">
-                          {wf.type} | 제작 {wf._count?.productions || 0}건
-                        </p>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <Workflow className="h-5 w-5 text-primary" />
+                        <div>
+                          <h3 className="font-medium">{wf.name}</h3>
+                          <p className="text-xs text-muted-foreground">
+                            {wf.type} | 제작 {wf._count?.productions || 0}건
+                          </p>
+                        </div>
                       </div>
+                      <button
+                        onClick={(e) => handleDeleteWorkflow(e, wf.id, wf.name, wf._count?.productions || 0)}
+                        className="p-1.5 rounded-md text-muted-foreground/50 hover:text-red-600 hover:bg-red-50 transition-colors"
+                        title="워크플로우 삭제"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
                     </div>
                   </CardContent>
                 </Card>
@@ -79,6 +108,29 @@ export default function ChannelDetail() {
           </div>
         </div>
 
+        {/* 유튜브 계정 */}
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold">유튜브 계정</h2>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => alert('준비 중입니다 (Phase 5에서 구현 예정)')}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              계정 추가
+            </Button>
+          </div>
+          <Card>
+            <CardContent className="p-8 text-center text-muted-foreground">
+              <Youtube className="h-10 w-10 mx-auto mb-3 text-muted-foreground/30" />
+              <p className="text-sm">연결된 유튜브 계정이 없습니다</p>
+              <p className="text-xs mt-1">Phase 5에서 OAuth 연동이 추가됩니다</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* 최근 제작 */}
         <div>
           <h2 className="text-lg font-semibold mb-4">최근 제작</h2>
           <Card>

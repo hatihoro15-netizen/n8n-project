@@ -95,6 +95,34 @@ export async function workflowRoutes(app: FastifyInstance) {
     }
   });
 
+  // Create workflow
+  app.post('/api/workflows', {
+    preHandler: [app.authenticate],
+  }, async (request) => {
+    const body = request.body as {
+      name: string;
+      channelId: string;
+      type: string;
+      n8nWorkflowId: string;
+      webhookPath?: string;
+      stepperType?: string;
+    };
+
+    const workflow = await prisma.workflow.create({
+      data: {
+        name: body.name,
+        channelId: body.channelId,
+        type: body.type as any,
+        n8nWorkflowId: body.n8nWorkflowId,
+        webhookPath: body.webhookPath || null,
+        stepperType: body.stepperType || 'tts_based',
+      },
+      include: { channel: true },
+    });
+
+    return { success: true, data: workflow };
+  });
+
   // Update workflow
   app.put('/api/workflows/:id', {
     preHandler: [app.authenticate],
@@ -114,5 +142,35 @@ export async function workflowRoutes(app: FastifyInstance) {
     });
 
     return { success: true, data: workflow };
+  });
+
+  // Delete workflow (only if no productions exist)
+  app.delete('/api/workflows/:id', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const workflow = await prisma.workflow.findUnique({
+      where: { id },
+      include: { _count: { select: { productions: true } } },
+    });
+
+    if (!workflow) {
+      return reply.status(404).send({ success: false, message: '워크플로우를 찾을 수 없습니다.' });
+    }
+
+    if (workflow._count.productions > 0) {
+      return reply.status(400).send({
+        success: false,
+        message: `제작 이력이 ${workflow._count.productions}건 있어 삭제할 수 없습니다.`,
+      });
+    }
+
+    // Delete related prompts and character links first
+    await prisma.prompt.deleteMany({ where: { workflowId: id } });
+    await prisma.workflowCharacter.deleteMany({ where: { workflowId: id } });
+    await prisma.workflow.delete({ where: { id } });
+
+    return { success: true, message: '워크플로우가 삭제되었습니다.' };
   });
 }
