@@ -311,7 +311,8 @@
         2176
       ],
       "id": "c9c85671-3eb2-4fa5-a158-74cf8d4613fb",
-      "name": "NCA 영상 제작"
+      "name": "NCA 영상 제작",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1187,6 +1188,240 @@
         432,
         2176
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 스크립트 콜백 준비 (script_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n} catch (e) {\n  return [];\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'script_ready' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2432,
+        1728
+      ],
+      "id": "15565624-17dd-4c60-a709-1db3463c6578",
+      "name": "스크립트 콜백 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2132,
+        1728
+      ],
+      "id": "560ad041-799f-42f3-8c70-4bddbf00ad32",
+      "name": "스크립트 콜백",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 이미지 콜백 준비 (images_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n} catch (e) {\n  return [];\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'images_ready' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -432,
+        1728
+      ],
+      "id": "e972f713-4ab8-4605-b0b2-d2d1b28f08b3",
+      "name": "이미지 콜백 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -132,
+        1728
+      ],
+      "id": "aad0f8eb-8792-4c79-9943-ed9002e84ed9",
+      "name": "이미지 콜백",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 영상 콜백 준비 (videos_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n} catch (e) {\n  return [];\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'videos_ready' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1376,
+        2592
+      ],
+      "id": "ad21bd0c-c766-4690-81f0-d14042696185",
+      "name": "영상 콜백 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1076,
+        2592
+      ],
+      "id": "15f4fb09-adae-4449-9163-43e415673eb0",
+      "name": "영상 콜백",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 렌더링 콜백 준비 (rendering)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n} catch (e) {\n  return [];\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'rendering' } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -912,
+        2576
+      ],
+      "id": "f79f5226-6af6-4202-bab0-a8d86f052acc",
+      "name": "렌더링 콜백 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -612,
+        2576
+      ],
+      "id": "536b78b3-2113-42fe-bd62-281df871b8b1",
+      "name": "렌더링 콜백",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 콜백 데이터 준비\n * Execute Workflow Trigger 실행이면 productionId 추출, 수동 실행이면 skipCallback=true\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n  skipCallback = !productionId;\n} catch (e) {\n  skipCallback = true;\n}\n\nconst ncaResult = $('NCA 결과 처리').first().json;\nconst videoUrl = ncaResult['영상 URL'] || '';\nconst hookTitle = $('NCA 데이터 준비').first().json.hookTitle || '';\n\nreturn [{\n  json: {\n    productionId,\n    skipCallback,\n    videoUrl,\n    title: hookTitle,\n    status: 'completed'\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        956,
+        2176
+      ],
+      "id": "7594c924-6751-4ed1-a76c-19facfa4a8be",
+      "name": "콜백 데이터 준비"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "9aa580f9-0413-4a79-a33c-d926d2c573d5",
+              "leftValue": "={{ $json.skipCallback }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1256,
+        2176
+      ],
+      "id": "fec914ea-4bac-44f1-ae09-7a23ae17179c",
+      "name": "콜백 필요?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status, title: $json.title, videoUrl: $json.videoUrl }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1556,
+        2076
+      ],
+      "id": "6dbeac0b-be55-4d7a-9964-39ca2aa01e7f",
+      "name": "성공 콜백"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 실패 콜백 준비\n * NCA 영상 제작 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\ntry {\n  const triggerData = $('Execute Workflow Trigger').first().json;\n  productionId = triggerData.productionId || '';\n  skipCallback = !productionId;\n} catch (e) {\n  skipCallback = true;\n}\n\nif (skipCallback) {\n  return [];\n}\n\nconst input = $input.first().json;\nconst errorMessage = (input.error && input.error.message) || input.message || 'NCA 영상 제작 실패';\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -688,
+        2576
+      ],
+      "id": "b04bcbe5-3f68-4e54-b805-87d1815103b8",
+      "name": "실패 콜백 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ productionId: $json.productionId, status: $json.status, errorMessage: $json.errorMessage }) }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -388,
+        2576
+      ],
+      "id": "1bfd3085-47e7-4990-8163-2343d4fbb910",
+      "name": "실패 콜백"
     }
   ],
   "connections": {
@@ -1206,6 +1441,11 @@
         [
           {
             "node": "시트 기록",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "스크립트 콜백 준비",
             "type": "main",
             "index": 0
           }
@@ -1263,6 +1503,11 @@
             "node": "NCA 영상 제작",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "렌더링 콜백 준비",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
@@ -1272,6 +1517,13 @@
         [
           {
             "node": "NCA 제작 대기",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "실패 콜백 준비",
             "type": "main",
             "index": 0
           }
@@ -1607,6 +1859,11 @@
             "node": "NCA 데이터 준비",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "영상 콜백 준비",
+            "type": "main",
+            "index": 0
           }
         ],
         [
@@ -1667,6 +1924,11 @@
         [
           {
             "node": "영상1 준비",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "이미지 콜백 준비",
             "type": "main",
             "index": 0
           }
@@ -1820,6 +2082,94 @@
         [
           {
             "node": "참조 이미지 프롬프트",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "상태 업데이트": {
+      "main": [
+        [
+          {
+            "node": "콜백 데이터 준비",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "스크립트 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "스크립트 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "이미지 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "영상 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "영상 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "렌더링 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "렌더링 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "콜백 데이터 준비": {
+      "main": [
+        [
+          {
+            "node": "콜백 필요?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "콜백 필요?": {
+      "main": [
+        [
+          {
+            "node": "성공 콜백",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "실패 콜백 준비": {
+      "main": [
+        [
+          {
+            "node": "실패 콜백",
             "type": "main",
             "index": 0
           }
