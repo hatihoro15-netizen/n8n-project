@@ -1693,11 +1693,6 @@
       "main": [
         [
           {
-            "node": "영상1 준비",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "이미지 콜백 준비",
             "type": "main",
             "index": 0
@@ -2154,11 +2149,6 @@
       "main": [
         [
           {
-            "node": "NCA 영상 제작",
-            "type": "main",
-            "index": 0
-          },
-          {
             "node": "렌더링 콜백 준비",
             "type": "main",
             "index": 0
@@ -2220,11 +2210,6 @@
     "콘텐츠 파싱": {
       "main": [
         [
-          {
-            "node": "시트 기록",
-            "type": "main",
-            "index": 0
-          },
           {
             "node": "스크립트 콜백 준비",
             "type": "main",
@@ -2508,6 +2493,39 @@
         [
           {
             "node": "영상3 재대기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "스크립트 콜백": {
+      "main": [
+        [
+          {
+            "node": "시트 기록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 콜백": {
+      "main": [
+        [
+          {
+            "node": "영상1 준비",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "렌더링 콜백": {
+      "main": [
+        [
+          {
+            "node": "NCA 영상 제작",
             "type": "main",
             "index": 0
           }
