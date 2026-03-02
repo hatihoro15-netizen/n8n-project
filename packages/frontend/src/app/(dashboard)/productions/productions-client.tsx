@@ -20,6 +20,9 @@ import {
   ExternalLink,
   FileText,
   Square,
+  Archive,
+  ArchiveRestore,
+  Trash2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { proxyMediaUrl } from '@/lib/media';
@@ -40,6 +43,7 @@ export default function ProductionsClient() {
     { value: 'completed', label: '완료' },
     { value: 'failed', label: '실패' },
     { value: 'paused', label: '정지' },
+    { value: 'archived', label: '보관' },
   ];
 
   const toggleExpand = (id: string) => {
@@ -108,19 +112,20 @@ export default function ProductionsClient() {
                   <th className="px-4 py-3 text-left font-medium">상태</th>
                   <th className="px-4 py-3 text-left font-medium">시작</th>
                   <th className="px-4 py-3 text-left font-medium">완료</th>
+                  <th className="px-4 py-3 text-right font-medium w-24">작업</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                       로딩 중...
                     </td>
                   </tr>
                 ) : productions?.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-muted-foreground">
-                      제작 이력이 없습니다.
+                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                      {statusFilter === 'archived' ? '보관된 제작이 없습니다.' : '제작 이력이 없습니다.'}
                     </td>
                   </tr>
                 ) : (
@@ -193,8 +198,13 @@ function AccordionRow({
   script: string | null;
 }) {
   const [aborting, setAborting] = useState(false);
+  const [archiving, setArchiving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const queryClient = useQueryClient();
-  const isInProgress = !['completed', 'failed', 'paused'].includes(prod.status);
+  const isInProgress = !['completed', 'failed', 'paused', 'archived'].includes(prod.status);
+  const canArchive = ['completed', 'failed', 'paused'].includes(prod.status);
+  const isArchived = prod.status === 'archived';
+  const canDelete = ['completed', 'failed', 'paused', 'pending', 'archived'].includes(prod.status);
 
   const handleAbort = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -210,6 +220,51 @@ function AccordionRow({
       // noop
     } finally {
       setAborting(false);
+    }
+  };
+
+  const handleArchive = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('이 제작을 보관하시겠습니까?')) return;
+    setArchiving(true);
+    try {
+      await api.patch(`/api/productions/${prod.id}`, { status: 'archived' });
+      queryClient.invalidateQueries({ queryKey: ['productions'] });
+    } catch {
+      // noop
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  const handleRestore = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setArchiving(true);
+    try {
+      await api.patch(`/api/productions/${prod.id}`, { status: 'restore' });
+      queryClient.invalidateQueries({ queryKey: ['productions'] });
+    } catch {
+      // noop
+    } finally {
+      setArchiving(false);
+    }
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isInProgress) {
+      alert('진행중인 제작은 삭제할 수 없습니다. 먼저 중단하세요.');
+      return;
+    }
+    if (!confirm('이 제작을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) return;
+    setDeleting(true);
+    try {
+      await api.delete(`/api/productions/${prod.id}`);
+      queryClient.invalidateQueries({ queryKey: ['productions'] });
+    } catch (err: any) {
+      alert(err.message || '삭제에 실패했습니다.');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -265,12 +320,45 @@ function AccordionRow({
         <td className="px-4 py-3 text-muted-foreground text-xs">
           {prod.completedAt ? new Date(prod.completedAt).toLocaleString('ko-KR') : '-'}
         </td>
+        <td className="px-4 py-3 text-right">
+          <div className="flex items-center justify-end gap-1">
+            {isArchived ? (
+              <button
+                onClick={handleRestore}
+                disabled={archiving}
+                className="p-1.5 rounded-md text-muted-foreground/50 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+                title="꺼내기 (복원)"
+              >
+                <ArchiveRestore className="h-4 w-4" />
+              </button>
+            ) : canArchive ? (
+              <button
+                onClick={handleArchive}
+                disabled={archiving}
+                className="p-1.5 rounded-md text-muted-foreground/50 hover:text-amber-600 hover:bg-amber-50 transition-colors"
+                title="보관"
+              >
+                <Archive className="h-4 w-4" />
+              </button>
+            ) : null}
+            {canDelete && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="p-1.5 rounded-md text-muted-foreground/50 hover:text-red-600 hover:bg-red-50 transition-colors"
+                title="삭제"
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
+            )}
+          </div>
+        </td>
       </tr>
 
       {/* Expanded detail row */}
       {isExpanded && (
         <tr className="border-b bg-muted/10">
-          <td colSpan={7} className="px-6 py-5">
+          <td colSpan={8} className="px-6 py-5">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left: Video player or status */}
               <div className="lg:col-span-1">

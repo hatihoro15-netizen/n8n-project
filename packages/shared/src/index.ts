@@ -75,7 +75,8 @@ export type ProductionStatus =
   | 'uploading'
   | 'completed'
   | 'failed'
-  | 'paused';
+  | 'paused'
+  | 'archived';
 
 export type StepperType = 'tts_based' | 'video_based';
 
@@ -86,6 +87,7 @@ export interface Production {
   title: string | null;
   topic: string | null;
   status: ProductionStatus;
+  previousStatus: ProductionStatus | null;
   n8nExecutionId: string | null;
   assets: Record<string, unknown> | null;
   youtubeVideoId: string | null;

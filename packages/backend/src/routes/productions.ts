@@ -18,7 +18,12 @@ export async function productionRoutes(app: FastifyInstance) {
 
     const where: Record<string, unknown> = {};
     if (channelId) where.channelId = channelId;
-    if (status) where.status = status;
+    if (status) {
+      where.status = status;
+    } else {
+      // 기본적으로 archived 제외
+      where.status = { not: 'archived' };
+    }
 
     const pageNum = parseInt(page, 10);
     const limitNum = parseInt(limit, 10);
@@ -194,8 +199,8 @@ export async function productionRoutes(app: FastifyInstance) {
       errorMessage?: string;
     };
 
-    const validStatuses = Object.values(ProductionStatus);
-    if (!validStatuses.includes(status as ProductionStatus)) {
+    const validStatuses = [...Object.values(ProductionStatus), 'restore'];
+    if (!validStatuses.includes(status as string)) {
       return reply.status(400).send({ success: false, message: `유효하지 않은 상태: ${status}` });
     }
 
@@ -207,8 +212,43 @@ export async function productionRoutes(app: FastifyInstance) {
       return reply.status(404).send({ success: false, message: '제작 건을 찾을 수 없습니다.' });
     }
 
-    if (['completed', 'failed', 'paused'].includes(production.status) && status !== 'paused') {
-      return reply.status(400).send({ success: false, message: '이미 완료/실패/정지된 제작 건입니다.' });
+    // 보관 처리
+    if (status === 'archived') {
+      if (!['completed', 'failed', 'paused'].includes(production.status)) {
+        return reply.status(400).send({ success: false, message: '완료/실패/정지 상태만 보관할 수 있습니다.' });
+      }
+      const updated = await prisma.production.update({
+        where: { id },
+        data: {
+          previousStatus: production.status,
+          status: 'archived' as ProductionStatus,
+        },
+        include: { workflow: true, channel: true },
+      });
+      logger.info({ productionId: id, previousStatus: production.status }, 'Production archived');
+      return { success: true, data: updated };
+    }
+
+    // 복원 처리 (archived → 원래 상태)
+    if (status === 'restore') {
+      if (production.status !== 'archived') {
+        return reply.status(400).send({ success: false, message: '보관된 제작 건만 복원할 수 있습니다.' });
+      }
+      const restoreStatus = (production.previousStatus || 'completed') as ProductionStatus;
+      const updated = await prisma.production.update({
+        where: { id },
+        data: {
+          status: restoreStatus,
+          previousStatus: null,
+        },
+        include: { workflow: true, channel: true },
+      });
+      logger.info({ productionId: id, restoredTo: restoreStatus }, 'Production restored');
+      return { success: true, data: updated };
+    }
+
+    if (['completed', 'failed', 'paused', 'archived'].includes(production.status) && status !== 'paused') {
+      return reply.status(400).send({ success: false, message: '이미 완료/실패/정지/보관된 제작 건입니다.' });
     }
 
     const newStatus = status as ProductionStatus;
@@ -227,6 +267,33 @@ export async function productionRoutes(app: FastifyInstance) {
     return { success: true, data: updated };
   });
 
+  // Delete production (only non-in-progress)
+  const IN_PROGRESS_STATUSES = ['started', 'script_ready', 'tts_ready', 'images_ready', 'videos_ready', 'rendering', 'uploading'];
+
+  app.delete('/api/productions/:id', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const production = await prisma.production.findUnique({ where: { id } });
+
+    if (!production) {
+      return reply.status(404).send({ success: false, message: '제작 건을 찾을 수 없습니다.' });
+    }
+
+    if (IN_PROGRESS_STATUSES.includes(production.status)) {
+      return reply.status(400).send({
+        success: false,
+        message: '진행중인 제작은 삭제할 수 없습니다. 먼저 중단하세요.',
+      });
+    }
+
+    await prisma.production.delete({ where: { id } });
+    logger.info({ productionId: id, status: production.status }, 'Production deleted');
+
+    return { success: true, message: '제작이 삭제되었습니다.' };
+  });
+
   // Status progression order (higher = more advanced)
   const STATUS_ORDER: Record<string, number> = {
     pending: 0,
@@ -240,6 +307,7 @@ export async function productionRoutes(app: FastifyInstance) {
     completed: 8,
     failed: 9,
     paused: -1, // special: handled via exception
+    archived: -2, // special: handled via exception
   };
 
   // n8n callback endpoint (no auth - called by n8n)
@@ -278,13 +346,13 @@ export async function productionRoutes(app: FastifyInstance) {
       return reply.status(404).send({ success: false, message: 'Production not found' });
     }
 
-    // If production is paused, ignore all callbacks (user paused it)
-    if (existingProd.status === 'paused') {
+    // If production is paused or archived, ignore all callbacks
+    if (existingProd.status === 'paused' || existingProd.status === 'archived') {
       logger.info(
-        { productionId, incomingStatus: status },
-        'Callback ignored: production is paused'
+        { productionId, incomingStatus: status, currentStatus: existingProd.status },
+        `Callback ignored: production is ${existingProd.status}`
       );
-      return { success: true, skipped: true, message: 'Production is paused' };
+      return { success: true, skipped: true, message: `Production is ${existingProd.status}` };
     }
 
     // Regression guard: skip if incoming status is behind current progress

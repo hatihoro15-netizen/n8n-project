@@ -106,6 +106,7 @@ model Production {
   title            String?
   topic            String?
   status           ProductionStatus @default(pending)
+  previousStatus   ProductionStatus? @map("previous_status")
   n8nExecutionId   String?          @map("n8n_execution_id")
   assets           Json?
   youtubeVideoId   String?          @map("youtube_video_id")
@@ -136,6 +137,7 @@ enum ProductionStatus {
   completed
   failed
   paused
+  archived
 }
 
 model Analytics {

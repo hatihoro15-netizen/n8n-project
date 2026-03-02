@@ -15,6 +15,7 @@ const statusConfig: Record<ProductionStatus, { label: string; variant: 'default'
   completed: { label: '완료', variant: 'success' },
   failed: { label: '실패', variant: 'destructive' },
   paused: { label: '정지됨', variant: 'outline' },
+  archived: { label: '보관됨', variant: 'outline' },
 };
 
 export function StatusBadge({ status }: { status: ProductionStatus }) {
