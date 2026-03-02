@@ -485,7 +485,7 @@
     },
     {
       "parameters": {
-        "jsCode": "function safeReplaceAudio(text) {\n  if (!text) return '';\n  const pairs = [\n    ['먹튀검증', '검증'],\n    ['짝퉁', '가짜'],\n    ['짭', '가짜'],\n    ['사기', '속임'],\n    ['먹튀', '잠적'],\n    ['도박', '승부'],\n    ['배팅', '승부'],\n    ['씹', ''],\n    ['좆', ''],\n    ['시발', ''],\n  ];\n  let result = text;\n  for (const [bad, good] of pairs) {\n    result = result.split(bad).join(good);\n  }\n  return result;\n}\n\n// 영상1 준비: 이미지 URL 추출 결과에서 이미지 가져오기\nconst imageUrl = $input.first().json.images?.[0]?.url || '';\nif (!imageUrl) throw new Error('이미지 URL 없음');\n\nconst seg = $('세그먼트 분리').all()[0].json;\nlet prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면1)');\n// Veo3 오디오 안전필터 대응: 민감 표현 치환\nprompt = safeReplaceAudio(prompt);\n\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
+        "jsCode": "function safeReplaceAudio(text) {\n  if (!text) return '';\n  const pairs = [\n    ['먹튀검증', '검증'],\n    ['짝퉁', '가짜'],\n    ['짭', '가짜'],\n    ['사기', '속임'],\n    ['먹튀', '잠적'],\n    ['도박', '승부'],\n    ['배팅', '승부'],\n    ['씹', ''],\n    ['좆', ''],\n    ['시발', ''],\n  ];\n  let result = text;\n  for (const [bad, good] of pairs) {\n    result = result.split(bad).join(good);\n  }\n  return result;\n}\n\n// 영상1 준비: 이미지 URL 추출 결과에서 이미지 가져오기\nlet imageUrl = $input.first().json.images?.[0]?.url || '';\nif (!imageUrl) {\n  // 재시도 경로: 이미지 URL 추출 노드에서 직접 가져오기\n  try { imageUrl = $('이미지 URL 추출').first().json?.images?.[0]?.url || ''; } catch(e) {}\n}\nif (!imageUrl) throw new Error('이미지 URL 없음');\n\nconst seg = $('세그먼트 분리').all()[0].json;\nlet prompt = (seg.veo3_prompt || '').replace(/[\\\\\"]/g, \"'\").replace(/[\\n\\r\\t]/g, ' ').trim();\nif (!prompt) throw new Error('veo3_prompt 없음 (장면1)');\n// Veo3 오디오 안전필터 대응: 민감 표현 치환\nprompt = safeReplaceAudio(prompt);\n\n\nreturn [{\n  json: {\n    veo3Body: {\n      prompt: prompt,\n      imageUrls: [imageUrl],\n      model: 'veo3_fast',\n      generationType: 'FIRST_AND_LAST_FRAMES_2_VIDEO',\n      aspect_ratio: '16:9',\n      enableTranslation: false\n    }\n  }\n}];"
       },
       "name": "영상1 준비",
       "type": "n8n-nodes-base.code",
@@ -494,7 +494,8 @@
         -2432,
         1616
       ],
-      "id": "7d1080a3-b5de-4226-847d-b837802f551c"
+      "id": "7d1080a3-b5de-4226-847d-b837802f551c",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -660,7 +661,8 @@
         -2448,
         1920
       ],
-      "id": "330f149f-9f22-4074-b25b-c9ea4dbe182f"
+      "id": "330f149f-9f22-4074-b25b-c9ea4dbe182f",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -826,7 +828,8 @@
         -2448,
         2192
       ],
-      "id": "e0211a33-78d9-4f52-9364-edd1c350aebb"
+      "id": "e0211a33-78d9-4f52-9364-edd1c350aebb",
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -1702,6 +1705,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "영상1 에러 준비",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1815,6 +1825,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "영상2 에러 준비",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1925,6 +1942,13 @@
         [
           {
             "node": "영상3 생성",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "영상3 에러 준비",
             "type": "main",
             "index": 0
           }
