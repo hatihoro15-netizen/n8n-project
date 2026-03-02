@@ -14,6 +14,7 @@ import { productionRoutes } from './routes/productions';
 import { promptRoutes } from './routes/prompts';
 import { characterRoutes } from './routes/characters';
 import { mediaRoutes } from './routes/media';
+import { startTimeoutChecker } from './jobs/timeout-checker';
 
 // Extend Fastify types
 declare module 'fastify' {
@@ -86,6 +87,9 @@ async function start() {
 
     await app.listen({ port: config.port, host: config.host });
     logger.info(`Server running at http://${config.host}:${config.port}`);
+
+    // Start cron jobs
+    startTimeoutChecker();
   } catch (err) {
     logger.error(err, 'Server failed to start');
     process.exit(1);

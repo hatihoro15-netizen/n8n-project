@@ -21,4 +21,6 @@ export const config = {
   },
 
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+
+  productionTimeoutMinutes: parseInt(process.env.PRODUCTION_TIMEOUT_MINUTES || '5', 10),
 };

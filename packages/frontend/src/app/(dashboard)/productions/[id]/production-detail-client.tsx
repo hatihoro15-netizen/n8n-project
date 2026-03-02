@@ -358,16 +358,32 @@ export default function ProductionDetailClient() {
 
             {/* Error Card */}
             {production.errorMessage && (
-              <Card className="border-red-200">
-                <CardHeader>
-                  <CardTitle className="text-base text-red-700">에러 로그</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <pre className="text-xs bg-red-50 text-red-800 p-3 rounded-lg overflow-auto max-h-40 whitespace-pre-wrap">
-                    {production.errorMessage}
-                  </pre>
-                </CardContent>
-              </Card>
+              production.errorMessage.includes('타임아웃') ? (
+                <Card className="border-amber-200">
+                  <CardHeader>
+                    <CardTitle className="text-base text-amber-700 flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      응답 시간 초과
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="text-xs bg-amber-50 text-amber-800 p-3 rounded-lg overflow-auto max-h-40 whitespace-pre-wrap">
+                      {production.errorMessage}
+                    </pre>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border-red-200">
+                  <CardHeader>
+                    <CardTitle className="text-base text-red-700">에러 로그</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="text-xs bg-red-50 text-red-800 p-3 rounded-lg overflow-auto max-h-40 whitespace-pre-wrap">
+                      {production.errorMessage}
+                    </pre>
+                  </CardContent>
+                </Card>
+              )
             )}
           </div>
         </div>

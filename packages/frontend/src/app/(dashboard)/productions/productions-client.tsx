@@ -471,12 +471,26 @@ function AccordionRow({
                 {/* Error message */}
                 {prod.errorMessage && (
                   <div>
-                    <h4 className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-2">
-                      에러
-                    </h4>
-                    <pre className="text-xs bg-red-50 text-red-800 p-3 rounded-lg overflow-auto max-h-32 whitespace-pre-wrap border border-red-200">
-                      {prod.errorMessage}
-                    </pre>
+                    {prod.errorMessage.includes('타임아웃') ? (
+                      <>
+                        <h4 className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5" />
+                          응답 시간 초과
+                        </h4>
+                        <pre className="text-xs bg-amber-50 text-amber-800 p-3 rounded-lg overflow-auto max-h-32 whitespace-pre-wrap border border-amber-200">
+                          {prod.errorMessage}
+                        </pre>
+                      </>
+                    ) : (
+                      <>
+                        <h4 className="text-xs font-semibold text-red-600 uppercase tracking-wider mb-2">
+                          에러
+                        </h4>
+                        <pre className="text-xs bg-red-50 text-red-800 p-3 rounded-lg overflow-auto max-h-32 whitespace-pre-wrap border border-red-200">
+                          {prod.errorMessage}
+                        </pre>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
