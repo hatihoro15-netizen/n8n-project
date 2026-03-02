@@ -207,8 +207,8 @@ export async function productionRoutes(app: FastifyInstance) {
       return reply.status(404).send({ success: false, message: '제작 건을 찾을 수 없습니다.' });
     }
 
-    if (['completed', 'failed'].includes(production.status)) {
-      return reply.status(400).send({ success: false, message: '이미 완료되거나 실패한 제작 건입니다.' });
+    if (['completed', 'failed', 'paused'].includes(production.status) && status !== 'paused') {
+      return reply.status(400).send({ success: false, message: '이미 완료/실패/정지된 제작 건입니다.' });
     }
 
     const newStatus = status as ProductionStatus;
@@ -234,10 +234,12 @@ export async function productionRoutes(app: FastifyInstance) {
     script_ready: 2,
     tts_ready: 3,
     images_ready: 4,
-    rendering: 5,
-    uploading: 6,
-    completed: 7,
-    failed: 8,
+    videos_ready: 5,
+    rendering: 6,
+    uploading: 7,
+    completed: 8,
+    failed: 9,
+    paused: -1, // special: handled via exception
   };
 
   // n8n callback endpoint (no auth - called by n8n)
@@ -274,6 +276,15 @@ export async function productionRoutes(app: FastifyInstance) {
 
     if (!existingProd) {
       return reply.status(404).send({ success: false, message: 'Production not found' });
+    }
+
+    // If production is paused, ignore all callbacks (user paused it)
+    if (existingProd.status === 'paused') {
+      logger.info(
+        { productionId, incomingStatus: status },
+        'Callback ignored: production is paused'
+      );
+      return { success: true, skipped: true, message: 'Production is paused' };
     }
 
     // Regression guard: skip if incoming status is behind current progress

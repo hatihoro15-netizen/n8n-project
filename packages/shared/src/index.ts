@@ -27,6 +27,7 @@ export interface Workflow {
   webhookPath: string | null;
   webhookUrl: string | null;
   scheduleExpression: string | null;
+  stepperType: string;
   isActive: boolean;
   channel?: Channel;
   createdAt: string;
@@ -69,10 +70,14 @@ export type ProductionStatus =
   | 'script_ready'
   | 'tts_ready'
   | 'images_ready'
+  | 'videos_ready'
   | 'rendering'
   | 'uploading'
   | 'completed'
-  | 'failed';
+  | 'failed'
+  | 'paused';
+
+export type StepperType = 'tts_based' | 'video_based';
 
 export interface Production {
   id: string;

@@ -39,6 +39,7 @@ export default function ProductionsClient() {
     { value: 'started', label: '시작됨' },
     { value: 'completed', label: '완료' },
     { value: 'failed', label: '실패' },
+    { value: 'paused', label: '정지' },
   ];
 
   const toggleExpand = (id: string) => {
@@ -193,7 +194,7 @@ function AccordionRow({
 }) {
   const [aborting, setAborting] = useState(false);
   const queryClient = useQueryClient();
-  const isInProgress = !['completed', 'failed'].includes(prod.status);
+  const isInProgress = !['completed', 'failed', 'paused'].includes(prod.status);
 
   const handleAbort = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -297,7 +298,7 @@ function AccordionRow({
                   <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
                     진행 상황
                   </h4>
-                  <ProductionProgress status={prod.status} />
+                  <ProductionProgress status={prod.status} stepperType={prod.workflow?.stepperType || 'tts_based'} />
                 </div>
 
                 {/* Production info */}

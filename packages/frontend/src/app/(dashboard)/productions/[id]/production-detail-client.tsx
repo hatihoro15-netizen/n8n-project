@@ -11,9 +11,20 @@ import { StatusBadge } from '@/components/status-badge';
 import { ProductionProgress } from '@/components/production-progress';
 import { VideoPlayer } from '@/components/video-player';
 import { useProduction } from '@/hooks/use-dashboard';
-import { ArrowLeft, ExternalLink, Clock, AlertCircle, RefreshCw, Square, Copy } from 'lucide-react';
+import {
+  ArrowLeft,
+  ExternalLink,
+  Clock,
+  AlertCircle,
+  RefreshCw,
+  Square,
+  Copy,
+  Pause,
+  Play,
+} from 'lucide-react';
 import { api } from '@/lib/api';
 import { proxyMediaUrl } from '@/lib/media';
+import type { StepperType } from '@n8n-web/shared';
 
 export default function ProductionDetailClient() {
   const params = useParams();
@@ -23,8 +34,16 @@ export default function ProductionDetailClient() {
   const production = data?.data;
   const [retrying, setRetrying] = useState(false);
   const [aborting, setAborting] = useState(false);
+  const [pausing, setPausing] = useState(false);
 
-  const isInProgress = production ? !['completed', 'failed'].includes(production.status) : false;
+  const isInProgress = production
+    ? !['completed', 'failed', 'paused'].includes(production.status)
+    : false;
+
+  const stepperType: StepperType =
+    (production?.workflow as any)?.stepperType === 'video_based'
+      ? 'video_based'
+      : 'tts_based';
 
   const handleAbort = async () => {
     if (!confirm('이 제작을 중단하시겠습니까?')) return;
@@ -39,6 +58,19 @@ export default function ProductionDetailClient() {
       // noop
     } finally {
       setAborting(false);
+    }
+  };
+
+  const handlePause = async () => {
+    if (!confirm('제작을 정지하시겠습니까?\nn8n에서 이미 실행 중인 작업은 계속 진행되지만, 이후 콜백은 무시됩니다.')) return;
+    setPausing(true);
+    try {
+      await api.patch(`/api/productions/${id}`, { status: 'paused' });
+      refetch();
+    } catch {
+      // noop
+    } finally {
+      setPausing(false);
     }
   };
 
@@ -132,7 +164,7 @@ export default function ProductionDetailClient() {
         {/* Progress Stepper */}
         <Card>
           <CardContent className="py-6">
-            <ProductionProgress status={production.status} />
+            <ProductionProgress status={production.status} stepperType={stepperType} />
           </CardContent>
         </Card>
 
@@ -152,7 +184,7 @@ export default function ProductionDetailClient() {
                   variant="outline"
                   className="w-full"
                 >
-                  <Copy className={`h-4 w-4 mr-2`} />
+                  <Copy className="h-4 w-4 mr-2" />
                   {retrying ? '생성 중...' : '다시 만들기'}
                 </Button>
               </div>
@@ -170,6 +202,20 @@ export default function ProductionDetailClient() {
                   </Button>
                 </CardContent>
               </Card>
+            ) : production.status === 'paused' ? (
+              <Card className="border-amber-200 bg-amber-50/50">
+                <CardContent className="p-8 text-center">
+                  <Pause className="h-12 w-12 mx-auto mb-4 text-amber-400" />
+                  <h3 className="text-lg font-medium text-amber-700 mb-2">제작 정지됨</h3>
+                  <p className="text-sm text-amber-600 mb-4">
+                    이 제작은 정지된 상태입니다.
+                  </p>
+                  <Button onClick={handleRetry} disabled={retrying} variant="outline">
+                    <Play className={`h-4 w-4 mr-2`} />
+                    {retrying ? '생성 중...' : '이어서 새 제작'}
+                  </Button>
+                </CardContent>
+              </Card>
             ) : (
               <Card>
                 <CardContent className="p-8 text-center">
@@ -184,16 +230,28 @@ export default function ProductionDetailClient() {
                   <p className="text-xs text-muted-foreground mt-2">
                     자동으로 새로고침됩니다
                   </p>
-                  <Button
-                    onClick={handleAbort}
-                    disabled={aborting}
-                    variant="outline"
-                    size="sm"
-                    className="mt-4 text-red-600 border-red-200 hover:bg-red-50"
-                  >
-                    <Square className="h-3.5 w-3.5 mr-1.5" />
-                    {aborting ? '중단 중...' : '제작 중단'}
-                  </Button>
+                  <div className="flex items-center justify-center gap-2 mt-4">
+                    <Button
+                      onClick={handlePause}
+                      disabled={pausing}
+                      variant="outline"
+                      size="sm"
+                      className="text-amber-600 border-amber-200 hover:bg-amber-50"
+                    >
+                      <Pause className="h-3.5 w-3.5 mr-1.5" />
+                      {pausing ? '정지 중...' : '정지'}
+                    </Button>
+                    <Button
+                      onClick={handleAbort}
+                      disabled={aborting}
+                      variant="outline"
+                      size="sm"
+                      className="text-red-600 border-red-200 hover:bg-red-50"
+                    >
+                      <Square className="h-3.5 w-3.5 mr-1.5" />
+                      {aborting ? '중단 중...' : '중단'}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             )}

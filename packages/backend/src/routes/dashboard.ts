@@ -26,7 +26,7 @@ export async function dashboardRoutes(app: FastifyInstance) {
       prisma.production.count({
         where: {
           status: {
-            in: ['pending', 'started', 'script_ready', 'tts_ready', 'images_ready', 'rendering', 'uploading'],
+            in: ['pending', 'started', 'script_ready', 'tts_ready', 'images_ready', 'videos_ready', 'rendering', 'uploading'],
           },
         },
       }),
