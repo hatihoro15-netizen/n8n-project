@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,12 +11,13 @@ import { StatusBadge } from '@/components/status-badge';
 import { ProductionProgress } from '@/components/production-progress';
 import { VideoPlayer } from '@/components/video-player';
 import { useProduction } from '@/hooks/use-dashboard';
-import { ArrowLeft, ExternalLink, Clock, AlertCircle, RefreshCw, Square } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Clock, AlertCircle, RefreshCw, Square, Copy } from 'lucide-react';
 import { api } from '@/lib/api';
 import { proxyMediaUrl } from '@/lib/media';
 
 export default function ProductionDetailClient() {
   const params = useParams();
+  const router = useRouter();
   const id = params.id as string;
   const { data, isLoading, refetch } = useProduction(id);
   const production = data?.data;
@@ -43,13 +44,16 @@ export default function ProductionDetailClient() {
 
   const handleRetry = async () => {
     if (!production) return;
+    if (!confirm('같은 설정으로 새 제작을 시작하시겠습니까?')) return;
     setRetrying(true);
     try {
-      await api.post('/api/productions', {
+      const res = await api.post<{ success: boolean; data: { id: string } }>('/api/productions', {
         workflowId: production.workflowId,
         topic: production.topic || undefined,
       });
-      refetch();
+      if (res.data?.id) {
+        router.push(`/productions/${res.data.id}`);
+      }
     } catch {
       // noop
     } finally {
@@ -136,11 +140,22 @@ export default function ProductionDetailClient() {
           {/* Left: Video Player or Status */}
           <div className="lg:col-span-1">
             {production.status === 'completed' && videoUrl ? (
-              <VideoPlayer
-                src={videoUrl}
-                poster={thumbnailUrl || undefined}
-                title={production.title || production.topic || undefined}
-              />
+              <div className="space-y-3">
+                <VideoPlayer
+                  src={videoUrl}
+                  poster={thumbnailUrl || undefined}
+                  title={production.title || production.topic || undefined}
+                />
+                <Button
+                  onClick={handleRetry}
+                  disabled={retrying}
+                  variant="outline"
+                  className="w-full"
+                >
+                  <Copy className={`h-4 w-4 mr-2`} />
+                  {retrying ? '생성 중...' : '다시 만들기'}
+                </Button>
+              </div>
             ) : production.status === 'failed' ? (
               <Card className="border-red-200 bg-red-50/50">
                 <CardContent className="p-8 text-center">
