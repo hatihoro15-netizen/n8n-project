@@ -85,7 +85,7 @@ export function useProduction(id: string) {
     enabled: !!id,
     refetchInterval: (query) => {
       const status = query.state.data?.data?.status;
-      if (status && !['completed', 'failed'].includes(status)) {
+      if (status && !['completed', 'failed', 'paused', 'archived'].includes(status)) {
         return 3000;
       }
       return false;

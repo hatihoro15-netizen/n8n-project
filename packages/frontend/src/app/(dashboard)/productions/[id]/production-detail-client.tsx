@@ -37,7 +37,7 @@ export default function ProductionDetailClient() {
   const [pausing, setPausing] = useState(false);
 
   const isInProgress = production
-    ? !['completed', 'failed', 'paused'].includes(production.status)
+    ? !['completed', 'failed', 'paused', 'archived'].includes(production.status)
     : false;
 
   const stepperType: StepperType =
