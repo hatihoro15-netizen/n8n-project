@@ -1,0 +1,20 @@
+{
+  "name": "capture-service",
+  "version": "1.0.0",
+  "description": "라이브365(scoredata.org) 페이지 캡처 서비스 for n8n 워크플로우",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.0",
+    "puppeteer-core": "^23.0.0",
+    "minio": "^8.0.0",
+    "sharp": "^0.33.0",
+    "dotenv": "^16.4.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
