@@ -33,6 +33,7 @@ export default function ProductionDetailClient() {
   const { data, isLoading, refetch } = useProduction(id);
   const production = data?.data;
   const [retrying, setRetrying] = useState(false);
+  const [retryingFromError, setRetryingFromError] = useState(false);
   const [aborting, setAborting] = useState(false);
   const [pausing, setPausing] = useState(false);
 
@@ -90,6 +91,20 @@ export default function ProductionDetailClient() {
       // noop
     } finally {
       setRetrying(false);
+    }
+  };
+
+  const handleRetryFromError = async () => {
+    if (!production) return;
+    if (!confirm('에러가 발생한 지점부터 n8n 실행을 재시도하시겠습니까?')) return;
+    setRetryingFromError(true);
+    try {
+      await api.post(`/api/productions/${id}/retry`);
+      refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '재시도 실패');
+    } finally {
+      setRetryingFromError(false);
     }
   };
 
@@ -196,10 +211,23 @@ export default function ProductionDetailClient() {
                   <p className="text-sm text-red-600 mb-4">
                     {production.errorMessage || '알 수 없는 오류가 발생했습니다.'}
                   </p>
-                  <Button onClick={handleRetry} disabled={retrying} variant="outline">
-                    <RefreshCw className={`h-4 w-4 mr-2 ${retrying ? 'animate-spin' : ''}`} />
-                    {retrying ? '재시도 중...' : '같은 주제로 재시도'}
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    {production.n8nExecutionId && (
+                      <Button
+                        onClick={handleRetryFromError}
+                        disabled={retryingFromError || retrying}
+                        variant="default"
+                        className="w-full"
+                      >
+                        <RefreshCw className={`h-4 w-4 mr-2 ${retryingFromError ? 'animate-spin' : ''}`} />
+                        {retryingFromError ? '재시도 중...' : '에러 지점부터 재시도'}
+                      </Button>
+                    )}
+                    <Button onClick={handleRetry} disabled={retrying || retryingFromError} variant="outline" className="w-full">
+                      <Copy className="h-4 w-4 mr-2" />
+                      {retrying ? '생성 중...' : '처음부터 다시 만들기'}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ) : production.status === 'paused' ? (

@@ -323,6 +323,7 @@ export async function productionRoutes(app: FastifyInstance) {
       youtubeVideoId,
       youtubeUrl,
       errorMessage,
+      executionId,
     } = request.body as {
       productionId: string;
       status: string;
@@ -334,6 +335,7 @@ export async function productionRoutes(app: FastifyInstance) {
       youtubeVideoId?: string;
       youtubeUrl?: string;
       errorMessage?: string;
+      executionId?: string;
     };
 
     // Fetch current production (status + assets)
@@ -382,6 +384,7 @@ export async function productionRoutes(app: FastifyInstance) {
     if (youtubeVideoId) data.youtubeVideoId = youtubeVideoId;
     if (youtubeUrl) data.youtubeUrl = youtubeUrl;
     if (errorMessage) data.errorMessage = errorMessage;
+    if (executionId) data.n8nExecutionId = executionId;
     if (status === 'completed' || status === 'failed') data.completedAt = new Date();
 
     const production = await prisma.production.update({
@@ -394,5 +397,59 @@ export async function productionRoutes(app: FastifyInstance) {
     // TODO: broadcast via WebSocket to connected clients
 
     return { success: true, data: production };
+  });
+
+  // Retry failed production via n8n execution retry API
+  app.post('/api/productions/:id/retry', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const production = await prisma.production.findUnique({
+      where: { id },
+      include: { workflow: true },
+    });
+
+    if (!production) {
+      return reply.status(404).send({ success: false, message: '제작 건을 찾을 수 없습니다.' });
+    }
+
+    if (production.status !== 'failed') {
+      return reply.status(400).send({ success: false, message: '실패한 제작 건만 재시도할 수 있습니다.' });
+    }
+
+    if (!production.n8nExecutionId) {
+      return reply.status(400).send({ success: false, message: 'n8n 실행 ID가 없어 재시도할 수 없습니다. "처음부터 다시 만들기"를 사용하세요.' });
+    }
+
+    try {
+      const retryResult = await n8nClient.retryExecution(production.n8nExecutionId);
+
+      // Reset production status to started for fresh tracking
+      await prisma.production.update({
+        where: { id },
+        data: {
+          status: 'started',
+          errorMessage: null,
+          completedAt: null,
+          n8nExecutionId: (retryResult as { data?: { id?: string } })?.data?.id || production.n8nExecutionId,
+        },
+      });
+
+      const updated = await prisma.production.findUnique({
+        where: { id },
+        include: { workflow: true, channel: true },
+      });
+
+      logger.info({ productionId: id, executionId: production.n8nExecutionId }, 'Production retry triggered');
+
+      return { success: true, data: updated };
+    } catch (error) {
+      logger.error({ productionId: id, error }, 'Failed to retry production');
+      return reply.status(500).send({
+        success: false,
+        message: error instanceof Error ? error.message : 'n8n 재시도 실패',
+      });
+    }
   });
 }

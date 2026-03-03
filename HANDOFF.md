@@ -136,6 +136,8 @@ videos_ready → rendering → uploading → completed
 - [x] 타임아웃 자동 실패 (크론잡, 기본 5분, 환경변수 조절)
 - [x] 스텝퍼 워크플로우 유형 분리 (tts_based / video_based)
 - [x] 타임아웃 에러 시각 구분 (amber 색상 + 시계 아이콘)
+- [x] n8n 실행 Retry API 연동 (에러 지점부터 재시도)
+- [x] 제작 상세 폴링 (진행중 3초 간격, 완료/실패 시 중지)
 
 ### Phase 2 부가
 - [x] 미디어 프록시 (mixed content 해결)
@@ -184,7 +186,8 @@ PRODUCTION_TIMEOUT_MINUTES=5  # 현재 테스트용 30
 | 패턴 | 방식 |
 |------|------|
 | 제작 트리거 | 백엔드 → `N8N_WEBHOOK_BASE/{webhookPath}` POST |
-| 상태 콜백 | n8n → `백엔드/api/productions/callback` POST (인증 없음) |
+| 상태 콜백 | n8n → `백엔드/api/productions/callback` POST (인증 없음, executionId 포함) |
+| 실행 재시도 | 백엔드 → n8n `POST /api/v1/executions/{id}/retry` |
 | 워크플로우 조회 | 백엔드 → n8n REST API GET |
 | 실행 이력 | 백엔드 → n8n `/api/v1/executions` GET |
 
@@ -195,7 +198,8 @@ PRODUCTION_TIMEOUT_MINUTES=5  # 현재 테스트용 30
   "status": "script_ready|tts_ready|images_ready|videos_ready|rendering|completed|failed",
   "title": "영상 제목",
   "assets": { "videoUrl": "...", "thumbnailUrl": "...", "script": "..." },
-  "errorMessage": "에러 시"
+  "errorMessage": "에러 시",
+  "executionId": "n8n 실행 ID (재시도용)"
 }
 ```
 
