@@ -296,19 +296,15 @@
             {
               "name": "x-api-key",
               "value": "nca-sagong-2026"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
             }
           ]
         },
         "sendBody": true,
-        "specifyBody": "string",
-        "body": "={{ JSON.stringify($json.nca_payload) }}",
+        "specifyBody": "json",
         "options": {
           "timeout": 600000
-        }
+        },
+        "jsonBody": "={{ $('NCA 데이터 준비').first().json.nca_payload }}"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
