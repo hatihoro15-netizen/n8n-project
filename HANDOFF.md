@@ -135,6 +135,7 @@ videos_ready → rendering → uploading → completed
 - [x] 제작 삭제 (진행중 차단)
 - [x] 타임아웃 자동 실패 (크론잡, 기본 5분, 환경변수 조절)
 - [x] 스텝퍼 워크플로우 유형 분리 (tts_based / video_based)
+- [x] 스마트 타임아웃 (n8n 실행 상태 확인 후 판단 — running이면 연장, error/stopped면 실패, 콜백 미수신 감지)
 - [x] 타임아웃 에러 시각 구분 (amber 색상 + 시계 아이콘)
 - [x] n8n 실행 Retry API 연동 (에러 지점부터 재시도)
 - [x] 제작 상세 폴링 (진행중 3초 간격, 완료/실패 시 중지)
@@ -178,7 +179,7 @@ N8N_WEBHOOK_BASE="https://n8n.srv1345711.hstgr.cloud/webhook"
 CORS_ORIGIN="https://n8n-project-9lj.pages.dev"  # 프론트 도메인만 허용 (절대 * 금지)
 ADMIN_USERNAME="admin"
 ADMIN_PASSWORD="..."  # VPS .env에서 직접 확인 (절대 코드에 하드코딩 금지)
-PRODUCTION_TIMEOUT_MINUTES=5  # 현재 테스트용 30
+PRODUCTION_TIMEOUT_MINUTES=5  # 스마트 타임아웃 적용 (n8n 실행 중이면 자동 연장)
 ```
 
 ## n8n 연동 패턴
@@ -214,7 +215,7 @@ PRODUCTION_TIMEOUT_MINUTES=5  # 현재 테스트용 30
 
 1. **Google Sheets OAuth 토큰 만료** — n8n에서 재인증 필요 (할머니+Mike 워크플로우)
 2. **이미지 URL 없음** — 이미지 생성 API가 간헐적으로 URL 미반환 (할머니+Mike #1223)
-3. **타임아웃 현재 30분** — 테스트 후 5분으로 원복 필요 (`PRODUCTION_TIMEOUT_MINUTES`)
+3. ~~**타임아웃 현재 30분**~~ — 5분 원복 완료 + 스마트 타임아웃 적용 (n8n 실행 중이면 자동 연장)
 
 ## 다음 작업 (미구현)
 
