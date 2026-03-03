@@ -45,12 +45,32 @@
 - 콜백 HTTP 노드 onError: continueRegularOutput (콜백 실패해도 메인 흐름 계속)
 - 대상: 3개 워크플로우 전부
 
-## 테스트 결과 (실행 1224, 할머니+Mike)
-- Webhook curl 트리거, productionId: `test-grandma-20260303-001`
-- 영상 3개 모두 성공 → NCA 합성 → 9:16 변환 → 완료
-- 콜백 데이터 준비에서 productionId 정상 추출
-- 성공 콜백 HTTP 404 (테스트 ID라 웹앱 DB에 없음 → 정상)
-- **중간 콜백은 병렬 분기라 실행 안 됨** → 직렬 변경으로 해결 (커밋 5)
+### 6. 콜백 준비 노드 수동실행 호환 (`bc8728e`)
+- 수동 실행 시 productionId 없어서 `return []` → 워크플로우 멈추는 문제 수정
+- 10개 콜백 준비 노드: `return []` → `return [{ json: { skipped: true, status: 'no_productionId' } }]`
+- 실패 콜백 HTTP 노드: onError=continueRegularOutput 추가
+- 대상: Jay+Mike, 할머니+Mike
+
+## 테스트 결과
+
+### 실행 1235 (할머니+Mike, 수동 실행)
+- Execute Workflow 버튼 트리거, productionId 없음
+- 51개 노드 전부 success
+- 콜백 준비 → `{ skipped: true }` → HTTP 콜백 500 (undefined ID) → continueRegularOutput → 멈추지 않고 끝까지 진행
+- **수동 실행 호환 검증 완료**
+
+### 실행 1236 (할머니+Mike, Webhook)
+- curl 트리거, productionId: `test-callback-verify-002`
+- 51개 노드 전부 success, 영상 3개 모두 성공
+- 중간 콜백 직렬 실행 **전체 검증 완료**:
+
+| 콜백 | 실행 | productionId | status |
+|---|---|---|---|
+| 스크립트 콜백 | OK | test-callback-verify-002 | script_ready |
+| 이미지 콜백 | OK | test-callback-verify-002 | images_ready |
+| 영상 콜백 | OK | test-callback-verify-002 | videos_ready |
+| 렌더링 콜백 | OK | test-callback-verify-002 | rendering |
+| 실패 콜백 | OK | test-callback-verify-002 | failed |
 
 ## 알려진 이슈
 
@@ -71,6 +91,7 @@
 - 흑형스포츠는 v86.4 미적용 (실패체크가 "원본 이미지 폴백" 패턴)
 - Jay+Mike/할머니+Mike는 v86.4 적용 (실패체크가 "1회 재시도 → throw" 패턴)
 - v86.6 + 재시도 버그 수정은 3개 모두 적용됨
+- 콜백 수동실행 호환은 Jay+Mike, 할머니+Mike만 적용 (흑형스포츠 미적용)
 
 ## 인프라 참고
 - n8n URL: `https://n8n.srv1345711.hstgr.cloud`
