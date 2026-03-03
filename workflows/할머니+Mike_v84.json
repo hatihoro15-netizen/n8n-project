@@ -855,15 +855,19 @@
             {
               "name": "x-api-key",
               "value": "nca-sagong-2026"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
             }
           ]
         },
         "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify($json.nca_payload) }}",
+        "specifyBody": "string",
         "options": {
           "timeout": 600000
-        }
+        },
+        "body": "={{ JSON.stringify($json.nca_payload) }}"
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
