@@ -2,7 +2,7 @@
 
 const express = require('express');
 const config = require('./config');
-const { capturePreset } = require('./capturer');
+const { capturePreset, captureAdvanced } = require('./capturer');
 const { ensureBucket } = require('./uploader');
 const { closeBrowser } = require('./browser');
 const { listPresetIds } = require('./presets');
@@ -18,29 +18,68 @@ app.get('/health', (_req, res) => {
 });
 
 /**
- * 캡처 엔드포인트
+ * 캡처 엔드포인트 (v1 프리셋 + v2 어드밴스드 통합)
  * POST /capture
- * Body: { capture_id: string, capture_params?: object, viewport?: {w: number, h: number} }
- * Response: { url, capture_id, timestamp, dimensions }
+ *
+ * v1 (하위 호환):
+ *   Body: { capture_id, capture_params?, viewport? }
+ *   Response: { url, capture_id, timestamp, dimensions }
+ *
+ * v2 (신규):
+ *   Body: { url, job_id?, filename?, capture_mode?, selector?,
+ *           style_mode?, style_args?, omitBackground?, viewport? }
+ *   Response: { url, capture_mode, style_mode, selector, timestamp, bytes }
  */
 app.post('/capture', async (req, res) => {
-  const { capture_id, capture_params, viewport } = req.body;
+  const {
+    capture_id,
+    capture_params,
+    url,
+    job_id,
+    filename,
+    capture_mode,
+    selector,
+    style_mode,
+    style_args,
+    omitBackground,
+    viewport,
+  } = req.body;
 
-  if (!capture_id) {
+  // v2 경로: url 또는 capture_mode/style_mode가 직접 지정된 경우
+  const isAdvanced = url || capture_mode || style_mode;
+
+  if (!capture_id && !isAdvanced) {
     return res.status(400).json({
-      error: 'capture_id is required',
+      error: 'capture_id or url is required',
       available: listPresetIds(),
     });
   }
 
   try {
-    const result = await capturePreset({ capture_id, capture_params, viewport });
+    if (capture_id && !isAdvanced) {
+      // v1 하위 호환: 기존 프리셋 캡처
+      const result = await capturePreset({ capture_id, capture_params, viewport });
+      return res.json(result);
+    }
+
+    // v2 어드밴스드 캡처
+    const result = await captureAdvanced({
+      url,
+      job_id,
+      filename,
+      capture_mode,
+      selector,
+      style_mode,
+      style_args,
+      omitBackground,
+      viewport,
+    });
     return res.json(result);
   } catch (err) {
-    console.error(`[CAPTURE ERROR] ${capture_id}:`, err.message);
+    console.error(`[CAPTURE ERROR] ${capture_id || url || 'unknown'}:`, err.message);
     return res.status(500).json({
       error: err.message,
-      capture_id,
+      capture_id: capture_id || null,
     });
   }
 });

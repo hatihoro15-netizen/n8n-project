@@ -1,0 +1,77 @@
+{
+  "_comment": "NCA 서버 포맷: TEMPLATE_A_VS (VS 분할 레이아웃). 플레이스홀더는 n8n Code 노드에서 치환.",
+  "inputs": [
+    {
+      "file_url": "{{bg}}",
+      "options": [
+        { "option": "-loop", "argument": "1" },
+        { "option": "-framerate", "argument": "30" },
+        { "option": "-t", "argument": "{{duration_sec}}" }
+      ]
+    },
+    {
+      "file_url": "{{team_a_card}}",
+      "options": [
+        { "option": "-loop", "argument": "1" },
+        { "option": "-framerate", "argument": "30" },
+        { "option": "-t", "argument": "{{duration_sec}}" }
+      ]
+    },
+    {
+      "file_url": "{{team_b_card}}",
+      "options": [
+        { "option": "-loop", "argument": "1" },
+        { "option": "-framerate", "argument": "30" },
+        { "option": "-t", "argument": "{{duration_sec}}" }
+      ]
+    },
+    {
+      "file_url": "{{vs_stats}}",
+      "options": [
+        { "option": "-loop", "argument": "1" },
+        { "option": "-framerate", "argument": "30" },
+        { "option": "-t", "argument": "{{duration_sec}}" }
+      ]
+    },
+    {
+      "file_url": "{{narr_intro}}",
+      "options": []
+    },
+    {
+      "file_url": "{{narr_body}}",
+      "options": []
+    },
+    {
+      "file_url": "{{narr_outro}}",
+      "options": []
+    },
+    {
+      "file_url": "{{bgm_audio}}",
+      "options": [
+        { "option": "-stream_loop", "argument": "-1" }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "filter": "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30[base];[base][1:v]overlay=x=60:y=260[v1];[v1][2:v]overlay=x=60:y=980[v2];[v2][3:v]overlay=x=60:y=700[v3];[v3]drawtext=fontfile={{fontfile}}:text='{{hook_text}}':x=60:y=120:fontsize=64:fontcolor=white:box=1:boxcolor=black@0.45:boxborderw=20:enable='between(t,0,3)',drawtext=fontfile={{fontfile}}:text='{{key_point_text}}':x=60:y=540:fontsize=46:fontcolor=white:box=1:boxcolor=black@0.35:boxborderw=18:enable='between(t,3,{{reveal_t}})',drawtext=fontfile={{fontfile}}:text='{{conclusion_text}}':x=60:y=1620:fontsize=56:fontcolor=white:box=1:boxcolor=black@0.45:boxborderw=20:enable='between(t,{{reveal_t}},{{duration_sec}}-2)',drawtext=fontfile={{fontfile}}:text='{{cta_text}}':x=(w-text_w)/2:y=1780:fontsize=54:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=24:enable='between(t,{{duration_sec}}-2,{{duration_sec}})'[video_out];[4:a]asetpts=PTS-STARTPTS[nr1];[5:a]asetpts=PTS-STARTPTS[nr2];[6:a]asetpts=PTS-STARTPTS[nr3];[nr1][nr2][nr3]concat=n=3:v=0:a=1[narr];[7:a]atrim=duration={{duration_sec}},asetpts=PTS-STARTPTS,afade=t=out:st={{fade_out_start}}:d=2,volume={{bgm_volume}}[bgm_d];[narr][bgm_d]amix=inputs=2:duration=first:weights=1 0.3:normalize=0[audio_out]"
+    }
+  ],
+  "outputs": [
+    {
+      "options": [
+        { "option": "-map", "argument": "[video_out]" },
+        { "option": "-map", "argument": "[audio_out]" },
+        { "option": "-c:v", "argument": "libx264" },
+        { "option": "-preset", "argument": "fast" },
+        { "option": "-crf", "argument": "23" },
+        { "option": "-c:a", "argument": "aac" },
+        { "option": "-b:a", "argument": "192k" },
+        { "option": "-pix_fmt", "argument": "yuv420p" },
+        { "option": "-movflags", "argument": "+faststart" },
+        { "option": "-t", "argument": "{{duration_sec}}" }
+      ],
+      "file_name": "{{output_filename}}"
+    }
+  ]
+}

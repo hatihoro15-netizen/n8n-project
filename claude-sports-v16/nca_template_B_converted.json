@@ -1,0 +1,53 @@
+{
+  "_comment": "NCA 서버 포맷: TEMPLATE_B_SCROLL (스크롤/줌인 레이아웃). 입력 0을 bg+fg 양쪽에서 사용. 플레이스홀더는 n8n Code 노드에서 치환.",
+  "inputs": [
+    {
+      "file_url": "{{long_capture}}",
+      "options": [
+        { "option": "-loop", "argument": "1" },
+        { "option": "-framerate", "argument": "30" },
+        { "option": "-t", "argument": "{{duration_sec}}" }
+      ]
+    },
+    {
+      "file_url": "{{narr_intro}}",
+      "options": []
+    },
+    {
+      "file_url": "{{narr_body}}",
+      "options": []
+    },
+    {
+      "file_url": "{{narr_outro}}",
+      "options": []
+    },
+    {
+      "file_url": "{{bgm_audio}}",
+      "options": [
+        { "option": "-stream_loop", "argument": "-1" }
+      ]
+    }
+  ],
+  "filters": [
+    {
+      "filter": "[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:10,setsar=1,fps=30[bg];[0:v]scale=980:-1,pad=1080:ih:50:0:color=0x00000000[fg];[bg][fg]overlay=x={{overlay_x}}:y='if(lte(overlay_h,main_h),{{overlay_y_start}},if(lt(t,{{HOLD}}),{{overlay_y_start}},max(-(overlay_h-main_h),{{overlay_y_start}}-((t-{{HOLD}})/{{SCROLL}})*(overlay_h-main_h))))'[v0];[v0]drawtext=fontfile={{fontfile}}:text='{{cta_text}}':x=(w-text_w)/2:y=1780:fontsize=54:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=24:enable='between(t,{{duration_sec}}-2,{{duration_sec}})'[video_out];[1:a]asetpts=PTS-STARTPTS[nr1];[2:a]asetpts=PTS-STARTPTS[nr2];[3:a]asetpts=PTS-STARTPTS[nr3];[nr1][nr2][nr3]concat=n=3:v=0:a=1[narr];[4:a]atrim=duration={{duration_sec}},asetpts=PTS-STARTPTS,afade=t=out:st={{fade_out_start}}:d=2,volume={{bgm_volume}}[bgm_d];[narr][bgm_d]amix=inputs=2:duration=first:weights=1 0.3:normalize=0[audio_out]"
+    }
+  ],
+  "outputs": [
+    {
+      "options": [
+        { "option": "-map", "argument": "[video_out]" },
+        { "option": "-map", "argument": "[audio_out]" },
+        { "option": "-c:v", "argument": "libx264" },
+        { "option": "-preset", "argument": "fast" },
+        { "option": "-crf", "argument": "23" },
+        { "option": "-c:a", "argument": "aac" },
+        { "option": "-b:a", "argument": "192k" },
+        { "option": "-pix_fmt", "argument": "yuv420p" },
+        { "option": "-movflags", "argument": "+faststart" },
+        { "option": "-t", "argument": "{{duration_sec}}" }
+      ],
+      "file_name": "{{output_filename}}"
+    }
+  ]
+}

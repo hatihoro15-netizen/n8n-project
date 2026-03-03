@@ -1,0 +1,21 @@
+services:
+  capture-service:
+    build: .
+    container_name: capture-service
+    ports:
+      - "3100:3100"
+    shm_size: "2gb"
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - CAPTURE_PORT=3100
+      - CHROMIUM_PATH=/usr/bin/chromium
+      # .env 파일에서 아래 값들을 설정하세요
+      # MINIO_ENDPOINT=172.17.0.1
+      # MINIO_ACCESS_KEY=your-access-key
+      # MINIO_SECRET_KEY=your-secret-key
+      # MINIO_BUCKET=captures
+      # MINIO_PORT=9000
+      # MINIO_PUBLIC_HOST=172.17.0.1
+      # CAPTURE_BASE_URL=https://scoredata.org

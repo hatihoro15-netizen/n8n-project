@@ -1,0 +1,907 @@
+{
+  "createdAt": "2026-03-03T00:00:00.000Z",
+  "updatedAt": "2026-03-03T00:00:00.000Z",
+  "id": "arupto_shortform_v2",
+  "name": "[아럽토] 라이브365 숏츠 v2",
+  "description": "v1.2 스크립트 JSON + 템플릿 기반 NCA 렌더링",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        304
+      ],
+      "id": "2dfad90a-639d-4d9b-a3b8-08217ee81dd7",
+      "name": "수동 실행"
+    },
+    {
+      "parameters": {
+        "jsCode": "// scoredata.org 오늘 경기 URL 생성 + 카테고리/말투 랜덤 선택\nconst today = new Date().toISOString().split('T')[0];\n\n// 카테고리 랜덤 (1~7)\nconst category = Math.floor(Math.random() * 7) + 1;\n\n// 말투 스타일\nconst TONE_STYLES = [\n  { name: '형', guide: '반말 사용, 친근하고 확신에 찬 말투. \"야 이거 봐\", \"이거 무조건이야\", \"형이 알려줄게\" 스타일.', examples: ['야 이거 봐 진짜 미쳤어', '이거 무조건이야 내가 장담해', '형이 알려줄게 잘 들어'] },\n  { name: '빡침', guide: '반말 사용, 답답하고 빡친 말투. \"아 진짜 제발 데이터 좀 보고 찍어\", \"이걸 왜 몰라?\" 스타일.', examples: ['아 진짜 제발 데이터 좀 보고 찍어', '이걸 왜 몰라 진짜 답답해', '아니 이게 말이 되냐고'] },\n  { name: 'ASMR', guide: '존댓말 사용, 차분하고 전문적인 말투. \"심상치 않습니다\", \"주목해야 할 부분이 있습니다\" 스타일.', examples: ['여러분 이건 심상치 않습니다', '주목해야 할 부분이 있습니다', '데이터가 말해주고 있습니다'] }\n];\nconst selectedTone = TONE_STYLES[Math.floor(Math.random() * TONE_STYLES.length)];\n\n// scoredata.org에서 3개 스포츠 순차 조회를 위한 URL\n// (오늘 경기 조회 노드에서 호출)\nconst scoredataUrl = `https://scoredata.org/api/scores/date?date=${today}`;\n\nreturn [{\n  json: {\n    apiType: 'scoredata',\n    today,\n    category,\n    toneStyle: selectedTone.name,\n    toneGuide: selectedTone.guide,\n    toneExamples: selectedTone.examples,\n    fdoKey: 'e0397df419be4d21b4133e75af030ba6',\n    scoredataUrl\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        304
+      ],
+      "id": "91e42d3f-744b-4f74-a329-58cee252144e",
+      "name": "종목 결정"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1SCzznS9eLMmyK_jQq0qFSx4zWKmwIK6dGesFEgm0brA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "스포츠 픽"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        340,
+        520
+      ],
+      "id": "eed5390a-311e-4d7a-9bfc-7f5845905a2f",
+      "name": "이전 픽 조회",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://scoredata.org/api/scores/live",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        304
+      ],
+      "id": "8283d355-1203-45f6-8484-eb92d19547e4",
+      "name": "오늘 경기 조회"
+    },
+    {
+      "parameters": {
+        "jsCode": "// scoredata.org /api/scores/live 응답 → 주요 리그 필터 → 랜덤 선택 → 경기 목록 출력\nconst sportInput = $('종목 결정').first().json;\nconst raw = $input.first().json;\nconst today = sportInput.today;\n\n/**\n * 주요 리그 매칭 (이름 태그 기반)\n */\nconst LEAGUE_PATTERNS = [\n  { pattern: '[ENG D1]',  sport: 'soccer', name: 'Premier League', espnLeague: 'eng.1', fdoCode: 'PL', oddsSport: 'soccer_epl' },\n  { pattern: '[SPA D1]',  sport: 'soccer', name: 'La Liga', espnLeague: 'esp.1', fdoCode: 'PD', oddsSport: 'soccer_spain_la_liga' },\n  { pattern: '[ITA D1]',  sport: 'soccer', name: 'Serie A', espnLeague: 'ita.1', fdoCode: 'SA', oddsSport: 'soccer_italy_serie_a' },\n  { pattern: '[GER D1]',  sport: 'soccer', name: 'Bundesliga', espnLeague: 'ger.1', fdoCode: 'BL1', oddsSport: 'soccer_germany_bundesliga' },\n  { pattern: '[FRA D1]',  sport: 'soccer', name: 'Ligue 1', espnLeague: 'fra.1', fdoCode: 'FL1', oddsSport: 'soccer_france_ligue_one' },\n  { pattern: '[KOR D1]',  sport: 'soccer', name: 'K League 1', espnLeague: null, fdoCode: '', oddsSport: 'soccer_korea_kleague1' },\n  { pattern: 'NBA',       sport: 'basketball', name: 'NBA', espnLeague: 'nba', fdoCode: '', oddsSport: 'basketball_nba', exact: true },\n  { pattern: 'MLB',       sport: 'baseball', name: 'MLB', espnLeague: 'mlb', fdoCode: '', oddsSport: 'baseball_mlb' },\n  { pattern: 'KBO',       sport: 'baseball', name: 'KBO', espnLeague: null, fdoCode: '', oddsSport: 'baseball_mlb', exact: true },\n];\n\nfunction matchLeague(leagueName, pat) {\n  if (pat.exact) return leagueName === pat.pattern || leagueName.startsWith(pat.pattern + ' ');\n  return leagueName.includes(pat.pattern);\n}\n\n// /api/scores/live → { sports: { football: { matches: [...] }, basketball: { ... } } }\nconst sportsData = raw.sports || {};\nconst availableLeagues = [];\n\nfor (const [sportKey, sportObj] of Object.entries(sportsData)) {\n  const matches = sportObj.matches || [];\n  const byLeague = {};\n  for (const m of matches) {\n    const lid = m.league?.id;\n    if (!lid) continue;\n    if (!byLeague[lid]) byLeague[lid] = { league: m.league, matches: [] };\n    byLeague[lid].matches.push(m);\n  }\n\n  for (const [lid, group] of Object.entries(byLeague)) {\n    const leagueName = group.league.name || '';\n    for (const pat of LEAGUE_PATTERNS) {\n      if (matchLeague(leagueName, pat)) {\n        const existing = availableLeagues.find(l => l.name === pat.name);\n        if (existing) {\n          existing.matches = existing.matches.concat(group.matches);\n          existing.matchCount += group.matches.length;\n        } else {\n          availableLeagues.push({\n            scoredataLeagueId: Number(lid),\n            ...pat,\n            leagueName,\n            matchCount: group.matches.length,\n            matches: group.matches\n          });\n        }\n        break;\n      }\n    }\n  }\n}\n\nif (availableLeagues.length === 0) {\n  throw new Error('오늘 주요 리그 라이브/예정 경기가 없습니다. 가용 리그: ' +\n    Object.entries(sportsData).map(([k,v]) => k + ':' + (v.count || 0)).join(', '));\n}\n\n// 랜덤 선택\nconst sel = availableLeagues[Math.floor(Math.random() * availableLeagues.length)];\n\n// 경기 목록 표준화 (하류 호환 fixtures 형식)\nconst parsed = sel.matches.map(m => ({\n  fixtureId: String(m.id),\n  date: m.date,\n  homeTeam: { id: String(m.home?.id || ''), name: m.home?.name || 'Home' },\n  awayTeam: { id: String(m.away?.id || ''), name: m.away?.name || 'Away' },\n  status: m.status?.short || m.status?.code || '',\n  venue: m.venue || '',\n  score: m.score || null\n}));\n\n// 순위 URL\nlet standingsUrl = '';\nlet useFdo = false;\nif (sel.sport === 'soccer' && sel.fdoCode) {\n  useFdo = true;\n  standingsUrl = 'https://api.football-data.org/v4/competitions/' + sel.fdoCode + '/standings';\n} else if (sel.sport === 'soccer' && sel.espnLeague) {\n  standingsUrl = 'https://site.api.espn.com/apis/v2/sports/soccer/' + sel.espnLeague + '/standings';\n} else if (sel.espnLeague) {\n  const sportPath = sel.sport === 'basketball' ? 'basketball/nba' : 'baseball/mlb';\n  standingsUrl = 'https://site.api.espn.com/apis/v2/sports/' + sportPath + '/standings';\n}\n\n// ODDS 매핑\nconst ODDS_MAP = {\n  'soccer_epl': 'soccer_epl', 'soccer_spain_la_liga': 'soccer_spain_la_liga',\n  'soccer_italy_serie_a': 'soccer_italy_serie_a', 'soccer_germany_bundesliga': 'soccer_germany_bundesliga',\n  'soccer_france_ligue_one': 'soccer_france_ligue_one', 'soccer_korea_kleague1': 'soccer_korea_kleague1',\n  'basketball_nba': 'basketball_nba', 'baseball_mlb': 'baseball_mlb'\n};\n\nreturn [{\n  json: {\n    // 종목 결정 보강 필드 (하류에서 $('경기 목록 파싱') 대신 여기서도 참조 가능)\n    sport: sel.sport,\n    league: { id: sel.scoredataLeagueId, name: sel.name, espnLeague: sel.espnLeague },\n    standingsUrl,\n    useFdo,\n    oddsApiSport: sel.oddsSport,\n    availableLeaguesSummary: availableLeagues.map(l => l.name + '(' + l.matchCount + ')').join(', '),\n    // 경기 목록 (기존 하류 호환)\n    fixtures: parsed,\n    fixtureCount: parsed.length\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        304
+      ],
+      "id": "952a1d5c-2096-4331-a08b-afc7424c7685",
+      "name": "경기 목록 파싱"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('경기 목록 파싱').first().json.standingsUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "={{ $('경기 목록 파싱').first().json.useFdo ? $('종목 결정').first().json.fdoKey : '' }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        860,
+        304
+      ],
+      "id": "5976b647-6c26-4b5b-92e2-15300d70deda",
+      "name": "순위표 조회"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ESPN/TheSportsDB는 부상 API를 제공하지 않음\n// 빈 결과 반환\nreturn [{\n  json: {\n    response: [],\n    available: false\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        304
+      ],
+      "id": "8605851b-d0a1-4aa0-8a72-697a1217ca9e",
+      "name": "부상자 조회"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ESPN/TheSportsDB는 H2H API를 제공하지 않음\n// 빈 결과 반환\nreturn [{\n  json: {\n    response: [],\n    available: false\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        304
+      ],
+      "id": "7dfb69fc-fce6-47e3-8c2b-d96a8cb4a4db",
+      "name": "상대전적 조회"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 순위 + 이전 픽 데이터 통합 (scoredata.org/football-data.org/ESPN)\nconst configData = $('종목 결정').first().json;\nconst fixtureData = $('경기 목록 파싱').first().json;\nconst standingsRaw = $('순위표 조회').first().json;\nconst injuriesData = $('부상자 조회').first().json;\nconst h2hData = $('상대전적 조회').first().json;\n\n// fixtureData에서 sport/league/useFdo 가져옴 (scoredata.org 마이그레이션)\nconst sport = fixtureData.sport;\nconst league = fixtureData.league;\nconst useFdo = fixtureData.useFdo;\n\n// 순위 파싱 (3가지 포맷 지원)\nlet standingsSummary = '';\ntry {\n  if (useFdo && standingsRaw.standings) {\n    // football-data.org 형식\n    const table = standingsRaw.standings[0]?.table || [];\n    standingsSummary = table.map(s => {\n      return s.position + '위 ' + s.team.name + ' (' + s.points + '점, 폼:' + (s.form || '?') + ', ' + s.won + '승' + s.draw + '무' + s.lost + '패)';\n    }).join('\\n');\n  } else if (configData.apiType === 'espn') {\n    // ESPN 형식 (레거시 호환)\n    const children = standingsRaw.children || [];\n    if (children.length > 0) {\n      const entries = children[0]?.standings?.entries || [];\n      standingsSummary = entries.slice(0, 20).map((e, i) => {\n        const stats = {};\n        (e.stats || []).forEach(s => { stats[s.name] = s.value || s.displayValue; });\n        return (i+1) + '위 ' + (e.team?.displayName || '?') + ' (' + (stats.points || stats.wins || '?') + '점, ' + (stats.gamesPlayed || stats.wins || '?') + '경기)';\n      }).join('\\n');\n    } else {\n      standingsSummary = '순위 데이터 없음';\n    }\n  } else {\n    // ESPN REST 형식 (scoredata 기본)\n    const children = standingsRaw.children || [];\n    if (children.length > 0) {\n      const entries = children[0]?.standings?.entries || [];\n      standingsSummary = entries.slice(0, 20).map((e, i) => {\n        const stats = {};\n        (e.stats || []).forEach(s => { stats[s.name] = s.value || s.displayValue; });\n        return (i+1) + '위 ' + (e.team?.displayName || '?') + ' (' + (stats.points || stats.wins || '?') + '점, ' + (stats.gamesPlayed || stats.wins || '?') + '경기)';\n      }).join('\\n');\n    } else {\n      standingsSummary = '순위 데이터 없음';\n    }\n  }\n} catch(e) {\n  standingsSummary = '순위 데이터 파싱 실패: ' + e.message;\n}\nif (!standingsSummary) standingsSummary = '순위 데이터 없음';\n\n\n// 프로토 배당 데이터\nlet matchesFormatted = '';\nlet oddsAvailable = false;\ntry {\n  const oddsData = $('배당 데이터 파싱').first().json;\n  matchesFormatted = oddsData.matchesFormatted || '';\n  oddsAvailable = oddsData.oddsAvailable || false;\n} catch(e) { /* 배당 데이터 없으면 무시 */ }\n\n// 부상자 (현재 미지원)\nconst injuriesSummary = injuriesData.available ? JSON.stringify(injuriesData.response).substring(0, 1000) : '부상 정보는 현재 API에서 제공하지 않습니다';\n\n// H2H (현재 미지원)\nconst h2hSummary = h2hData.available ? JSON.stringify(h2hData.response).substring(0, 1000) : '상대전적 정보는 현재 API에서 제공하지 않습니다';\n\n// 이전 픽 데이터\nlet prevPickResult = '미확인';\nlet prevMatchup = '';\nlet prevPick = '';\nlet isFirstPick = true;\ntry {\n  const sheetData = $('이전 픽 조회').all();\n  if (sheetData && sheetData.length > 0) {\n    const lastRow = sheetData[sheetData.length - 1].json;\n    prevPickResult = lastRow.pickResult || '미확인';\n    prevMatchup = lastRow.matchup || '';\n    prevPick = lastRow.pick || '';\n    isFirstPick = false;\n  }\n} catch(e) { /* 첫 실행이거나 시트 비어있음 */ }\n\n// 경기 목록 요약\nconst fixturesSummary = fixtureData.fixtures.map((f, i) => {\n  return (i+1) + '. ' + f.homeTeam.name + ' vs ' + f.awayTeam.name + ' (ID: ' + f.fixtureId + ')';\n}).join('\\n');\n\nreturn [{\n  json: {\n    sport,\n    league,\n    toneStyle: configData.toneStyle,\n    toneGuide: configData.toneGuide,\n    toneExamples: configData.toneExamples,\n    fixtures: fixtureData.fixtures,\n    fixturesSummary,\n    standingsSummary,\n    injuriesSummary,\n    h2hSummary,\n    prevPickResult,\n    prevMatchup,\n    prevPick,\n    isFirstPick,\n    today: configData.today,\n    matchesFormatted,\n    oddsAvailable,\n    category: configData.category\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        304
+      ],
+      "id": "f7dcf265-7aa5-4a4b-9592-57598f87bef3",
+      "name": "데이터 병합"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "너는 스포츠 분석 전문가야. 아래 경기 목록과 데이터를 보고 가장 흥미로운 1경기를 선택해줘.\n\n## 종목: {{ $json.sport }} / 리그: {{ $json.league.name }}\n\n## 오늘 경기 목록\n{{ $json.fixturesSummary }}\n\n## 리그 순위표\n{{ $json.standingsSummary }}\n\n## 부상/결장 정보\n{{ $json.injuriesSummary }}\n\n## 상대전적\n{{ $json.h2hSummary }}\n\n## 선택 기준\n- 순위 차이가 적절한 경기 (너무 일방적이지 않은)\n- 최근 폼이 흥미로운 팀이 포함된 경기\n- 분석 포인트가 많은 경기\n- 반전 요소가 있을 수 있는 경기\n\n## 출력 형식 (순수 JSON만, 코드블록 없이)\n{ \"selectedFixtureId\": 경기ID, \"homeTeam\": \"홈팀명\", \"awayTeam\": \"어웨이팀명\", \"reason\": \"선택 이유 한줄\", \"angle\": \"분석 각도 한줄\", \"hookIdea\": \"훅 아이디어 한줄\" }"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1900,
+        304
+      ],
+      "id": "b6792186-ddb8-4f11-9b0f-03162994b1fd",
+      "name": "AI 경기 선택",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// AI 경기 선택 결과 파싱\nconst raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\nlet data;\ntry {\n  data = JSON.parse(cleanText);\n} catch(e) {\n  const first = cleanText.indexOf('{');\n  const last = cleanText.lastIndexOf('}');\n  if (first !== -1 && last > first) {\n    data = JSON.parse(cleanText.substring(first, last + 1));\n  } else {\n    throw new Error('AI 경기 선택 JSON 파싱 실패: ' + cleanText.substring(0, 300));\n  }\n}\n\nif (!data.selectedFixtureId) {\n  throw new Error('selectedFixtureId가 없습니다: ' + JSON.stringify(data));\n}\n\nconst mergedData = $('데이터 병합').first().json;\n\n// 선택된 경기 찾기\nconst selectedFixture = mergedData.fixtures.find(f => String(f.fixtureId) === String(data.selectedFixtureId)) || mergedData.fixtures[0];\n\nreturn [{\n  json: {\n    selectedFixtureId: data.selectedFixtureId,\n    homeTeam: data.homeTeam || selectedFixture.homeTeam.name,\n    awayTeam: data.awayTeam || selectedFixture.awayTeam.name,\n    matchup: (data.homeTeam || selectedFixture.homeTeam.name) + ' vs ' + (data.awayTeam || selectedFixture.awayTeam.name),\n    reason: data.reason || '',\n    angle: data.angle || '',\n    hookIdea: data.hookIdea || '',\n    sport: mergedData.sport,\n    league: mergedData.league,\n    toneStyle: mergedData.toneStyle,\n    toneGuide: mergedData.toneGuide,\n    toneExamples: mergedData.toneExamples,\n    standingsSummary: mergedData.standingsSummary,\n    injuriesSummary: mergedData.injuriesSummary,\n    h2hSummary: mergedData.h2hSummary,\n    prevPickResult: mergedData.prevPickResult,\n    prevMatchup: mergedData.prevMatchup,\n    prevPick: mergedData.prevPick,\n    isFirstPick: mergedData.isFirstPick,\n    today: mergedData.today,\n    matchesFormatted: mergedData.matchesFormatted || '',\n    oddsAvailable: mergedData.oddsAvailable || false,\n    category: 5\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        304
+      ],
+      "id": "8df6a907-62c9-4436-8405-fc64347e7351",
+      "name": "경기 선택 파싱"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.the-odds-api.com/v4/sports/{{ $json.oddsApiSport }}/odds/?apiKey={{ $env.ODDS_API_KEY || '' }}&regions=eu&markets=h2h&oddsFormat=decimal",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        340,
+        740
+      ],
+      "id": "b1c2d3e4-0001-4000-b000-000000000001",
+      "name": "프로토 배당 조회",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 프로토 배당 데이터 파싱 (the-odds-api.com 응답 → matchesFormatted)\nconst raw = $input.first().json;\n\n// the-odds-api 응답이 배열 형태\nconst events = Array.isArray(raw) ? raw : (raw.data || []);\n\nif (!events || events.length === 0) {\n  // 배당 데이터 없으면 빈 결과 반환 (카테고리 2~7에서는 무시됨)\n  return [{\n    json: {\n      matchesFormatted: '배당 데이터 없음 (해당 리그의 프로토 배당이 없습니다)',\n      oddsAvailable: false,\n      oddsMatches: []\n    }\n  }];\n}\n\n// 경기별 배당 정리\nconst oddsMatches = events.slice(0, 10).map((ev, idx) => {\n  const homeTeam = ev.home_team || '';\n  const awayTeam = ev.away_team || '';\n  const startTime = ev.commence_time || '';\n\n  // 첫 번째 북메이커의 배당률 사용\n  let homeOdds = '-';\n  let drawOdds = '-';\n  let awayOdds = '-';\n\n  const bookmaker = (ev.bookmakers || [])[0];\n  if (bookmaker) {\n    const market = (bookmaker.markets || []).find(m => m.key === 'h2h');\n    if (market) {\n      for (const outcome of (market.outcomes || [])) {\n        if (outcome.name === homeTeam) homeOdds = outcome.price;\n        else if (outcome.name === awayTeam) awayOdds = outcome.price;\n        else if (outcome.name === 'Draw') drawOdds = outcome.price;\n      }\n    }\n  }\n\n  return {\n    index: idx + 1,\n    homeTeam,\n    awayTeam,\n    homeOdds,\n    drawOdds,\n    awayOdds,\n    startTime\n  };\n});\n\n// matchesFormatted 문자열 생성 (프롬프트에 주입)\nconst matchesFormatted = oddsMatches.map(m => {\n  const drawPart = m.drawOdds !== '-' ? ` / 무 ${m.drawOdds}` : '';\n  return `${m.index}. ${m.homeTeam} vs ${m.awayTeam} — 승 ${m.homeOdds}${drawPart} / 패 ${m.awayOdds}`;\n}).join('\\n');\n\nreturn [{\n  json: {\n    matchesFormatted,\n    oddsAvailable: true,\n    oddsMatches,\n    oddsSource: 'the-odds-api',\n    oddsCount: oddsMatches.length\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        740
+      ],
+      "id": "b1c2d3e4-0001-4000-b000-000000000002",
+      "name": "배당 데이터 파싱"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * v1.2 프롬프트 조립\n * - 경기 선택 파싱 결과 + 카테고리 데이터를 Gemini user message로 조립\n * - 시스템 프롬프트(v1.2)는 별도 반환하여 Gemini 노드에서 system message로 사용\n */\nconst data = $input.first().json;\nconst category = data.category || 2;\n\n// 이전 픽 가이드 (category 2에서 활용)\nlet prevPickGuide = '';\nif (data.isFirstPick) {\n  prevPickGuide = '이번이 첫 번째 픽입니다.';\n} else if (data.prevPickResult === '적중') {\n  prevPickGuide = '지난 픽 \"' + (data.prevMatchup || '') + ' → ' + (data.prevPick || '') + '\" 적중! 자신감 있게 언급하세요.';\n} else if (data.prevPickResult === '실패') {\n  prevPickGuide = '지난 픽 \"' + (data.prevMatchup || '') + ' → ' + (data.prevPick || '') + '\" 실패. 솔직하게 인정하고 오늘은 다르다고 하세요.';\n} else {\n  prevPickGuide = '이전 픽 결과 미확인.';\n}\n\n// user message 조립\nconst parts = [\n  '## 입력 데이터',\n  'category_id: ' + category,\n  '종목: ' + (data.sport || ''),\n  '리그: ' + (data.league?.name || data.league || ''),\n  '날짜: ' + (data.today || ''),\n];\n\nif (data.matchup) {\n  parts.push('대진: ' + data.matchup);\n  parts.push('홈: ' + (data.homeTeam || '') + ' / 어웨이: ' + (data.awayTeam || ''));\n}\nif (data.angle) parts.push('분석 각도: ' + data.angle);\nif (data.hookIdea) parts.push('훅 아이디어: ' + data.hookIdea);\n\nparts.push('');\nparts.push('## 리그 순위');\nparts.push(data.standingsSummary || '데이터 없음');\n\nif (data.oddsAvailable && data.matchesFormatted) {\n  parts.push('');\n  parts.push('## 프로토 배당 데이터');\n  parts.push(data.matchesFormatted);\n}\n\nparts.push('');\nparts.push('## 부상/결장 정보');\nparts.push(data.injuriesSummary || '데이터 없음');\n\nparts.push('');\nparts.push('## 상대전적');\nparts.push(data.h2hSummary || '데이터 없음');\n\nif (category === 2) {\n  parts.push('');\n  parts.push('## 이전 픽 결과');\n  parts.push(prevPickGuide);\n}\n\n// 톤 스타일 (v1에서 이미 선택된 것 전달)\nif (data.toneStyle) {\n  parts.push('');\n  parts.push('## 톤 스타일 지정: ' + data.toneStyle);\n  if (data.toneGuide) parts.push(data.toneGuide);\n}\n\nconst userMessage = parts.join('\\n');\n\nreturn [{\n  json: {\n    userMessage,\n    category,\n    sport: data.sport,\n    league: data.league,\n    matchup: data.matchup || '',\n    homeTeam: data.homeTeam || '',\n    awayTeam: data.awayTeam || '',\n    today: data.today || '',\n    selectedFixtureId: data.selectedFixtureId || '',\n    toneStyle: data.toneStyle || '',\n    prevPickResult: data.prevPickResult || '미확인',\n    isFirstPick: data.isFirstPick || false\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2420,
+        304
+      ],
+      "id": "v2-node-014-prompt-assemble",
+      "name": "v1.2 프롬프트 조립"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.userMessage }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {
+          "systemMessage": "You are an automation script generator for a Korean YouTube Shorts channel named \"아럽토\" promoting the sports info site \"라이브365 (scoredata.org)\".\n\nYour job: Given an input (category_id, match data, league, teams, or a target URL), output ONLY a single JSON object that strictly follows the \"Script JSON 스키마 v1.2\" described below. Do NOT output any explanations, markdown, code fences, or extra text. Output valid JSON only.\n\n================================================================================\n[1] HARD RULES\n================================================================================\n- Output must be valid JSON (no trailing commas).\n- Output must follow the schema exactly (required keys, types, allowed enums).\n- Tone: informational, not guaranteeing outcomes. NEVER use \"확정\", \"보장\", \"무조건\", \"몇 시간 뒤 얼마 된다\". Use \"가정\", \"예시\", \"가능성\", \"변수\" when needed.\n- Always end with CTA: \"라이브365에서 확인해!\" (use cta_text).\n- Keep Shorts length target 18–25 seconds. Use exactly 3 segments (intro/body/outro).\n- Korean spoken-style text only. NO English alphabet: EPL → 이피엘, TOP3 → 탑3, MVP → 엠브이피, H2H → 상대전적.\n- No period(.) at end of sentences.\n- Use <em>태그</em> to emphasize key numbers/facts in segment text.\n\n================================================================================\n[2] TEMPLATE SELECTION (template_id)\n================================================================================\n- category_id 1,4,5 → template_id \"B\" (scroll/zoom style)\n- category_id 2,6   → template_id \"A\" (VS board)\n- category_id 3,7   → template_id \"C\" (breaking/news ticker style)\n- If the content is ranking-like TOP3, use \"D\" instead.\n- For reveal structures (question→hint→answer), keep the main template and implement reveal via segment text pacing.\n\n================================================================================\n[3] ALLOWED ENUMS\n================================================================================\n- template_id: \"A\" | \"B\" | \"C\" | \"D\" | \"R\"\n- style_mode: \"CLEAN\" | \"FONT_UP\" | \"HIGHLIGHT\" | \"ZOOM\"\n- capture_mode: \"element\" | \"long\" | \"full_page\"\n- sfx allowed: \"whoosh\" | \"swoosh\" | \"ding\" | \"pop\" | \"ppook\" | \"wow\" | \"ding2\" | \"none\"\n- bgm.pack allowed: \"sportsbeat\" | \"newsroom\" | \"chill\" | \"none\"\n\n================================================================================\n[4] SCHEMA v1.2 (REQUIRED KEYS)\n================================================================================\n{\n  \"version\": \"1.2\",\n  \"channel\": \"아럽토\",\n  \"site\": \"라이브365\",\n  \"category_id\": <number 1-7>,\n  \"template_id\": <string>,\n  \"language\": \"ko\",\n\n  \"hook_text\": <string>,\n  \"key_point_text\": <string>,\n  \"conclusion_text\": <string>,\n  \"cta_text\": \"라이브365에서 확인해!\",\n\n  \"capture_targets\": [\n    {\n      \"url\": <string>,\n      \"selector\": <string or empty>,\n      \"style_mode\": <enum>,\n      \"style_args\": <object optional>,\n      \"filename\": <string>,\n      \"omitBackground\": <boolean>,\n      \"capture_mode\": <enum>\n    }\n  ],\n\n  \"segments\": [\n    { \"id\": \"intro\", \"text\": <string>, \"sfx\": [<enum>...] },\n    { \"id\": \"body\",  \"text\": <string>, \"sfx\": [<enum>...] },\n    { \"id\": \"outro\", \"text\": <string>, \"sfx\": [<enum>...] }\n  ],\n\n  \"visual_plan\": {\n    \"template_b\": {\n      \"hold_sec\": <number>,\n      \"scroll_sec_min\": <number>,\n      \"scroll_speed_px_per_sec\": <number>,\n      \"overlay_x\": <number>,\n      \"overlay_y_start\": <number>\n    }\n  },\n\n  \"bgm\": { \"pack\": <enum>, \"ducking_db\": <number> },\n\n  \"compliance\": {\n    \"tone\": \"info\",\n    \"avoid_guarantee_phrases\": true,\n    \"privacy_blur_required\": <boolean>\n  },\n\n  \"category_data\": <object>\n}\n\nFIELD NOTES:\n- hook_text: 18 Korean chars max. First-screen hook.\n- key_point_text: 1-line key point (empty string if not applicable).\n- conclusion_text: 1-line conclusion (empty string if not applicable).\n- segments: exactly 3. Each text should be 1–2 spoken-friendly Korean sentences.\n- capture_targets: 2–4 entries typically. At least 1 must target scoredata.org.\n- visual_plan.template_b: ONLY required when template_id is \"B\". Omit or leave empty for other templates.\n- category_data: category-specific metadata (see per-category sections below).\n\n================================================================================\n[5] TONE STYLES — WRITING GUIDE\n================================================================================\nWhen writing segment text, apply one of the following tone styles based on category.\nDo NOT add a \"tone\" field to the JSON. Just write the text in the chosen tone.\n\nTONE DEFINITIONS:\n\n[hyung] 형 — 반말, 친근하고 확신에 찬 말투\n  예: \"야 이거 봐 진짜 미쳤어\", \"형이 알려줄게 잘 들어\"\n\n[angry] 빡침 — 반말, 답답하고 빡친 말투\n  예: \"아 진짜 제발 데이터 좀 보고 찍어\", \"이걸 왜 몰라 진짜 답답해\"\n\n[asmr] 차분한 전문가 — 존댓말, 차분하고 전문적\n  예: \"여러분 이건 심상치 않습니다\", \"데이터가 말해주고 있습니다\"\n\n[friendly] 친절한 설명 — 존댓말, 친절하고 쉬운 말투\n  예: \"이건 생각보다 쉬워요\", \"걱정 마세요 제가 알려드릴게요\"\n\nCATEGORY → ALLOWED TONES:\n- category 1 (프로토 배당): hyung, angry, asmr\n- category 2 (경기 분석): hyung, angry, asmr\n- category 3 (결과 속보): hyung, angry\n- category 4 (적중인증): hyung, angry\n- category 5 (초보 가이드): friendly, asmr\n- category 6 (멀티종목): hyung, angry\n- category 7 (기능 소개): friendly, hyung\n\nIf the input specifies a tone, use it. Otherwise pick one from the allowed list for that category. Write ALL segment text consistently in the chosen tone.\n\n================================================================================\n[6] CATEGORY-SPECIFIC INSTRUCTIONS\n================================================================================\n\n---------- CATEGORY 1: 프로토 배당 분석 (template_id: B) ----------\n\nSEGMENT STRUCTURE:\n- intro: 수익 금액으로 궁금증 유발 (\"천 원으로 3만 4천 원?\")\n- body: 고배당 경기 소개 + 조합 전략(배당 곱셈 계산) + 수익 시뮬레이션 + 리스크 언급\n- outro: 최종 추천 조합 + CTA \"라이브365\"\n\nFACT RULES:\n1. 배당률은 제공된 데이터 그대로 — 반올림/변형 금지\n2. 배당 곱셈, 환급금 계산은 정확하게\n3. \"무조건 된다\" 식 표현 금지\n\nCAPTURE GUIDE (capture_targets):\n- 배당률 표: url=\"https://scoredata.org/proto\", selector=\".odds-table\", style_mode=\"CLEAN\", capture_mode=\"element\"\n- 주목 경기 배당: url=\"https://scoredata.org/proto\", selector=\".proto-match-list\", style_mode=\"HIGHLIGHT\", capture_mode=\"element\"\n- 배당 계산기: url=\"https://scoredata.org/proto\", selector=\".calculator-section\", style_mode=\"CLEAN\", capture_mode=\"element\"\n\nCATEGORY_DATA:\n{ \"top_match\": \"가장 주목할 경기명\", \"combo_odds\": <number>, \"expected_return_1000\": <number> }\n\n---------- CATEGORY 2: 경기 분석/예측 (template_id: A) ----------\n\nSEGMENT STRUCTURE:\n- intro: 이전 픽 결과 언급 + 궁금증 유발 훅 (결론 숨기기)\n- body: 데이터 분석(순위, 폼, 부상자, 홈/원정) + 반전 요소(상대전적/숨은 변수) + 최종 픽 공개\n- outro: 근거 요약 + CTA \"라이브365\"\n\nFACT RULES:\n1. 크롤링 데이터에 있는 수치/사실만 사용\n2. 데이터에 없는 내용 추측 절대 금지\n3. 숫자는 원본 그대로\n\nCAPTURE GUIDE (capture_targets):\n- 양팀 비교(team_a_card): url=\"https://scoredata.org/analysis/{{match_id}}\", selector=\".team-compare-section .home\", style_mode=\"CLEAN\", capture_mode=\"element\"\n- 양팀 비교(team_b_card): url=\"https://scoredata.org/analysis/{{match_id}}\", selector=\".team-compare-section .away\", style_mode=\"CLEAN\", capture_mode=\"element\"\n- VS 통계(vs_stats): url=\"https://scoredata.org/analysis/{{match_id}}\", selector=\".h2h-section\", style_mode=\"HIGHLIGHT\", capture_mode=\"element\"\n\nCATEGORY_DATA:\n{ \"pick\": \"최종 픽\", \"pickDetail\": \"픽 근거 요약\", \"confidence\": \"높음/보통/낮음\" }\n\n---------- CATEGORY 3: 경기 결과 속보 (template_id: C) ----------\n\nSEGMENT STRUCTURE:\n- intro: 가장 충격적인 결과로 시작\n- body: 주요 결과 나열(스코어+한줄 포인트) + 이변/하이라이트 + 순위 변동\n- outro: 다음 라운드 예고 + CTA \"라이브365\"\n\nFACT RULES:\n1. 스코어는 데이터 그대로\n2. \"이변\" = 하위팀이 상위팀 이긴 경우만\n3. 하이라이트는 데이터에 있는 것만\n\nCAPTURE GUIDE (capture_targets):\n- 스코어보드(scoreboard): url=\"https://scoredata.org\", selector=\".scoreboard-container\", style_mode=\"CLEAN\", capture_mode=\"element\"\n- 배경(bg): url=\"https://scoredata.org\", selector=\"\", capture_mode=\"full_page\"\n- 프레임 오버레이: 생략 가능 (없으면 frame_overlay 없이 진행)\n\nCATEGORY_DATA:\n{ \"biggest_upset\": \"가장 큰 이변 경기\", \"results_count\": <number> }\n\n---------- CATEGORY 4: 적중인증/커뮤니티 (template_id: B) ----------\n\nSEGMENT STRUCTURE:\n- intro: 적중 금액으로 충격 유발\n- body: 적중 내역 소개 + 배당/수익 분석 + 다른 적중 사례 or 전략 포인트\n- outro: \"너도 할 수 있다\" + 커뮤니티 소개 + CTA \"라이브365 커뮤니티\"\n\nFACT RULES:\n1. 적중 금액/배당 데이터 그대로\n2. \"쉽다\" \"무조건\" 표현 금지\n\nCAPTURE GUIDE (capture_targets):\n- 적중 게시글 (long capture): url=\"https://scoredata.org/community/hit/{{post_id}}\", selector=\".post-detail\", style_mode=\"HIGHLIGHT\", capture_mode=\"long\"\n- 적중인증 목록: url=\"https://scoredata.org/community/hit\", selector=\".board-list\", style_mode=\"CLEAN\", capture_mode=\"element\"\n\nSPECIAL: Set compliance.privacy_blur_required = true for this category. Prefer style_mode \"CLEAN\" or \"HIGHLIGHT\".\n\nCATEGORY_DATA:\n{ \"top_return\": <number>, \"top_odds\": <number>, \"hit_count\": <number> }\n\n---------- CATEGORY 5: 초보자 가이드 (template_id: B) ----------\n\nSEGMENT STRUCTURE:\n- intro: 모르면 손해라는 느낌\n- body: 기본 개념(쉬운 비유+핵심) + 단계별 가이드(1→2→3단계) + 실전 예시(구체적 숫자)\n- outro: 꿀팁 or 주의사항 + CTA \"라이브365\" (연습배팅/프로토정보)\n\nCONTENT RULES:\n1. 전문용어 쓰면 바로 풀어서 설명\n2. 비유 적극 활용\n3. 숫자 예시 필수 (추상적 설명 금지)\n4. \"어렵지 않아\" \"누구나 가능\" 톤 유지\n\nCAPTURE GUIDE (capture_targets):\n- 프로토 가이드: url=\"https://scoredata.org/proto\", selector=\".proto-guide-section\", style_mode=\"FONT_UP\", capture_mode=\"long\"\n- 배당 계산기: url=\"https://scoredata.org/proto\", selector=\".calculator-section\", style_mode=\"CLEAN\", capture_mode=\"element\"\n\nCATEGORY_DATA:\n{ \"guide_topic\": \"가이드 주제명\", \"difficulty\": \"입문/초급/중급\" }\n\n---------- CATEGORY 6: 멀티종목 비교 (template_id: A) ----------\n\nSEGMENT STRUCTURE:\n- intro: \"오늘 스포츠 30초 정리\" 느낌\n- body: 축구 주요 결과/일정 + 야구/농구 주요 결과/일정 + 이변 or 핫한 경기\n- outro: 내일 주목 경기 예고 + CTA \"라이브365\" (모든 종목 한 곳에서)\n\nFACT RULES:\n1. 스코어/일정 데이터 그대로\n2. 종목당 1~2경기만 (전부 나열 금지)\n\nCAPTURE GUIDE (capture_targets):\n- 전체 스코어보드(team_a 또는 bg): url=\"https://scoredata.org\", selector=\".scoreboard-container\", style_mode=\"CLEAN\", capture_mode=\"element\"\n- 축구탭: url=\"https://scoredata.org\", selector=\".sport-tab[data-sport='soccer'] ~ .match-list\", style_mode=\"CLEAN\", capture_mode=\"element\"\n- 야구탭(team_b 또는 vs_stats): url=\"https://scoredata.org\", selector=\".sport-tab[data-sport='baseball'] ~ .match-list\", style_mode=\"CLEAN\", capture_mode=\"element\"\n\nCATEGORY_DATA:\n{ \"total_matches\": <number>, \"hottest_match\": \"가장 주목할 경기\" }\n\n---------- CATEGORY 7: 사이트 기능 소개 (template_id: C) ----------\n\nSEGMENT STRUCTURE:\n- intro: 문제 제기 (\"스포츠 정보 여기저기 흩어져 있어서 불편하지 않나요?\")\n- body: 핵심 기능 1~2개 소개 + 추가 기능 빠르게 훑기 + 차별점\n- outro: 사용 후기 느낌 + CTA \"라이브365 지금 바로 접속해봐\"\n\nCONTENT RULES:\n1. 광고 느낌 최소화 — 체험 후기 톤\n2. 기능 나열 금지 — 스토리텔링\n3. 다른 서비스 비하 금지\n\n라이브365 주요 기능 (참고):\n- 실시간 스코어: 축구/야구/농구/배구/하키/테니스/이스포츠/격투기 8종목\n- 프리미엄분석: 양팀 비교, 전적, 순위, 부상자\n- 프로토정보: 배당률 실시간, 계산, 가이드\n- 커뮤니티: 자유게시판, 유머, 뉴스, 적중인증\n- 연습배팅: 시뮬레이션\n- 중계: 실시간 중계\n\nCAPTURE GUIDE (capture_targets):\n- 스코어보드(scoreboard): url=\"https://scoredata.org\", selector=\".scoreboard-container\", style_mode=\"CLEAN\", capture_mode=\"element\"\n- 분석화면(bg): url=\"https://scoredata.org/analysis\", selector=\".analysis-detail\", style_mode=\"HIGHLIGHT\", capture_mode=\"element\"\n\nCATEGORY_DATA:\n{ \"feature_focus\": \"포커스 기능명\", \"key_selling_point\": \"핵심 차별점 한줄\" }\n\n================================================================================\n[7] COMMON RULES\n================================================================================\n\nLANGUAGE:\n- 한국어 구어체, 20~30대 남성 타겟\n- 영어 알파벳 절대 금지: EPL→이피엘, TOP3→탑3, MVP→엠브이피\n- 마침표 찍지 마\n- <em>태그</em>로 핵심 수치/사실 강조\n\nSEGMENTS:\n- Exactly 3 segments: intro / body / outro\n- Each segment text: 1–2 spoken-friendly Korean sentences\n- intro: hook + curiosity\n- body: core content (data, analysis, explanation)\n- outro: conclusion + CTA\n\nCAPTURE TARGETS:\n- 2–4 entries per video\n- At least 1 must target scoredata.org\n- For template A: need team_a_card, team_b_card, vs_stats captures\n- For template B: need a long capture for scrolling (capture_mode=\"long\")\n- For template C: need scoreboard (element) + background (full_page or stock)\n\nCTA:\n- cta_text must be \"라이브365에서 확인해!\"\n- outro segment must mention \"라이브365\"\n\n================================================================================\n[8] CAPTURE TARGETS GUIDANCE\n================================================================================\n\nWARNING: All CSS selector values in this prompt (e.g. \".odds-table\", \".scoreboard-container\", \".h2h-section\") are ASSUMED EXAMPLES. Verify against actual scoredata.org DOM structure before production use. Selectors may need adjustment based on the live site.\n\nURL CONSTRUCTION:\n- Home: https://scoredata.org\n- Analysis: https://scoredata.org/analysis/{{match_id}}\n- Proto: https://scoredata.org/proto\n- Community: https://scoredata.org/community\n- Community hit: https://scoredata.org/community/hit/{{post_id}}\n\nIf the input provides a URL, use it as capture_targets[].url. If not, construct a scoredata.org URL based on match_id if given.\n\nSTYLE MODE RECOMMENDATIONS:\n- Data tables/grids → \"CLEAN\" (white bg, rounded corners, shadow)\n- Key stat to emphasize → \"HIGHLIGHT\" (dim overlay + bright target)\n- Small text to enlarge → \"FONT_UP\" (1.15x scale + bold)\n- Overview screenshots → \"ZOOM\" (1.2x center scale)\n\nTEMPLATE B DEFAULTS (visual_plan.template_b):\n- hold_sec: 1.0\n- scroll_sec_min: 6.0\n- scroll_speed_px_per_sec: 150\n- overlay_x: 0\n- overlay_y_start: 400\n\n================================================================================\n[9] OUTPUT REQUIREMENTS\n================================================================================\n- hook_text: 18 Korean chars max\n- segments: exactly 3 (intro/body/outro), each 1–2 sentences, spoken-friendly\n- capture_targets: at least 1, typically 2–4\n- For category 4 (community proof): compliance.privacy_blur_required = true\n- For template B: fill visual_plan.template_b with defaults above (or input-specified values)\n- bgm.ducking_db: typically -8 to -12\n\nNow generate the JSON for the given input."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2680,
+        304
+      ],
+      "id": "v2-node-015-ai-script-gen",
+      "name": "AI 스크립트 생성",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 스크립트 파싱 — Script JSON v1.2 검증\n * - Gemini 응답에서 JSON 추출 + cleanGeminiJson\n * - 필수 필드 검증: version, template_id, segments[3], capture_targets[1+]\n */\nconst raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\n/** Gemini JSON 클리너 (v1에서 검증됨) */\nfunction cleanGeminiJson(raw) {\n  let s = raw.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  const first = s.indexOf('{');\n  const last = s.lastIndexOf('}');\n  if (first !== -1 && last > first) {\n    s = s.substring(first, last + 1);\n  }\n  let result = '';\n  let inStr = false;\n  let esc = false;\n  for (let i = 0; i < s.length; i++) {\n    const c = s[i];\n    if (esc) { result += c; esc = false; continue; }\n    if (c === '\\\\' && inStr) { result += c; esc = true; continue; }\n    if (c === '\"') { inStr = !inStr; result += c; continue; }\n    if (inStr) {\n      if (c === '\\n' || c === '\\r') { result += ' '; continue; }\n      if (c === '\\t') { result += ' '; continue; }\n      if (c.charCodeAt(0) < 0x20) { continue; }\n    }\n    result += c;\n  }\n  result = result.replace(/,(\\s*[}\\]])/g, '$1');\n  return result;\n}\n\nlet cleanText = cleanGeminiJson(text);\nlet script;\ntry {\n  script = JSON.parse(cleanText);\n} catch (e1) {\n  try {\n    let fixed = cleanText\n      .replace(/[\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036]/g, '\"')\n      .replace(/[\\u2018\\u2019\\u201A\\u201B\\u2032\\u2035]/g, \"'\")\n      .replace(/^\\uFEFF/, '');\n    script = JSON.parse(fixed);\n  } catch (e2) {\n    throw new Error('Script JSON v1.2 파싱 실패: ' + e1.message + '\\n처음 500자: ' + cleanText.substring(0, 500));\n  }\n}\n\n// 필수 필드 검증\nif (!script.template_id) throw new Error('template_id 누락');\nif (!['A','B','C','D','R'].includes(script.template_id)) {\n  throw new Error('template_id 유효하지 않음: ' + script.template_id);\n}\nif (!Array.isArray(script.segments) || script.segments.length !== 3) {\n  throw new Error('segments는 정확히 3개 필요, 현재: ' + (script.segments?.length || 0));\n}\nconst segIds = script.segments.map(s => s.id);\nif (!segIds.includes('intro') || !segIds.includes('body') || !segIds.includes('outro')) {\n  throw new Error('segments에 intro/body/outro 필수: ' + JSON.stringify(segIds));\n}\nif (!Array.isArray(script.capture_targets) || script.capture_targets.length < 1) {\n  throw new Error('capture_targets 최소 1개 필요');\n}\nfor (const ct of script.capture_targets) {\n  if (!ct.url) throw new Error('capture_target에 url 누락: ' + JSON.stringify(ct));\n}\n\n// 기본값 보정\nscript.version = script.version || '1.2';\nscript.channel = script.channel || '아럽토';\nscript.site = script.site || '라이브365';\nscript.cta_text = script.cta_text || '라이브365에서 확인해!';\nscript.hook_text = script.hook_text || '';\nscript.key_point_text = script.key_point_text || '';\nscript.conclusion_text = script.conclusion_text || '';\n\nif (!script.bgm) script.bgm = { pack: 'sportsbeat', ducking_db: -10 };\nif (!script.compliance) script.compliance = { tone: 'info', avoid_guarantee_phrases: true, privacy_blur_required: false };\nif (script.template_id === 'B' && !script.visual_plan?.template_b) {\n  script.visual_plan = script.visual_plan || {};\n  script.visual_plan.template_b = {\n    hold_sec: 1.0, scroll_sec_min: 6.0,\n    scroll_speed_px_per_sec: 150, overlay_x: 0, overlay_y_start: 400\n  };\n}\n\nconst promptData = $('v1.2 프롬프트 조립').first().json;\n\nreturn [{\n  json: {\n    script,\n    template_id: script.template_id,\n    category: promptData.category,\n    sport: promptData.sport,\n    league: promptData.league,\n    matchup: promptData.matchup,\n    today: promptData.today,\n    toneStyle: promptData.toneStyle,\n    selectedFixtureId: promptData.selectedFixtureId,\n    prevPickResult: promptData.prevPickResult,\n    isFirstPick: promptData.isFirstPick\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2940,
+        304
+      ],
+      "id": "v2-node-016-script-parse",
+      "name": "스크립트 파싱"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1SCzznS9eLMmyK_jQq0qFSx4zWKmwIK6dGesFEgm0brA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "스포츠 픽"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3200,
+        304
+      ],
+      "id": "v2-node-017-sheet-record",
+      "name": "시트 기록",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * TTS 세그먼트 분리\n * - segments[3]을 개별 아이템으로 분리하여 각각 TTS 호출\n * - <em> 태그 제거, 이모지 제거\n */\nconst script = $('스크립트 파싱').first().json.script;\nconst segments = script.segments || [];\n\nfunction cleanForTts(text) {\n  return (text || '')\n    .replace(/<[^>]*>?/gm, '')\n    .replace(/[\\u{1F600}-\\u{1F64F}\\u{1F300}-\\u{1F5FF}\\u{1F680}-\\u{1F6FF}\\u{1F1E0}-\\u{1F1FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}]/gu, '')\n    .trim();\n}\n\nreturn segments.map(seg => ({\n  json: {\n    id: seg.id,\n    text: cleanForTts(seg.text),\n    voice_id: 'tc_6059dad0b83880769a50502f',\n    emotion: 'happy',\n    tempo: 1.4\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3460,
+        160
+      ],
+      "id": "v2-node-018-tts-segment-split",
+      "name": "TTS 세그먼트 분리"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:5100/tts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": {{ JSON.stringify($json.text) }},\n  \"voice_id\": {{ JSON.stringify($json.voice_id) }},\n  \"emotion\": {{ JSON.stringify($json.emotion) }},\n  \"tempo\": {{ $json.tempo }}\n}",
+        "options": {
+          "timeout": 60000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3720,
+        160
+      ],
+      "id": "v2-node-019-tts-request",
+      "name": "TTS 요청"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * TTS 결과 처리\n * - 3개 세그먼트 TTS 응답을 tts_results 배열로 통합\n * - 각 세그먼트의 실제 duration_sec 사용 (추정 안 함)\n */\nconst ttsItems = $input.all();\nconst segItems = $('TTS 세그먼트 분리').all();\n\nconst tts_results = ttsItems.map((item, i) => {\n  const segId = segItems[i]?.json?.id || ['intro', 'body', 'outro'][i];\n  const audioUrl = item.json.audio_url;\n  const durationSec = item.json.duration_sec;\n\n  if (!audioUrl) {\n    throw new Error('TTS 응답에 audio_url 없음 (segment: ' + segId + '): ' + JSON.stringify(item.json));\n  }\n\n  return {\n    id: segId,\n    url: audioUrl,\n    duration_sec: Number(durationSec || 0)\n  };\n});\n\n// 전체 나레이션 텍스트 (NCA 자막용)\nconst fullNarration = segItems.map(s => s.json.text).join(' ');\n\nreturn [{\n  json: {\n    tts_results,\n    fullNarration,\n    totalDuration: tts_results.reduce((sum, r) => sum + r.duration_sec, 0)\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3980,
+        160
+      ],
+      "id": "v2-node-020-tts-result",
+      "name": "TTS 결과 처리"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 캡처 타겟 분리\n * - script.capture_targets[]를 개별 아이템으로 분리\n * - 각 아이템은 capture-service v1.2 API 파라미터\n */\nconst data = $('스크립트 파싱').first().json;\nconst script = data.script;\nconst targets = script.capture_targets || [];\nconst jobId = 'v2-' + (data.today || '').replace(/-/g, '') + '-' + Date.now();\n\nreturn targets.map((ct, i) => ({\n  json: {\n    url: ct.url,\n    capture_mode: ct.capture_mode || 'element',\n    selector: ct.selector || '',\n    style_mode: ct.style_mode || 'CLEAN',\n    style_args: ct.style_args || {},\n    omitBackground: ct.omitBackground || false,\n    job_id: jobId,\n    filename: ct.filename || ('capture_' + i + '.png'),\n    index: i\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3460,
+        480
+      ],
+      "id": "v2-node-021-capture-split",
+      "name": "캡처 타겟 분리"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://{{ $env.CAPTURE_HOST || '172.17.0.1' }}:3100/capture",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"url\": {{ JSON.stringify($json.url) }},\n  \"capture_mode\": {{ JSON.stringify($json.capture_mode) }},\n  \"selector\": {{ JSON.stringify($json.selector) }},\n  \"style_mode\": {{ JSON.stringify($json.style_mode) }},\n  \"style_args\": {{ JSON.stringify($json.style_args) }},\n  \"omitBackground\": {{ $json.omitBackground }},\n  \"job_id\": {{ JSON.stringify($json.job_id) }},\n  \"filename\": {{ JSON.stringify($json.filename) }}\n}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3720,
+        480
+      ],
+      "id": "v2-node-022-capture-request",
+      "name": "캡처 요청 v2"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * 캡처 결과 수집\n * - 개별 캡처 응답을 capture_urls 배열로 통합\n * - filename 기준으로 정렬 (템플릿 플레이스홀더 매핑에 사용)\n */\nconst items = $input.all();\nconst splitItems = $('캡처 타겟 분리').all();\n\nconst capture_results = items.map((item, i) => {\n  const captureUrl = item.json.url || '';\n  const splitData = splitItems[i]?.json || {};\n\n  if (!captureUrl) {\n    throw new Error('캡처 응답에 url 없음 (index: ' + i + '): ' + JSON.stringify(item.json));\n  }\n\n  return {\n    index: splitData.index || i,\n    filename: splitData.filename || ('capture_' + i + '.png'),\n    url: captureUrl,\n    capture_mode: splitData.capture_mode || 'element',\n    style_mode: splitData.style_mode || 'CLEAN'\n  };\n});\n\n// index 순서대로 정렬\ncapture_results.sort((a, b) => a.index - b.index);\n\nreturn [{\n  json: {\n    capture_results,\n    captureCount: capture_results.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3980,
+        480
+      ],
+      "id": "v2-node-023-capture-collect",
+      "name": "캡처 결과 수집"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: SFX 안전 매핑 + 폴백\n * - 입력: script JSON (v1.2/v1.3)\n * - 출력: sfx_urls[] (세그먼트/이벤트별), bgm_url (optional)\n *\n * 전제:\n * - MINIO_BASE_URL은 내부 접근 가능한 base (예: http://minio:9000)\n * - 혹은 presigned URL을 미리 만들어두고 manifest에 넣어도 됨.\n */\n\nconst MINIO_BASE_URL = $env.MINIO_BASE_URL || \"http://76.13.182.180:9000\";\nconst BUCKET = $env.MINIO_BUCKET || \"arubto\";\n\n// 실제 MinIO에 존재하는 SFX 파일 매핑\nconst SFX_KEY = {\n  whoosh: \"audio/sfx_whoosh1.mp3\",\n  swoosh: \"audio/sfx_whoosh1.mp3\",\n  pop:    \"audio/sfx_pop_user.mp3\",\n  ding:   \"audio/sfx_ding1.mp3\",\n  ding2:  \"audio/sfx_ding2.mp3\",\n  ppook:  \"audio/sfx_ppook.wav\",\n  wow:    \"audio/sfx_wow.wav\",\n};\n\n// 아직 전용 파일이 없는 키 — 기존 SFX로 폴백\nconst OPTIONAL_SFX_ALIAS = {\n  cash: \"ding\",\n  cheer: \"pop\",\n};\n\n/**\n * MinIO 오브젝트 키를 전체 URL로 변환\n * @param {string} keyPath - MinIO 오브젝트 키\n * @returns {string} 전체 URL\n */\nfunction toUrl(keyPath) {\n  return `${MINIO_BASE_URL}/${BUCKET}/${keyPath}`;\n}\n\n/**\n * SFX 타입을 안전하게 해석 (존재하지 않으면 alias → 최후 폴백)\n * @param {string} t - 요청된 SFX 타입\n * @returns {string} 유효한 SFX 키\n */\nfunction safeSfxType(t) {\n  if (SFX_KEY[t]) return t;\n  if (OPTIONAL_SFX_ALIAS[t] && SFX_KEY[OPTIONAL_SFX_ALIAS[t]]) return OPTIONAL_SFX_ALIAS[t];\n  // 최후 폴백\n  return \"whoosh\";\n}\n\n// 1) v1.3 audio_plan.sfx_events 우선, 없으면 v1.2 segments[].sfx 사용\nconst input = $input.item.json;\nconst sfxEvents = input.audio_plan?.sfx_events ?? null;\n\nlet resolved = [];\n\nif (Array.isArray(sfxEvents) && sfxEvents.length) {\n  resolved = sfxEvents.map(ev => {\n    const t = safeSfxType(ev.type);\n    return { anchor: ev.anchor, type: t, url: toUrl(SFX_KEY[t]) };\n  });\n} else if (Array.isArray(input.segments)) {\n  // segments[].sfx (세그먼트 시작 기준으로만 처리)\n  resolved = input.segments.flatMap(seg => {\n    const list = Array.isArray(seg.sfx) ? seg.sfx : [];\n    return list.map(t0 => {\n      const t = safeSfxType(t0);\n      return { anchor: `${seg.id}_start`, type: t, url: toUrl(SFX_KEY[t]) };\n    });\n  });\n}\n\nreturn { sfx_events_resolved: resolved };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4240,
+        304
+      ],
+      "id": "v2-node-024-sfx-mapping",
+      "name": "SFX 매핑"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * n8n Code Node: 동적 타임라인 조립 (TTS duration 기반)\n * 입력:\n *  - script JSON (v1.2/v1.3)\n *  - tts_results: [{id:'intro', url:'...', duration_sec: 2.4}, ...]\n * 출력:\n *  - render_duration_sec, segment_times, template_B params(HOLD/SCROLL)\n */\n\nconst input = $input.item.json;\nconst ttsResults = input.tts_results || []; // 이전 노드에서 합쳐서 넣어주세요\nconst padding = Number(input.audio_plan?.timeline_padding_sec ?? 0.5);\n\nconst durById = {};\nfor (const r of ttsResults) {\n  if (r && r.id) durById[r.id] = Number(r.duration_sec || 0);\n}\n\n// segment 순서 고정\nconst order = [\"intro\",\"body\",\"outro\"];\nlet t = 0;\nconst segmentTimes = {};\nfor (const id of order) {\n  const d = Math.max(0.2, durById[id] || 0);\n  segmentTimes[id] = { start: Number(t.toFixed(3)), dur: Number(d.toFixed(3)) };\n  t += d;\n}\nconst totalTts = t;\nconst renderDuration = Number((totalTts + padding).toFixed(3));\n\n// B형 스크롤 파라미터 계산\nlet hold = 1.0;\nlet scrollMin = 6.0;\nif (input.visual_plan?.template_b?.hold_sec != null) hold = Number(input.visual_plan.template_b.hold_sec);\nif (input.visual_plan?.template_b?.scroll_sec_min != null) scrollMin = Number(input.visual_plan.template_b.scroll_sec_min);\n\n// outro 구간(CTA 포함) 확보를 위해 최소 2초는 남기기\nconst outroDur = segmentTimes.outro?.dur ?? 2.0;\nconst reserve = Math.max(2.0, outroDur);\nconst scroll = Math.max(scrollMin, renderDuration - hold - reserve);\n\nreturn {\n  render_duration_sec: renderDuration,\n  segment_times: segmentTimes,\n  template_b_params: {\n    HOLD: Number(hold.toFixed(3)),\n    SCROLL: Number(scroll.toFixed(3))\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4500,
+        304
+      ],
+      "id": "v2-node-025-timeline-assemble",
+      "name": "타임라인 조립"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * NCA 데이터 준비 v2\n * - template_id에 따라 A/B/C 템플릿 선택\n * - 플레이스홀더를 실제 값으로 치환\n * - TTS 3-segment concat: narr_intro/narr_body/narr_outro 3개 입력\n * - nca_payload 반환\n */\nconst scriptData = $('스크립트 파싱').first().json;\nconst script = scriptData.script;\nconst ttsData = $('TTS 결과 처리').first().json;\nconst captureData = $('캡처 결과 수집').first().json;\nconst sfxData = $('SFX 매핑').first().json;\nconst timelineData = $('타임라인 조립').first().json;\n\nconst MINIO_BASE = $env.MINIO_BASE_URL || \"http://76.13.182.180:9000\";\nconst BUCKET = $env.MINIO_BUCKET || \"arubto\";\n\n// BGM 매핑\nconst BGM_MAP = {\n  sportsbeat: MINIO_BASE + '/audio/bgm_new.mp3',\n  newsroom: MINIO_BASE + '/audio/bgm_new.mp3',\n  chill: MINIO_BASE + '/audio/bgm_new.mp3',\n  none: ''\n};\nconst bgmUrl = BGM_MAP[script.bgm?.pack] || BGM_MAP.sportsbeat;\n\n// 폰트 경로\nconst fontfile = '/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf';\n\n// 타이밍\nconst durationSec = timelineData.render_duration_sec;\nconst fadeOutStart = Math.max(0, durationSec - 2);\nconst bgmVolume = '0.3';\n\n// 캡처 URL 배열\nconst caps = captureData.capture_results || [];\n\n// TTS: 세그먼트별 URL 추출\nconst ttsMap = {};\nfor (const r of ttsData.tts_results) {\n  ttsMap[r.id] = r.url;\n}\nconst narrIntro = ttsMap.intro || '';\nconst narrBody = ttsMap.body || '';\nconst narrOutro = ttsMap.outro || '';\n\nif (!narrIntro) throw new Error('TTS intro URL 없음');\nif (!narrBody) throw new Error('TTS body URL 없음');\nif (!narrOutro) throw new Error('TTS outro URL 없음');\n\n// 텍스트 (drawtext용 이스케이프)\nfunction escDt(text) {\n  if (!text) return '';\n  return text\n    .replace(/[\\u{1F600}-\\u{1FAFF}\\u{200D}\\u{20E3}\\u{FE0F}]/gu, '')\n    .replace(/\\\\\\\\/g, '\\\\\\\\\\\\\\\\')\n    .replace(/'/g, '\\u2019')\n    .replace(/\"/g, '\\u201D')\n    .replace(/:/g, '\\\\:')\n    .replace(/;/g, '\\\\;')\n    .replace(/,/g, '\\\\,')\n    .replace(/\\\\[/g, '\\\\\\\\[')\n    .replace(/\\\\]/g, '\\\\\\\\]')\n    .replace(/<[^>]*>/g, '')\n    .trim();\n}\n\nconst hookText = escDt(script.hook_text);\nconst keyPointText = escDt(script.key_point_text);\nconst conclusionText = escDt(script.conclusion_text);\nconst ctaText = escDt(script.cta_text);\nconst outputFilename = 'arupto_v2_' + (scriptData.today || '').replace(/-/g, '') + '.mp4';\n\n// 템플릿 JSON (인라인, 3-segment narration 대응)\nconst TEMPLATES = {\n  A: \"{\\\"_comment\\\": \\\"NCA 서버 포맷: TEMPLATE_A_VS (VS 분할 레이아웃). 플레이스홀더는 n8n Code 노드에서 치환.\\\", \\\"inputs\\\": [{\\\"file_url\\\": \\\"{{bg}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-loop\\\", \\\"argument\\\": \\\"1\\\"}, {\\\"option\\\": \\\"-framerate\\\", \\\"argument\\\": \\\"30\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}]}, {\\\"file_url\\\": \\\"{{team_a_card}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-loop\\\", \\\"argument\\\": \\\"1\\\"}, {\\\"option\\\": \\\"-framerate\\\", \\\"argument\\\": \\\"30\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}]}, {\\\"file_url\\\": \\\"{{team_b_card}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-loop\\\", \\\"argument\\\": \\\"1\\\"}, {\\\"option\\\": \\\"-framerate\\\", \\\"argument\\\": \\\"30\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}]}, {\\\"file_url\\\": \\\"{{vs_stats}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-loop\\\", \\\"argument\\\": \\\"1\\\"}, {\\\"option\\\": \\\"-framerate\\\", \\\"argument\\\": \\\"30\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}]}, {\\\"file_url\\\": \\\"{{narr_intro}}\\\", \\\"options\\\": []}, {\\\"file_url\\\": \\\"{{narr_body}}\\\", \\\"options\\\": []}, {\\\"file_url\\\": \\\"{{narr_outro}}\\\", \\\"options\\\": []}, {\\\"file_url\\\": \\\"{{bgm_audio}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-stream_loop\\\", \\\"argument\\\": \\\"-1\\\"}]}], \\\"filters\\\": [{\\\"filter\\\": \\\"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,fps=30[base];[base][1:v]overlay=x=60:y=260[v1];[v1][2:v]overlay=x=60:y=980[v2];[v2][3:v]overlay=x=60:y=700[v3];[v3]drawtext=fontfile={{fontfile}}:text='{{hook_text}}':x=60:y=120:fontsize=64:fontcolor=white:box=1:boxcolor=black@0.45:boxborderw=20:enable='between(t,0,3)',drawtext=fontfile={{fontfile}}:text='{{key_point_text}}':x=60:y=540:fontsize=46:fontcolor=white:box=1:boxcolor=black@0.35:boxborderw=18:enable='between(t,3,{{reveal_t}})',drawtext=fontfile={{fontfile}}:text='{{conclusion_text}}':x=60:y=1620:fontsize=56:fontcolor=white:box=1:boxcolor=black@0.45:boxborderw=20:enable='between(t,{{reveal_t}},{{duration_sec}}-2)',drawtext=fontfile={{fontfile}}:text='{{cta_text}}':x=(w-text_w)/2:y=1780:fontsize=54:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=24:enable='between(t,{{duration_sec}}-2,{{duration_sec}})'[video_out];[4:a]asetpts=PTS-STARTPTS[nr1];[5:a]asetpts=PTS-STARTPTS[nr2];[6:a]asetpts=PTS-STARTPTS[nr3];[nr1][nr2][nr3]concat=n=3:v=0:a=1[narr];[7:a]atrim=duration={{duration_sec}},asetpts=PTS-STARTPTS,afade=t=out:st={{fade_out_start}}:d=2,volume={{bgm_volume}}[bgm_d];[narr][bgm_d]amix=inputs=2:duration=first:weights=1 0.3:normalize=0[audio_out]\\\"}], \\\"outputs\\\": [{\\\"options\\\": [{\\\"option\\\": \\\"-map\\\", \\\"argument\\\": \\\"[video_out]\\\"}, {\\\"option\\\": \\\"-map\\\", \\\"argument\\\": \\\"[audio_out]\\\"}, {\\\"option\\\": \\\"-c:v\\\", \\\"argument\\\": \\\"libx264\\\"}, {\\\"option\\\": \\\"-preset\\\", \\\"argument\\\": \\\"fast\\\"}, {\\\"option\\\": \\\"-crf\\\", \\\"argument\\\": \\\"23\\\"}, {\\\"option\\\": \\\"-c:a\\\", \\\"argument\\\": \\\"aac\\\"}, {\\\"option\\\": \\\"-b:a\\\", \\\"argument\\\": \\\"192k\\\"}, {\\\"option\\\": \\\"-pix_fmt\\\", \\\"argument\\\": \\\"yuv420p\\\"}, {\\\"option\\\": \\\"-movflags\\\", \\\"argument\\\": \\\"+faststart\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}], \\\"file_name\\\": \\\"{{output_filename}}\\\"}]}\",\n  B: \"{\\\"_comment\\\": \\\"NCA 서버 포맷: TEMPLATE_B_SCROLL (스크롤/줌인 레이아웃). 입력 0을 bg+fg 양쪽에서 사용. 플레이스홀더는 n8n Code 노드에서 치환.\\\", \\\"inputs\\\": [{\\\"file_url\\\": \\\"{{long_capture}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-loop\\\", \\\"argument\\\": \\\"1\\\"}, {\\\"option\\\": \\\"-framerate\\\", \\\"argument\\\": \\\"30\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}]}, {\\\"file_url\\\": \\\"{{narr_intro}}\\\", \\\"options\\\": []}, {\\\"file_url\\\": \\\"{{narr_body}}\\\", \\\"options\\\": []}, {\\\"file_url\\\": \\\"{{narr_outro}}\\\", \\\"options\\\": []}, {\\\"file_url\\\": \\\"{{bgm_audio}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-stream_loop\\\", \\\"argument\\\": \\\"-1\\\"}]}], \\\"filters\\\": [{\\\"filter\\\": \\\"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:10,setsar=1,fps=30[bg];[0:v]scale=980:-1,pad=1080:ih:50:0:color=0x00000000[fg];[bg][fg]overlay=x={{overlay_x}}:y='if(lte(overlay_h,main_h),{{overlay_y_start}},if(lt(t,{{HOLD}}),{{overlay_y_start}},max(-(overlay_h-main_h),{{overlay_y_start}}-((t-{{HOLD}})/{{SCROLL}})*(overlay_h-main_h))))'[v0];[v0]drawtext=fontfile={{fontfile}}:text='{{cta_text}}':x=(w-text_w)/2:y=1780:fontsize=54:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=24:enable='between(t,{{duration_sec}}-2,{{duration_sec}})'[video_out];[1:a]asetpts=PTS-STARTPTS[nr1];[2:a]asetpts=PTS-STARTPTS[nr2];[3:a]asetpts=PTS-STARTPTS[nr3];[nr1][nr2][nr3]concat=n=3:v=0:a=1[narr];[4:a]atrim=duration={{duration_sec}},asetpts=PTS-STARTPTS,afade=t=out:st={{fade_out_start}}:d=2,volume={{bgm_volume}}[bgm_d];[narr][bgm_d]amix=inputs=2:duration=first:weights=1 0.3:normalize=0[audio_out]\\\"}], \\\"outputs\\\": [{\\\"options\\\": [{\\\"option\\\": \\\"-map\\\", \\\"argument\\\": \\\"[video_out]\\\"}, {\\\"option\\\": \\\"-map\\\", \\\"argument\\\": \\\"[audio_out]\\\"}, {\\\"option\\\": \\\"-c:v\\\", \\\"argument\\\": \\\"libx264\\\"}, {\\\"option\\\": \\\"-preset\\\", \\\"argument\\\": \\\"fast\\\"}, {\\\"option\\\": \\\"-crf\\\", \\\"argument\\\": \\\"23\\\"}, {\\\"option\\\": \\\"-c:a\\\", \\\"argument\\\": \\\"aac\\\"}, {\\\"option\\\": \\\"-b:a\\\", \\\"argument\\\": \\\"192k\\\"}, {\\\"option\\\": \\\"-pix_fmt\\\", \\\"argument\\\": \\\"yuv420p\\\"}, {\\\"option\\\": \\\"-movflags\\\", \\\"argument\\\": \\\"+faststart\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}], \\\"file_name\\\": \\\"{{output_filename}}\\\"}]}\",\n  C: \"{\\\"_comment\\\": \\\"NCA 서버 포맷: TEMPLATE_C_NEWS (뉴스 티커 레이아웃). 플레이스홀더는 n8n Code 노드에서 치환.\\\", \\\"inputs\\\": [{\\\"file_url\\\": \\\"{{bg}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-loop\\\", \\\"argument\\\": \\\"1\\\"}, {\\\"option\\\": \\\"-framerate\\\", \\\"argument\\\": \\\"30\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}]}, {\\\"file_url\\\": \\\"{{scoreboard}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-loop\\\", \\\"argument\\\": \\\"1\\\"}, {\\\"option\\\": \\\"-framerate\\\", \\\"argument\\\": \\\"30\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}]}, {\\\"file_url\\\": \\\"{{frame_overlay}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-loop\\\", \\\"argument\\\": \\\"1\\\"}, {\\\"option\\\": \\\"-framerate\\\", \\\"argument\\\": \\\"30\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}]}, {\\\"file_url\\\": \\\"{{narr_intro}}\\\", \\\"options\\\": []}, {\\\"file_url\\\": \\\"{{narr_body}}\\\", \\\"options\\\": []}, {\\\"file_url\\\": \\\"{{narr_outro}}\\\", \\\"options\\\": []}, {\\\"file_url\\\": \\\"{{bgm_audio}}\\\", \\\"options\\\": [{\\\"option\\\": \\\"-stream_loop\\\", \\\"argument\\\": \\\"-1\\\"}]}], \\\"filters\\\": [{\\\"filter\\\": \\\"[0:v]scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,boxblur=20:10,setsar=1,fps=30[bg];[bg][1:v]overlay=x=(W-w)/2:y=520[v1];[v1][2:v]overlay=x=0:y=0[v2];[v2]drawtext=fontfile={{fontfile}}:text='{{headline_text}}':x=60:y=140:fontsize=64:fontcolor=white:box=1:boxcolor=black@0.45:boxborderw=20:enable='between(t,0,{{duration_sec}})',drawtext=fontfile={{fontfile}}:text='{{ticker_text}}':x=w-mod(t*{{ticker_px_per_sec}}\\\\\\\\,(text_w+w)):y=1750:fontsize=44:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=18:enable='between(t,0,{{duration_sec}})',drawtext=fontfile={{fontfile}}:text='{{cta_text}}':x=(w-text_w)/2:y=1840:fontsize=48:fontcolor=white:box=1:boxcolor=black@0.55:boxborderw=18:enable='between(t,{{duration_sec}}-2,{{duration_sec}})'[video_out];[3:a]asetpts=PTS-STARTPTS[nr1];[4:a]asetpts=PTS-STARTPTS[nr2];[5:a]asetpts=PTS-STARTPTS[nr3];[nr1][nr2][nr3]concat=n=3:v=0:a=1[narr];[6:a]atrim=duration={{duration_sec}},asetpts=PTS-STARTPTS,afade=t=out:st={{fade_out_start}}:d=2,volume={{bgm_volume}}[bgm_d];[narr][bgm_d]amix=inputs=2:duration=first:weights=1 0.3:normalize=0[audio_out]\\\"}], \\\"outputs\\\": [{\\\"options\\\": [{\\\"option\\\": \\\"-map\\\", \\\"argument\\\": \\\"[video_out]\\\"}, {\\\"option\\\": \\\"-map\\\", \\\"argument\\\": \\\"[audio_out]\\\"}, {\\\"option\\\": \\\"-c:v\\\", \\\"argument\\\": \\\"libx264\\\"}, {\\\"option\\\": \\\"-preset\\\", \\\"argument\\\": \\\"fast\\\"}, {\\\"option\\\": \\\"-crf\\\", \\\"argument\\\": \\\"23\\\"}, {\\\"option\\\": \\\"-c:a\\\", \\\"argument\\\": \\\"aac\\\"}, {\\\"option\\\": \\\"-b:a\\\", \\\"argument\\\": \\\"192k\\\"}, {\\\"option\\\": \\\"-pix_fmt\\\", \\\"argument\\\": \\\"yuv420p\\\"}, {\\\"option\\\": \\\"-movflags\\\", \\\"argument\\\": \\\"+faststart\\\"}, {\\\"option\\\": \\\"-t\\\", \\\"argument\\\": \\\"{{duration_sec}}\\\"}], \\\"file_name\\\": \\\"{{output_filename}}\\\"}]}\"\n};\n\nconst tid = script.template_id;\nconst tplStr = TEMPLATES[tid];\nif (!tplStr) throw new Error('지원하지 않는 template_id: ' + tid);\n\nlet tpl = JSON.parse(tplStr);\n\n// 플레이스홀더 치환 함수\nfunction replacePlaceholders(obj, map) {\n  const str = JSON.stringify(obj);\n  let result = str;\n  for (const [key, val] of Object.entries(map)) {\n    const placeholder = '{{' + key + '}}';\n    result = result.split(placeholder).join(String(val));\n  }\n  return JSON.parse(result);\n}\n\n// 공통 플레이스홀더 (3-segment narration)\nconst commonMap = {\n  narr_intro: narrIntro,\n  narr_body: narrBody,\n  narr_outro: narrOutro,\n  bgm_audio: bgmUrl,\n  duration_sec: durationSec.toFixed(2),\n  fontfile: fontfile,\n  cta_text: ctaText,\n  bgm_volume: bgmVolume,\n  fade_out_start: fadeOutStart.toFixed(2),\n  output_filename: outputFilename\n};\n\n// 템플릿별 추가 플레이스홀더\nlet templateMap = {};\n\nif (tid === 'A') {\n  templateMap = {\n    bg: caps[0]?.url || caps[caps.length - 1]?.url || '',\n    team_a_card: caps[1]?.url || caps[0]?.url || '',\n    team_b_card: caps[2]?.url || caps[1]?.url || caps[0]?.url || '',\n    vs_stats: caps[3]?.url || caps[2]?.url || caps[0]?.url || '',\n    hook_text: hookText,\n    key_point_text: keyPointText,\n    conclusion_text: conclusionText,\n    reveal_t: (durationSec * 0.7).toFixed(2)\n  };\n} else if (tid === 'B') {\n  const tbParams = timelineData.template_b_params || {};\n  const vp = script.visual_plan?.template_b || {};\n  templateMap = {\n    long_capture: caps[0]?.url || '',\n    overlay_x: vp.overlay_x ?? 0,\n    overlay_y_start: vp.overlay_y_start ?? 400,\n    HOLD: tbParams.HOLD?.toFixed(3) || vp.hold_sec || '1.000',\n    SCROLL: tbParams.SCROLL?.toFixed(3) || vp.scroll_sec_min || '6.000'\n  };\n} else if (tid === 'C') {\n  templateMap = {\n    bg: caps[0]?.url || '',\n    scoreboard: caps[1]?.url || caps[0]?.url || '',\n    frame_overlay: caps[2]?.url || caps[1]?.url || caps[0]?.url || '',\n    headline_text: hookText || keyPointText,\n    ticker_text: conclusionText || keyPointText || hookText,\n    ticker_px_per_sec: '150'\n  };\n}\n\nconst fullMap = { ...commonMap, ...templateMap };\nconst nca_payload = replacePlaceholders(tpl, fullMap);\n\n// _comment 제거\ndelete nca_payload._comment;\n\nreturn [{\n  json: {\n    nca_payload,\n    template_id: tid,\n    totalDuration: durationSec,\n    captureCount: caps.length,\n    subject: script.hook_text || '',\n    caption: script.cta_text || '',\n    comment: '라이브365에서 더 많은 정보 확인!',\n    category: scriptData.category,\n    matchup: scriptData.matchup || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4760,
+        304
+      ],
+      "id": "v2-node-026-nca-prepare",
+      "name": "NCA 데이터 준비 v2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "nca-sagong-2026"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.nca_payload) }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5020,
+        304
+      ],
+      "id": "v2-node-027-nca-render",
+      "name": "NCA 영상 제작"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * NCA 결과 처리\n * - NCA 서버 응답에서 영상 URL 추출\n */\nconst result = $input.first().json;\nconst prevData = $('NCA 데이터 준비 v2').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (!videoUrl) {\n  throw new Error('NCA 영상 제작 결과 URL 없음: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    '영상 URL': videoUrl,\n    Status: '완료',\n    matchup: prevData.matchup || '',\n    category: prevData.category,\n    template_id: prevData.template_id\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5280,
+        304
+      ],
+      "id": "v2-node-028-nca-result",
+      "name": "NCA 결과 처리"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1SCzznS9eLMmyK_jQq0qFSx4zWKmwIK6dGesFEgm0brA",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "스포츠 픽"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "matchup"
+          ],
+          "schema": [
+            {
+              "id": "matchup",
+              "displayName": "matchup",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "영상 URL",
+              "displayName": "영상 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        5540,
+        304
+      ],
+      "id": "v2-node-029-status-update",
+      "name": "상태 업데이트",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "path": "arupto-v2-run",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "fc6360bb-70c8-4275-9819-4ef72dff1c75",
+      "name": "웹훅 트리거",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        300
+      ],
+      "webhookId": "d51ea6a2-f503-4d0a-a872-7f67761ad8fc"
+    }
+  ],
+  "connections": {
+    "수동 실행": {
+      "main": [
+        [
+          {
+            "node": "종목 결정",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "종목 결정": {
+      "main": [
+        [
+          {
+            "node": "이전 픽 조회",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "오늘 경기 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "오늘 경기 조회": {
+      "main": [
+        [
+          {
+            "node": "경기 목록 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "경기 목록 파싱": {
+      "main": [
+        [
+          {
+            "node": "순위표 조회",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "프로토 배당 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "순위표 조회": {
+      "main": [
+        [
+          {
+            "node": "부상자 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "부상자 조회": {
+      "main": [
+        [
+          {
+            "node": "상대전적 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "상대전적 조회": {
+      "main": [
+        [
+          {
+            "node": "데이터 병합",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "프로토 배당 조회": {
+      "main": [
+        [
+          {
+            "node": "배당 데이터 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "데이터 병합": {
+      "main": [
+        [
+          {
+            "node": "AI 경기 선택",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 경기 선택": {
+      "main": [
+        [
+          {
+            "node": "경기 선택 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "경기 선택 파싱": {
+      "main": [
+        [
+          {
+            "node": "v1.2 프롬프트 조립",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "v1.2 프롬프트 조립": {
+      "main": [
+        [
+          {
+            "node": "AI 스크립트 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 스크립트 생성": {
+      "main": [
+        [
+          {
+            "node": "스크립트 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "스크립트 파싱": {
+      "main": [
+        [
+          {
+            "node": "시트 기록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "시트 기록": {
+      "main": [
+        [
+          {
+            "node": "TTS 세그먼트 분리",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "캡처 타겟 분리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 세그먼트 분리": {
+      "main": [
+        [
+          {
+            "node": "TTS 요청",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 요청": {
+      "main": [
+        [
+          {
+            "node": "TTS 결과 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "캡처 타겟 분리": {
+      "main": [
+        [
+          {
+            "node": "캡처 요청 v2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "캡처 요청 v2": {
+      "main": [
+        [
+          {
+            "node": "캡처 결과 수집",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 결과 처리": {
+      "main": [
+        [
+          {
+            "node": "SFX 매핑",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SFX 매핑": {
+      "main": [
+        [
+          {
+            "node": "타임라인 조립",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "타임라인 조립": {
+      "main": [
+        [
+          {
+            "node": "NCA 데이터 준비 v2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 데이터 준비 v2": {
+      "main": [
+        [
+          {
+            "node": "NCA 영상 제작",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 영상 제작": {
+      "main": [
+        [
+          {
+            "node": "NCA 결과 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 결과 처리": {
+      "main": [
+        [
+          {
+            "node": "상태 업데이트",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "웹훅 트리거": {
+      "main": [
+        [
+          {
+            "node": "종목 결정",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {}
+}

@@ -38,17 +38,29 @@ async function ensureBucket() {
 
 /**
  * PNG 이미지를 MinIO에 업로드하고 공개 URL 반환
- * 저장 경로: captures/{날짜}/{capture_id}_{timestamp}.png
+ * - 기본 경로: {날짜}/{captureId}_{timestamp}.png
+ * - jobId 지정 시: {날짜}/{jobId}/{filename}
  * @param {Buffer} imageBuffer - PNG 이미지 버퍼
  * @param {string} captureId - 프리셋 ID
+ * @param {Object} [options={}] - 업로드 옵션
+ * @param {string} [options.job_id] - Job ID (있으면 경로에 포함)
+ * @param {string} [options.filename] - 커스텀 파일명
  * @returns {Promise<string>} 공개 접근 URL
  */
-async function uploadCapture(imageBuffer, captureId) {
+async function uploadCapture(imageBuffer, captureId, options = {}) {
   const client = getClient();
   const bucket = config.minio.bucket;
   const dateStr = new Date().toISOString().split('T')[0];
-  const timestamp = Date.now();
-  const objectName = `${dateStr}/${captureId}_${timestamp}.png`;
+
+  let objectName;
+  if (options.job_id) {
+    const safeJobId = String(options.job_id).replace(/[^\w-]/g, '_');
+    const safeName = (options.filename || 'capture.png').replace(/[^\w.\-]/g, '_');
+    objectName = `${dateStr}/${safeJobId}/${safeName}`;
+  } else {
+    const timestamp = Date.now();
+    objectName = `${dateStr}/${captureId}_${timestamp}.png`;
+  }
 
   await client.putObject(bucket, objectName, imageBuffer, imageBuffer.length, {
     'Content-Type': 'image/png',
