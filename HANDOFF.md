@@ -129,7 +129,7 @@ videos_ready → rendering → uploading → completed
 - [x] 콜백 역행 방지 (STATUS_ORDER)
 - [x] 실시간 제작 목록 (아코디언 + 자동 리패칭)
 - [x] 제작 상세 페이지 (비디오 플레이어, 스텝퍼, 스크립트)
-- [x] 정지/이어서 (paused 상태)
+- [x] 정지/이어서 (paused 상태 + n8n 실행 stop/retry 연동)
 - [x] 중단/재시도/다시 만들기
 - [x] 제작 보관/복원 (archived + previousStatus)
 - [x] 제작 삭제 (진행중 차단)
@@ -187,6 +187,7 @@ PRODUCTION_TIMEOUT_MINUTES=5  # 현재 테스트용 30
 |------|------|
 | 제작 트리거 | 백엔드 → `N8N_WEBHOOK_BASE/{webhookPath}` POST |
 | 상태 콜백 | n8n → `백엔드/api/productions/callback` POST (인증 없음, executionId 포함) |
+| 실행 중단 | 백엔드 → n8n `POST /api/v1/executions/{id}/stop` |
 | 실행 재시도 | 백엔드 → n8n `POST /api/v1/executions/{id}/retry` |
 | 워크플로우 조회 | 백엔드 → n8n REST API GET |
 | 실행 이력 | 백엔드 → n8n `/api/v1/executions` GET |

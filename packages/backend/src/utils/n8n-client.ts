@@ -71,6 +71,10 @@ export const n8nClient = {
     return n8nFetch(`executions/${id}/retry`, { method: 'POST' });
   },
 
+  async stopExecution(id: string): Promise<unknown> {
+    return n8nFetch(`executions/${id}/stop`, { method: 'POST' });
+  },
+
   async triggerWebhook(webhookPath: string, data?: Record<string, unknown>): Promise<unknown> {
     const url = `${config.n8n.webhookBase}/${webhookPath}`;
     const res = await fetch(url, {

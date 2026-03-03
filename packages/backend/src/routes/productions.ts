@@ -251,6 +251,16 @@ export async function productionRoutes(app: FastifyInstance) {
       return reply.status(400).send({ success: false, message: '이미 완료/실패/정지/보관된 제작 건입니다.' });
     }
 
+    // 정지 요청 시 n8n 실행도 중단
+    if (status === 'paused' && production.n8nExecutionId) {
+      try {
+        await n8nClient.stopExecution(production.n8nExecutionId);
+        logger.info({ productionId: id, executionId: production.n8nExecutionId }, 'n8n execution stopped');
+      } catch (err) {
+        logger.warn({ productionId: id, error: err }, 'Failed to stop n8n execution (may already be finished)');
+      }
+    }
+
     const newStatus = status as ProductionStatus;
     const updated = await prisma.production.update({
       where: { id },
@@ -399,7 +409,44 @@ export async function productionRoutes(app: FastifyInstance) {
     return { success: true, data: production };
   });
 
-  // Retry failed production via n8n execution retry API
+  // Stop production — pause DB + stop n8n execution
+  app.post('/api/productions/:id/stop', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    const production = await prisma.production.findUnique({ where: { id } });
+
+    if (!production) {
+      return reply.status(404).send({ success: false, message: '제작 건을 찾을 수 없습니다.' });
+    }
+
+    if (['completed', 'failed', 'paused', 'archived'].includes(production.status)) {
+      return reply.status(400).send({ success: false, message: '이미 완료/실패/정지/보관된 제작 건입니다.' });
+    }
+
+    // n8n 실행 중단
+    if (production.n8nExecutionId) {
+      try {
+        await n8nClient.stopExecution(production.n8nExecutionId);
+        logger.info({ productionId: id, executionId: production.n8nExecutionId }, 'n8n execution stopped');
+      } catch (err) {
+        logger.warn({ productionId: id, error: err }, 'Failed to stop n8n execution (may already be finished)');
+      }
+    }
+
+    const updated = await prisma.production.update({
+      where: { id },
+      data: { status: 'paused' },
+      include: { workflow: true, channel: true },
+    });
+
+    logger.info({ productionId: id }, 'Production stopped and paused');
+
+    return { success: true, data: updated };
+  });
+
+  // Retry failed/paused production via n8n execution retry API
   app.post('/api/productions/:id/retry', {
     preHandler: [app.authenticate],
   }, async (request, reply) => {
@@ -414,8 +461,8 @@ export async function productionRoutes(app: FastifyInstance) {
       return reply.status(404).send({ success: false, message: '제작 건을 찾을 수 없습니다.' });
     }
 
-    if (production.status !== 'failed') {
-      return reply.status(400).send({ success: false, message: '실패한 제작 건만 재시도할 수 있습니다.' });
+    if (production.status !== 'failed' && production.status !== 'paused') {
+      return reply.status(400).send({ success: false, message: '실패하거나 정지된 제작 건만 재시도할 수 있습니다.' });
     }
 
     if (!production.n8nExecutionId) {

@@ -34,6 +34,7 @@ export default function ProductionDetailClient() {
   const production = data?.data;
   const [retrying, setRetrying] = useState(false);
   const [retryingFromError, setRetryingFromError] = useState(false);
+  const [resuming, setResuming] = useState(false);
   const [aborting, setAborting] = useState(false);
   const [pausing, setPausing] = useState(false);
 
@@ -63,13 +64,13 @@ export default function ProductionDetailClient() {
   };
 
   const handlePause = async () => {
-    if (!confirm('제작을 정지하시겠습니까?\nn8n에서 이미 실행 중인 작업은 계속 진행되지만, 이후 콜백은 무시됩니다.')) return;
+    if (!confirm('제작을 정지하시겠습니까?\nn8n 실행도 함께 중단됩니다.')) return;
     setPausing(true);
     try {
-      await api.patch(`/api/productions/${id}`, { status: 'paused' });
+      await api.post(`/api/productions/${id}/stop`);
       refetch();
-    } catch {
-      // noop
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '정지 실패');
     } finally {
       setPausing(false);
     }
@@ -91,6 +92,20 @@ export default function ProductionDetailClient() {
       // noop
     } finally {
       setRetrying(false);
+    }
+  };
+
+  const handleResume = async () => {
+    if (!production) return;
+    if (!confirm('정지된 지점부터 이어서 진행하시겠습니까?')) return;
+    setResuming(true);
+    try {
+      await api.post(`/api/productions/${id}/retry`);
+      refetch();
+    } catch (err) {
+      alert(err instanceof Error ? err.message : '이어서 하기 실패');
+    } finally {
+      setResuming(false);
     }
   };
 
@@ -236,12 +251,25 @@ export default function ProductionDetailClient() {
                   <Pause className="h-12 w-12 mx-auto mb-4 text-amber-400" />
                   <h3 className="text-lg font-medium text-amber-700 mb-2">제작 정지됨</h3>
                   <p className="text-sm text-amber-600 mb-4">
-                    이 제작은 정지된 상태입니다.
+                    n8n 실행이 중단된 상태입니다.
                   </p>
-                  <Button onClick={handleRetry} disabled={retrying} variant="outline">
-                    <Play className={`h-4 w-4 mr-2`} />
-                    {retrying ? '생성 중...' : '이어서 새 제작'}
-                  </Button>
+                  <div className="flex flex-col gap-2">
+                    {production.n8nExecutionId && (
+                      <Button
+                        onClick={handleResume}
+                        disabled={resuming || retrying}
+                        variant="default"
+                        className="w-full"
+                      >
+                        <Play className="h-4 w-4 mr-2" />
+                        {resuming ? '재시작 중...' : '이어서 하기'}
+                      </Button>
+                    )}
+                    <Button onClick={handleRetry} disabled={retrying || resuming} variant="outline" className="w-full">
+                      <Copy className="h-4 w-4 mr-2" />
+                      {retrying ? '생성 중...' : '처음부터 다시 만들기'}
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             ) : (
