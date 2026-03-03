@@ -8,8 +8,8 @@
 - **워크플로우 ID:** `x6xTzHJ9WbUc94ec`
 - **n8n 서버:** `https://n8n.srv1345711.hstgr.cloud`
 - **워크플로우 상태:** Active (40 노드)
-- **최신 커밋:** `8d16a4e` HANDOFF.md 업데이트
-- **웹앱 배포:** 2026-03-04 완료 (executionId 매핑 코드 반영)
+- **최신 커밋:** `505597b` HANDOFF.md 업데이트 (executionId 매핑 배포 기록)
+- **웹앱 배포:** 2026-03-04 완료 (executionId 매핑 → n8nExecutionId 정상 저장 확인)
 
 ## 최근 작업 요약 (2026-03-02~03)
 
@@ -47,7 +47,17 @@
 - **원인:** n8n은 `executionId`를 콜백 body에 이미 포함 중이었으나, 웹앱 콜백 API의 executionId 매핑 코드(`8d8769e`)가 마지막 n8n 실행 이후에 커밋됨
 - **해결:** 코드 변경 없이 웹앱 백엔드 VPS 재배포 (`deploy/deploy.sh`)
 - **배포 확인:** PM2 `n8n-web-backend` online (PID: 303072)
-- **검증 필요:** 다음 n8n 실행 시 DB에서 `n8n_execution_id` 컬럼 값 확인
+- **검증 완료:** 실행 #1280에서 `n8nExecutionId: "1280"` 정상 저장 확인
+
+### 7. 주제 파싱 금지어 조기 검증 추가 (2026-03-04)
+- **문제:** 실행 #1280에서 "콘텐츠 파싱 실패" 5초 에러
+- **원인:** AI 주제 생성이 카테고리 4(방송존)인데 "200만원 증발된 억울함" 주제 생성 → 콘텐츠 파싱 TOPIC_CONFLICT에서 "증발" 금지어 감지
+- **근본 원인:** 주제 파싱에 금지어 검증 없이 통과 → 불필요한 AI 콘텐츠 생성 호출
+- **수정:** 주제 파싱 노드에 2단계 조기 검증 추가
+  - NEGATIVE_BLOCKLIST: 비-먹튀 카테고리(2~5)에서 부정 키워드 금지 (topic 텍스트 대상)
+  - TOPIC_CONFLICT: subtopic-topic 충돌 검증 (콘텐츠 파싱과 동일 규칙)
+- **효과:** AI 콘텐츠 생성 호출 전에 차단 → Gemini API 비용 절감 + 빠른 실패
+- **서버 반영:** n8n API PUT 업로드 완료 (top-level + activeVersion 양쪽)
 
 ## 에러 핸들링 커버리지
 
