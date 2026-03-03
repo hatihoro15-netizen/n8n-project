@@ -1175,7 +1175,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * 스크립트 콜백 준비 (script_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\n// Webhook 우선\ntry {\n  const wh = $('Webhook').first().json;\n  productionId = (wh.body && wh.body.productionId) || wh.productionId || '';\n} catch (_) {}\n// Execute Workflow Trigger 폴백\nif (!productionId) {\n  try {\n    const triggerData = $('Execute Workflow Trigger').first().json;\n    productionId = triggerData.productionId || '';\n  } catch (_) {}\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'script_ready' } }];"
+        "jsCode": "/**\n * 스크립트 콜백 준비 (script_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\n// Webhook 우선\ntry {\n  const wh = $('Webhook').first().json;\n  productionId = (wh.body && wh.body.productionId) || wh.productionId || '';\n} catch (_) {}\n// Execute Workflow Trigger 폴백\nif (!productionId) {\n  try {\n    const triggerData = $('Execute Workflow Trigger').first().json;\n    productionId = triggerData.productionId || '';\n  } catch (_) {}\n}\nif (!productionId) return [{ json: { skipped: true, status: 'no_productionId' } }];\nreturn [{ json: { productionId, status: 'script_ready' } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1209,7 +1209,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * 이미지 콜백 준비 (images_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\n// Webhook 우선\ntry {\n  const wh = $('Webhook').first().json;\n  productionId = (wh.body && wh.body.productionId) || wh.productionId || '';\n} catch (_) {}\n// Execute Workflow Trigger 폴백\nif (!productionId) {\n  try {\n    const triggerData = $('Execute Workflow Trigger').first().json;\n    productionId = triggerData.productionId || '';\n  } catch (_) {}\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'images_ready' } }];"
+        "jsCode": "/**\n * 이미지 콜백 준비 (images_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\n// Webhook 우선\ntry {\n  const wh = $('Webhook').first().json;\n  productionId = (wh.body && wh.body.productionId) || wh.productionId || '';\n} catch (_) {}\n// Execute Workflow Trigger 폴백\nif (!productionId) {\n  try {\n    const triggerData = $('Execute Workflow Trigger').first().json;\n    productionId = triggerData.productionId || '';\n  } catch (_) {}\n}\nif (!productionId) return [{ json: { skipped: true, status: 'no_productionId' } }];\nreturn [{ json: { productionId, status: 'images_ready' } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1243,7 +1243,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * 영상 콜백 준비 (videos_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\n// Webhook 우선\ntry {\n  const wh = $('Webhook').first().json;\n  productionId = (wh.body && wh.body.productionId) || wh.productionId || '';\n} catch (_) {}\n// Execute Workflow Trigger 폴백\nif (!productionId) {\n  try {\n    const triggerData = $('Execute Workflow Trigger').first().json;\n    productionId = triggerData.productionId || '';\n  } catch (_) {}\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'videos_ready' } }];"
+        "jsCode": "/**\n * 영상 콜백 준비 (videos_ready)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\n// Webhook 우선\ntry {\n  const wh = $('Webhook').first().json;\n  productionId = (wh.body && wh.body.productionId) || wh.productionId || '';\n} catch (_) {}\n// Execute Workflow Trigger 폴백\nif (!productionId) {\n  try {\n    const triggerData = $('Execute Workflow Trigger').first().json;\n    productionId = triggerData.productionId || '';\n  } catch (_) {}\n}\nif (!productionId) return [{ json: { skipped: true, status: 'no_productionId' } }];\nreturn [{ json: { productionId, status: 'videos_ready' } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1277,7 +1277,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * 렌더링 콜백 준비 (rendering)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\n// Webhook 우선\ntry {\n  const wh = $('Webhook').first().json;\n  productionId = (wh.body && wh.body.productionId) || wh.productionId || '';\n} catch (_) {}\n// Execute Workflow Trigger 폴백\nif (!productionId) {\n  try {\n    const triggerData = $('Execute Workflow Trigger').first().json;\n    productionId = triggerData.productionId || '';\n  } catch (_) {}\n}\nif (!productionId) return [];\nreturn [{ json: { productionId, status: 'rendering' } }];"
+        "jsCode": "/**\n * 렌더링 콜백 준비 (rendering)\n * 수동 실행이면 빈 배열 반환\n */\nlet productionId = '';\n// Webhook 우선\ntry {\n  const wh = $('Webhook').first().json;\n  productionId = (wh.body && wh.body.productionId) || wh.productionId || '';\n} catch (_) {}\n// Execute Workflow Trigger 폴백\nif (!productionId) {\n  try {\n    const triggerData = $('Execute Workflow Trigger').first().json;\n    productionId = triggerData.productionId || '';\n  } catch (_) {}\n}\nif (!productionId) return [{ json: { skipped: true, status: 'no_productionId' } }];\nreturn [{ json: { productionId, status: 'rendering' } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1376,7 +1376,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/**\n * 실패 콜백 준비\n * NCA 영상 제작 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\n// Webhook 우선\ntry {\n  const wh = $('Webhook').first().json;\n  productionId = (wh.body && wh.body.productionId) || wh.productionId || '';\n} catch (_) {}\n// Execute Workflow Trigger 폴백\nif (!productionId) {\n  try {\n    const triggerData = $('Execute Workflow Trigger').first().json;\n    productionId = triggerData.productionId || '';\n  } catch (_) {}\n}\nskipCallback = !productionId;\n\nif (skipCallback) {\n  return [];\n}\n\nconst input = $input.first().json;\nconst errorMessage = (input.error && input.error.message) || input.message || '[NCA 영상 제작]: ' + ((input.error && input.error.message) || input.message || '알 수 없는 에러');\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
+        "jsCode": "/**\n * 실패 콜백 준비\n * NCA 영상 제작 에러 출력에서 productionId + 에러 메시지 추출\n * 수동 실행이면 콜백 없이 빈 배열 반환\n */\nlet productionId = '';\nlet skipCallback = true;\n\n// Webhook 우선\ntry {\n  const wh = $('Webhook').first().json;\n  productionId = (wh.body && wh.body.productionId) || wh.productionId || '';\n} catch (_) {}\n// Execute Workflow Trigger 폴백\nif (!productionId) {\n  try {\n    const triggerData = $('Execute Workflow Trigger').first().json;\n    productionId = triggerData.productionId || '';\n  } catch (_) {}\n}\nskipCallback = !productionId;\n\nif (skipCallback) {\n  return [{ json: { skipped: true, status: 'no_productionId' } }];\n}\n\nconst input = $input.first().json;\nconst errorMessage = (input.error && input.error.message) || input.message || '[NCA 영상 제작]: ' + ((input.error && input.error.message) || input.message || '알 수 없는 에러');\n\nreturn [{\n  json: {\n    productionId,\n    status: 'failed',\n    errorMessage\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -1405,7 +1405,8 @@
         2400
       ],
       "id": "c2fa5b91-0932-46a3-8b52-3d8cfd31b074",
-      "name": "실패 콜백"
+      "name": "실패 콜백",
+      "onError": "continueRegularOutput"
     },
     {
       "parameters": {
