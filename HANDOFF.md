@@ -51,6 +51,17 @@
 - 실패 콜백 HTTP 노드: onError=continueRegularOutput 추가
 - 대상: Jay+Mike, 할머니+Mike
 
+### 7. NCA 영상 제작 body 전송 방식 수정 (`e9334f8`)
+- `specifyBody: "json"` → `specifyBody: "string"` 변경 (n8n 이중 JSON 파싱 방지)
+- `jsonBody` → `body` 키 변경
+- `Content-Type: application/json` 헤더 명시적 추가
+- 대상: Jay+Mike, 할머니+Mike
+
+### 8. 노드 위치 재배치 (`c276fc1`, `0e74e34`)
+- 3개 워크플로우 전체 노드 레이아웃 정리 (단계별 그리드 배치)
+- n8n 서버에서 최신 JSON 동기화
+- 대상: 3개 워크플로우 전부
+
 ## 테스트 결과
 
 ### 실행 1235 (할머니+Mike, 수동 실행)
@@ -72,6 +83,13 @@
 | 렌더링 콜백 | OK | test-callback-verify-002 | rendering |
 | 실패 콜백 | OK | test-callback-verify-002 | failed |
 
+### 실행 1247 (할머니+Mike, NCA 수정 테스트)
+- NCA body 전송 방식 수정 후 테스트
+- 영상 3개 모두 성공
+- NCA 데이터 준비에서 "영상4 URL 없음 - 3세그먼트(24초) 필수" 에러 발생
+- NCA 영상 제작 노드는 도달하지 못함 (데이터 준비 단계 실패)
+- **기존 NCA 로직 이슈** (body 수정과 무관)
+
 ## 알려진 이슈
 
 ### Google Sheets OAuth 토큰 만료
@@ -83,6 +101,11 @@
 - Veo3가 직접 음성 생성하는 구조라 TTS 미사용 → 의도된 것일 수 있음
 - 필요 시 추가 검토
 
+### NCA 데이터 준비 "영상4 URL 없음" 에러
+- 실행 1247에서 발생: "영상4 URL 없음 - 3세그먼트(24초) 필수"
+- NCA 데이터 준비 코드가 영상 4개를 기대하지만 3개만 존재
+- **조사/수정 필요**
+
 ### n8n 병렬 분기 제한
 - n8n은 wait/polling 노드가 있는 경로에서 이전 노드의 병렬 side branch를 실행하지 않음
 - 중간 콜백은 반드시 메인 파이프라인에 직렬로 삽입해야 함
@@ -92,6 +115,7 @@
 - Jay+Mike/할머니+Mike는 v86.4 적용 (실패체크가 "1회 재시도 → throw" 패턴)
 - v86.6 + 재시도 버그 수정은 3개 모두 적용됨
 - 콜백 수동실행 호환은 Jay+Mike, 할머니+Mike만 적용 (흑형스포츠 미적용)
+- NCA body 수정은 Jay+Mike, 할머니+Mike만 적용 (흑형스포츠 미적용)
 
 ## 인프라 참고
 - n8n URL: `https://n8n.srv1345711.hstgr.cloud`
