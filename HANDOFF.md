@@ -143,6 +143,10 @@ videos_ready → rendering → uploading → completed
 - [x] CORS PATCH 메서드 지원
 - [x] DELETE 빈 body Content-Type 수정
 
+### 보안
+- [x] CORS 도메인 제한 (`CORS_ORIGIN` → 프론트엔드 도메인만 허용, `*` 금지)
+- [x] admin 기본 비밀번호 변경 (changeme → 강력한 랜덤 비밀번호)
+
 ### Phase 3: 프롬프트 + 캐릭터 (부분)
 - [x] 프롬프트 CRUD API
 - [x] 캐릭터 CRUD API
@@ -169,9 +173,9 @@ JWT_SECRET="..."
 N8N_BASE_URL="https://n8n.srv1345711.hstgr.cloud"
 N8N_API_KEY="eyJhbGci..."
 N8N_WEBHOOK_BASE="https://n8n.srv1345711.hstgr.cloud/webhook"
-CORS_ORIGIN="https://프론트도메인"
+CORS_ORIGIN="https://n8n-project-9lj.pages.dev"  # 프론트 도메인만 허용 (절대 * 금지)
 ADMIN_USERNAME="admin"
-ADMIN_PASSWORD="..."
+ADMIN_PASSWORD="..."  # VPS .env에서 직접 확인 (절대 코드에 하드코딩 금지)
 PRODUCTION_TIMEOUT_MINUTES=5  # 현재 테스트용 30
 ```
 
@@ -194,6 +198,12 @@ PRODUCTION_TIMEOUT_MINUTES=5  # 현재 테스트용 30
   "errorMessage": "에러 시"
 }
 ```
+
+## 보안 주의사항
+
+1. **CORS**: `CORS_ORIGIN`은 반드시 프론트엔드 도메인(`https://n8n-project-9lj.pages.dev`)만 허용. `*` 절대 금지.
+2. **비밀번호**: `ADMIN_PASSWORD`는 VPS `.env`에만 존재. 코드/문서에 평문 기록 금지.
+3. **n8n 콜백**: `/api/productions/callback`은 인증 없음 — VPS Nginx에서 내부 IP만 허용하거나 별도 시크릿 토큰 추가 권장.
 
 ## 알려진 이슈
 

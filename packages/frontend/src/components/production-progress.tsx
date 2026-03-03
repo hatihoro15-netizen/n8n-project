@@ -51,11 +51,14 @@ export function ProductionProgress({ status, stepperType = 'tts_based', classNam
 
   const isFailed = status === 'failed';
   const isPaused = status === 'paused';
-  const isAllDone = status === 'completed';
+  const isArchived = status === 'archived';
+  const isAllDone = status === 'completed' || isArchived;
 
   // For failed/paused, find last known progress step
-  // Use the step order to determine where the marker should be
-  const currentIdx = orderMap[status] ?? -1;
+  // For archived, treat as all done (was completed/failed/paused before archiving)
+  const currentIdx = isArchived
+    ? steps.length - 1
+    : (orderMap[status] ?? -1);
 
   return (
     <div className={cn('flex items-center gap-1', className)}>
