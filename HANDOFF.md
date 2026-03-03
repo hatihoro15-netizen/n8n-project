@@ -8,7 +8,7 @@
 - **워크플로우 ID:** `x6xTzHJ9WbUc94ec`
 - **n8n 서버:** `https://n8n.srv1345711.hstgr.cloud`
 - **워크플로우 상태:** Active (40 노드)
-- **최신 커밋:** `f6c9608` 에러 핸들링 강화
+- **최신 커밋:** `fff8f3b` 콜백 HTTP body에 executionId 추가
 
 ## 최근 작업 요약 (2026-03-02~03)
 
@@ -36,6 +36,11 @@
 - 콘텐츠 파싱 / 주제 파싱에 `onError: continueErrorOutput` 추가
 - 전체 에러 경로 7개 → 모두 실패 콜백으로 연결
 
+### 5. 콜백 executionId 추가 (`fff8f3b`)
+- 모든 콜백 HTTP Request 노드(6개) body에 `executionId: $execution.id` 추가
+- 대상: 성공 콜백, 실패 콜백, 스크립트 콜백, TTS 콜백, 이미지 콜백, 렌더링 콜백
+- 웹앱에서 n8n 실행 ID로 디버깅 가능
+
 ## 에러 핸들링 커버리지
 
 | 에러 발생 노드 | 에러 준비 노드 | → 실패 콜백 |
@@ -52,6 +57,9 @@
 
 - **URL:** `POST https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback`
 - **상태 값:** `script_ready` → `tts_ready` → `images_ready` → `rendering` → `completed` / `failed`
+- **공통 필드:** `productionId`, `status`, `executionId` (n8n 실행 ID)
+- **성공 추가 필드:** `title`, `videoUrl`
+- **실패 추가 필드:** `errorMessage`
 - **Prisma enum:** `ProductionStatus`에 모든 값 정의됨
 - **주의:** 콜백 엔드포인트에 status 검증 로직 없음 (Prisma enum이 방어)
 
