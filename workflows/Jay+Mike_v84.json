@@ -21,8 +21,8 @@
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        -3504,
-        1600
+        -3200,
+        200
       ],
       "id": "a042c6b2-5d62-4716-8693-f5f558d46ce2",
       "name": "스케줄 트리거",
@@ -34,8 +34,8 @@
       "name": "When clicking ‘Execute workflow’",
       "type": "n8n-nodes-base.manualTrigger",
       "position": [
-        -3376,
-        1328
+        -3200,
+        600
       ],
       "typeVersion": 1
     },
@@ -61,8 +61,8 @@
       "type": "@n8n/n8n-nodes-langchain.googleGemini",
       "typeVersion": 1.1,
       "position": [
-        -2784,
-        1328
+        -2540,
+        600
       ],
       "id": "0f0b8cab-e649-4c60-afba-6991b2a30901",
       "name": "AI 콘텐츠 생성",
@@ -81,8 +81,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2432,
-        1328
+        -2280,
+        600
       ],
       "id": "debd624e-66b9-4443-8544-002d62bd2da6",
       "name": "콘텐츠 파싱"
@@ -185,8 +185,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        -2240,
-        1328
+        -1500,
+        600
       ],
       "id": "ad97017d-7051-4a32-a9d2-9ba6d5276e01",
       "name": "시트 기록",
@@ -204,8 +204,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1792,
-        1328
+        -980,
+        600
       ],
       "id": "624571a3-41be-44cb-a4cd-1b5f40b89fec",
       "name": "세그먼트 분리"
@@ -224,8 +224,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1344,
-        1328
+        -2800,
+        1100
       ],
       "id": "img-gen-001",
       "name": "이미지 생성",
@@ -244,8 +244,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1120,
-        1328
+        -2540,
+        1100
       ],
       "id": "img-wait-001",
       "name": "이미지 대기",
@@ -261,8 +261,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -896,
-        1328
+        -2280,
+        1100
       ],
       "id": "img-result-001",
       "name": "이미지 결과",
@@ -280,8 +280,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -912,
-        2176
+        -2280,
+        3400
       ],
       "id": "98d0499e-0f4e-43d0-a80d-f65128036951",
       "name": "NCA 데이터 준비"
@@ -313,8 +313,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -688,
-        2176
+        -1500,
+        3400
       ],
       "id": "c9c85671-3eb2-4fa5-a158-74cf8d4613fb",
       "name": "NCA 영상 제작",
@@ -327,8 +327,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -448,
-        2176
+        -1240,
+        3400
       ],
       "id": "0abbc265-f782-44cd-8a9a-6462e14753c8",
       "name": "NCA 제작 대기",
@@ -341,8 +341,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -224,
-        2176
+        -980,
+        3400
       ],
       "id": "7bf9dedf-711a-47f7-b00a-2980c09c9574",
       "name": "NCA 결과 처리"
@@ -436,8 +436,8 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        656,
-        2176
+        -2020,
+        3900
       ],
       "id": "9d065d63-6fbc-4c9e-9bf2-7b06ec695e4c",
       "name": "상태 업데이트",
@@ -455,8 +455,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2016,
-        1328
+        -1240,
+        600
       ],
       "id": "20787f47-c724-4ea1-bfbf-1243c574a1c7",
       "name": "참조 이미지 프롬프트"
@@ -468,8 +468,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -672,
-        1328
+        -2020,
+        1100
       ],
       "id": "nano_url_extract",
       "name": "이미지 URL 추출"
@@ -483,8 +483,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1568,
-        1328
+        -720,
+        600
       ]
     },
     {
@@ -496,8 +496,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2688,
-        1616
+        -2800,
+        1600
       ],
       "onError": "continueErrorOutput"
     },
@@ -517,8 +517,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -2464,
-        1616
+        -2540,
+        1600
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -537,8 +537,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -2144,
-        1616
+        -2280,
+        1600
       ],
       "webhookId": "c82dfe2d-8cd1-43b5-8407-b5fb5f3b82d7"
     },
@@ -554,8 +554,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1792,
-        1616
+        -2020,
+        1600
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -596,8 +596,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1392,
-        1616
+        -1500,
+        1600
       ]
     },
     {
@@ -609,8 +609,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1152,
-        1632
+        -2020,
+        1850
       ],
       "webhookId": "a13742be-e399-4a95-92ee-9b978949ef28"
     },
@@ -623,7 +623,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -896,
+        -1240,
         1600
       ]
     },
@@ -636,7 +636,7 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -672,
+        -980,
         1600
       ],
       "webhookId": "e836bbd9-d700-47f4-b59a-21c5959c1d30"
@@ -650,7 +650,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -432,
+        -720,
         1600
       ]
     },
@@ -663,8 +663,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2704,
-        1920
+        -2800,
+        2200
       ],
       "onError": "continueErrorOutput"
     },
@@ -684,8 +684,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -2480,
-        1920
+        -2540,
+        2200
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -704,8 +704,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -2256,
-        1920
+        -2280,
+        2200
       ],
       "webhookId": "d2407170-d76d-4dd5-9eef-9be53fde87d9"
     },
@@ -721,8 +721,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1808,
-        1920
+        -2020,
+        2200
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -763,8 +763,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1408,
-        1920
+        -1500,
+        2200
       ]
     },
     {
@@ -776,8 +776,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1152,
-        1936
+        -2020,
+        2450
       ],
       "webhookId": "f5b50b19-c70e-4206-95a7-5b63f8984d76"
     },
@@ -790,8 +790,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -912,
-        1904
+        -1240,
+        2200
       ]
     },
     {
@@ -803,8 +803,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -688,
-        1904
+        -980,
+        2200
       ],
       "webhookId": "3cd50ace-887f-4a96-a157-ce8b19e41d31"
     },
@@ -817,8 +817,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -448,
-        1904
+        -720,
+        2200
       ]
     },
     {
@@ -830,8 +830,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2704,
-        2192
+        -2800,
+        2800
       ],
       "onError": "continueErrorOutput"
     },
@@ -851,8 +851,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -2480,
-        2192
+        -2540,
+        2800
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -871,8 +871,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -2256,
-        2192
+        -2280,
+        2800
       ],
       "webhookId": "e249c3c0-0416-4e17-8865-73c8829ce2b3"
     },
@@ -888,8 +888,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.3,
       "position": [
-        -1808,
-        2192
+        -2020,
+        2800
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -930,8 +930,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1376,
-        2192
+        -1500,
+        2800
       ]
     },
     {
@@ -943,8 +943,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -1136,
-        2208
+        -2020,
+        3050
       ],
       "webhookId": "425f17f7-a44b-49c9-9b2b-90d6a61190fc"
     },
@@ -957,8 +957,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1568,
-        1616
+        -1760,
+        1600
       ]
     },
     {
@@ -970,8 +970,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1584,
-        1920
+        -1760,
+        2200
       ]
     },
     {
@@ -983,8 +983,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1584,
-        2192
+        -1760,
+        2800
       ]
     },
     {
@@ -1018,8 +1018,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -432,
-        1328
+        -1760,
+        1100
       ]
     },
     {
@@ -1031,8 +1031,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        -176,
-        1344
+        -1760,
+        1350
       ],
       "webhookId": "31e22254-2dba-4faa-8e40-a566c24ffc6e"
     },
@@ -1067,7 +1067,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -192,
+        -460,
         1600
       ]
     },
@@ -1080,8 +1080,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        64,
-        1616
+        -460,
+        1850
       ],
       "webhookId": "d958b8c2-2524-4e91-a0da-a1dd619289aa"
     },
@@ -1116,8 +1116,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -208,
-        1904
+        -460,
+        2200
       ]
     },
     {
@@ -1129,8 +1129,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        32,
-        1920
+        -460,
+        2450
       ],
       "webhookId": "90d602d6-1c87-43f8-bf90-ad3ef0cf1093"
     },
@@ -1141,8 +1141,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2976,
-        1328
+        -2800,
+        600
       ],
       "id": "jm-cat-select",
       "name": "카테고리 선택"
@@ -1152,8 +1152,8 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1,
       "position": [
-        -3152,
-        1136
+        -3200,
+        400
       ],
       "id": "ewt-jay-trigger-001",
       "name": "Execute Workflow Trigger"
@@ -1167,8 +1167,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -16,
-        2176
+        -2800,
+        3900
       ]
     },
     {
@@ -1180,8 +1180,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        208,
-        2176
+        -2540,
+        3900
       ],
       "webhookId": "916-convert-wait-hook"
     },
@@ -1194,8 +1194,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        432,
-        2176
+        -2280,
+        3900
       ]
     },
     {
@@ -1205,8 +1205,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2432,
-        1728
+        -2020,
+        600
       ],
       "id": "15565624-17dd-4c60-a709-1db3463c6578",
       "name": "스크립트 콜백 준비"
@@ -1225,8 +1225,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -2132,
-        1728
+        -1760,
+        600
       ],
       "id": "560ad041-799f-42f3-8c70-4bddbf00ad32",
       "name": "스크립트 콜백",
@@ -1239,8 +1239,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -432,
-        1728
+        -1500,
+        1100
       ],
       "id": "e972f713-4ab8-4605-b0b2-d2d1b28f08b3",
       "name": "이미지 콜백 준비"
@@ -1259,8 +1259,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -132,
-        1728
+        -1240,
+        1100
       ],
       "id": "aad0f8eb-8792-4c79-9943-ed9002e84ed9",
       "name": "이미지 콜백",
@@ -1273,8 +1273,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1376,
-        2592
+        -2800,
+        3400
       ],
       "id": "ad21bd0c-c766-4690-81f0-d14042696185",
       "name": "영상 콜백 준비"
@@ -1293,8 +1293,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -1076,
-        2592
+        -2540,
+        3400
       ],
       "id": "15f4fb09-adae-4449-9163-43e415673eb0",
       "name": "영상 콜백",
@@ -1307,8 +1307,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -912,
-        2576
+        -2020,
+        3400
       ],
       "id": "f79f5226-6af6-4202-bab0-a8d86f052acc",
       "name": "렌더링 콜백 준비"
@@ -1327,8 +1327,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -612,
-        2576
+        -1760,
+        3400
       ],
       "id": "536b78b3-2113-42fe-bd62-281df871b8b1",
       "name": "렌더링 콜백",
@@ -1341,8 +1341,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        956,
-        2176
+        -1760,
+        3900
       ],
       "id": "7594c924-6751-4ed1-a76c-19facfa4a8be",
       "name": "콜백 데이터 준비"
@@ -1373,8 +1373,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1256,
-        2176
+        -1500,
+        3900
       ],
       "id": "fec914ea-4bac-44f1-ae09-7a23ae17179c",
       "name": "콜백 필요?"
@@ -1393,8 +1393,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        1556,
-        2076
+        -1240,
+        3900
       ],
       "id": "6dbeac0b-be55-4d7a-9964-39ca2aa01e7f",
       "name": "성공 콜백"
@@ -1406,8 +1406,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -688,
-        2576
+        -1500,
+        3700
       ],
       "id": "b04bcbe5-3f68-4e54-b805-87d1815103b8",
       "name": "실패 콜백 준비"
@@ -1426,8 +1426,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        -388,
-        2576
+        -1240,
+        3700
       ],
       "id": "1bfd3085-47e7-4990-8163-2343d4fbb910",
       "name": "실패 콜백",
@@ -1440,8 +1440,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2784,
-        1728
+        -2540,
+        900
       ],
       "id": "114d3ac7-d68a-48ed-a820-c1373ba58172",
       "name": "AI 콘텐츠 에러 준비"
@@ -1453,8 +1453,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -1344,
-        1728
+        -2800,
+        1400
       ],
       "id": "d18fcb76-c2a3-4854-97f7-4e2699b6ea6c",
       "name": "이미지 생성 에러 준비"
@@ -1466,8 +1466,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2464,
-        2016
+        -2800,
+        1900
       ],
       "id": "686bf315-c459-4451-b021-24558656549e",
       "name": "영상1 에러 준비"
@@ -1479,8 +1479,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2480,
-        2320
+        -2800,
+        2500
       ],
       "id": "fdf34e66-74c2-488c-8f74-deb7c95031a5",
       "name": "영상2 에러 준비"
@@ -1492,8 +1492,8 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -2480,
-        2592
+        -2800,
+        3100
       ],
       "id": "61adc053-b919-4ca3-863c-fd7ae4cc8acc",
       "name": "영상3 에러 준비"
@@ -1508,8 +1508,8 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        -3152,
-        936
+        -3200,
+        200
       ],
       "id": "0d9e5ecf-cd5a-430f-9d2a-2e53b9ee7298",
       "name": "Webhook",
@@ -1541,8 +1541,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1092,
-        1716
+        -1500,
+        1850
       ],
       "id": "3f58acb2-0329-4e21-a4fc-d4dbd663162d",
       "name": "영상1 재생성판단"
@@ -1573,8 +1573,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1108,
-        2020
+        -1500,
+        2450
       ],
       "id": "e12e1171-87ec-4bf1-a93b-accca19be44b",
       "name": "영상2 재생성판단"
@@ -1605,8 +1605,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
       "position": [
-        -1076,
-        2292
+        -1500,
+        3050
       ],
       "id": "0b4bf2db-b7be-4532-8b7c-ff13f2fd1738",
       "name": "영상3 재생성판단"
