@@ -51,13 +51,20 @@
 - 실패 콜백 HTTP 노드: onError=continueRegularOutput 추가
 - 대상: Jay+Mike, 할머니+Mike
 
-### 7. NCA 영상 제작 body 전송 방식 수정 (`e9334f8`)
-- `specifyBody: "json"` → `specifyBody: "string"` 변경 (n8n 이중 JSON 파싱 방지)
-- `jsonBody` → `body` 키 변경
-- `Content-Type: application/json` 헤더 명시적 추가
+### 7. NCA 영상 제작 body 전송 방식 수정 (`e9334f8`, `6a6ef8b`)
+- 최초: `specifyBody: "json"` + `jsonBody: JSON.stringify($json.nca_payload)` → 이중 파싱 에러
+- 중간: `specifyBody: "string"` + `body` → `Missing JSON in request` 에러
+- 최종: `specifyBody: "json"` + `jsonBody: $('NCA 데이터 준비').first().json.nca_payload`
+- **근본 원인**: 중간 콜백 직렬 삽입으로 `$json` 데이터 체인 끊어짐 → 원본 노드 직접 참조로 해결
 - 대상: Jay+Mike, 할머니+Mike
 
-### 8. 노드 위치 재배치 (`c276fc1`, `0e74e34`)
+### 8. scenes 3개 초과 방지 + segmentCount 클램핑 (`b2590ed`, `75494ba`)
+- 콘텐츠 파싱: `data.scenes.slice(0, 3)` (AI가 4장면 생성해도 앞 3개만)
+- NCA 데이터 준비: `Math.min(segmentCount, 3)` (이중 안전장치)
+- "영상4 URL 없음" 에러 방지
+- 대상: 3개 워크플로우 전부
+
+### 9. 노드 위치 재배치 (`c276fc1`, `0e74e34`)
 - 3개 워크플로우 전체 노드 레이아웃 정리 (단계별 그리드 배치)
 - n8n 서버에서 최신 JSON 동기화
 - 대상: 3개 워크플로우 전부
@@ -101,10 +108,13 @@
 - Veo3가 직접 음성 생성하는 구조라 TTS 미사용 → 의도된 것일 수 있음
 - 필요 시 추가 검토
 
-### NCA 데이터 준비 "영상4 URL 없음" 에러
-- 실행 1247에서 발생: "영상4 URL 없음 - 3세그먼트(24초) 필수"
-- NCA 데이터 준비 코드가 영상 4개를 기대하지만 3개만 존재
-- **조사/수정 필요**
+### NCA 데이터 준비 "영상4 URL 없음" 에러 → 해결됨
+- scenes.slice(0,3) + Math.min(segmentCount,3) 적용으로 해결
+- 커밋: `b2590ed`, `75494ba`
+
+### 직렬 콜백 삽입 시 $json 데이터 체인 끊어짐 주의
+- 중간 콜백(HTTP Request)이 직렬로 삽입되면 이후 노드의 `$json`은 콜백 API 응답이 됨
+- 원본 데이터가 필요한 노드는 `$('원본노드').first().json.xxx`로 직접 참조해야 함
 
 ### n8n 병렬 분기 제한
 - n8n은 wait/polling 노드가 있는 경로에서 이전 노드의 병렬 side branch를 실행하지 않음
