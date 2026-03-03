@@ -1,6 +1,6 @@
 # HANDOFF - 온카 숏폼 v16 워크플로우
 
-> 마지막 업데이트: 2026-03-03
+> 마지막 업데이트: 2026-03-04
 
 ## 현재 상태
 
@@ -8,7 +8,8 @@
 - **워크플로우 ID:** `x6xTzHJ9WbUc94ec`
 - **n8n 서버:** `https://n8n.srv1345711.hstgr.cloud`
 - **워크플로우 상태:** Active (40 노드)
-- **최신 커밋:** `fff8f3b` 콜백 HTTP body에 executionId 추가
+- **최신 커밋:** `8d16a4e` HANDOFF.md 업데이트
+- **웹앱 배포:** 2026-03-04 완료 (executionId 매핑 코드 반영)
 
 ## 최근 작업 요약 (2026-03-02~03)
 
@@ -40,6 +41,13 @@
 - 모든 콜백 HTTP Request 노드(6개) body에 `executionId: $execution.id` 추가
 - 대상: 성공 콜백, 실패 콜백, 스크립트 콜백, TTS 콜백, 이미지 콜백, 렌더링 콜백
 - 웹앱에서 n8n 실행 ID로 디버깅 가능
+
+### 6. 웹앱 executionId 매핑 배포 (2026-03-04)
+- **문제:** 웹앱 DB의 모든 production에서 `n8n_execution_id`가 NULL
+- **원인:** n8n은 `executionId`를 콜백 body에 이미 포함 중이었으나, 웹앱 콜백 API의 executionId 매핑 코드(`8d8769e`)가 마지막 n8n 실행 이후에 커밋됨
+- **해결:** 코드 변경 없이 웹앱 백엔드 VPS 재배포 (`deploy/deploy.sh`)
+- **배포 확인:** PM2 `n8n-web-backend` online (PID: 303072)
+- **검증 필요:** 다음 n8n 실행 시 DB에서 `n8n_execution_id` 컬럼 값 확인
 
 ## 에러 핸들링 커버리지
 
