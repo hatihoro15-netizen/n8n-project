@@ -1,118 +1,81 @@
-# HANDOFF - 온카 숏폼 v16 워크플로우
+# HANDOFF.md — 현재 상태/진행상황 (항상 전체 Overwrite)
 
-> 마지막 업데이트: 2026-03-04
+## A) 상태 요약
+- **현재 프로젝트**: 온카스터디
+- **Current Status**: AI 주제 생성 프롬프트 강화 + 리트라이 로직 추가 완료 (42노드)
+- **Goal**: 숏폼 자동 생성 워크플로우 v16 안정화
+- **Current Mental Model**: Gemini가 프롬프트 강화 후에도 소재와 무관한 주제를 생성하는 문제가 남아 있음. 에러 핸들링/콜백/카운터 시스템은 안정화됨.
 
-## 현재 상태
+## B) 환경/의존성
+- **서버**: VPS 76.13.182.180 (Hostinger KVM1, Malaysia)
+- **Branch**: `feature/onca-shortform-v16`
+- **Environment**: Production (n8n self-hosted, queue-mode)
+- **n8n URL**: `https://n8n.srv1345711.hstgr.cloud`
+- **워크플로우 ID**: `x6xTzHJ9WbUc94ec`
+- **Runtime/Versions**: Node.js (n8n), Python 3.11 (백엔드), Gemini (AI), ElevenLabs (TTS), Kie.ai/fal.ai (영상), NCA Toolkit + FFmpeg (합성), MinIO (스토리지)
+- **Required Secrets**: N8N_API_KEY (값 기재 금지)
 
-- **브랜치:** `feature/onca-shortform-v16`
-- **워크플로우 ID:** `x6xTzHJ9WbUc94ec`
-- **n8n 서버:** `https://n8n.srv1345711.hstgr.cloud`
-- **워크플로우 상태:** Active (42 노드)
-- **최신 커밋:** `609b7ff` E2E 테스트 실패 분석 기록
-- **웹앱 배포:** 2026-03-04 완료 (executionId 매핑 → n8nExecutionId 정상 저장 확인)
+## C) 마지막 실행 기록 (필수)
+- **Last Run Command**: Webhook POST `/onca-shortform-v16` (웹앱 E2E 테스트)
+- **Result**: 실행 #1310 — category 1, subtopic "먹튀 제보와 검증 과정" → Gemini가 "스포츠 승무패 예측" 생성 (소재 무관) → 주제 파싱 통과 (category 1은 금지어 제외) → AI 콘텐츠 생성에서 에러 → 실패 경로 진행
+- **실행 위치**: VPS (n8n 서버)
 
-## 최근 작업 요약 (2026-03-02~03)
+## D) 완료/미완료
 
-### 1. 웹앱 연동: Webhook + 콜백 시스템 (`f1a620a`)
-- Webhook POST `/onca-shortform-v16` 추가 (responseMode: onReceived)
-- 성공 콜백: 상태 업데이트 → 콜백 데이터 준비 → 콜백 필요?(IF) → 성공 콜백
-- 실패 콜백: NCA 영상 제작 에러출력 → 실패 콜백 준비 → 실패 콜백
-- 수동 실행 시 콜백 스킵 (skipCallback 분기)
+### Done ✅
+- [x] Webhook + 콜백 시스템 구축 (`f1a620a`)
+  - Webhook POST `/onca-shortform-v16` (responseMode: onReceived)
+  - 성공/실패 콜백, 수동 실행 시 콜백 스킵 (skipCallback 분기)
+- [x] 중간 단계 콜백 4개 (`80b9965`)
+  - `script_ready`, `tts_ready`, `images_ready`, `rendering` (병렬 분기, 실패해도 메인 흐름 무관)
+- [x] v3 종합 패치 머지 (`d3c58d1`)
+  - 프롬프트 앵커 시스템 + 콘텐츠 검증 강화 + 사투리 + 밈 mood 매칭
+  - 머지 노드: 콘텐츠 파싱, 프롬프트 생성, AI 주제 생성, 주제 파싱, 카테고리 결정
+- [x] 에러 핸들링 7개 경로 완비 (`f6c9608`)
+  - AI 주제/주제 파싱/AI 콘텐츠/콘텐츠 파싱/TTS/이미지 검색/NCA 영상 제작
+  - 콘텐츠 파싱/주제 파싱에 `onError: continueErrorOutput` 추가
+- [x] 콜백 executionId 추가 (`fff8f3b`)
+  - 6개 콜백 HTTP Request 노드 body에 `executionId: $execution.id` 추가
+- [x] 웹앱 executionId 매핑 배포 (2026-03-04)
+  - 웹앱 백엔드 VPS 재배포 → PM2 `n8n-web-backend` online (PID: 303072)
+  - 실행 #1280에서 `n8nExecutionId: "1280"` 정상 저장 확인
+- [x] 주제 파싱 금지어 조기 검증 추가 (2026-03-04)
+  - NEGATIVE_BLOCKLIST + TOPIC_CONFLICT 2단계 조기 검증
+  - AI 콘텐츠 생성 전 차단 → Gemini API 비용 절감 + 빠른 실패
+- [x] 실패 시 카운터 고정 문제 수정 (2026-03-04)
+  - "실패 시트 기록" Google Sheets append 노드 추가
+  - 에러 준비 7개에 시트용 컬럼 추가 → 에러 경로에서 병렬 시트 기록
+  - 실패해도 카운터 진행 → 다음 카테고리로 넘어감
+- [x] AI 주제 생성 프롬프트 강화 + 리트라이 판단 노드 추가 (2026-03-04)
+  - subtopic 주입, 해당 카테고리 톤만 표시, 카테고리별 금지어 조건부 표시
+  - 리트라이 판단 Code 노드: 최대 2회 재시도 후 에러 경로
 
-### 2. 중간 단계 콜백 (`80b9965`)
-- 4개 병렬 분기로 메인 흐름에 지연 없음
-- `script_ready` (콘텐츠 파싱 후)
-- `tts_ready` (TTS 결과 처리 후)
-- `images_ready` (이미지 URL 추출 후)
-- `rendering` (NCA 데이터 준비 후)
-- HTTP 노드에 `onError: continueRegularOutput` (실패해도 메인 흐름 무관)
+### In Progress 🔧
+- [ ] Gemini 주제 생성 품질 개선 — 프롬프트 강화 후에도 소재와 무관한 주제 생성 (모델 한계)
+- [ ] 에러 준비 노드 `input.error` 문자열 타입 미처리 → "알 수 없는 에러" 폴백 문제
 
-### 3. v3 종합 패치 머지 (`d3c58d1`)
-- 프롬프트 앵커 시스템 + 콘텐츠 검증 강화 + 사투리 + 밈 mood 매칭
-- 패치 파일(20노드)에서 변경된 5개 노드 parameters만 34노드 파일에 머지
-- 머지된 노드: 콘텐츠 파싱, 프롬프트 생성, AI 주제 생성, 주제 파싱, 카테고리 결정
+### Next Actions ➡️ (우선순위 1~3)
+1. [ ] Gemini 주제 생성 개선: 프롬프트 추가 강화 또는 다른 모델 검토
+2. [ ] 에러 준비 노드 에러 메시지 추출 개선: `typeof input.error === 'string' ? input.error : (input.error?.message || ...)` 처리
+3. [ ] 콜백 API에 status 검증 로직 추가 (현재 Prisma enum만 방어)
 
-### 4. 에러 핸들링 강화 (`f6c9608`)
-- 서버 38노드 버전 동기화 (n8n 에디터에서 추가된 에러 준비 4개 포함)
-- 콘텐츠 파싱 / 주제 파싱에 `onError: continueErrorOutput` 추가
-- 전체 에러 경로 7개 → 모두 실패 콜백으로 연결
+## E) Blockers / Issues
+- **Blockers**: Gemini가 카테고리/소재와 무관한 주제를 반복 생성 (프롬프트 강화로도 미해결, 모델 한계 가능성)
+- **Known Issues**:
+  - Gemini API rate limit 시 AI 주제 생성 에러 (연속 webhook 실행 시, #1292에서 확인)
+  - 에러 준비 노드의 `input.error` 문자열 타입 미처리 → "알 수 없는 에러" 폴백
+  - 콜백 API에 status 검증 로직 없음 (Prisma enum만 방어)
+  - 가짜 productionId로 테스트 시 콜백 API에서 404/500 발생 (정상 동작)
+  - Webhook vs 수동 실행: 웹앱 E2E 연속 호출 시 rate limit 초과 가능 (#1292)
+- **롤백 필요 시**: n8n API로 백업 JSON Import, 워크플로우 ID `x6xTzHJ9WbUc94ec`
 
-### 5. 콜백 executionId 추가 (`fff8f3b`)
-- 모든 콜백 HTTP Request 노드(6개) body에 `executionId: $execution.id` 추가
-- 대상: 성공 콜백, 실패 콜백, 스크립트 콜백, TTS 콜백, 이미지 콜백, 렌더링 콜백
-- 웹앱에서 n8n 실행 ID로 디버깅 가능
+## F) 변경 파일
+- `onca-shortform-v16.json` — 메인 워크플로우 (42노드)
+- 웹앱 백엔드: 콜백 API executionId 매핑 (코드 변경 없이 재배포)
 
-### 6. 웹앱 executionId 매핑 배포 (2026-03-04)
-- **문제:** 웹앱 DB의 모든 production에서 `n8n_execution_id`가 NULL
-- **원인:** n8n은 `executionId`를 콜백 body에 이미 포함 중이었으나, 웹앱 콜백 API의 executionId 매핑 코드(`8d8769e`)가 마지막 n8n 실행 이후에 커밋됨
-- **해결:** 코드 변경 없이 웹앱 백엔드 VPS 재배포 (`deploy/deploy.sh`)
-- **배포 확인:** PM2 `n8n-web-backend` online (PID: 303072)
-- **검증 완료:** 실행 #1280에서 `n8nExecutionId: "1280"` 정상 저장 확인
+## G) 참고 정보
 
-### 7. 주제 파싱 금지어 조기 검증 추가 (2026-03-04)
-- **문제:** 실행 #1280에서 "콘텐츠 파싱 실패" 5초 에러
-- **원인:** AI 주제 생성이 카테고리 4(방송존)인데 "200만원 증발된 억울함" 주제 생성 → 콘텐츠 파싱 TOPIC_CONFLICT에서 "증발" 금지어 감지
-- **근본 원인:** 주제 파싱에 금지어 검증 없이 통과 → 불필요한 AI 콘텐츠 생성 호출
-- **수정:** 주제 파싱 노드에 2단계 조기 검증 추가
-  - NEGATIVE_BLOCKLIST: 비-먹튀 카테고리(2~5)에서 부정 키워드 금지 (topic 텍스트 대상)
-  - TOPIC_CONFLICT: subtopic-topic 충돌 검증 (콘텐츠 파싱과 동일 규칙)
-- **효과:** AI 콘텐츠 생성 호출 전에 차단 → Gemini API 비용 절감 + 빠른 실패
-- **서버 반영:** n8n API PUT 업로드 완료 (top-level + activeVersion 양쪽)
-
-### 8. E2E 테스트 2건 연속 실패 분석 (2026-03-04)
-- **실행 #1286:** topic 미입력 → AI가 "역대급 먹튀 사건" 생성 → 주제 파싱 NEGATIVE_BLOCKLIST "먹튀" 차단 (2초)
-- **실행 #1287:** topic "안녕" 입력 → AI가 "역대급 먹튀썰" 생성 → 동일 차단 (2초)
-- **조기 검증 효과 확인:** 콘텐츠 파싱까지 안 가고 주제 파싱에서 차단 → AI 콘텐츠 생성 비용 절감
-- **근본 원인:**
-  1. AI 주제 생성(Gemini)이 카테고리 4(방송존)인데 계속 먹튀/사기 주제 생성 (프롬프트 무시)
-  2. webhook의 topic 필드("안녕")가 AI 주제 생성에 전달/반영되지 않음
-  3. 3연속(#1280~#1287) 카테고리 4 고정 → 카운터 순환 확인 필요
-- **미해결:** AI 프롬프트 강화 또는 리트라이 로직 검토 필요
-
-### 9. 실패 시 카운터 고정 문제 수정 (2026-03-04)
-- **문제:** 카운터 = Google Sheets 행 수인데, 실패 시 시트 기록이 안 되어 같은 카테고리 무한 반복
-- **원인:** 에러 경로 7개가 모두 시트 기록 없이 실패 콜백으로 직통
-- **수정:**
-  - "실패 시트 기록" Google Sheets append 노드 1개 추가 (onError: continueRegularOutput)
-  - 에러 준비 노드 7개에 시트용 컬럼 추가 (Status: "실패", category, subtopic, generatedAt, Subject)
-  - 에러 준비 → [실패 콜백, 실패 시트 기록] 병렬 연결
-- **효과:** 실패해도 시트에 행 추가 → 카운터 진행 → 다음 카테고리로 넘어감
-- **서버 반영:** n8n API PUT 업로드 완료 (41 노드)
-
-### 10. Webhook vs 수동 실행 차이 분석 (2026-03-04)
-- **실행 #1292 (webhook):** AI 주제 생성에서 Gemini rate limit 에러 → AI 주제 에러 준비 → 실패 콜백 + 실패 시트 기록
-- **실행 #1285 (수동):** AI 주제 생성 정상 (980ms) → 주제 파싱 → 프롬프트 생성까지 진행
-- **에러 원인:** Gemini API rate limit (`"The service is receiving too many requests from you"`)
-- **webhook만 실패 이유:** 웹앱 E2E 테스트로 짧은 간격(수 초) 연속 호출 → rate limit 초과
-- **수동 정상 이유:** 실행 간 간격 충분하여 rate limit 미초과
-- **부수 이슈:** 에러 준비 노드가 `input.error`가 문자열일 때 메시지 추출 실패 → "알 수 없는 에러"로 폴백
-  - 수정 필요: `typeof input.error === 'string' ? input.error : (input.error?.message || ...)` 처리
-- **카운터:** 실패 시트 기록 정상 작동 확인 (2524ms)
-
-### 11. AI 주제 생성 프롬프트 강화 + 리트라이 로직 추가 (2026-03-04)
-- **문제:** Gemini가 카테고리/소재와 무관한 주제를 계속 생성 (예: 카테고리 4에서 "먹튀" 주제)
-- **수정 1: 프롬프트 강화**
-  - subtopic(소재) 필드를 프롬프트에 주입: `소재: '{{ $json.subtopic }}'`
-  - 해당 카테고리 톤만 표시 (n8n 삼항 표현식 사용)
-  - 카테고리별 금지어 조건부 표시: `{{ $json.category != 1 ? '...' : '' }}`
-  - 기존: 5개 카테고리 전부 나열 → 변경: 해당 카테고리만 + 소재 범위 제한
-- **수정 2: 리트라이 판단 노드 추가**
-  - `리트라이 판단` Code 노드 (n8n-nodes-base.code, typeVersion 2)
-  - 주제 파싱 검증 실패 시 최대 2회 재시도 후 에러 경로
-  - output[0] (retry) → AI 주제 생성 (루프백)
-  - output[1] (give up) → 주제 파싱 에러 준비
-  - `$('카테고리 결정').first().json.topicRetryCount`로 재시도 횟수 추적
-- **연결 변경:**
-  - 기존: 주제 파싱 error → 주제 파싱 에러 준비
-  - 변경: 주제 파싱 error → 리트라이 판단 → [AI 주제 생성 / 주제 파싱 에러 준비]
-- **테스트 (#1310):** category 1, subtopic "먹튀 제보와 검증 과정" 전달 확인
-  - Gemini가 "스포츠 승무패 예측" 생성 (여전히 무관한 주제)
-  - 주제 파싱 통과 (category 1은 금지어 제외 대상)
-  - AI 콘텐츠 생성에서 에러 → 실패 경로 진행
-- **서버 반영:** n8n API PUT 업로드 완료 (42 노드)
-- **미해결:** Gemini가 프롬프트 강화 후에도 소재와 무관한 주제 생성 (모델 한계)
-
-## 에러 핸들링 커버리지
+### 에러 핸들링 커버리지
 
 | 에러 발생 노드 | 에러 준비 노드 | → 실패 콜백 |
 |---|---|---|
@@ -124,17 +87,16 @@
 | 이미지 검색 | 이미지 검색 에러 준비 | → 실패 콜백 |
 | NCA 영상 제작 | 실패 콜백 준비 | → 실패 콜백 |
 
-## 콜백 API
+### 콜백 API
 
-- **URL:** `POST https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback`
-- **상태 값:** `script_ready` → `tts_ready` → `images_ready` → `rendering` → `completed` / `failed`
-- **공통 필드:** `productionId`, `status`, `executionId` (n8n 실행 ID)
-- **성공 추가 필드:** `title`, `videoUrl`
-- **실패 추가 필드:** `errorMessage`
-- **Prisma enum:** `ProductionStatus`에 모든 값 정의됨
-- **주의:** 콜백 엔드포인트에 status 검증 로직 없음 (Prisma enum이 방어)
+- **URL**: `POST https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/productions/callback`
+- **상태 값**: `script_ready` → `tts_ready` → `images_ready` → `rendering` → `completed` / `failed`
+- **공통 필드**: `productionId`, `status`, `executionId` (n8n 실행 ID)
+- **성공 추가 필드**: `title`, `videoUrl`
+- **실패 추가 필드**: `errorMessage`
+- **Prisma enum**: `ProductionStatus`에 모든 값 정의됨
 
-## 워크플로우 전체 흐름
+### 워크플로우 전체 흐름
 
 ```
 [Webhook POST]  ─┐
@@ -165,7 +127,7 @@
                                                                 성공콜백    (끝)
 ```
 
-## n8n API 참고
+### n8n API 참고
 
 ```bash
 # 워크플로우 조회
@@ -191,9 +153,5 @@ curl -s ".../api/v1/executions/{id}?includeData=true" \
   -H "X-N8N-API-KEY: $N8N_API_KEY"
 ```
 
-## 알려진 이슈
-
-- Gemini API rate limit 시 AI 주제 생성 에러 발생 (연속 webhook 실행 시 주의, #1292에서 확인됨)
-- 에러 준비 노드의 에러 메시지 추출이 `input.error` 문자열 타입 미처리 → "알 수 없는 에러"로 폴백
-- 콜백 API에 status 검증 로직 없음 (추가 권장)
-- 가짜 productionId로 테스트 시 콜백 API에서 404/500 발생 (정상 동작)
+## H) 다음 세션 시작용 메시지 (복붙)
+> 온카 숏폼 v16 워크플로우 (42노드). 에러 핸들링/콜백/카운터 시스템 안정화 완료. Gemini 주제 생성 품질 문제(소재 무관 주제 반복)가 미해결 blocker. 에러 준비 노드 input.error 문자열 처리도 미수정.
