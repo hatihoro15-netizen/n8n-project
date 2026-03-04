@@ -16,6 +16,13 @@
 | claude-tools/onca_shortform_v16.json | 원본 복사본 (이 폴더 내 참고용) |
 | claude-tools/onca_shortform_v16_capture.json | 캡처 기능 추가 작업본 |
 
+## n8n 워크플로우
+- **워크플로우 ID**: `9v1Qc84iI19lQCEx`
+- **워크플로우 이름**: [온카 스터디] 설명형 숏츠 - 캡처 v16
+- **n8n 서버**: https://n8n.srv1345711.hstgr.cloud
+- **상태**: 비활성 (테스트 후 수동 활성화)
+- **노드 수**: 45개
+
 ## 캡처 서비스
 - **엔드포인트**: POST http://76.13.182.180:3100/capture
 - **요청 형식**: `{ url, capture_mode, selector, style_mode, job_id, filename }`
@@ -33,6 +40,7 @@
 | 2026-03-04 | 캡처 결과 수집 → NCA 데이터 준비 connection 추가 | 완료 |
 | 2026-03-04 | capture_targets AI 생성 제거 → 고정 빈 배열로 변경 | 완료 |
 | 2026-03-04 | 캡처 타겟 분리 URL 테이블 추가 (13개 subtopic) | 완료 |
+| 2026-03-04 | n8n 서버 업로드 (워크플로우 ID: 9v1Qc84iI19lQCEx) | 완료 |
 
 ## 수정 내역 (캡처 파이프라인)
 
