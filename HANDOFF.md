@@ -136,6 +136,7 @@ videos_ready → rendering → uploading → completed
 - [x] 타임아웃 자동 실패 (크론잡, 기본 5분, 환경변수 조절)
 - [x] 스텝퍼 워크플로우 유형 분리 (tts_based / video_based)
 - [x] 스마트 타임아웃 (n8n 실행 상태 확인 후 판단 — running이면 연장, error/stopped면 실패, 콜백 미수신 감지)
+- [x] 능동 상태 동기화 (1분마다 진행중 건의 n8n 실행 상태를 API로 확인, 즉시 반영)
 - [x] 타임아웃 에러 시각 구분 (amber 색상 + 시계 아이콘)
 - [x] n8n 실행 Retry API 연동 (에러 지점부터 재시도)
 - [x] 제작 상세 폴링 (진행중 3초 간격, 완료/실패 시 중지)
