@@ -79,6 +79,16 @@
 - **효과:** 실패해도 시트에 행 추가 → 카운터 진행 → 다음 카테고리로 넘어감
 - **서버 반영:** n8n API PUT 업로드 완료 (41 노드)
 
+### 10. Webhook vs 수동 실행 차이 분석 (2026-03-04)
+- **실행 #1292 (webhook):** AI 주제 생성에서 Gemini rate limit 에러 → AI 주제 에러 준비 → 실패 콜백 + 실패 시트 기록
+- **실행 #1285 (수동):** AI 주제 생성 정상 (980ms) → 주제 파싱 → 프롬프트 생성까지 진행
+- **에러 원인:** Gemini API rate limit (`"The service is receiving too many requests from you"`)
+- **webhook만 실패 이유:** 웹앱 E2E 테스트로 짧은 간격(수 초) 연속 호출 → rate limit 초과
+- **수동 정상 이유:** 실행 간 간격 충분하여 rate limit 미초과
+- **부수 이슈:** 에러 준비 노드가 `input.error`가 문자열일 때 메시지 추출 실패 → "알 수 없는 에러"로 폴백
+  - 수정 필요: `typeof input.error === 'string' ? input.error : (input.error?.message || ...)` 처리
+- **카운터:** 실패 시트 기록 정상 작동 확인 (2524ms)
+
 ## 에러 핸들링 커버리지
 
 | 에러 발생 노드 | 에러 준비 노드 | → 실패 콜백 |
@@ -158,6 +168,7 @@ curl -s ".../api/v1/executions/{id}?includeData=true" \
 
 ## 알려진 이슈
 
-- Gemini API rate limit 시 AI 주제 생성 에러 발생 (동시 실행 주의)
+- Gemini API rate limit 시 AI 주제 생성 에러 발생 (연속 webhook 실행 시 주의, #1292에서 확인됨)
+- 에러 준비 노드의 에러 메시지 추출이 `input.error` 문자열 타입 미처리 → "알 수 없는 에러"로 폴백
 - 콜백 API에 status 검증 로직 없음 (추가 권장)
 - 가짜 productionId로 테스트 시 콜백 API에서 404/500 발생 (정상 동작)
