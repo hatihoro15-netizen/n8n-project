@@ -424,7 +424,7 @@
         "messages": {
           "values": [
             {
-              "content": "너는 '온카스터디' 커뮤니티의 YouTube Shorts 주제 기획자야.\n\n아래 5가지 카테고리 중 **{{ $json.category }}번 카테고리**에 해당하는 주제(topic) 1개를 생성해줘.\n반드시 {{ $json.category }}번 카테고리와 일치해야 하고, 다른 카테고리 키워드는 섞지 마.\n\n카테고리 요약\n1) 안전/먹튀검증 썰 (경고/분노/충격 가능)\n2) 무료 혜택/앱테크 (공짜/이득/꿀팁만, 손실/피해 톤 금지)\n3) 잭팟/후기 (대박/부러움/인증, 손실/피해 톤 금지)\n4) 방송 하이라이트 (재미/반전/현장감, 손실/피해 톤 금지)\n5) 스포츠/카지노 뉴스·분석 (이슈 1개만, 나열 금지)\n\n제목(Topic) 규칙\n- 20~40자, 클릭을 부르는 후킹 문장 1개\n- \"이거 실화냐/이거 가능해/이거 알아\" 같은 패턴 금지\n- \"/\" \"등\" \"그리고\" 같은 나열 표현 금지\n- topic 문장 안에 '온카스터디'를 자연스럽게 1회 포함\n\n카테고리별 추가 금지\n- 2~5번 카테고리: \"잃\", \"날리\", \"증발\", \"먹튀\", \"사기\", \"피해\" 같은 손실/범죄 톤 금지\n- 5번 카테고리: 축구/농구/야구를 동시에 언급하는 식의 종목 나열 금지(종목 1개, 이슈 1개만)\n\n출력 형식 (순수 JSON만, 코드블록 없이):\n- JSON 값 안에 쌍따옴표(\")나 줄바꿈 문자를 절대 넣지 마!\n{\"topic\": \"\"}"
+              "content": "너는 '온카스터디' 커뮤니티의 YouTube Shorts 주제 기획자야.\n\n**{{ $json.category }}번 카테고리**, 소재: '{{ $json.subtopic }}'\n\n이 소재 범위 안에서만 주제(topic) 1개를 만들어.\n소재와 무관한 키워드는 절대 넣지 마.\n\n카테고리별 톤 ({{ $json.category }}번만 참고)\n{{ $json.category == 1 ? '1) 안전/먹튀검증 썰 → 경고/분노/충격 가능' : $json.category == 2 ? '2) 무료 혜택/앱테크 → 공짜/이득/꿀팁만' : $json.category == 3 ? '3) 잭팟/후기 → 대박/부러움/인증만' : $json.category == 4 ? '4) 방송 하이라이트 → 재미/반전/현장감만' : '5) 스포츠/카지노 뉴스·분석 → 이슈 1개만' }}\n\n절대 금지:\n{{ $json.category != 1 ? '- \"먹튀\", \"사기\", \"잃\", \"날리\", \"증발\", \"피해\", \"털렸\" 같은 손실/범죄 단어 사용 금지' : '' }}\n{{ $json.category != 3 ? '- \"잭팟\", \"대박\", \"당첨\" 같은 잭팟 단어 사용 금지' : '' }}\n- 소재('{{ $json.subtopic }}')와 무관한 다른 카테고리 키워드 혼합 금지\n- \"이거 실화냐/이거 가능해/이거 알아\" 같은 패턴 금지\n- \"/\" \"등\" \"그리고\" 같은 나열 표현 금지\n\n제목(Topic) 규칙\n- 20~40자, 클릭을 부르는 후킹 문장 1개\n- topic 문장 안에 '온카스터디'를 자연스럽게 1회 포함\n\n출력 형식 (순수 JSON만, 코드블록 없이):\n- JSON 값 안에 쌍따옴표(\")나 줄바꿈 문자를 절대 넣지 마!\n{\"topic\": \"\"}"
             }
           ]
         },
@@ -869,6 +869,21 @@
         }
       },
       "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "/**\n * 리트라이 판단\n * 주제 파싱 검증 실패 시 최대 2회 재시도, 이후 에러 경로\n * @returns {Array} output[0]=retry, output[1]=give up\n */\nconst input = $input.first().json;\nconst catData = $('카테고리 결정').first().json;\nconst prevRetry = catData.topicRetryCount || 0;\nconst maxRetries = 2;\n\nif (prevRetry < maxRetries) {\n  // 재시도: 카테고리 결정 데이터를 다시 AI 주제 생성으로 전달\n  const retryData = {\n    category: catData.category,\n    outroFile: catData.outroFile,\n    outroCta: catData.outroCta,\n    subtopic: catData.subtopic,\n    outroDuration: catData.outroDuration,\n    sequenceInfo: catData.sequenceInfo,\n    topicRetryCount: prevRetry + 1\n  };\n  return [[{ json: retryData }], []];\n} else {\n  // 포기: 에러 데이터를 주제 파싱 에러 준비로 전달\n  return [[], [{ json: input }]];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1960,
+        460
+      ],
+      "id": "retry-judge-node-001",
+      "name": "리트라이 판단",
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -1126,7 +1141,7 @@
         ],
         [
           {
-            "node": "주제 파싱 에러 준비",
+            "node": "리트라이 판단",
             "type": "main",
             "index": 0
           }
@@ -1349,6 +1364,24 @@
           },
           {
             "node": "실패 시트 기록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "리트라이 판단": {
+      "main": [
+        [
+          {
+            "node": "AI 주제 생성",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "주제 파싱 에러 준비",
             "type": "main",
             "index": 0
           }
@@ -1852,7 +1885,7 @@
           "messages": {
             "values": [
               {
-                "content": "너는 '온카스터디' 커뮤니티의 YouTube Shorts 주제 기획자야.\n\n아래 5가지 카테고리 중 **{{ $json.category }}번 카테고리**에 해당하는 주제(topic) 1개를 생성해줘.\n반드시 {{ $json.category }}번 카테고리와 일치해야 하고, 다른 카테고리 키워드는 섞지 마.\n\n카테고리 요약\n1) 안전/먹튀검증 썰 (경고/분노/충격 가능)\n2) 무료 혜택/앱테크 (공짜/이득/꿀팁만, 손실/피해 톤 금지)\n3) 잭팟/후기 (대박/부러움/인증, 손실/피해 톤 금지)\n4) 방송 하이라이트 (재미/반전/현장감, 손실/피해 톤 금지)\n5) 스포츠/카지노 뉴스·분석 (이슈 1개만, 나열 금지)\n\n제목(Topic) 규칙\n- 20~40자, 클릭을 부르는 후킹 문장 1개\n- \"이거 실화냐/이거 가능해/이거 알아\" 같은 패턴 금지\n- \"/\" \"등\" \"그리고\" 같은 나열 표현 금지\n- topic 문장 안에 '온카스터디'를 자연스럽게 1회 포함\n\n카테고리별 추가 금지\n- 2~5번 카테고리: \"잃\", \"날리\", \"증발\", \"먹튀\", \"사기\", \"피해\" 같은 손실/범죄 톤 금지\n- 5번 카테고리: 축구/농구/야구를 동시에 언급하는 식의 종목 나열 금지(종목 1개, 이슈 1개만)\n\n출력 형식 (순수 JSON만, 코드블록 없이):\n- JSON 값 안에 쌍따옴표(\")나 줄바꿈 문자를 절대 넣지 마!\n{\"topic\": \"\"}"
+                "content": "너는 '온카스터디' 커뮤니티의 YouTube Shorts 주제 기획자야.\n\n**{{ $json.category }}번 카테고리**, 소재: '{{ $json.subtopic }}'\n\n이 소재 범위 안에서만 주제(topic) 1개를 만들어.\n소재와 무관한 키워드는 절대 넣지 마.\n\n카테고리별 톤 ({{ $json.category }}번만 참고)\n{{ $json.category == 1 ? '1) 안전/먹튀검증 썰 → 경고/분노/충격 가능' : $json.category == 2 ? '2) 무료 혜택/앱테크 → 공짜/이득/꿀팁만' : $json.category == 3 ? '3) 잭팟/후기 → 대박/부러움/인증만' : $json.category == 4 ? '4) 방송 하이라이트 → 재미/반전/현장감만' : '5) 스포츠/카지노 뉴스·분석 → 이슈 1개만' }}\n\n절대 금지:\n{{ $json.category != 1 ? '- \"먹튀\", \"사기\", \"잃\", \"날리\", \"증발\", \"피해\", \"털렸\" 같은 손실/범죄 단어 사용 금지' : '' }}\n{{ $json.category != 3 ? '- \"잭팟\", \"대박\", \"당첨\" 같은 잭팟 단어 사용 금지' : '' }}\n- 소재('{{ $json.subtopic }}')와 무관한 다른 카테고리 키워드 혼합 금지\n- \"이거 실화냐/이거 가능해/이거 알아\" 같은 패턴 금지\n- \"/\" \"등\" \"그리고\" 같은 나열 표현 금지\n\n제목(Topic) 규칙\n- 20~40자, 클릭을 부르는 후킹 문장 1개\n- topic 문장 안에 '온카스터디'를 자연스럽게 1회 포함\n\n출력 형식 (순수 JSON만, 코드블록 없이):\n- JSON 값 안에 쌍따옴표(\")나 줄바꿈 문자를 절대 넣지 마!\n{\"topic\": \"\"}"
               }
             ]
           },
@@ -2270,6 +2303,21 @@
           }
         },
         "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "/**\n * 리트라이 판단\n * 주제 파싱 검증 실패 시 최대 2회 재시도, 이후 에러 경로\n * @returns {Array} output[0]=retry, output[1]=give up\n */\nconst input = $input.first().json;\nconst catData = $('카테고리 결정').first().json;\nconst prevRetry = catData.topicRetryCount || 0;\nconst maxRetries = 2;\n\nif (prevRetry < maxRetries) {\n  // 재시도: 카테고리 결정 데이터를 다시 AI 주제 생성으로 전달\n  const retryData = {\n    category: catData.category,\n    outroFile: catData.outroFile,\n    outroCta: catData.outroCta,\n    subtopic: catData.subtopic,\n    outroDuration: catData.outroDuration,\n    sequenceInfo: catData.sequenceInfo,\n    topicRetryCount: prevRetry + 1\n  };\n  return [[{ json: retryData }], []];\n} else {\n  // 포기: 에러 데이터를 주제 파싱 에러 준비로 전달\n  return [[], [{ json: input }]];\n}"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1960,
+          460
+        ],
+        "id": "retry-judge-node-001",
+        "name": "리트라이 판단",
+        "onError": "continueRegularOutput"
       }
     ],
     "connections": {
@@ -2517,6 +2565,13 @@
               "type": "main",
               "index": 0
             }
+          ],
+          [
+            {
+              "node": "리트라이 판단",
+              "type": "main",
+              "index": 0
+            }
           ]
         ]
       },
@@ -2730,6 +2785,18 @@
               "index": 0
             }
           ]
+        ]
+      },
+      "리트라이 판단": {
+        "main": [
+          [
+            {
+              "node": "AI 주제 생성",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
         ]
       }
     },
