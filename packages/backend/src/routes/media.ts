@@ -127,9 +127,10 @@ export async function mediaRoutes(app: FastifyInstance) {
       return reply.status(501).send({ success: false, message: 'KIEAI_API_KEY not configured' });
     }
 
-    const { prompt, count = 1, ref_subject, ref_scene, ref_style } = request.body as {
+    const { prompt, count = 1, aspect_ratio, ref_subject, ref_scene, ref_style } = request.body as {
       prompt: string;
       count?: number;
+      aspect_ratio?: '9:16' | '16:9';
       ref_subject?: string;
       ref_scene?: string;
       ref_style?: string;
@@ -149,6 +150,7 @@ export async function mediaRoutes(app: FastifyInstance) {
           model: 'google/nano-banana-pro',
           input: {
             prompt: prompt.trim(),
+            ...(aspect_ratio ? { aspect_ratio } : {}),
             ...(ref_subject ? { subject_image_url: ref_subject } : {}),
             ...(ref_scene ? { scene_image_url: ref_scene } : {}),
             ...(ref_style ? { style_image_url: ref_style } : {}),
@@ -213,6 +215,41 @@ export async function mediaRoutes(app: FastifyInstance) {
     }
 
     return { success: true, data: { images: results } };
+  });
+
+  // Save external image to MinIO (download → re-upload)
+  app.post('/api/media/save-external', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { url } = request.body as { url: string };
+    if (!url) {
+      return reply.status(400).send({ success: false, message: 'url is required' });
+    }
+
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error(`Fetch failed: ${res.status}`);
+
+      const buf = Buffer.from(await res.arrayBuffer());
+      const contentType = res.headers.get('content-type') || 'image/png';
+      const ext = contentType.includes('jpeg') ? 'jpg' : contentType.includes('webp') ? 'webp' : 'png';
+      const key = `generated/${Date.now()}-${crypto.randomBytes(6).toString('hex')}.${ext}`;
+
+      await s3.send(new PutObjectCommand({
+        Bucket: config.minio.bucket,
+        Key: key,
+        Body: buf,
+        ContentType: contentType,
+      }));
+
+      const savedUrl = `${config.minio.endpoint}/${config.minio.bucket}/${key}`;
+      logger.info({ key, size: buf.length }, 'External image saved to MinIO');
+
+      return { success: true, data: { url: savedUrl } };
+    } catch (err) {
+      logger.error({ url, error: err }, 'Failed to save external image');
+      return reply.status(500).send({ success: false, message: 'Failed to save image' });
+    }
   });
 
   // Analyze image via Claude Vision

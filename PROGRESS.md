@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 전체 영상 제작 UI 개편 완료 + VPS 배포 완료
+- 현재 상태(1줄): 숏폼/롱폼 선택 UI 추가 완료 + VPS 배포 완료
 - 진행중 작업: n8n ao-produce E2E 테스트
-- 최근 완료: UI 개편 + VPS 배포
+- 최근 완료: 숏폼/롱폼 선택 UI + aspect_ratio 웹훅 payload
 - 주의사항: n8n ao-produce 웹훅 활성화 필요, PM2 프로세스명=n8n-web-backend
 
 ---
@@ -265,3 +265,18 @@
 - n8n ao-produce 웹훅 E2E 테스트
 ### Files / Links
 - VPS: /root/n8n-web (feature/web-app)
+
+## 2026-03-06 (13차)
+### Done
+- [x] 숏폼/롱폼 선택 UI 추가 (워크플로우 선택 아래, 제작 방식 위)
+- [x] 프론트 aspectRatio 상태 + 숏폼(9:16)/롱폼(16:9) 버튼
+- [x] 백엔드 aspect_ratio body 타입 + 웹훅 payload 전달
+- [x] VPS 배포 + PM2 재시작
+### Result
+- TypeScript + quality-check PASS
+- VPS PM2 online
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+### Files / Links
+- productions-client.tsx (aspectRatio 상태 + UI)
+- productions.ts (aspect_ratio 타입 + payload)

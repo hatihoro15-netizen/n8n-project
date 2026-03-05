@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Play,
   Tv,
+  Wand2,
   Workflow,
   Users,
   FileText,
@@ -20,6 +21,7 @@ import { useAuthStore } from '@/stores/auth';
 const navItems = [
   { href: '/', label: '대시보드', icon: LayoutDashboard },
   { href: '/productions', label: '제작 관리', icon: Play },
+  { href: '/images', label: '이미지 생성', icon: Wand2 },
   { href: '/channels', label: '채널 관리', icon: Tv },
   { href: '/workflows', label: '워크플로우', icon: Workflow },
   { href: '/characters', label: '캐릭터', icon: Users },
