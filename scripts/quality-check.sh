@@ -64,10 +64,13 @@ else
 fi
 
 # 6) Hardcoding scan
+# 워크플로우 JSON/생성스크립트(*.py)는 n8n 특성상 URL/IP 포함 가능 → 별도 관리
 echo "-- hardcoding scan --"
 while IFS= read -r -d '' f; do
   is_excluded "$f" && continue
   [[ "$f" == "$ROOT/docs/"* ]] && continue
+  [[ "$f" == *.json ]] && continue
+  [[ "$f" == *.py ]] && continue
   if grep -nE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' "$f" >/dev/null 2>&1; then
     echo "[FAIL] IP hardcoding suspected: $f"
     grep -nE '\b([0-9]{1,3}\.){3}[0-9]{1,3}\b' "$f" | head -n 3
