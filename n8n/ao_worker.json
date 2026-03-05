@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-05T11:31:06.537Z",
+  "updatedAt": "2026-03-05T11:38:28.914Z",
   "createdAt": "2026-03-05T10:52:54.255Z",
   "id": "FHYohZccExR24Uha",
   "name": "AO Worker",
@@ -166,7 +166,13 @@
       "position": [
         1568,
         144
-      ]
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "mr2FTmB2pmyvlbWK",
+          "name": "Claude API"
+        }
+      }
     },
     {
       "parameters": {
@@ -722,9 +728,9 @@
       }
     ]
   },
-  "versionId": "e10308b5-b4a9-49ae-b9f5-2daea9a7d04a",
-  "activeVersionId": "e10308b5-b4a9-49ae-b9f5-2daea9a7d04a",
-  "versionCounter": 13,
+  "versionId": "88d2f584-fa66-410e-a019-722fdbc740c3",
+  "activeVersionId": "88d2f584-fa66-410e-a019-722fdbc740c3",
+  "versionCounter": 18,
   "triggerCount": 1,
   "shared": [
     {
@@ -783,9 +789,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-05T11:31:06.539Z",
-    "createdAt": "2026-03-05T11:31:06.539Z",
-    "versionId": "e10308b5-b4a9-49ae-b9f5-2daea9a7d04a",
+    "updatedAt": "2026-03-05T11:38:28.915Z",
+    "createdAt": "2026-03-05T11:38:28.915Z",
+    "versionId": "88d2f584-fa66-410e-a019-722fdbc740c3",
     "workflowId": "FHYohZccExR24Uha",
     "nodes": [
       {
@@ -947,7 +953,13 @@
         "position": [
           1568,
           144
-        ]
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "mr2FTmB2pmyvlbWK",
+            "name": "Claude API"
+          }
+        }
       },
       {
         "parameters": {
@@ -1487,18 +1499,18 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-05T11:31:06.610Z",
-        "id": 712,
+        "createdAt": "2026-03-05T11:38:28.954Z",
+        "id": 714,
         "workflowId": "FHYohZccExR24Uha",
-        "versionId": "e10308b5-b4a9-49ae-b9f5-2daea9a7d04a",
+        "versionId": "88d2f584-fa66-410e-a019-722fdbc740c3",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       },
       {
-        "createdAt": "2026-03-05T11:31:17.830Z",
-        "id": 713,
+        "createdAt": "2026-03-05T11:38:38.300Z",
+        "id": 715,
         "workflowId": "FHYohZccExR24Uha",
-        "versionId": "e10308b5-b4a9-49ae-b9f5-2daea9a7d04a",
+        "versionId": "88d2f584-fa66-410e-a019-722fdbc740c3",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }
