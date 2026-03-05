@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): Step1 참조이미지(유/무+분석) + Step2 이미지/영상 분리 업로드 완료 + VPS 배포 완료
+- 현재 상태(1줄): 슬라이드쇼 UI 개편 완료 (20장 + 선택지 3가지) + VPS 배포 완료
 - 진행중 작업: n8n ao-produce E2E 테스트
-- 최근 완료: Step1/Step2 UI 개편 + ref_files[] 백엔드 지원
+- 최근 완료: 슬라이드쇼 UI (SlideshowSlotCard + use_mode/auto_prompt)
 - 주의사항: n8n ao-produce 웹훅 활성화 필요
 
 ---
@@ -214,3 +214,24 @@
 ### Files / Links
 - productions-client.tsx (Step1 refFiles + Step2 이미지/영상 분리)
 - productions.ts (ref_files[], prompt_p1 optional)
+
+## 2026-03-06 (10차)
+### Done
+- [x] 슬라이드쇼 UI 개편: "이미지 있어?/없어?" 선택
+- [x] 슬라이드쇼 이미지 업로드: 칸 3개 초기 → [+추가] 1칸씩 → 최대 20장
+- [x] 파일별 선택지 3가지: 직접 사용 / 새 이미지 생성 / 분석만 반영
+- [x] 분석만 반영 시 자동 프롬프트 표시 + 수정 가능
+- [x] 이미지 표시 시간 선택 제거 (나레이션 길이로 자동 결정)
+- [x] 슬라이드쇼 프롬프트 필수 입력
+- [x] SlideshowSlotCard 컴포넌트 추가
+- [x] 백엔드 files[] 타입에 use_mode, auto_prompt 추가
+- [x] 기존 영상화 UI 변경 없음
+- [x] VPS 배포 + PM2 재시작
+### Result
+- TypeScript + quality-check PASS
+- VPS PM2 online
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+### Files / Links
+- productions-client.tsx (슬라이드쇼 UI + SlideshowSlotCard)
+- productions.ts (files[] use_mode, auto_prompt)

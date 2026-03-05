@@ -7,7 +7,7 @@
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: Step1/Step2 UI 개편 완료 + VPS 배포 완료
+- **Current Status**: 슬라이드쇼 UI 개편 완료 (20장 + 선택지 3가지) + VPS 배포 완료
 - **Goal**: n8n ao-produce 웹훅 E2E 테스트
 
 ## B) 환경/의존성
@@ -21,20 +21,22 @@
   ```
   VPS: git pull + tsc + pm2 restart
   ```
-- **Result**: PASS - PM2 online
+- **Result**: PASS - PM2 online, quality-check PASS
 - **실행 위치**: VPS (SSH)
-- **Last Commit**: `d6274af feat: Step1 참조이미지 유/무+분석 + Step2 이미지/영상 분리 업로드`
+- **Last Commit**: `8426e53 feat: 슬라이드쇼 UI 개편 (20장 + 선택지 3가지)`
 
 ## D) 완료/미완료
 
 ### Done
-- [x] Step1: 참조 이미지 최대 5장, 유/무 토글, Vision 자동 분석, 선택적 프롬프트
-- [x] Step2: 이미지(max 5) / 영상(max 5) 분리 업로드 영역
-- [x] analyzeFileInState() 리팩토링 (ref/prod 타겟 분리)
-- [x] 백엔드 ref_files[] 지원 추가
-- [x] prompt_p1 선택적(optional)으로 변경
-- [x] 영상 제작 방식 선택: 영상화 (Kling AI) / 슬라이드쇼
-- [x] IP 하드코딩 → VPS_HOST 환경변수 전환
+- [x] 슬라이드쇼 UI: 이미지 있어?/없어? 선택
+- [x] 슬라이드쇼: 칸 3개 초기 → [+추가] 1칸씩 → 최대 20장
+- [x] 슬라이드쇼: 파일별 선택지 3가지 (직접 사용 / 새 이미지 생성 / 분석만 반영)
+- [x] 분석만 반영: 자동 프롬프트 표시 + 수정 가능 textarea
+- [x] 이미지 표시 시간 선택 제거 (나레이션 길이로 자동 결정)
+- [x] 프롬프트 필수 입력 (슬라이드쇼 모드)
+- [x] SlideshowSlotCard 컴포넌트 추가
+- [x] 백엔드 files[] 타입에 use_mode, auto_prompt 추가
+- [x] 기존 영상화 UI 변경 없음
 - [x] VPS 배포 + PM2 재시작
 
 ### Next Actions
@@ -47,8 +49,8 @@
 - **Known Issues**: 없음
 
 ## F) 변경 파일
-- productions-client.tsx (Step1 참조이미지 + Step2 이미지/영상 분리)
-- productions.ts (ref_files[] 지원, prompt_p1 optional)
+- productions-client.tsx (슬라이드쇼 UI + SlideshowSlotCard)
+- productions.ts (files[] use_mode, auto_prompt 타입 추가)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> Step1 참조이미지(유/무+분석) + Step2 이미지/영상 분리 업로드 완료. n8n ao-produce 웹훅 E2E 테스트 필요.
+> 슬라이드쇼 UI 개편 완료 (20장+선택지3가지). n8n ao-produce 웹훅 E2E 테스트 필요.
