@@ -386,6 +386,8 @@ function WhiskProductionForm() {
   const [category, setCategory] = useState('');
   const [clipDuration, setClipDuration] = useState<5 | 8>(5);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>('');
+  const [productionMode, setProductionMode] = useState<'ai_video' | 'slideshow'>('ai_video');
+  const [slideDuration, setSlideDuration] = useState<2 | 3 | 5>(3);
 
   // Form state
   const [submitting, setSubmitting] = useState(false);
@@ -572,7 +574,9 @@ function WhiskProductionForm() {
         topic: formTopic.trim() || undefined,
         keywords: keywords.trim() || undefined,
         category: category.trim() || undefined,
-        clip_duration: clipDuration,
+        production_mode: productionMode,
+        clip_duration: productionMode === 'ai_video' ? clipDuration : undefined,
+        slide_duration: productionMode === 'slideshow' ? slideDuration : undefined,
         files,
       };
 
@@ -740,25 +744,82 @@ function WhiskProductionForm() {
                 </select>
               </div>
 
-              {/* Clip duration + file count summary */}
-              <div className="flex items-center gap-4">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">클립 길이</h4>
-                  <div className="flex gap-2">
-                    {([5, 8] as const).map(d => (
-                      <Button
-                        key={d}
-                        type="button"
-                        variant={clipDuration === d ? 'default' : 'outline'}
-                        size="sm"
-                        onClick={() => setClipDuration(d)}
-                      >
-                        <Timer className="h-3.5 w-3.5 mr-1" />
-                        {d}초
-                      </Button>
-                    ))}
-                  </div>
+              {/* Production mode selector */}
+              <div>
+                <h4 className="text-sm font-medium mb-2">제작 방식</h4>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setProductionMode('ai_video')}
+                    className={`flex flex-col items-start gap-1 p-4 rounded-lg border-2 transition-colors text-left ${
+                      productionMode === 'ai_video'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-muted-foreground/20 hover:border-primary/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Film className="h-4 w-4" />
+                      <span className="text-sm font-medium">영상화 (Kling AI)</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">이미지를 AI가 분석해서 새 영상 생성</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setProductionMode('slideshow')}
+                    className={`flex flex-col items-start gap-1 p-4 rounded-lg border-2 transition-colors text-left ${
+                      productionMode === 'slideshow'
+                        ? 'border-primary bg-primary/5'
+                        : 'border-muted-foreground/20 hover:border-primary/40'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <ImageIcon className="h-4 w-4" />
+                      <span className="text-sm font-medium">슬라이드쇼</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">이미지 그대로 순서대로 이어붙이기</span>
+                  </button>
                 </div>
+              </div>
+
+              {/* Duration settings per mode */}
+              <div className="flex items-center gap-4">
+                {productionMode === 'ai_video' ? (
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">클립 길이</h4>
+                    <div className="flex gap-2">
+                      {([5, 8] as const).map(d => (
+                        <Button
+                          key={d}
+                          type="button"
+                          variant={clipDuration === d ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setClipDuration(d)}
+                        >
+                          <Timer className="h-3.5 w-3.5 mr-1" />
+                          {d}초
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <h4 className="text-sm font-medium mb-2">이미지 표시 시간</h4>
+                    <div className="flex gap-2">
+                      {([2, 3, 5] as const).map(d => (
+                        <Button
+                          key={d}
+                          type="button"
+                          variant={slideDuration === d ? 'default' : 'outline'}
+                          size="sm"
+                          onClick={() => setSlideDuration(d)}
+                        >
+                          <Timer className="h-3.5 w-3.5 mr-1" />
+                          {d}초
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {uploadedFiles.length > 0 && (
                   <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-lg border border-primary/10">
                     <Film className="h-4 w-4 text-primary/60" />

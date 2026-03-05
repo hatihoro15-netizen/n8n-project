@@ -151,7 +151,9 @@ export async function productionRoutes(app: FastifyInstance) {
       topic?: string;
       keywords?: string;
       category?: string;
+      production_mode?: 'ai_video' | 'slideshow';
       clip_duration?: number;
+      slide_duration?: number;
       files?: {
         type: 'image' | 'video';
         url: string;
@@ -205,7 +207,9 @@ export async function productionRoutes(app: FastifyInstance) {
         topic: body.topic,
         keywords: body.keywords,
         category: body.category,
+        production_mode: body.production_mode || 'ai_video',
         clip_duration: body.clip_duration,
+        slide_duration: body.slide_duration,
         files: body.files,
         clips: body.clips,
       });
