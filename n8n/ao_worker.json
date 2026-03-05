@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-05T11:38:28.914Z",
+  "updatedAt": "2026-03-05T12:05:45.237Z",
   "createdAt": "2026-03-05T10:52:54.255Z",
   "id": "FHYohZccExR24Uha",
   "name": "AO Worker",
@@ -381,11 +381,12 @@
       "parameters": {
         "method": "POST",
         "url": "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-        "authentication": "oAuth2",
+        "authentication": "genericCredentialType",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"snippet\": {\n    \"title\": \"{{ $json.metadata?.title || $json.topic }}\",\n    \"description\": \"{{ $json.metadata?.description || '' }}\",\n    \"tags\": {{ JSON.stringify($json.metadata?.tags || $json.keywords.split(',')) }},\n    \"categoryId\": \"22\"\n  },\n  \"status\": {\n    \"privacyStatus\": \"{{ $json.metadata?.privacy || 'public' }}\"\n  }\n}",
-        "options": {}
+        "options": {},
+        "genericAuthType": "googleOAuth2Api"
       },
       "id": "upload-youtube",
       "name": "YouTube 업로드",
@@ -394,7 +395,13 @@
       "position": [
         3760,
         208
-      ]
+      ],
+      "credentials": {
+        "googleOAuth2Api": {
+          "id": "FHvjDOGBtI0zvyFA",
+          "name": "YouTube OAuth2"
+        }
+      }
     },
     {
       "parameters": {
@@ -728,9 +735,9 @@
       }
     ]
   },
-  "versionId": "88d2f584-fa66-410e-a019-722fdbc740c3",
-  "activeVersionId": "88d2f584-fa66-410e-a019-722fdbc740c3",
-  "versionCounter": 18,
+  "versionId": "a436afaf-ae54-4625-bf2f-eac867af8519",
+  "activeVersionId": "a436afaf-ae54-4625-bf2f-eac867af8519",
+  "versionCounter": 23,
   "triggerCount": 1,
   "shared": [
     {
@@ -789,9 +796,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-05T11:38:28.915Z",
-    "createdAt": "2026-03-05T11:38:28.915Z",
-    "versionId": "88d2f584-fa66-410e-a019-722fdbc740c3",
+    "updatedAt": "2026-03-05T12:05:45.238Z",
+    "createdAt": "2026-03-05T12:05:45.238Z",
+    "versionId": "a436afaf-ae54-4625-bf2f-eac867af8519",
     "workflowId": "FHYohZccExR24Uha",
     "nodes": [
       {
@@ -1168,11 +1175,12 @@
         "parameters": {
           "method": "POST",
           "url": "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-          "authentication": "oAuth2",
+          "authentication": "genericCredentialType",
           "sendBody": true,
           "specifyBody": "json",
           "jsonBody": "={\n  \"snippet\": {\n    \"title\": \"{{ $json.metadata?.title || $json.topic }}\",\n    \"description\": \"{{ $json.metadata?.description || '' }}\",\n    \"tags\": {{ JSON.stringify($json.metadata?.tags || $json.keywords.split(',')) }},\n    \"categoryId\": \"22\"\n  },\n  \"status\": {\n    \"privacyStatus\": \"{{ $json.metadata?.privacy || 'public' }}\"\n  }\n}",
-          "options": {}
+          "options": {},
+          "genericAuthType": "googleOAuth2Api"
         },
         "id": "upload-youtube",
         "name": "YouTube 업로드",
@@ -1181,7 +1189,13 @@
         "position": [
           3760,
           208
-        ]
+        ],
+        "credentials": {
+          "googleOAuth2Api": {
+            "id": "FHvjDOGBtI0zvyFA",
+            "name": "YouTube OAuth2"
+          }
+        }
       },
       {
         "parameters": {
@@ -1499,18 +1513,18 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-05T11:38:28.954Z",
-        "id": 714,
+        "createdAt": "2026-03-05T12:05:45.340Z",
+        "id": 716,
         "workflowId": "FHYohZccExR24Uha",
-        "versionId": "88d2f584-fa66-410e-a019-722fdbc740c3",
+        "versionId": "a436afaf-ae54-4625-bf2f-eac867af8519",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       },
       {
-        "createdAt": "2026-03-05T11:38:38.300Z",
-        "id": 715,
+        "createdAt": "2026-03-05T12:06:09.676Z",
+        "id": 717,
         "workflowId": "FHYohZccExR24Uha",
-        "versionId": "88d2f584-fa66-410e-a019-722fdbc740c3",
+        "versionId": "a436afaf-ae54-4625-bf2f-eac867af8519",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }

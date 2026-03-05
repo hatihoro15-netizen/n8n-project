@@ -7,10 +7,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-05
-- 현재 상태(1줄): 외부 API 크리덴셜 3건 연결 + 테스트 완료 (Replicate/kie.ai/Creatomate)
-- 진행중 작업: -
-- 최근 완료: 외부 API 크리덴셜 생성/연결/테스트 성공
-- 주의사항: Claude API 키 미확보 (번역 노드), YouTube OAuth 미설정
+- 현재 상태(1줄): 외부 API 크리덴셜 5건 전체 연결 완료 (YouTube OAuth 브라우저 인증 대기)
+- 진행중 작업: YouTube OAuth 브라우저 인증
+- 최근 완료: Claude API + YouTube OAuth2 크리덴셜 생성/노드 연결
+- 주의사항: n8n 웹 에디터에서 YouTube OAuth Sign in with Google 필요
 
 ---
 
@@ -104,5 +104,23 @@
 - Claude API 크리덴셜 + 번역 노드 연결
 - YouTube OAuth 설정
 - Worker 풀 파이프라인 테스트
+### 📁 Files / Links
+- n8n/ao_worker.json (업데이트)
+
+## 2026-03-05 (5차)
+### ✅ Done
+- [x] Claude API 크리덴셜 생성 (mr2FTmB2pmyvlbWK) + 번역 노드 연결
+- [x] Claude API 테스트 성공 ("안녕하세요 반갑습니다 환영합니다")
+- [x] YouTube OAuth2 크리덴셜 생성 (FHvjDOGBtI0zvyFA)
+  - Client ID: 481347496295-...apps.googleusercontent.com
+  - Redirect URI: https://n8n.srv1345711.hstgr.cloud/rest/oauth2-credential/callback
+- [x] Worker 업로드 노드에 YouTube OAuth2 연결
+### 📌 Result
+- 외부 API 크리덴셜 5건 전체 생성/노드 연결 완료
+- YouTube OAuth는 브라우저 인증 필요 (n8n 웹 에디터 > Credentials > Sign in with Google)
+### ➡️ Next (방향만)
+- YouTube OAuth 브라우저 인증
+- Worker 풀 파이프라인 테스트
+- Next.js 프론트 초기화
 ### 📁 Files / Links
 - n8n/ao_worker.json (업데이트)
