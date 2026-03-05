@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-05T12:48:17.918Z",
+  "updatedAt": "2026-03-05T17:32:16.561Z",
   "createdAt": "2026-03-05T10:52:54.255Z",
   "id": "FHYohZccExR24Uha",
   "name": "AO Worker",
@@ -98,7 +98,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ✅ AO 프롬프트 조립기 — P1 원문 100% 보존\nconst job = $input.first().json;\n\n// P1 원문은 절대 변경 금지\nconst p1 = job.prompt_p1;\nif (!p1) throw new Error('P1 원문 없음 — 작업 중단');\n\n// 이미지 슬롯 파싱\nlet imageSlots = {};\ntry {\n  imageSlots = typeof job.image_slots === 'string'\n    ? JSON.parse(job.image_slots)\n    : (job.image_slots || {});\n} catch(e) {\n  imageSlots = {};\n}\n\n// 슬롯 값 준비 (없으면 빈 문자열)\nconst slotValues = {\n  TOPIC: job.topic || '',\n  KEYWORDS: job.keywords || '',\n  CATEGORY: job.category || '',\n  IMG_1: imageSlots.IMG_1 || '',\n  IMG_2: imageSlots.IMG_2 || '',\n  IMG_3: imageSlots.IMG_3 || '',\n  IMG_4: imageSlots.IMG_4 || '',\n  REF_VIDEO: job.ref_video || '',\n  LANG: job.prompt_lang_detected || 'ko',\n  ASPECT_RATIO: '9:16'\n};\n\n// 누락 슬롯 로그 수집\nconst missedSlots = Object.entries(slotValues)\n  .filter(([k, v]) => !v)\n  .map(([k]) => k);\n\n// 최종 프롬프트: P1 그대로 + 슬롯 주입\nconst finalPrompt = p1\n  .replace(/\\{TOPIC\\}/g, slotValues.TOPIC)\n  .replace(/\\{KEYWORDS\\}/g, slotValues.KEYWORDS)\n  .replace(/\\{CATEGORY\\}/g, slotValues.CATEGORY)\n  .replace(/\\{IMG_1\\}/g, slotValues.IMG_1)\n  .replace(/\\{IMG_2\\}/g, slotValues.IMG_2)\n  .replace(/\\{IMG_3\\}/g, slotValues.IMG_3)\n  .replace(/\\{IMG_4\\}/g, slotValues.IMG_4)\n  .replace(/\\{REF_VIDEO\\}/g, slotValues.REF_VIDEO)\n  .replace(/\\{LANG\\}/g, slotValues.LANG)\n  .replace(/\\{ASPECT_RATIO\\}/g, slotValues.ASPECT_RATIO);\n\nreturn [{\n  json: {\n    ...job,\n    prompt_to_engine: finalPrompt,\n    prompt_p1_preserved: p1,  // 원문 보존 확인용\n    missed_slots: missedSlots,\n    assembled_at: new Date().toISOString()\n  }\n}];"
+        "jsCode": "// ✅ AO 프롬프트 조립기 — P1 원문 100% 보존 + clips 지원\nconst job = $input.first().json;\n\nconst p1 = job.prompt_p1;\nif (!p1) throw new Error('P1 원문 없음 — 작업 중단');\n\n// clips 파싱\nlet clips = [];\ntry {\n  clips = typeof job.clips === 'string' ? JSON.parse(job.clips) : (job.clips || []);\n} catch(e) { clips = []; }\n\nconst slotValues = {\n  TOPIC: job.topic || '',\n  KEYWORDS: job.keywords || '',\n  CATEGORY: job.category || '',\n  LANG: job.prompt_lang_detected || 'ko',\n  ASPECT_RATIO: '9:16'\n};\n\nconst finalPrompt = p1\n  .replace(/\\{TOPIC\\}/g, slotValues.TOPIC)\n  .replace(/\\{KEYWORDS\\}/g, slotValues.KEYWORDS)\n  .replace(/\\{CATEGORY\\}/g, slotValues.CATEGORY)\n  .replace(/\\{LANG\\}/g, slotValues.LANG)\n  .replace(/\\{ASPECT_RATIO\\}/g, slotValues.ASPECT_RATIO);\n\nreturn [{\n  json: {\n    ...job,\n    clips: clips,\n    clip_duration: job.clip_duration || 8,\n    prompt_to_engine: finalPrompt,\n    prompt_p1_preserved: p1,\n    assembled_at: new Date().toISOString()\n  }\n}];"
       },
       "id": "assemble-prompt",
       "name": "AO 프롬프트 조립 (P1 보존)",
@@ -189,137 +189,27 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {},
-          "conditions": [
-            {
-              "leftValue": "={{ $json.use_media }}",
-              "rightValue": "off",
-              "operator": {
-                "type": "string",
-                "operation": "notEquals"
-              }
-            }
-          ]
-        },
-        "options": {}
+        "jsCode": "// ✅ Creatomate 최종 영상 합성 — 씬별 클립 이어붙이기\nconst job = $input.first().json;\nconst scenes = job.scene_results || [];\nconst dur = parseInt(job.clip_duration) <= 4 ? 4 : 8;\nconst apiKey = $env.CREATOMATE_API_KEY;\n\nif (scenes.length === 0) throw new Error('scene_results가 비어있음');\n\n// elements 배열 구성\nconst elements = [];\nscenes.forEach((s, i) => {\n  elements.push({\n    type: 'video',\n    source: s.video_url,\n    time: i * dur,\n    duration: dur,\n    fit: 'cover'\n  });\n  if (s.audio_url) {\n    elements.push({\n      type: 'audio',\n      source: s.audio_url,\n      time: i * dur,\n      duration: dur\n    });\n  }\n});\n\nconst body = {\n  source: {\n    output_format: 'mp4',\n    width: 1080,\n    height: 1920,\n    elements: elements\n  }\n};\n\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.creatomate.com/v1/renders',\n  headers: {\n    'Authorization': `Bearer ${apiKey}`,\n    'Content-Type': 'application/json'\n  },\n  body: body,\n  json: true\n});\n\n// Creatomate returns array\nconst render = Array.isArray(resp) ? resp[0] : resp;\nreturn [{ json: render }];"
       },
-      "id": "check-use-media",
-      "name": "이미지 생성 필요 여부",
-      "type": "n8n-nodes-base.if",
+      "id": "render-video",
+      "name": "최종 영상 합성 (Creatomate)",
+      "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2000,
+        2224,
         208
       ]
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://api.kie.ai/api/v1/jobs/createTask",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"nano-banana-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"resolution\": \"1K\",\n    \"output_format\": \"jpg\"\n  }\n}",
-        "options": {}
-      },
-      "id": "generate-image",
-      "name": "이미지 생성 (kie.ai Nano Banana Pro)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2224,
-        144
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "OipYAEtrzhD1lJmL",
-          "name": "KieAI TTS"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// ✅ kie.ai 이미지 생성 폴링 (n8n this.helpers.httpRequest)\nconst taskId = $input.first().json.data?.taskId;\nif (!taskId) throw new Error('이미지 taskId 없음');\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet imageUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    imageUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`이미지 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!imageUrl) throw new Error('이미지 생성 타임아웃 (150초)');\n\n// ✅ 이전 노드 데이터 병합 (job 원본 데이터 보존)\nconst prevData = $('이미지 생성 필요 여부').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    generated_images: [imageUrl],\n    image_task_id: taskId\n  }\n}];"
-      },
-      "id": "poll-image",
-      "name": "이미지 생성 대기 (폴링)",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2448,
-        144
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "OipYAEtrzhD1lJmL",
-          "name": "KieAI TTS"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.kie.ai/api/v1/jobs/createTask",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"elevenlabs/text-to-speech-multilingual-v2\",\n  \"input\": {\n    \"text\": \"{{ $json.prompt_p1 || $json.topic }}\",\n    \"voice_id\": \"EXAVITQu4vr4xnSDxMaL\"\n  }\n}",
-        "options": {}
-      },
-      "id": "generate-tts",
-      "name": "TTS 생성 (ElevenLabs)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2672,
-        208
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "OipYAEtrzhD1lJmL",
-          "name": "KieAI TTS"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.creatomate.com/v1/renders",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"template_id\": \"056a9082-710f-4345-b964-c6384103fbf6\",\n  \"modifications\": {\n    \"Video-1.source\": \"{{ $json.seedance_video_url || '' }}\",\n    \"Narration-1.source\": \"{{ $json.tts_audio_url || '' }}\",\n    \"Text-1.text\": \"{{ $json.topic || '' }}\"\n  }\n}",
-        "options": {}
-      },
-      "id": "render-video",
-      "name": "영상 렌더링 (Creatomate)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2880,
-        208
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "7uzM44eLOitv8ubQ",
-          "name": "Creatomate API"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// Creatomate 렌더 폴링\nconst renderResponse = $input.first().json;\nconst renderId = renderResponse.id || (Array.isArray(renderResponse) ? renderResponse[0]?.id : null);\nif (!renderId) throw new Error('renderId 없음');\n\nconst apiKey = $env.CREATOMATE_API_KEY || '';\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.creatomate.com/v1/renders/${renderId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n  status = resp.status;\n  url = resp.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\n// ✅ TTS 폴링 출력에서 job 원본 데이터 병합\nconst prevData = $('TTS 생성 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
+        "jsCode": "// Creatomate 렌더 폴링\nconst renderResponse = $input.first().json;\nconst renderId = renderResponse.id || (Array.isArray(renderResponse) ? renderResponse[0]?.id : null);\nif (!renderId) throw new Error('renderId 없음');\n\nconst apiKey = $env.CREATOMATE_API_KEY || '';\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.creatomate.com/v1/renders/${renderId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n  status = resp.status;\n  url = resp.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\n// ✅ TTS 폴링 출력에서 job 원본 데이터 병합\nconst prevData = $('멀티씬 순차 처리').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
       },
       "id": "poll-render",
       "name": "렌더링 대기 (폴링)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        3104,
+        2448,
         208
       ],
       "credentials": {
@@ -476,54 +366,15 @@
     },
     {
       "parameters": {
-        "jsCode": "// ✅ kie.ai TTS 폴링 — 오디오 URL 획득\nconst ttsResponse = $input.first().json;\nconst taskId = ttsResponse?.data?.taskId;\nif (!taskId) throw new Error('TTS taskId 없음 - TTS 응답: ' + JSON.stringify(ttsResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet audioUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    audioUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`TTS 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!audioUrl) throw new Error('TTS 생성 타임아웃 (150초)');\n\n// ✅ 이전 노드 데이터 병합\nconst prevData = $('Seedance 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    tts_audio_url: audioUrl,\n    tts_task_id: taskId\n  }\n}];"
+        "jsCode": "// ✅ 멀티씬 순차 처리 — include_audio 분기\nconst job = $input.first().json;\nlet clips = [];\ntry {\n  clips = typeof job.clips === 'string' ? JSON.parse(job.clips) : (job.clips || []);\n} catch(e) { clips = []; }\n\nif (clips.length === 0) throw new Error('clips 배열이 비어있음');\n\nconst rawDur = parseInt(job.clip_duration) || 8;\nconst duration = (rawDur <= 4) ? '4' : '8';\nconst durSec = parseInt(duration);\nconst apiKey = $env.KIEAI_API_KEY;\nconst promptBase = job.prompt_en || job.prompt_to_engine || job.prompt_p1;\nconst sceneResults = [];\n\n// kie.ai 폴링\nasync function pollTask(taskId) {\n  for (let i = 0; i < 60; i++) {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n      headers: { 'Authorization': `Bearer ${apiKey}` },\n      json: true\n    });\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const result = JSON.parse(resp.data.resultJson || '{}');\n      return result.resultUrls?.[0] || null;\n    }\n    if (state === 'failed' || state === 'fail') {\n      throw new Error(`Task 실패: ${resp.data.failMsg || state}`);\n    }\n    await new Promise(r => setTimeout(r, 10000));\n  }\n  throw new Error('Task 타임아웃 (600초)');\n}\n\nfor (let i = 0; i < clips.length; i++) {\n  const clip = clips[i];\n  const includeAudio = clip.include_audio === true;\n\n  // 1) 프롬프트 조립\n  const parts = [];\n  if (clip.vision_analysis) parts.push(`[Image: ${clip.vision_analysis}]`);\n  if (clip.scene_prompt) parts.push(`[Scene: ${clip.scene_prompt}]`);\n  parts.push(promptBase);\n  const videoPrompt = parts.join('\\n');\n\n  // 2) Seedance 영상 생성\n  const seedInput = {\n    prompt: videoPrompt,\n    aspect_ratio: '9:16',\n    resolution: '720p',\n    duration: duration,\n    fixed_lens: false,\n    generate_audio: includeAudio\n  };\n  if (clip.image_url) seedInput.input_urls = [clip.image_url];\n\n  let taskResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/jobs/createTask',\n    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n    body: { model: 'bytedance/seedance-1.5-pro', input: seedInput },\n    json: true\n  });\n\n  // 이미지 URL 에러 시 이미지 없이 재시도\n  if (taskResp?.code !== 200 && clip.image_url) {\n    delete seedInput.input_urls;\n    taskResp = await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.kie.ai/api/v1/jobs/createTask',\n      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n      body: { model: 'bytedance/seedance-1.5-pro', input: seedInput },\n      json: true\n    });\n  }\n\n  const seedTaskId = taskResp?.data?.taskId;\n  if (!seedTaskId) throw new Error(`씬${i+1} Seedance taskId 없음: ${JSON.stringify(taskResp).substring(0,200)}`);\n\n  const videoUrl = await pollTask.call(this, seedTaskId);\n  if (!videoUrl) throw new Error(`씬${i+1} 영상 URL 없음`);\n\n  const scene = {\n    index: i,\n    video_url: videoUrl,\n    image_url: clip.image_url || '',\n    include_audio: includeAudio,\n    audio_url: null\n  };\n\n  // 3) include_audio=false → TTS 생성\n  if (!includeAudio && clip.scene_prompt) {\n    const ttsText = clip.scene_prompt || job.topic || '';\n    const ttsResp = await this.helpers.httpRequest({\n      method: 'POST',\n      url: 'https://api.kie.ai/api/v1/jobs/createTask',\n      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n      body: {\n        model: 'elevenlabs/text-to-speech-multilingual-v2',\n        input: { text: ttsText, voice_id: 'EXAVITQu4vr4xnSDxMaL' }\n      },\n      json: true\n    });\n    const ttsTaskId = ttsResp?.data?.taskId;\n    if (ttsTaskId) {\n      const audioUrl = await pollTask.call(this, ttsTaskId);\n      scene.audio_url = audioUrl;\n    }\n  }\n\n  sceneResults.push(scene);\n}\n\nreturn [{\n  json: {\n    ...job,\n    scene_results: sceneResults,\n    total_scenes: sceneResults.length,\n    total_duration: sceneResults.length * durSec\n  }\n}];"
       },
-      "id": "tts-poll",
-      "name": "TTS 생성 대기 (폴링)",
+      "id": "process-clips",
+      "name": "멀티씬 순차 처리",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        2776,
+        2000,
         208
-      ]
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://api.kie.ai/api/v1/jobs/createTask",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"model\": \"bytedance/seedance-1.5-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"input_urls\": [\"{{ $json.generated_images?.[0] || '' }}\"],\n    \"aspect_ratio\": \"9:16\",\n    \"resolution\": \"720p\",\n    \"duration\": \"8\",\n    \"fixed_lens\": false,\n    \"generate_audio\": false\n  }\n}",
-        "options": {}
-      },
-      "id": "generate-seedance",
-      "name": "Seedance 영상 생성 (kie.ai)",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        2520,
-        144
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "OipYAEtrzhD1lJmL",
-          "name": "KieAI TTS"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "// ✅ kie.ai Seedance 영상 생성 폴링\nconst seedanceResponse = $input.first().json;\nconst taskId = seedanceResponse?.data?.taskId;\nif (!taskId) throw new Error('Seedance taskId 없음 - 응답: ' + JSON.stringify(seedanceResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 60;\nconst interval = 10000;\n\nlet videoUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    videoUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || state === 'fail' || resp?.data?.failMsg) {\n    throw new Error(`Seedance 영상 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!videoUrl) throw new Error('Seedance 영상 생성 타임아웃 (600초)');\n\nconst prevData = $('이미지 생성 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    seedance_video_url: videoUrl,\n    seedance_task_id: taskId\n  }\n}];"
-      },
-      "id": "poll-seedance",
-      "name": "Seedance 대기 (폴링)",
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        2596,
-        144
       ]
     }
   ],
@@ -601,7 +452,7 @@
         ],
         [
           {
-            "node": "이미지 생성 필요 여부",
+            "node": "멀티씬 순차 처리",
             "type": "main",
             "index": 0
           }
@@ -613,90 +464,6 @@
         [
           {
             "node": "번역 결과 병합",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "번역 결과 병합": {
-      "main": [
-        [
-          {
-            "node": "이미지 생성 필요 여부",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "이미지 생성 필요 여부": {
-      "main": [
-        [
-          {
-            "node": "이미지 생성 (kie.ai Nano Banana Pro)",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "TTS 생성 (ElevenLabs)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "이미지 생성 대기 (폴링)": {
-      "main": [
-        [
-          {
-            "node": "Seedance 영상 생성 (kie.ai)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Seedance 영상 생성 (kie.ai)": {
-      "main": [
-        [
-          {
-            "node": "Seedance 대기 (폴링)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Seedance 대기 (폴링)": {
-      "main": [
-        [
-          {
-            "node": "TTS 생성 (ElevenLabs)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "TTS 생성 (ElevenLabs)": {
-      "main": [
-        [
-          {
-            "node": "TTS 생성 대기 (폴링)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "영상 렌더링 (Creatomate)": {
-      "main": [
-        [
-          {
-            "node": "렌더링 대기 (폴링)",
             "type": "main",
             "index": 0
           }
@@ -769,22 +536,33 @@
         ]
       ]
     },
-    "이미지 생성 (kie.ai Nano Banana Pro)": {
+    "번역 결과 병합": {
       "main": [
         [
           {
-            "node": "이미지 생성 대기 (폴링)",
+            "node": "멀티씬 순차 처리",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "TTS 생성 대기 (폴링)": {
+    "멀티씬 순차 처리": {
       "main": [
         [
           {
-            "node": "영상 렌더링 (Creatomate)",
+            "node": "최종 영상 합성 (Creatomate)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "최종 영상 합성 (Creatomate)": {
+      "main": [
+        [
+          {
+            "node": "렌더링 대기 (폴링)",
             "type": "main",
             "index": 0
           }
@@ -814,9 +592,9 @@
       }
     ]
   },
-  "versionId": "197bcf50-a13e-4935-a9e5-7a455bf08aee",
-  "activeVersionId": "197bcf50-a13e-4935-a9e5-7a455bf08aee",
-  "versionCounter": 56,
+  "versionId": "79561ef8-a68e-444e-9cb6-40a5cdc7d5dd",
+  "activeVersionId": "79561ef8-a68e-444e-9cb6-40a5cdc7d5dd",
+  "versionCounter": 62,
   "triggerCount": 1,
   "shared": [
     {
@@ -875,9 +653,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-05T12:48:17.920Z",
-    "createdAt": "2026-03-05T12:48:17.920Z",
-    "versionId": "197bcf50-a13e-4935-a9e5-7a455bf08aee",
+    "updatedAt": "2026-03-05T17:32:16.562Z",
+    "createdAt": "2026-03-05T17:32:16.562Z",
+    "versionId": "79561ef8-a68e-444e-9cb6-40a5cdc7d5dd",
     "workflowId": "FHYohZccExR24Uha",
     "nodes": [
       {
@@ -971,7 +749,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// ✅ AO 프롬프트 조립기 — P1 원문 100% 보존\nconst job = $input.first().json;\n\n// P1 원문은 절대 변경 금지\nconst p1 = job.prompt_p1;\nif (!p1) throw new Error('P1 원문 없음 — 작업 중단');\n\n// 이미지 슬롯 파싱\nlet imageSlots = {};\ntry {\n  imageSlots = typeof job.image_slots === 'string'\n    ? JSON.parse(job.image_slots)\n    : (job.image_slots || {});\n} catch(e) {\n  imageSlots = {};\n}\n\n// 슬롯 값 준비 (없으면 빈 문자열)\nconst slotValues = {\n  TOPIC: job.topic || '',\n  KEYWORDS: job.keywords || '',\n  CATEGORY: job.category || '',\n  IMG_1: imageSlots.IMG_1 || '',\n  IMG_2: imageSlots.IMG_2 || '',\n  IMG_3: imageSlots.IMG_3 || '',\n  IMG_4: imageSlots.IMG_4 || '',\n  REF_VIDEO: job.ref_video || '',\n  LANG: job.prompt_lang_detected || 'ko',\n  ASPECT_RATIO: '9:16'\n};\n\n// 누락 슬롯 로그 수집\nconst missedSlots = Object.entries(slotValues)\n  .filter(([k, v]) => !v)\n  .map(([k]) => k);\n\n// 최종 프롬프트: P1 그대로 + 슬롯 주입\nconst finalPrompt = p1\n  .replace(/\\{TOPIC\\}/g, slotValues.TOPIC)\n  .replace(/\\{KEYWORDS\\}/g, slotValues.KEYWORDS)\n  .replace(/\\{CATEGORY\\}/g, slotValues.CATEGORY)\n  .replace(/\\{IMG_1\\}/g, slotValues.IMG_1)\n  .replace(/\\{IMG_2\\}/g, slotValues.IMG_2)\n  .replace(/\\{IMG_3\\}/g, slotValues.IMG_3)\n  .replace(/\\{IMG_4\\}/g, slotValues.IMG_4)\n  .replace(/\\{REF_VIDEO\\}/g, slotValues.REF_VIDEO)\n  .replace(/\\{LANG\\}/g, slotValues.LANG)\n  .replace(/\\{ASPECT_RATIO\\}/g, slotValues.ASPECT_RATIO);\n\nreturn [{\n  json: {\n    ...job,\n    prompt_to_engine: finalPrompt,\n    prompt_p1_preserved: p1,  // 원문 보존 확인용\n    missed_slots: missedSlots,\n    assembled_at: new Date().toISOString()\n  }\n}];"
+          "jsCode": "// ✅ AO 프롬프트 조립기 — P1 원문 100% 보존 + clips 지원\nconst job = $input.first().json;\n\nconst p1 = job.prompt_p1;\nif (!p1) throw new Error('P1 원문 없음 — 작업 중단');\n\n// clips 파싱\nlet clips = [];\ntry {\n  clips = typeof job.clips === 'string' ? JSON.parse(job.clips) : (job.clips || []);\n} catch(e) { clips = []; }\n\nconst slotValues = {\n  TOPIC: job.topic || '',\n  KEYWORDS: job.keywords || '',\n  CATEGORY: job.category || '',\n  LANG: job.prompt_lang_detected || 'ko',\n  ASPECT_RATIO: '9:16'\n};\n\nconst finalPrompt = p1\n  .replace(/\\{TOPIC\\}/g, slotValues.TOPIC)\n  .replace(/\\{KEYWORDS\\}/g, slotValues.KEYWORDS)\n  .replace(/\\{CATEGORY\\}/g, slotValues.CATEGORY)\n  .replace(/\\{LANG\\}/g, slotValues.LANG)\n  .replace(/\\{ASPECT_RATIO\\}/g, slotValues.ASPECT_RATIO);\n\nreturn [{\n  json: {\n    ...job,\n    clips: clips,\n    clip_duration: job.clip_duration || 8,\n    prompt_to_engine: finalPrompt,\n    prompt_p1_preserved: p1,\n    assembled_at: new Date().toISOString()\n  }\n}];"
         },
         "id": "assemble-prompt",
         "name": "AO 프롬프트 조립 (P1 보존)",
@@ -1062,84 +840,13 @@
       },
       {
         "parameters": {
-          "conditions": {
-            "options": {},
-            "conditions": [
-              {
-                "leftValue": "={{ $json.use_media }}",
-                "rightValue": "off",
-                "operator": {
-                  "type": "string",
-                  "operation": "notEquals"
-                }
-              }
-            ]
-          },
-          "options": {}
-        },
-        "id": "check-use-media",
-        "name": "이미지 생성 필요 여부",
-        "type": "n8n-nodes-base.if",
-        "typeVersion": 2,
-        "position": [
-          2000,
-          208
-        ]
-      },
-      {
-        "parameters": {
           "method": "POST",
           "url": "https://api.kie.ai/api/v1/jobs/createTask",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={\n  \"model\": \"nano-banana-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"resolution\": \"1K\",\n    \"output_format\": \"jpg\"\n  }\n}",
-          "options": {}
-        },
-        "id": "generate-image",
-        "name": "이미지 생성 (kie.ai Nano Banana Pro)",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.2,
-        "position": [
-          2224,
-          144
-        ],
-        "credentials": {
-          "httpHeaderAuth": {
-            "id": "OipYAEtrzhD1lJmL",
-            "name": "KieAI TTS"
-          }
-        }
-      },
-      {
-        "parameters": {
-          "jsCode": "// ✅ kie.ai 이미지 생성 폴링 (n8n this.helpers.httpRequest)\nconst taskId = $input.first().json.data?.taskId;\nif (!taskId) throw new Error('이미지 taskId 없음');\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet imageUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    imageUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`이미지 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!imageUrl) throw new Error('이미지 생성 타임아웃 (150초)');\n\n// ✅ 이전 노드 데이터 병합 (job 원본 데이터 보존)\nconst prevData = $('이미지 생성 필요 여부').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    generated_images: [imageUrl],\n    image_task_id: taskId\n  }\n}];"
-        },
-        "id": "poll-image",
-        "name": "이미지 생성 대기 (폴링)",
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          2448,
-          144
-        ],
-        "credentials": {
-          "httpHeaderAuth": {
-            "id": "OipYAEtrzhD1lJmL",
-            "name": "KieAI TTS"
-          }
-        }
-      },
-      {
-        "parameters": {
-          "method": "POST",
-          "url": "https://api.kie.ai/api/v1/jobs/createTask",
-          "authentication": "genericCredentialType",
-          "genericAuthType": "httpHeaderAuth",
-          "sendBody": true,
-          "specifyBody": "json",
-          "jsonBody": "={\n  \"model\": \"elevenlabs/text-to-speech-multilingual-v2\",\n  \"input\": {\n    \"text\": \"{{ $json.prompt_p1 || $json.topic }}\",\n    \"voice_id\": \"EXAVITQu4vr4xnSDxMaL\"\n  }\n}",
+          "jsonBody": "={\n  \"model\": \"elevenlabs/text-to-speech-multilingual-v2\",\n  \"input\": {\n    \"text\": \"{{ $json.narration_script || $json.topic }}\",\n    \"voice_id\": \"EXAVITQu4vr4xnSDxMaL\"\n  }\n}",
           "options": {}
         },
         "id": "generate-tts",
@@ -1165,7 +872,7 @@
           "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={\n  \"template_id\": \"056a9082-710f-4345-b964-c6384103fbf6\",\n  \"modifications\": {\n    \"Video-1.source\": \"{{ $json.seedance_video_url || '' }}\",\n    \"Narration-1.source\": \"{{ $json.tts_audio_url || '' }}\",\n    \"Text-1.text\": \"{{ $json.topic || '' }}\"\n  }\n}",
+          "jsonBody": "={\n  \"source\": {\n    \"output_format\": \"mp4\",\n    \"width\": 1080,\n    \"height\": 1920,\n    \"duration\": null,\n    \"elements\": [\n      ...(() => {\n        const clips = $json.clip_videos || [];\n        const dur = $json.clip_duration || 8;\n        return clips.map((c, i) => ({\n          \"type\": \"video\",\n          \"source\": c.video_url,\n          \"time\": i * dur,\n          \"duration\": dur,\n          \"fit\": \"cover\"\n        }));\n      })(),\n      ...(() => {\n        const audioUrl = $json.tts_audio_url;\n        return audioUrl ? [{ \"type\": \"audio\", \"source\": audioUrl, \"time\": 0, \"duration\": null }] : [];\n      })()\n    ]\n  }\n}",
           "options": {}
         },
         "id": "render-video",
@@ -1349,7 +1056,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// ✅ kie.ai TTS 폴링 — 오디오 URL 획득\nconst ttsResponse = $input.first().json;\nconst taskId = ttsResponse?.data?.taskId;\nif (!taskId) throw new Error('TTS taskId 없음 - TTS 응답: ' + JSON.stringify(ttsResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet audioUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    audioUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`TTS 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!audioUrl) throw new Error('TTS 생성 타임아웃 (150초)');\n\n// ✅ 이전 노드 데이터 병합\nconst prevData = $('Seedance 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    tts_audio_url: audioUrl,\n    tts_task_id: taskId\n  }\n}];"
+          "jsCode": "// ✅ kie.ai TTS 폴링 — 오디오 URL 획득\nconst ttsResponse = $input.first().json;\nconst taskId = ttsResponse?.data?.taskId;\nif (!taskId) throw new Error('TTS taskId 없음 - TTS 응답: ' + JSON.stringify(ttsResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet audioUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    audioUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`TTS 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!audioUrl) throw new Error('TTS 생성 타임아웃 (150초)');\n\n// ✅ 이전 노드 데이터 병합\nconst prevData = $('나레이션 생성 (Claude)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    tts_audio_url: audioUrl,\n    tts_task_id: taskId\n  }\n}];"
         },
         "id": "tts-poll",
         "name": "TTS 생성 대기 (폴링)",
@@ -1362,41 +1069,28 @@
       },
       {
         "parameters": {
-          "method": "POST",
-          "url": "https://api.kie.ai/api/v1/jobs/createTask",
-          "authentication": "genericCredentialType",
-          "genericAuthType": "httpHeaderAuth",
-          "sendBody": true,
-          "specifyBody": "json",
-          "jsonBody": "={\n  \"model\": \"bytedance/seedance-1.5-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"input_urls\": [\"{{ $json.generated_images?.[0] || '' }}\"],\n    \"aspect_ratio\": \"9:16\",\n    \"resolution\": \"720p\",\n    \"duration\": \"8\",\n    \"fixed_lens\": false,\n    \"generate_audio\": false\n  }\n}",
-          "options": {}
+          "jsCode": "// ✅ 멀티클립 순차 처리 — clips[] 루프\nconst job = $input.first().json;\nlet clips = [];\ntry {\n  clips = typeof job.clips === 'string' ? JSON.parse(job.clips) : (job.clips || []);\n} catch(e) { clips = []; }\n\nif (clips.length === 0) throw new Error('clips 배열이 비어있음');\n\nconst duration = String(job.clip_duration || 8);\nconst apiKey = $env.KIEAI_API_KEY;\nconst promptBase = job.prompt_en || job.prompt_to_engine || job.prompt_p1;\nconst clipVideos = [];\n\n// kie.ai 폴링 헬퍼\nasync function pollTask(taskId, helpers) {\n  for (let i = 0; i < 60; i++) {\n    const resp = await helpers.httpRequest({\n      method: 'GET',\n      url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n      headers: { 'Authorization': `Bearer ${apiKey}` },\n      json: true\n    });\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const result = JSON.parse(resp.data.resultJson || '{}');\n      return result.resultUrls?.[0] || null;\n    }\n    if (state === 'failed' || state === 'fail') {\n      throw new Error(`Task 실패: ${resp.data.failMsg || state}`);\n    }\n    await new Promise(r => setTimeout(r, 10000));\n  }\n  throw new Error('Task 타임아웃 (600초)');\n}\n\nfor (let i = 0; i < clips.length; i++) {\n  const clip = clips[i];\n\n  // 1) 영상 프롬프트 조립: vision_analysis + scene_prompt + P1\n  const parts = [];\n  if (clip.vision_analysis) parts.push(`[Image: ${clip.vision_analysis}]`);\n  if (clip.scene_prompt) parts.push(`[Scene: ${clip.scene_prompt}]`);\n  parts.push(promptBase);\n  const videoPrompt = parts.join('\\n');\n\n  // 2) Seedance createTask\n  const taskResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/jobs/createTask',\n    headers: {\n      'Authorization': `Bearer ${apiKey}`,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      model: 'bytedance/seedance-1.5-pro',\n      input: {\n        prompt: videoPrompt,\n        input_urls: clip.image_url ? [clip.image_url] : [],\n        aspect_ratio: '9:16',\n        resolution: '720p',\n        duration: duration,\n        fixed_lens: false,\n        generate_audio: false\n      }\n    },\n    json: true\n  });\n\n  const taskId = taskResp?.data?.taskId;\n  if (!taskId) throw new Error(`Clip ${i+1} Seedance taskId 없음`);\n\n  // 3) 폴링\n  const videoUrl = await pollTask(taskId, this.helpers);\n  if (!videoUrl) throw new Error(`Clip ${i+1} 영상 URL 없음`);\n\n  clipVideos.push({ index: i, video_url: videoUrl, image_url: clip.image_url || '' });\n}\n\nreturn [{\n  json: {\n    ...job,\n    clip_videos: clipVideos,\n    total_clips: clipVideos.length,\n    total_duration: clipVideos.length * parseInt(duration)\n  }\n}];"
         },
-        "id": "generate-seedance",
-        "name": "Seedance 영상 생성 (kie.ai)",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.2,
-        "position": [
-          2520,
-          144
-        ],
-        "credentials": {
-          "httpHeaderAuth": {
-            "id": "OipYAEtrzhD1lJmL",
-            "name": "KieAI TTS"
-          }
-        }
-      },
-      {
-        "parameters": {
-          "jsCode": "// ✅ kie.ai Seedance 영상 생성 폴링\nconst seedanceResponse = $input.first().json;\nconst taskId = seedanceResponse?.data?.taskId;\nif (!taskId) throw new Error('Seedance taskId 없음 - 응답: ' + JSON.stringify(seedanceResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 60;\nconst interval = 10000;\n\nlet videoUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    videoUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || state === 'fail' || resp?.data?.failMsg) {\n    throw new Error(`Seedance 영상 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!videoUrl) throw new Error('Seedance 영상 생성 타임아웃 (600초)');\n\nconst prevData = $('이미지 생성 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    seedance_video_url: videoUrl,\n    seedance_task_id: taskId\n  }\n}];"
-        },
-        "id": "poll-seedance",
-        "name": "Seedance 대기 (폴링)",
+        "id": "process-clips",
+        "name": "클립 순차 처리 (Seedance)",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          2596,
-          144
+          2000,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// ✅ Claude API로 나레이션 대본 생성\nconst job = $input.first().json;\nconst totalDuration = job.total_duration || 40;\nconst clipCount = job.total_clips || 5;\n\nconst apiKey = $env.CLAUDE_API_KEY || '';\n\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.anthropic.com/v1/messages',\n  headers: {\n    'x-api-key': apiKey,\n    'anthropic-version': '2023-06-01',\n    'Content-Type': 'application/json'\n  },\n  body: {\n    model: 'claude-sonnet-4-20250514',\n    max_tokens: 1500,\n    messages: [{\n      role: 'user',\n      content: `다음 영상의 나레이션 대본을 작성해줘.\\n\\n주제: ${job.topic || ''}\\n키워드: ${job.keywords || ''}\\n메인 지시: ${job.prompt_p1}\\n총 영상 길이: ${totalDuration}초 (${clipCount}개 장면)\\n\\n규칙:\\n- 총 ${totalDuration}초 분량에 맞는 나레이션\\n- 자연스러운 한국어\\n- 나레이션 텍스트만 출력 (설명/주석 없이)`\n    }]\n  },\n  json: true\n});\n\nconst narrationScript = resp?.content?.[0]?.text || job.topic || '';\n\nreturn [{\n  json: {\n    ...job,\n    narration_script: narrationScript\n  }\n}];"
+        },
+        "id": "generate-narration",
+        "name": "나레이션 생성 (Claude)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2224,
+          208
         ]
       }
     ],
@@ -1474,7 +1168,7 @@
           ],
           [
             {
-              "node": "이미지 생성 필요 여부",
+              "node": "클립 순차 처리 (Seedance)",
               "type": "main",
               "index": 0
             }
@@ -1486,68 +1180,6 @@
           [
             {
               "node": "번역 결과 병합",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "번역 결과 병합": {
-        "main": [
-          [
-            {
-              "node": "이미지 생성 필요 여부",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "이미지 생성 필요 여부": {
-        "main": [
-          [
-            {
-              "node": "이미지 생성 (kie.ai Nano Banana Pro)",
-              "type": "main",
-              "index": 0
-            }
-          ],
-          [
-            {
-              "node": "TTS 생성 (ElevenLabs)",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "이미지 생성 대기 (폴링)": {
-        "main": [
-          [
-            {
-              "node": "Seedance 영상 생성 (kie.ai)",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Seedance 영상 생성 (kie.ai)": {
-        "main": [
-          [
-            {
-              "node": "Seedance 대기 (폴링)",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "Seedance 대기 (폴링)": {
-        "main": [
-          [
-            {
-              "node": "TTS 생성 (ElevenLabs)",
               "type": "main",
               "index": 0
             }
@@ -1642,22 +1274,44 @@
           ]
         ]
       },
-      "이미지 생성 (kie.ai Nano Banana Pro)": {
+      "TTS 생성 대기 (폴링)": {
         "main": [
           [
             {
-              "node": "이미지 생성 대기 (폴링)",
+              "node": "영상 렌더링 (Creatomate)",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "TTS 생성 대기 (폴링)": {
+      "번역 결과 병합": {
         "main": [
           [
             {
-              "node": "영상 렌더링 (Creatomate)",
+              "node": "클립 순차 처리 (Seedance)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "클립 순차 처리 (Seedance)": {
+        "main": [
+          [
+            {
+              "node": "나레이션 생성 (Claude)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "나레이션 생성 (Claude)": {
+        "main": [
+          [
+            {
+              "node": "TTS 생성 (ElevenLabs)",
               "type": "main",
               "index": 0
             }
@@ -1671,18 +1325,10 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-05T12:48:17.979Z",
-        "id": 728,
+        "createdAt": "2026-03-05T17:32:16.610Z",
+        "id": 731,
         "workflowId": "FHYohZccExR24Uha",
-        "versionId": "197bcf50-a13e-4935-a9e5-7a455bf08aee",
-        "event": "activated",
-        "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
-      },
-      {
-        "createdAt": "2026-03-05T12:48:18.734Z",
-        "id": 729,
-        "workflowId": "FHYohZccExR24Uha",
-        "versionId": "197bcf50-a13e-4935-a9e5-7a455bf08aee",
+        "versionId": "79561ef8-a68e-444e-9cb6-40a5cdc7d5dd",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }

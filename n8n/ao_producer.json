@@ -1,5 +1,11 @@
 {
+  "updatedAt": "2026-03-05T11:12:43.939Z",
+  "createdAt": "2026-03-05T10:52:36.709Z",
+  "id": "XV5shW265ht59MTD",
   "name": "AO Producer",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
@@ -12,32 +18,43 @@
       "name": "Webhook Trigger",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
-      "position": [240, 300]
+      "position": [
+        240,
+        304
+      ],
+      "webhookId": "dff8568d-f569-4980-9f70-70cff125ff40"
     },
     {
       "parameters": {
-        "jsCode": "// ✅ 필수값 검사\nconst body = $input.first().json.body || $input.first().json;\n\nconst required = ['prompt_p1', 'topic', 'keywords', 'category', 'use_media', 'upload_target'];\nconst missing = required.filter(k => !body[k]);\n\nif (missing.length > 0) {\n  throw new Error(`필수값 누락: ${missing.join(', ')}`);\n}\n\n// use_media 값 검증\nif (!['auto', 'forced', 'off'].includes(body.use_media)) {\n  throw new Error(`use_media 값 오류: ${body.use_media} (auto/forced/off 중 하나여야 함)`);\n}\n\n// upload_target 검증\nif (body.upload_target !== 'youtube') {\n  throw new Error(`upload_target 오류: ${body.upload_target} (현재 youtube만 지원)`);\n}\n\n// 이미지 슬롯 매핑 (IMG_1 ~ IMG_4)\nconst images = body.images || [];\nconst imageSlots = {};\nfor (let i = 0; i < 4; i++) {\n  imageSlots[`IMG_${i + 1}`] = images[i] || null;\n}\n\n// 언어 감지 (한글 포함 여부)\nconst isKorean = /[\\uAC00-\\uD7A3]/.test(body.prompt_p1 + body.topic);\nconst translateMode = body.translate_mode || 'auto';\nconst needsTranslation = translateMode === 'on' || (translateMode === 'auto' && isKorean);\n\nreturn [{\n  json: {\n    ...body,\n    image_slots: imageSlots,\n    prompt_lang_detected: isKorean ? 'ko' : 'en',\n    needs_translation: needsTranslation,\n    validated_at: new Date().toISOString()\n  }\n}];"
+        "jsCode": "// ✅ 필수값 검사 (멀티씬 + include_audio 지원)\nconst body = $input.first().json.body || $input.first().json;\n\nconst required = ['prompt_p1', 'topic', 'keywords', 'category'];\nconst missing = required.filter(k => !body[k]);\n\nif (missing.length > 0) {\n  throw new Error(`필수값 누락: ${missing.join(', ')}`);\n}\n\n// clips 검증 (최대 10개)\nconst clips = body.clips || [];\nif (clips.length > 10) {\n  throw new Error(`clips 최대 10개 (현재: ${clips.length})`);\n}\n\n// clip_duration: 4 또는 8만 허용, 그 외는 8로 고정\nconst rawDur = parseInt(body.clip_duration) || 8;\nconst clipDuration = (rawDur <= 4) ? 4 : 8;\n\n// 기본값 처리\nconst useMedia = body.use_media || 'forced';\nconst uploadTarget = body.upload_target || 'youtube';\n\n// clips에 include_audio 기본값 설정\nlet finalClips = clips.map(c => ({\n  image_url: c.image_url || '',\n  vision_analysis: c.vision_analysis || '',\n  scene_prompt: c.scene_prompt || '',\n  include_audio: c.include_audio === true\n}));\n\n// 하위 호환: images[] → clips[] 변환\nif (finalClips.length === 0 && body.images && body.images.length > 0) {\n  finalClips = body.images.map(url => ({\n    image_url: url, vision_analysis: '', scene_prompt: '', include_audio: false\n  }));\n}\n\n// 언어 감지\nconst isKorean = /[\\uAC00-\\uD7A3]/.test(body.prompt_p1 + body.topic);\nconst translateMode = body.translate_mode || 'auto';\nconst needsTranslation = translateMode === 'on' || (translateMode === 'auto' && isKorean);\n\nreturn [{\n  json: {\n    ...body,\n    clips: finalClips,\n    clip_duration: clipDuration,\n    use_media: useMedia,\n    upload_target: uploadTarget,\n    prompt_lang_detected: isKorean ? 'ko' : 'en',\n    needs_translation: needsTranslation,\n    validated_at: new Date().toISOString()\n  }\n}];"
       },
       "id": "validate-input",
       "name": "입력값 검증",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [460, 300]
+      "position": [
+        464,
+        304
+      ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO jobs (\n  prompt_p1,\n  topic,\n  keywords,\n  category,\n  use_media,\n  upload_target,\n  template_id,\n  image_slots,\n  ref_video,\n  metadata,\n  prompt_lang_detected,\n  needs_translation,\n  status,\n  retry_count,\n  created_at,\n  updated_at\n) VALUES (\n  '{{ $json.prompt_p1 }}',\n  '{{ $json.topic }}',\n  '{{ $json.keywords }}',\n  '{{ $json.category }}',\n  '{{ $json.use_media }}',\n  '{{ $json.upload_target }}',\n  {{ $json.template_id ? `'${$json.template_id}'` : 'NULL' }},\n  '{{ JSON.stringify($json.image_slots) }}'::jsonb,\n  {{ $json.ref_video ? `'${$json.ref_video}'` : 'NULL' }},\n  {{ $json.metadata ? `'${JSON.stringify($json.metadata)}'::jsonb` : 'NULL' }},\n  '{{ $json.prompt_lang_detected }}',\n  {{ $json.needs_translation }},\n  'queued',\n  0,\n  NOW(),\n  NOW()\n) RETURNING id, status, created_at;",
+        "query": "INSERT INTO jobs (\n  prompt_p1, topic, keywords, category,\n  use_media, upload_target, template_id,\n  clips, clip_duration,\n  metadata, prompt_lang_detected, needs_translation,\n  status, retry_count, created_at, updated_at\n) VALUES (\n  '{{ $json.prompt_p1 }}',\n  '{{ $json.topic }}',\n  '{{ $json.keywords }}',\n  '{{ $json.category }}',\n  '{{ $json.use_media }}',\n  '{{ $json.upload_target }}',\n  {{ $json.template_id ? `'${$json.template_id}'` : 'NULL' }},\n  '{{ JSON.stringify($json.clips) }}'::jsonb,\n  {{ $json.clip_duration }},\n  {{ $json.metadata ? `'${JSON.stringify($json.metadata)}'::jsonb` : 'NULL' }},\n  '{{ $json.prompt_lang_detected }}',\n  {{ $json.needs_translation }},\n  'queued', 0, NOW(), NOW()\n) RETURNING id, status, created_at;",
         "options": {}
       },
       "id": "create-job",
       "name": "Job 생성 (Supabase)",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [680, 300],
+      "position": [
+        688,
+        304
+      ],
       "credentials": {
         "postgres": {
-          "name": "Supabase PostgreSQL"
+          "id": "4W3WKJLsJKa9hVAA",
+          "name": "Postgres account"
         }
       }
     },
@@ -49,7 +66,10 @@
       "name": "응답 포맷",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [900, 300]
+      "position": [
+        912,
+        304
+      ]
     },
     {
       "parameters": {
@@ -63,7 +83,10 @@
       "name": "응답 반환 (200)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1120, 300]
+      "position": [
+        1120,
+        304
+      ]
     },
     {
       "parameters": {
@@ -77,7 +100,10 @@
       "name": "응답 반환 (400)",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
-      "position": [1120, 480]
+      "position": [
+        1120,
+        480
+      ]
     },
     {
       "parameters": {
@@ -87,33 +113,370 @@
       "name": "에러 핸들러",
       "type": "n8n-nodes-base.stopAndError",
       "typeVersion": 1,
-      "position": [900, 480]
+      "position": [
+        912,
+        480
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        240,
+        496
+      ],
+      "id": "5160caee-1747-4855-9bed-ee01c7e6ab84",
+      "name": "수동 실행"
     }
   ],
   "connections": {
     "Webhook Trigger": {
-      "main": [[{ "node": "입력값 검증", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "입력값 검증",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "입력값 검증": {
-      "main": [[{ "node": "Job 생성 (Supabase)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Job 생성 (Supabase)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Job 생성 (Supabase)": {
-      "main": [[{ "node": "응답 포맷", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "응답 포맷",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "응답 포맷": {
-      "main": [[{ "node": "응답 반환 (200)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "응답 반환 (200)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "에러 핸들러": {
-      "main": [[{ "node": "응답 반환 (400)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "응답 반환 (400)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "수동 실행": {
+      "main": [
+        [
+          {
+            "node": "입력값 검증",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1",
-    "errorWorkflow": ""
+    "errorWorkflow": "",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
   "staticData": null,
-  "tags": ["AO", "producer"],
+  "meta": null,
+  "pinData": {},
+  "versionId": "f8342b23-04aa-4f4a-b0ee-99d3b3660e88",
+  "activeVersionId": "f8342b23-04aa-4f4a-b0ee-99d3b3660e88",
+  "versionCounter": 11,
   "triggerCount": 1,
-  "updatedAt": "2026-03-05T00:00:00.000Z",
-  "versionId": "1"
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T10:52:36.709Z",
+      "createdAt": "2026-03-05T10:52:36.709Z",
+      "role": "workflow:owner",
+      "workflowId": "XV5shW265ht59MTD",
+      "projectId": "W6LETsSnBzw4J5Aa",
+      "project": {
+        "updatedAt": "2026-02-09T04:42:12.235Z",
+        "createdAt": "2026-02-07T19:04:11.494Z",
+        "id": "W6LETsSnBzw4J5Aa",
+        "name": "hatihoro15 hatihoro15 <hatihoro15@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-07T19:04:11.494Z",
+            "createdAt": "2026-02-07T19:04:11.494Z",
+            "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+            "projectId": "W6LETsSnBzw4J5Aa",
+            "user": {
+              "updatedAt": "2026-03-05T12:31:17.668Z",
+              "createdAt": "2026-02-07T19:04:09.331Z",
+              "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+              "email": "hatihoro15@gmail.com",
+              "firstName": "hatihoro15",
+              "lastName": "hatihoro15",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-02-07T19:24:51.818Z",
+                "personalization_survey_n8n_version": "2.6.4"
+              },
+              "settings": {
+                "userActivated": true,
+                "easyAIWorkflowOnboarded": true,
+                "firstSuccessfulWorkflowId": "FHYohZccExR24Uha",
+                "userActivatedAt": 1772709240022,
+                "npsSurvey": {
+                  "waitingForResponse": true,
+                  "ignoredCount": 2,
+                  "lastShownAt": 1772185245155
+                }
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-04",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-05T11:12:43.940Z",
+    "createdAt": "2026-03-05T11:12:43.940Z",
+    "versionId": "f8342b23-04aa-4f4a-b0ee-99d3b3660e88",
+    "workflowId": "XV5shW265ht59MTD",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "ao-produce",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "id": "webhook-trigger",
+        "name": "Webhook Trigger",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2,
+        "position": [
+          240,
+          304
+        ],
+        "webhookId": "dff8568d-f569-4980-9f70-70cff125ff40"
+      },
+      {
+        "parameters": {
+          "jsCode": "// ✅ 필수값 검사\nconst body = $input.first().json.body || $input.first().json;\n\nconst required = ['prompt_p1', 'topic', 'keywords', 'category', 'use_media', 'upload_target'];\nconst missing = required.filter(k => !body[k]);\n\nif (missing.length > 0) {\n  throw new Error(`필수값 누락: ${missing.join(', ')}`);\n}\n\n// use_media 값 검증\nif (!['auto', 'forced', 'off'].includes(body.use_media)) {\n  throw new Error(`use_media 값 오류: ${body.use_media} (auto/forced/off 중 하나여야 함)`);\n}\n\n// upload_target 검증\nif (body.upload_target !== 'youtube') {\n  throw new Error(`upload_target 오류: ${body.upload_target} (현재 youtube만 지원)`);\n}\n\n// 이미지 슬롯 매핑 (IMG_1 ~ IMG_4)\nconst images = body.images || [];\nconst imageSlots = {};\nfor (let i = 0; i < 4; i++) {\n  imageSlots[`IMG_${i + 1}`] = images[i] || null;\n}\n\n// 언어 감지 (한글 포함 여부)\nconst isKorean = /[\\uAC00-\\uD7A3]/.test(body.prompt_p1 + body.topic);\nconst translateMode = body.translate_mode || 'auto';\nconst needsTranslation = translateMode === 'on' || (translateMode === 'auto' && isKorean);\n\nreturn [{\n  json: {\n    ...body,\n    image_slots: imageSlots,\n    prompt_lang_detected: isKorean ? 'ko' : 'en',\n    needs_translation: needsTranslation,\n    validated_at: new Date().toISOString()\n  }\n}];"
+        },
+        "id": "validate-input",
+        "name": "입력값 검증",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          464,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "INSERT INTO jobs (\n  prompt_p1,\n  topic,\n  keywords,\n  category,\n  use_media,\n  upload_target,\n  template_id,\n  image_slots,\n  ref_video,\n  metadata,\n  prompt_lang_detected,\n  needs_translation,\n  status,\n  retry_count,\n  created_at,\n  updated_at\n) VALUES (\n  '{{ $json.prompt_p1 }}',\n  '{{ $json.topic }}',\n  '{{ $json.keywords }}',\n  '{{ $json.category }}',\n  '{{ $json.use_media }}',\n  '{{ $json.upload_target }}',\n  {{ $json.template_id ? `'${$json.template_id}'` : 'NULL' }},\n  '{{ JSON.stringify($json.image_slots) }}'::jsonb,\n  {{ $json.ref_video ? `'${$json.ref_video}'` : 'NULL' }},\n  {{ $json.metadata ? `'${JSON.stringify($json.metadata)}'::jsonb` : 'NULL' }},\n  '{{ $json.prompt_lang_detected }}',\n  {{ $json.needs_translation }},\n  'queued',\n  0,\n  NOW(),\n  NOW()\n) RETURNING id, status, created_at;",
+          "options": {}
+        },
+        "id": "create-job",
+        "name": "Job 생성 (Supabase)",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          688,
+          304
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "4W3WKJLsJKa9hVAA",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const job = $input.first().json;\n\nreturn [{\n  json: {\n    success: true,\n    job_id: job.id,\n    status: job.status,\n    message: 'Job이 큐에 등록되었습니다.',\n    created_at: job.created_at\n  }\n}];"
+        },
+        "id": "format-response",
+        "name": "응답 포맷",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          912,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ $json }}",
+          "options": {
+            "responseCode": 200
+          }
+        },
+        "id": "respond-success",
+        "name": "응답 반환 (200)",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { success: false, error: $json.message } }}",
+          "options": {
+            "responseCode": 400
+          }
+        },
+        "id": "respond-error",
+        "name": "응답 반환 (400)",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          480
+        ]
+      },
+      {
+        "parameters": {
+          "errorMessage": "={{ $json.message }}"
+        },
+        "id": "error-handler",
+        "name": "에러 핸들러",
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [
+          912,
+          480
+        ]
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          240,
+          496
+        ],
+        "id": "5160caee-1747-4855-9bed-ee01c7e6ab84",
+        "name": "수동 실행"
+      }
+    ],
+    "connections": {
+      "Webhook Trigger": {
+        "main": [
+          [
+            {
+              "node": "입력값 검증",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "입력값 검증": {
+        "main": [
+          [
+            {
+              "node": "Job 생성 (Supabase)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Job 생성 (Supabase)": {
+        "main": [
+          [
+            {
+              "node": "응답 포맷",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "응답 포맷": {
+        "main": [
+          [
+            {
+              "node": "응답 반환 (200)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "에러 핸들러": {
+        "main": [
+          [
+            {
+              "node": "응답 반환 (400)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "수동 실행": {
+        "main": [
+          [
+            {
+              "node": "입력값 검증",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "hatihoro15 hatihoro15",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-05T11:13:14.726Z",
+        "id": 711,
+        "workflowId": "XV5shW265ht59MTD",
+        "versionId": "f8342b23-04aa-4f4a-b0ee-99d3b3660e88",
+        "event": "activated",
+        "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
+      }
+    ]
+  }
 }
