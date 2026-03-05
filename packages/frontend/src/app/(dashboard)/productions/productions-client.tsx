@@ -375,6 +375,7 @@ export default function ProductionsClient() {
 // ══════════════════════════════════════════════
 function WhiskProductionForm() {
   const [activeTab, setActiveTab] = useState<'generate' | 'video'>('generate');
+  const queryClient = useQueryClient();
 
   // Common form fields
   const [promptP1, setPromptP1] = useState('');
@@ -399,6 +400,12 @@ function WhiskProductionForm() {
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
+
+  // Job tracking
+  const [jobId, setJobId] = useState<string | null>(null);
+  const [jobStatus, setJobStatus] = useState<string | null>(null);
+  const [jobVideoUrl, setJobVideoUrl] = useState<string | null>(null);
+  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const filledSlots = slots.filter(s => s.file || s.preview);
   const estimatedLength = filledSlots.length * clipDuration;
@@ -548,7 +555,37 @@ function WhiskProductionForm() {
     }
   };
 
-  // ── Submit: upload slot images → webhook ──
+  // ── Polling: track job status ──
+  const startPolling = (productionId: string) => {
+    if (pollingRef.current) clearInterval(pollingRef.current);
+    setJobId(productionId);
+    setJobStatus('started');
+    setJobVideoUrl(null);
+
+    pollingRef.current = setInterval(async () => {
+      try {
+        const res = await api.get(`/api/productions/${productionId}`) as { data: any };
+        const prod = res.data;
+        setJobStatus(prod.status);
+
+        // Extract video URL from assets
+        const assets = prod.assets as Record<string, string> | null;
+        const videoUrl = assets?.videoUrl || assets?.video_url || assets?.rendered_video_url || null;
+        if (videoUrl) setJobVideoUrl(proxyMediaUrl(videoUrl));
+
+        // Stop polling on terminal states
+        if (['completed', 'failed', 'paused'].includes(prod.status)) {
+          if (pollingRef.current) clearInterval(pollingRef.current);
+          pollingRef.current = null;
+          queryClient.invalidateQueries({ queryKey: ['productions'] });
+        }
+      } catch {
+        // polling failure, keep trying
+      }
+    }, 10000); // 10초 간격
+  };
+
+  // ── Submit: upload slot images → backend AO endpoint ──
   const handleSubmit = async () => {
     if (!promptP1.trim()) {
       setFormError('프롬프트를 입력해주세요.');
@@ -600,17 +637,16 @@ function WhiskProductionForm() {
         clips,
       };
 
-      const webhookRes = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
+      const res = await api.post('/api/productions/ao', payload) as { data: any };
+      const production = res.data;
 
-      if (!webhookRes.ok) {
-        throw new Error(`웹훅 호출 실패 (${webhookRes.status})`);
+      if (production?.id) {
+        setFormSuccess('영상 제작이 시작되었습니다!');
+        startPolling(production.id);
+        queryClient.invalidateQueries({ queryKey: ['productions'] });
+      } else {
+        throw new Error('제작 생성 실패');
       }
-
-      setFormSuccess('영상 제작이 시작되었습니다!');
     } catch (err) {
       setFormError(err instanceof Error ? err.message : '요청에 실패했습니다.');
     } finally {
@@ -828,7 +864,7 @@ function WhiskProductionForm() {
 
               {/* Submit */}
               <div className="flex items-center gap-3">
-                <Button onClick={handleSubmit} disabled={submitting || filledSlots.length === 0}>
+                <Button onClick={handleSubmit} disabled={submitting || filledSlots.length === 0 || !!jobId}>
                   {submitting ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" />처리 중...</>
                   ) : (
@@ -837,15 +873,74 @@ function WhiskProductionForm() {
                 </Button>
                 <span className="text-xs text-muted-foreground">
                   {filledSlots.length > 0
-                    ? `${filledSlots.length}장 MinIO 업로드 후 웹훅 호출`
+                    ? `${filledSlots.length}장 MinIO 업로드 후 제작 시작`
                     : '이미지를 1장 이상 추가해주세요'}
                 </span>
               </div>
+
+              {/* Job Status Tracker */}
+              {jobId && (
+                <div className="mt-4 p-4 rounded-lg border bg-muted/30 space-y-3">
+                  <div className="flex items-center gap-3">
+                    <h4 className="text-sm font-medium">제작 상태</h4>
+                    <JobStatusBadge status={jobStatus} />
+                  </div>
+                  {jobVideoUrl && (
+                    <div>
+                      <p className="text-xs text-muted-foreground mb-2">영상 미리보기</p>
+                      <video
+                        src={jobVideoUrl}
+                        controls
+                        className="w-full max-w-md rounded-lg border"
+                        preload="metadata"
+                      />
+                    </div>
+                  )}
+                  {jobStatus === 'completed' && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => { setJobId(null); setJobStatus(null); setJobVideoUrl(null); }}
+                    >
+                      새 제작 시작
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
           )}
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+// ══════════════════════════════════════════════
+// Job Status Badge
+// ══════════════════════════════════════════════
+const JOB_STATUS_MAP: Record<string, { label: string; color: string }> = {
+  pending: { label: '대기 중', color: 'bg-gray-100 text-gray-700' },
+  started: { label: '제작 중...', color: 'bg-blue-100 text-blue-700' },
+  script_ready: { label: '스크립트 완료', color: 'bg-blue-100 text-blue-700' },
+  tts_ready: { label: 'TTS 완료', color: 'bg-blue-100 text-blue-700' },
+  images_ready: { label: '이미지 완료', color: 'bg-blue-100 text-blue-700' },
+  videos_ready: { label: '영상 클립 완료', color: 'bg-blue-100 text-blue-700' },
+  rendering: { label: '렌더링 중...', color: 'bg-purple-100 text-purple-700' },
+  uploading: { label: '업로드 중...', color: 'bg-amber-100 text-amber-700' },
+  completed: { label: '완료', color: 'bg-emerald-100 text-emerald-700' },
+  failed: { label: '실패', color: 'bg-red-100 text-red-700' },
+  paused: { label: '정지', color: 'bg-gray-100 text-gray-700' },
+};
+
+function JobStatusBadge({ status }: { status: string | null }) {
+  if (!status) return null;
+  const info = JOB_STATUS_MAP[status] || { label: status, color: 'bg-gray-100 text-gray-700' };
+  const isActive = ['started', 'script_ready', 'tts_ready', 'images_ready', 'videos_ready', 'rendering', 'uploading'].includes(status);
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${info.color}`}>
+      {isActive && <Loader2 className="h-3 w-3 animate-spin" />}
+      {info.label}
+    </span>
   );
 }
 

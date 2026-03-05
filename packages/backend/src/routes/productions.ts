@@ -141,6 +141,100 @@ export async function productionRoutes(app: FastifyInstance) {
     return { success: true, data: updated };
   });
 
+  // AO Pipeline: create production + trigger webhook
+  app.post('/api/productions/ao', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const body = request.body as {
+      prompt_p1: string;
+      topic?: string;
+      keywords?: string;
+      category?: string;
+      clip_duration?: number;
+      clips: {
+        image_url: string;
+        vision_analysis?: string;
+        scene_prompt?: string;
+        include_audio?: boolean;
+      }[];
+    };
+
+    if (!body.prompt_p1?.trim()) {
+      return reply.status(400).send({ success: false, message: 'prompt_p1 is required' });
+    }
+
+    // Find or create AO channel + workflow
+    let channel = await prisma.channel.findUnique({ where: { slug: 'ao' } });
+    if (!channel) {
+      channel = await prisma.channel.create({
+        data: { name: 'AO (아럽토)', slug: 'ao' },
+      });
+    }
+
+    let workflow = await prisma.workflow.findFirst({
+      where: { channelId: channel.id, webhookPath: 'ao-produce' },
+    });
+    if (!workflow) {
+      workflow = await prisma.workflow.create({
+        data: {
+          channelId: channel.id,
+          n8nWorkflowId: 'ao-produce',
+          name: 'AO Producer',
+          type: 'shortform',
+          webhookPath: 'ao-produce',
+          stepperType: 'tts_based',
+        },
+      });
+    }
+
+    // Create production record
+    const production = await prisma.production.create({
+      data: {
+        workflowId: workflow.id,
+        channelId: channel.id,
+        topic: body.topic || body.prompt_p1.slice(0, 100),
+        status: 'pending',
+      },
+      include: { workflow: true, channel: true },
+    });
+
+    // Trigger n8n webhook with productionId + full payload
+    try {
+      await n8nClient.triggerWebhook('ao-produce', {
+        productionId: production.id,
+        prompt_p1: body.prompt_p1,
+        topic: body.topic,
+        keywords: body.keywords,
+        category: body.category,
+        clip_duration: body.clip_duration,
+        clips: body.clips,
+      });
+
+      await prisma.production.update({
+        where: { id: production.id },
+        data: { status: 'started', startedAt: new Date() },
+      });
+
+      logger.info({ productionId: production.id }, 'AO production triggered');
+    } catch (error) {
+      await prisma.production.update({
+        where: { id: production.id },
+        data: {
+          status: 'failed',
+          errorMessage: error instanceof Error ? error.message : 'Webhook trigger failed',
+        },
+      });
+      logger.error({ productionId: production.id, error }, 'AO webhook trigger failed');
+    }
+
+    const updated = await prisma.production.findUnique({
+      where: { id: production.id },
+      include: { workflow: true, channel: true },
+    });
+
+    return { success: true, data: updated };
+  });
+
   // Batch trigger
   app.post('/api/productions/batch', {
     preHandler: [app.authenticate],
