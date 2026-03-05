@@ -1,17 +1,30 @@
 {
+  "updatedAt": "2026-03-05T11:31:06.537Z",
+  "createdAt": "2026-03-05T10:52:54.255Z",
+  "id": "FHYohZccExR24Uha",
   "name": "AO Worker",
+  "description": null,
+  "active": true,
+  "isArchived": false,
   "nodes": [
     {
       "parameters": {
         "rule": {
-          "interval": [{ "field": "seconds", "secondsInterval": 30 }]
+          "interval": [
+            {
+              "field": "seconds"
+            }
+          ]
         }
       },
       "id": "schedule-trigger",
       "name": "스케줄 트리거 (30초)",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
-      "position": [240, 300]
+      "position": [
+        240,
+        304
+      ]
     },
     {
       "parameters": {
@@ -23,29 +36,44 @@
       "name": "큐에서 Job 꺼내기",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [460, 300],
+      "position": [
+        464,
+        304
+      ],
       "credentials": {
         "postgres": {
-          "name": "Supabase PostgreSQL"
+          "id": "4W3WKJLsJKa9hVAA",
+          "name": "Postgres account"
         }
       }
     },
     {
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true },
-          "conditions": [{
-            "leftValue": "={{ $json.id }}",
-            "rightValue": "",
-            "operator": { "type": "string", "operation": "notEmpty" }
-          }]
-        }
+          "options": {
+            "caseSensitive": true
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "check-job-exists",
       "name": "Job 존재 여부",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [680, 300]
+      "position": [
+        688,
+        304
+      ]
     },
     {
       "parameters": {
@@ -57,10 +85,14 @@
       "name": "상태 → processing",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [900, 200],
+      "position": [
+        912,
+        208
+      ],
       "credentials": {
         "postgres": {
-          "name": "Supabase PostgreSQL"
+          "id": "4W3WKJLsJKa9hVAA",
+          "name": "Postgres account"
         }
       }
     },
@@ -72,24 +104,36 @@
       "name": "AO 프롬프트 조립 (P1 보존)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1120, 200]
+      "position": [
+        1120,
+        208
+      ]
     },
     {
       "parameters": {
         "conditions": {
           "options": {},
-          "conditions": [{
-            "leftValue": "={{ $json.needs_translation }}",
-            "rightValue": true,
-            "operator": { "type": "boolean", "operation": "true" }
-          }]
-        }
+          "conditions": [
+            {
+              "leftValue": "={{ $json.needs_translation }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "check-translation",
       "name": "번역 필요 여부",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [1340, 200]
+      "position": [
+        1344,
+        208
+      ]
     },
     {
       "parameters": {
@@ -100,8 +144,14 @@
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
-            { "name": "x-api-key", "value": "={{ $credentials.httpHeaderAuth.value }}" },
-            { "name": "anthropic-version", "value": "2023-06-01" }
+            {
+              "name": "x-api-key",
+              "value": "={{ $credentials.httpHeaderAuth.value }}"
+            },
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            }
           ]
         },
         "sendBody": true,
@@ -113,7 +163,10 @@
       "name": "한글→영문 번역 (Claude)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [1560, 140]
+      "position": [
+        1568,
+        144
+      ]
     },
     {
       "parameters": {
@@ -123,24 +176,36 @@
       "name": "번역 결과 병합",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [1780, 140]
+      "position": [
+        1792,
+        144
+      ]
     },
     {
       "parameters": {
         "conditions": {
           "options": {},
-          "conditions": [{
-            "leftValue": "={{ $json.use_media }}",
-            "rightValue": "off",
-            "operator": { "type": "string", "operation": "notEquals" }
-          }]
-        }
+          "conditions": [
+            {
+              "leftValue": "={{ $json.use_media }}",
+              "rightValue": "off",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ]
+        },
+        "options": {}
       },
       "id": "check-use-media",
       "name": "이미지 생성 필요 여부",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2,
-      "position": [2000, 200]
+      "position": [
+        2000,
+        208
+      ]
     },
     {
       "parameters": {
@@ -157,7 +222,16 @@
       "name": "이미지 생성 (Replicate Flux Pro)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2220, 140]
+      "position": [
+        2224,
+        144
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "iG2Q9pXtGuE2xdoS",
+          "name": "Replicate API"
+        }
+      }
     },
     {
       "parameters": {
@@ -167,26 +241,48 @@
       "name": "이미지 생성 대기 (폴링)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2440, 140]
+      "position": [
+        2448,
+        144
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "iG2Q9pXtGuE2xdoS",
+          "name": "Replicate API"
+        }
+      }
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.elevenlabs.io/v1/text-to-speech/{{ $json.voice_id || 'EXAVITQu4vr4xnSDxMaL' }}",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"text\": \"{{ $json.topic }}\",\n  \"model_id\": \"eleven_multilingual_v2\",\n  \"voice_settings\": {\n    \"stability\": 0.5,\n    \"similarity_boost\": 0.75\n  }\n}",
         "options": {
-          "response": { "response": { "responseFormat": "arraybuffer" } }
+          "response": {
+            "response": {
+              "responseFormat": "arraybuffer"
+            }
+          }
         }
       },
       "id": "generate-tts",
       "name": "TTS 생성 (ElevenLabs)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2660, 200]
+      "position": [
+        2672,
+        208
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OipYAEtrzhD1lJmL",
+          "name": "KieAI TTS"
+        }
+      }
     },
     {
       "parameters": {
@@ -203,17 +299,35 @@
       "name": "영상 렌더링 (Creatomate)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [2880, 200]
+      "position": [
+        2880,
+        208
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7uzM44eLOitv8ubQ",
+          "name": "Creatomate API"
+        }
+      }
     },
     {
       "parameters": {
-        "jsCode": "// Creatomate 렌더 폴링\nconst renderId = $input.first().json.id || $input.first().json[0]?.id;\nconst apiKey = '';\n\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await fetch(`https://api.creatomate.com/v1/renders/${renderId}`, {\n    headers: { 'Authorization': `Bearer ${apiKey}` }\n  });\n  const data = await resp.json();\n  status = data.status;\n  url = data.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\nconst prev = $('영상 렌더링 (Creatomate)').first().json;\nreturn [{\n  json: {\n    ...prev,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
+        "jsCode": "// Creatomate 렌더 폴링\nconst renderId = $input.first().json.id || $input.first().json[0]?.id;\nconst apiKey = $credentials?.httpHeaderAuth?.value || '';\n\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await fetch(`https://api.creatomate.com/v1/renders/${renderId}`, {\n    headers: { 'Authorization': `Bearer ${apiKey}` }\n  });\n  const data = await resp.json();\n  status = data.status;\n  url = data.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\nconst prev = $('영상 렌더링 (Creatomate)').first().json;\nreturn [{\n  json: {\n    ...prev,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
       },
       "id": "poll-render",
       "name": "렌더링 대기 (폴링)",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3100, 200]
+      "position": [
+        3104,
+        208
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7uzM44eLOitv8ubQ",
+          "name": "Creatomate API"
+        }
+      }
     },
     {
       "parameters": {
@@ -225,10 +339,14 @@
       "name": "상태 → generated",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [3320, 200],
+      "position": [
+        3328,
+        208
+      ],
       "credentials": {
         "postgres": {
-          "name": "Supabase PostgreSQL"
+          "id": "4W3WKJLsJKa9hVAA",
+          "name": "Postgres account"
         }
       }
     },
@@ -242,10 +360,14 @@
       "name": "상태 → uploading",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [3540, 200],
+      "position": [
+        3552,
+        208
+      ],
       "credentials": {
         "postgres": {
-          "name": "Supabase PostgreSQL"
+          "id": "4W3WKJLsJKa9hVAA",
+          "name": "Postgres account"
         }
       }
     },
@@ -263,7 +385,10 @@
       "name": "YouTube 업로드",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [3760, 200]
+      "position": [
+        3760,
+        208
+      ]
     },
     {
       "parameters": {
@@ -275,10 +400,14 @@
       "name": "상태 → uploaded",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [3980, 200],
+      "position": [
+        3984,
+        208
+      ],
       "credentials": {
         "postgres": {
-          "name": "Supabase PostgreSQL"
+          "id": "4W3WKJLsJKa9hVAA",
+          "name": "Postgres account"
         }
       }
     },
@@ -290,7 +419,10 @@
       "name": "에러 캡처",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2000, 460]
+      "position": [
+        2000,
+        464
+      ]
     },
     {
       "parameters": {
@@ -302,10 +434,14 @@
       "name": "재시도 or 실패 처리",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
-      "position": [2220, 460],
+      "position": [
+        2224,
+        464
+      ],
       "credentials": {
         "postgres": {
-          "name": "Supabase PostgreSQL"
+          "id": "4W3WKJLsJKa9hVAA",
+          "name": "Postgres account"
         }
       }
     },
@@ -315,81 +451,1057 @@
       "name": "대기 (Job 없음)",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
-      "position": [900, 400]
+      "position": [
+        912,
+        400
+      ]
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        272,
+        528
+      ],
+      "id": "2b83b859-bae3-46a9-b29b-495a5e214a13",
+      "name": "수동 실행"
     }
   ],
   "connections": {
     "스케줄 트리거 (30초)": {
-      "main": [[{ "node": "큐에서 Job 꺼내기", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "큐에서 Job 꺼내기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "큐에서 Job 꺼내기": {
-      "main": [[{ "node": "Job 존재 여부", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "Job 존재 여부",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Job 존재 여부": {
       "main": [
-        [{ "node": "상태 → processing", "type": "main", "index": 0 }],
-        [{ "node": "대기 (Job 없음)", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "상태 → processing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "대기 (Job 없음)",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "상태 → processing": {
-      "main": [[{ "node": "AO 프롬프트 조립 (P1 보존)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "AO 프롬프트 조립 (P1 보존)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "AO 프롬프트 조립 (P1 보존)": {
-      "main": [[{ "node": "번역 필요 여부", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "번역 필요 여부",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "번역 필요 여부": {
       "main": [
-        [{ "node": "한글→영문 번역 (Claude)", "type": "main", "index": 0 }],
-        [{ "node": "이미지 생성 필요 여부", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "한글→영문 번역 (Claude)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "이미지 생성 필요 여부",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "한글→영문 번역 (Claude)": {
-      "main": [[{ "node": "번역 결과 병합", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "번역 결과 병합",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "번역 결과 병합": {
-      "main": [[{ "node": "이미지 생성 필요 여부", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "이미지 생성 필요 여부",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "이미지 생성 필요 여부": {
       "main": [
-        [{ "node": "이미지 생성 (Replicate Flux Pro)", "type": "main", "index": 0 }],
-        [{ "node": "TTS 생성 (ElevenLabs)", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "이미지 생성 (Replicate Flux Pro)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "TTS 생성 (ElevenLabs)",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "이미지 생성 (Replicate Flux Pro)": {
-      "main": [[{ "node": "이미지 생성 대기 (폴링)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "이미지 생성 대기 (폴링)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "이미지 생성 대기 (폴링)": {
-      "main": [[{ "node": "TTS 생성 (ElevenLabs)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "TTS 생성 (ElevenLabs)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "TTS 생성 (ElevenLabs)": {
-      "main": [[{ "node": "영상 렌더링 (Creatomate)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "영상 렌더링 (Creatomate)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "영상 렌더링 (Creatomate)": {
-      "main": [[{ "node": "렌더링 대기 (폴링)", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "렌더링 대기 (폴링)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "렌더링 대기 (폴링)": {
-      "main": [[{ "node": "상태 → generated", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "상태 → generated",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "상태 → generated": {
-      "main": [[{ "node": "상태 → uploading", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "상태 → uploading",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "상태 → uploading": {
-      "main": [[{ "node": "YouTube 업로드", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "YouTube 업로드",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "YouTube 업로드": {
-      "main": [[{ "node": "상태 → uploaded", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "상태 → uploaded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     },
     "에러 캡처": {
-      "main": [[{ "node": "재시도 or 실패 처리", "type": "main", "index": 0 }]]
+      "main": [
+        [
+          {
+            "node": "재시도 or 실패 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "수동 실행": {
+      "main": [
+        [
+          {
+            "node": "큐에서 Job 꺼내기",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1",
-    "errorWorkflow": "{{ AO Worker 에러 핸들러 워크플로우 ID }}"
+    "errorWorkflow": "{{ AO Worker 에러 핸들러 워크플로우 ID }}",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
   },
-  "staticData": null,
-  "tags": ["AO", "worker"],
+  "staticData": {
+    "node:스케줄 트리거 (30초)": {
+      "recurrenceRules": []
+    }
+  },
+  "meta": null,
+  "pinData": {
+    "수동 실행": [
+      {
+        "json": {},
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "versionId": "e10308b5-b4a9-49ae-b9f5-2daea9a7d04a",
+  "activeVersionId": "e10308b5-b4a9-49ae-b9f5-2daea9a7d04a",
+  "versionCounter": 13,
   "triggerCount": 1,
-  "updatedAt": "2026-03-05T00:00:00.000Z",
-  "versionId": "1"
+  "shared": [
+    {
+      "updatedAt": "2026-03-05T10:52:54.255Z",
+      "createdAt": "2026-03-05T10:52:54.255Z",
+      "role": "workflow:owner",
+      "workflowId": "FHYohZccExR24Uha",
+      "projectId": "W6LETsSnBzw4J5Aa",
+      "project": {
+        "updatedAt": "2026-02-09T04:42:12.235Z",
+        "createdAt": "2026-02-07T19:04:11.494Z",
+        "id": "W6LETsSnBzw4J5Aa",
+        "name": "hatihoro15 hatihoro15 <hatihoro15@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-07T19:04:11.494Z",
+            "createdAt": "2026-02-07T19:04:11.494Z",
+            "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+            "projectId": "W6LETsSnBzw4J5Aa",
+            "user": {
+              "updatedAt": "2026-03-05T11:14:00.062Z",
+              "createdAt": "2026-02-07T19:04:09.331Z",
+              "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+              "email": "hatihoro15@gmail.com",
+              "firstName": "hatihoro15",
+              "lastName": "hatihoro15",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-02-07T19:24:51.818Z",
+                "personalization_survey_n8n_version": "2.6.4"
+              },
+              "settings": {
+                "userActivated": true,
+                "easyAIWorkflowOnboarded": true,
+                "firstSuccessfulWorkflowId": "FHYohZccExR24Uha",
+                "userActivatedAt": 1772709240022,
+                "npsSurvey": {
+                  "waitingForResponse": true,
+                  "ignoredCount": 2,
+                  "lastShownAt": 1772185245155
+                }
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-03-04",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": {
+    "updatedAt": "2026-03-05T11:31:06.539Z",
+    "createdAt": "2026-03-05T11:31:06.539Z",
+    "versionId": "e10308b5-b4a9-49ae-b9f5-2daea9a7d04a",
+    "workflowId": "FHYohZccExR24Uha",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "seconds"
+              }
+            ]
+          }
+        },
+        "id": "schedule-trigger",
+        "name": "스케줄 트리거 (30초)",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          240,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "SELECT * FROM jobs\nWHERE status = 'queued'\nORDER BY created_at ASC\nLIMIT 1\nFOR UPDATE SKIP LOCKED;",
+          "options": {}
+        },
+        "id": "pop-queue",
+        "name": "큐에서 Job 꺼내기",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          464,
+          304
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "4W3WKJLsJKa9hVAA",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "check-job-exists",
+        "name": "Job 존재 여부",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          688,
+          304
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE jobs SET status = 'processing', updated_at = NOW() WHERE id = '{{ $json.id }}' RETURNING *;",
+          "options": {}
+        },
+        "id": "mark-processing",
+        "name": "상태 → processing",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          912,
+          208
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "4W3WKJLsJKa9hVAA",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// ✅ AO 프롬프트 조립기 — P1 원문 100% 보존\nconst job = $input.first().json;\n\n// P1 원문은 절대 변경 금지\nconst p1 = job.prompt_p1;\nif (!p1) throw new Error('P1 원문 없음 — 작업 중단');\n\n// 이미지 슬롯 파싱\nlet imageSlots = {};\ntry {\n  imageSlots = typeof job.image_slots === 'string'\n    ? JSON.parse(job.image_slots)\n    : (job.image_slots || {});\n} catch(e) {\n  imageSlots = {};\n}\n\n// 슬롯 값 준비 (없으면 빈 문자열)\nconst slotValues = {\n  TOPIC: job.topic || '',\n  KEYWORDS: job.keywords || '',\n  CATEGORY: job.category || '',\n  IMG_1: imageSlots.IMG_1 || '',\n  IMG_2: imageSlots.IMG_2 || '',\n  IMG_3: imageSlots.IMG_3 || '',\n  IMG_4: imageSlots.IMG_4 || '',\n  REF_VIDEO: job.ref_video || '',\n  LANG: job.prompt_lang_detected || 'ko',\n  ASPECT_RATIO: '9:16'\n};\n\n// 누락 슬롯 로그 수집\nconst missedSlots = Object.entries(slotValues)\n  .filter(([k, v]) => !v)\n  .map(([k]) => k);\n\n// 최종 프롬프트: P1 그대로 + 슬롯 주입\nconst finalPrompt = p1\n  .replace(/\\{TOPIC\\}/g, slotValues.TOPIC)\n  .replace(/\\{KEYWORDS\\}/g, slotValues.KEYWORDS)\n  .replace(/\\{CATEGORY\\}/g, slotValues.CATEGORY)\n  .replace(/\\{IMG_1\\}/g, slotValues.IMG_1)\n  .replace(/\\{IMG_2\\}/g, slotValues.IMG_2)\n  .replace(/\\{IMG_3\\}/g, slotValues.IMG_3)\n  .replace(/\\{IMG_4\\}/g, slotValues.IMG_4)\n  .replace(/\\{REF_VIDEO\\}/g, slotValues.REF_VIDEO)\n  .replace(/\\{LANG\\}/g, slotValues.LANG)\n  .replace(/\\{ASPECT_RATIO\\}/g, slotValues.ASPECT_RATIO);\n\nreturn [{\n  json: {\n    ...job,\n    prompt_to_engine: finalPrompt,\n    prompt_p1_preserved: p1,  // 원문 보존 확인용\n    missed_slots: missedSlots,\n    assembled_at: new Date().toISOString()\n  }\n}];"
+        },
+        "id": "assemble-prompt",
+        "name": "AO 프롬프트 조립 (P1 보존)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {},
+            "conditions": [
+              {
+                "leftValue": "={{ $json.needs_translation }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "check-translation",
+        "name": "번역 필요 여부",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          1344,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.anthropic.com/v1/messages",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "x-api-key",
+                "value": "={{ $credentials.httpHeaderAuth.value }}"
+              },
+              {
+                "name": "anthropic-version",
+                "value": "2023-06-01"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"model\": \"claude-sonnet-4-20250514\",\n  \"max_tokens\": 1000,\n  \"messages\": [{\n    \"role\": \"user\",\n    \"content\": \"다음 한국어 텍스트를 영어로 번역해줘. 원문 의미를 100% 보존하고, 번역문만 반환해. 설명 없이.\\n\\n{{ $json.prompt_to_engine }}\"\n  }]\n}",
+          "options": {}
+        },
+        "id": "translate-prompt",
+        "name": "한글→영문 번역 (Claude)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          1568,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "const prev = $('번역 필요 여부').first().json;\nconst translated = $input.first().json;\n\nconst promptEn = translated.content?.[0]?.text || prev.prompt_to_engine;\n\nreturn [{\n  json: {\n    ...prev,\n    prompt_en: promptEn\n  }\n}];"
+        },
+        "id": "merge-translation",
+        "name": "번역 결과 병합",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1792,
+          144
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {},
+            "conditions": [
+              {
+                "leftValue": "={{ $json.use_media }}",
+                "rightValue": "off",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "check-use-media",
+        "name": "이미지 생성 필요 여부",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
+        "position": [
+          2000,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"output_format\": \"jpg\",\n    \"output_quality\": 90\n  }\n}",
+          "options": {}
+        },
+        "id": "generate-image",
+        "name": "이미지 생성 (Replicate Flux Pro)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2224,
+          144
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "iG2Q9pXtGuE2xdoS",
+            "name": "Replicate API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Replicate 폴링 — 완료될 때까지 대기\nconst predictionId = $input.first().json.id;\nconst apiKey = $credentials?.httpHeaderAuth?.value || '';\n\nlet status = 'starting';\nlet output = null;\nlet attempts = 0;\nconst maxAttempts = 30;\n\nwhile (!['succeeded', 'failed', 'canceled'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 3000));\n  const resp = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {\n    headers: { 'Authorization': `Bearer ${apiKey}` }\n  });\n  const data = await resp.json();\n  status = data.status;\n  output = data.output;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !output) {\n  throw new Error(`이미지 생성 실패: ${status}`);\n}\n\nconst prev = $('이미지 생성 필요 여부').first().json;\nreturn [{\n  json: {\n    ...prev,\n    generated_images: Array.isArray(output) ? output : [output]\n  }\n}];"
+        },
+        "id": "poll-image",
+        "name": "이미지 생성 대기 (폴링)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2448,
+          144
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "iG2Q9pXtGuE2xdoS",
+            "name": "Replicate API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.kie.ai/api/v1/jobs/createTask",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"text\": \"{{ $json.topic }}\",\n  \"model_id\": \"eleven_multilingual_v2\",\n  \"voice_settings\": {\n    \"stability\": 0.5,\n    \"similarity_boost\": 0.75\n  }\n}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "arraybuffer"
+              }
+            }
+          }
+        },
+        "id": "generate-tts",
+        "name": "TTS 생성 (ElevenLabs)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2672,
+          208
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "OipYAEtrzhD1lJmL",
+            "name": "KieAI TTS"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.creatomate.com/v1/renders",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"template_id\": \"{{ $json.template_id || '' }}\",\n  \"modifications\": {\n    \"Topic\": \"{{ $json.topic }}\",\n    \"Keywords\": \"{{ $json.keywords }}\",\n    \"Image-1\": \"{{ $json.generated_images?.[0] || $json.image_slots?.IMG_1 || '' }}\",\n    \"Image-2\": \"{{ $json.generated_images?.[1] || $json.image_slots?.IMG_2 || '' }}\",\n    \"Image-3\": \"{{ $json.generated_images?.[2] || $json.image_slots?.IMG_3 || '' }}\",\n    \"Image-4\": \"{{ $json.generated_images?.[3] || $json.image_slots?.IMG_4 || '' }}\"\n  }\n}",
+          "options": {}
+        },
+        "id": "render-video",
+        "name": "영상 렌더링 (Creatomate)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2880,
+          208
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "7uzM44eLOitv8ubQ",
+            "name": "Creatomate API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Creatomate 렌더 폴링\nconst renderId = $input.first().json.id || $input.first().json[0]?.id;\nconst apiKey = $credentials?.httpHeaderAuth?.value || '';\n\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await fetch(`https://api.creatomate.com/v1/renders/${renderId}`, {\n    headers: { 'Authorization': `Bearer ${apiKey}` }\n  });\n  const data = await resp.json();\n  status = data.status;\n  url = data.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\nconst prev = $('영상 렌더링 (Creatomate)').first().json;\nreturn [{\n  json: {\n    ...prev,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
+        },
+        "id": "poll-render",
+        "name": "렌더링 대기 (폴링)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3104,
+          208
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "7uzM44eLOitv8ubQ",
+            "name": "Creatomate API"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE jobs\nSET status = 'generated',\n    rendered_video_url = '{{ $json.rendered_video_url }}',\n    render_id = '{{ $json.render_id }}',\n    updated_at = NOW()\nWHERE id = '{{ $json.id }}'\nRETURNING *;",
+          "options": {}
+        },
+        "id": "mark-generated",
+        "name": "상태 → generated",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          3328,
+          208
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "4W3WKJLsJKa9hVAA",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE jobs SET status = 'uploading', updated_at = NOW() WHERE id = '{{ $json.id }}' RETURNING *;",
+          "options": {}
+        },
+        "id": "mark-uploading",
+        "name": "상태 → uploading",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          3552,
+          208
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "4W3WKJLsJKa9hVAA",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
+          "authentication": "oAuth2",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"snippet\": {\n    \"title\": \"{{ $json.metadata?.title || $json.topic }}\",\n    \"description\": \"{{ $json.metadata?.description || '' }}\",\n    \"tags\": {{ JSON.stringify($json.metadata?.tags || $json.keywords.split(',')) }},\n    \"categoryId\": \"22\"\n  },\n  \"status\": {\n    \"privacyStatus\": \"{{ $json.metadata?.privacy || 'public' }}\"\n  }\n}",
+          "options": {}
+        },
+        "id": "upload-youtube",
+        "name": "YouTube 업로드",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          3760,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE jobs\nSET status = 'uploaded',\n    youtube_video_id = '{{ $json.id }}',\n    youtube_url = CONCAT('https://youtu.be/', '{{ $json.id }}'),\n    completed_at = NOW(),\n    updated_at = NOW()\nWHERE id = '{{ $node[\"상태 → uploading\"].json.id }}'\nRETURNING *;\n\nINSERT INTO job_logs (job_id, level, message, created_at)\nVALUES (\n  '{{ $node[\"상태 → uploading\"].json.id }}',\n  'info',\n  'YouTube 업로드 완료',\n  NOW()\n);",
+          "options": {}
+        },
+        "id": "mark-uploaded",
+        "name": "상태 → uploaded",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          3984,
+          208
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "4W3WKJLsJKa9hVAA",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// ✅ 에러 핸들러 — 재시도 로직\nconst error = $input.first().json;\nconst jobId = $('큐에서 Job 꺼내기').first().json?.id;\n\nif (!jobId) return [];\n\nreturn [{\n  json: {\n    job_id: jobId,\n    error_message: error.message || JSON.stringify(error),\n    timestamp: new Date().toISOString()\n  }\n}];"
+        },
+        "id": "handle-error",
+        "name": "에러 캡처",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2000,
+          464
+        ]
+      },
+      {
+        "parameters": {
+          "operation": "executeQuery",
+          "query": "UPDATE jobs\nSET retry_count = retry_count + 1,\n    status = CASE\n      WHEN retry_count + 1 >= 3 THEN 'failed'\n      ELSE 'queued'\n    END,\n    last_error = '{{ $json.error_message }}',\n    updated_at = NOW()\nWHERE id = '{{ $json.job_id }}'\nRETURNING id, status, retry_count;\n\nINSERT INTO job_logs (job_id, level, message, created_at)\nVALUES (\n  '{{ $json.job_id }}',\n  'error',\n  '{{ $json.error_message }}',\n  NOW()\n);",
+          "options": {}
+        },
+        "id": "retry-or-fail",
+        "name": "재시도 or 실패 처리",
+        "type": "n8n-nodes-base.postgres",
+        "typeVersion": 2.5,
+        "position": [
+          2224,
+          464
+        ],
+        "credentials": {
+          "postgres": {
+            "id": "4W3WKJLsJKa9hVAA",
+            "name": "Postgres account"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "id": "no-job",
+        "name": "대기 (Job 없음)",
+        "type": "n8n-nodes-base.noOp",
+        "typeVersion": 1,
+        "position": [
+          912,
+          400
+        ]
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          272,
+          528
+        ],
+        "id": "2b83b859-bae3-46a9-b29b-495a5e214a13",
+        "name": "수동 실행"
+      }
+    ],
+    "connections": {
+      "스케줄 트리거 (30초)": {
+        "main": [
+          [
+            {
+              "node": "큐에서 Job 꺼내기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "큐에서 Job 꺼내기": {
+        "main": [
+          [
+            {
+              "node": "Job 존재 여부",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Job 존재 여부": {
+        "main": [
+          [
+            {
+              "node": "상태 → processing",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "대기 (Job 없음)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "상태 → processing": {
+        "main": [
+          [
+            {
+              "node": "AO 프롬프트 조립 (P1 보존)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AO 프롬프트 조립 (P1 보존)": {
+        "main": [
+          [
+            {
+              "node": "번역 필요 여부",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "번역 필요 여부": {
+        "main": [
+          [
+            {
+              "node": "한글→영문 번역 (Claude)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "이미지 생성 필요 여부",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "한글→영문 번역 (Claude)": {
+        "main": [
+          [
+            {
+              "node": "번역 결과 병합",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "번역 결과 병합": {
+        "main": [
+          [
+            {
+              "node": "이미지 생성 필요 여부",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 생성 필요 여부": {
+        "main": [
+          [
+            {
+              "node": "이미지 생성 (Replicate Flux Pro)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "TTS 생성 (ElevenLabs)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 생성 (Replicate Flux Pro)": {
+        "main": [
+          [
+            {
+              "node": "이미지 생성 대기 (폴링)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "이미지 생성 대기 (폴링)": {
+        "main": [
+          [
+            {
+              "node": "TTS 생성 (ElevenLabs)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "TTS 생성 (ElevenLabs)": {
+        "main": [
+          [
+            {
+              "node": "영상 렌더링 (Creatomate)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "영상 렌더링 (Creatomate)": {
+        "main": [
+          [
+            {
+              "node": "렌더링 대기 (폴링)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "렌더링 대기 (폴링)": {
+        "main": [
+          [
+            {
+              "node": "상태 → generated",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "상태 → generated": {
+        "main": [
+          [
+            {
+              "node": "상태 → uploading",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "상태 → uploading": {
+        "main": [
+          [
+            {
+              "node": "YouTube 업로드",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "YouTube 업로드": {
+        "main": [
+          [
+            {
+              "node": "상태 → uploaded",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "에러 캡처": {
+        "main": [
+          [
+            {
+              "node": "재시도 or 실패 처리",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "수동 실행": {
+        "main": [
+          [
+            {
+              "node": "큐에서 Job 꺼내기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "authors": "hatihoro15 hatihoro15",
+    "name": null,
+    "description": null,
+    "autosaved": false,
+    "workflowPublishHistory": [
+      {
+        "createdAt": "2026-03-05T11:31:06.610Z",
+        "id": 712,
+        "workflowId": "FHYohZccExR24Uha",
+        "versionId": "e10308b5-b4a9-49ae-b9f5-2daea9a7d04a",
+        "event": "activated",
+        "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
+      },
+      {
+        "createdAt": "2026-03-05T11:31:17.830Z",
+        "id": 713,
+        "workflowId": "FHYohZccExR24Uha",
+        "versionId": "e10308b5-b4a9-49ae-b9f5-2daea9a7d04a",
+        "event": "activated",
+        "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
+      }
+    ]
+  }
 }

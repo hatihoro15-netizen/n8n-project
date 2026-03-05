@@ -7,10 +7,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-05
-- 현재 상태(1줄): Producer/Worker 크리덴셜 연결 + Activate + 웹훅 테스트 완료
+- 현재 상태(1줄): 외부 API 크리덴셜 3건 연결 + 테스트 완료 (Replicate/kie.ai/Creatomate)
 - 진행중 작업: -
-- 최근 완료: 크리덴셜 생성/연결, Activate, 웹훅 테스트 성공
-- 주의사항: 외부 API 키 미확보 (Worker 풀 파이프라인 미완)
+- 최근 완료: 외부 API 크리덴셜 생성/연결/테스트 성공
+- 주의사항: Claude API 키 미확보 (번역 노드), YouTube OAuth 미설정
 
 ---
 
@@ -81,3 +81,28 @@
 ### 📁 Files / Links
 - n8n/ao_producer.json, n8n/ao_worker.json
 - supabase/ao_supabase_init.sql
+
+## 2026-03-05 (4차)
+### ✅ Done
+- [x] 외부 API 크리덴셜 3건 생성 (n8n API)
+  - Replicate API: iG2Q9pXtGuE2xdoS
+  - KieAI TTS: OipYAEtrzhD1lJmL
+  - Creatomate API: 7uzM44eLOitv8ubQ
+- [x] Worker 워크플로우 5개 노드에 크리덴셜 연결
+  - 이미지 생성 (Replicate Flux Pro) + 폴링 → Replicate
+  - TTS 생성 → KieAI TTS + URL 변경 (ElevenLabs → kie.ai)
+  - 영상 렌더링 (Creatomate) + 폴링 → Creatomate
+- [x] Worker activate 확인
+- [x] 각 API 연결 테스트 성공
+  - Replicate: 200 (모델 정보 반환)
+  - kie.ai TTS: 200 (taskId 반환, Bearer auth)
+  - Creatomate: 400 (인증 통과, template_id 요구 — 정상)
+### 📌 Result
+- Worker 외부 API 3건 연결 완료, TTS 엔드포인트 kie.ai로 교체
+- 남은 크리덴셜: Claude API (번역), YouTube OAuth (업로드)
+### ➡️ Next (방향만)
+- Claude API 크리덴셜 + 번역 노드 연결
+- YouTube OAuth 설정
+- Worker 풀 파이프라인 테스트
+### 📁 Files / Links
+- n8n/ao_worker.json (업데이트)
