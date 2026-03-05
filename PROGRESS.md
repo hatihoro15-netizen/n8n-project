@@ -7,9 +7,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 웹앱 콜백 연동 완료 (production_id + uploaded/failed 콜백)
-- 진행중 작업: 웹앱 E2E 테스트
-- 최근 완료: 웹앱 콜백 노드 추가, Producer production_id 저장, VPS 환경변수 설정
+- 현재 상태(1줄): 통합 payload 구조 변경 완료 (clips[] → files[] + use_directly)
+- 진행중 작업: 웹앱 E2E 테스트 (새 payload 구조)
+- 최근 완료: Producer/Worker files[] 구조 대응, use_directly 분기, 분석 결과 프롬프트 통합
 - 주의사항: n8n publish 시스템 주의(배포 절차 HANDOFF.md 참조)
 
 ---
@@ -208,3 +208,24 @@
 ### 📁 Files / Links
 - n8n/ao_worker.json (콜백 노드 2개 추가)
 - n8n/ao_producer.json (production_id 저장)
+
+## 2026-03-06 (4차)
+### ✅ Done
+- [x] Producer 입력값 검증: clips[] → files[] 구조 변경
+  - files[].type (image/video), files[].url, files[].vision_analysis, files[].video_analysis, files[].use_directly
+  - 하위 호환: 기존 clips[] payload도 files[]로 자동 변환
+- [x] Worker AO 프롬프트 조립: 모든 파일의 분석 결과를 프롬프트에 반영 (유/무 관계없이)
+  - 최종 프롬프트 = [분석 결과들] + P1 원문 (100% 보존)
+- [x] Worker 멀티씬 순차 처리: files[] + use_directly 분기
+  - use_directly=true → Seedance에 이미지 직접 전달
+  - use_directly=false → 분석만 프롬프트에 반영, Seedance에 미전달
+  - include_audio/scene_prompt 제거 (메인 P1로 통합)
+- [x] VPS 배포 완료 (Producer + Worker active)
+### 📌 Result
+- 통합 업로드 구조 대응 완료
+- P1 원문 100% 보존 + 분석 결과 자동 반영
+### ➡️ Next (방향만)
+- 프론트에서 files[] payload E2E 테스트
+### 📁 Files / Links
+- n8n/ao_worker.json (assemble-prompt + process-clips 수정)
+- n8n/ao_producer.json (입력값 검증 수정)
