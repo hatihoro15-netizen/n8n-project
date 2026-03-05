@@ -377,6 +377,9 @@ function WhiskProductionForm() {
   const { data: workflowsData } = useWorkflows();
   const workflows = ((workflowsData as any)?.data || []) as any[];
 
+  // Aspect ratio
+  const [aspectRatio, setAspectRatio] = useState<'9:16' | '16:9'>('9:16');
+
   // Mode
   const [productionMode, setProductionMode] = useState<'ai_video' | 'slideshow'>('slideshow');
   const [hasImages, setHasImages] = useState<'yes' | 'no' | null>(null);
@@ -659,6 +662,7 @@ function WhiskProductionForm() {
         topic: formTopic.trim() || undefined,
         keywords: keywords.trim() || undefined,
         category: category.trim() || undefined,
+        aspect_ratio: aspectRatio,
         production_mode: productionMode,
         has_images: hasImages === 'yes',
         files,
@@ -712,7 +716,38 @@ function WhiskProductionForm() {
           </select>
         </div>
 
-        {/* 2. Production mode */}
+        {/* 2. Aspect ratio */}
+        <div>
+          <h4 className="text-sm font-medium mb-2">영상 비율</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => setAspectRatio('9:16')}
+              className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors ${
+                aspectRatio === '9:16'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-muted-foreground/20 hover:border-primary/40'
+              }`}
+            >
+              <span className="text-base">📱</span>
+              <span className="text-sm font-medium">숏폼 (9:16)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAspectRatio('16:9')}
+              className={`flex items-center justify-center gap-2 p-3 rounded-lg border-2 transition-colors ${
+                aspectRatio === '16:9'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-muted-foreground/20 hover:border-primary/40'
+              }`}
+            >
+              <span className="text-base">🖥️</span>
+              <span className="text-sm font-medium">롱폼 (16:9)</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 3. Production mode */}
         <div>
           <h4 className="text-sm font-medium mb-2">제작 방식</h4>
           <div className="grid grid-cols-2 gap-3">

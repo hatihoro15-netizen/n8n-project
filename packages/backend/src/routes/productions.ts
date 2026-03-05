@@ -151,6 +151,7 @@ export async function productionRoutes(app: FastifyInstance) {
       topic?: string;
       keywords?: string;
       category?: string;
+      aspect_ratio?: '9:16' | '16:9';
       production_mode?: 'ai_video' | 'slideshow';
       has_images?: boolean;
       clip_duration?: number;
@@ -218,6 +219,7 @@ export async function productionRoutes(app: FastifyInstance) {
         topic: body.topic,
         keywords: body.keywords,
         category: body.category,
+        aspect_ratio: body.aspect_ratio || '9:16',
         production_mode: body.production_mode || 'ai_video',
         has_images: body.has_images,
         clip_duration: body.clip_duration,

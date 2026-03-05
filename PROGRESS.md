@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 전체 영상 제작 UI 개편 완료 (슬라이드쇼+영상화 한 페이지 통합)
-- 진행중 작업: VPS 배포 + n8n ao-produce E2E 테스트
-- 최근 완료: UI 개편 (탭→단일페이지, SlotCard 통합, AI 이미지 생성)
-- 주의사항: n8n ao-produce 웹훅 활성화 필요
+- 현재 상태(1줄): 전체 영상 제작 UI 개편 완료 + VPS 배포 완료
+- 진행중 작업: n8n ao-produce E2E 테스트
+- 최근 완료: UI 개편 + VPS 배포
+- 주의사항: n8n ao-produce 웹훅 활성화 필요, PM2 프로세스명=n8n-web-backend
 
 ---
 
@@ -254,3 +254,14 @@
 ### Files / Links
 - productions-client.tsx (전면 재작성)
 - productions.ts (has_images, generated_images 추가)
+
+## 2026-03-06 (12차)
+### Done
+- [x] VPS 배포: git pull + npm install + tsc + pm2 restart n8n-web-backend
+### Result
+- PM2 online, tsc 통과
+- PM2 프로세스명: n8n-web-backend (n8n-backend 아님 주의)
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+### Files / Links
+- VPS: /root/n8n-web (feature/web-app)
