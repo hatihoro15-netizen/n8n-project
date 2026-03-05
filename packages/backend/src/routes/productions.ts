@@ -158,13 +158,19 @@ export async function productionRoutes(app: FastifyInstance) {
         type: 'image' | 'video';
         url: string;
         analysis?: string;
+        vision_analysis?: string;
         use_directly?: boolean;
+        use_mode?: 'direct' | 'generate' | 'analysis_only';
+        auto_prompt?: string;
       }[];
       ref_files?: {
         type: 'image';
         url: string;
         analysis?: string;
+        vision_analysis?: string;
         use_directly?: boolean;
+        use_mode?: 'direct' | 'generate' | 'analysis_only';
+        auto_prompt?: string;
       }[];
       clips?: {
         image_url: string;
