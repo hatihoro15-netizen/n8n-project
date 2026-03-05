@@ -36,6 +36,7 @@ import {
   RefreshCw,
   Check,
   Timer,
+  Star,
 } from 'lucide-react';
 import Link from 'next/link';
 import { proxyMediaUrl } from '@/lib/media';
@@ -85,20 +86,80 @@ async function uploadFilesToMinIO(files: File[]): Promise<string[]> {
 export default function ProductionsClient() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [starredFilter, setStarredFilter] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [starredIds, setStarredIds] = useState<Set<string>>(() => {
+    if (typeof window === 'undefined') return new Set();
+    try {
+      const saved = localStorage.getItem('productions_starred');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch { return new Set(); }
+  });
+  const queryClient = useQueryClient();
 
   const { data, isLoading } = useProductions({ page, status: statusFilter });
-  const productions = data?.data;
+  const allProductions = data?.data;
+  const productions = starredFilter
+    ? allProductions?.filter((p: any) => starredIds.has(p.id))
+    : allProductions;
   const pagination = data?.pagination;
+
+  const toggleStar = (id: string) => {
+    setStarredIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      localStorage.setItem('productions_starred', JSON.stringify([...next]));
+      return next;
+    });
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (!productions?.length) return;
+    const allIds = productions.map((p: any) => p.id);
+    const allSelected = allIds.every((id: string) => selectedIds.has(id));
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(allIds));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`선택한 ${selectedIds.size}개 항목을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.`)) return;
+    for (const id of selectedIds) {
+      try { await api.delete(`/api/productions/${id}`); } catch { /* skip */ }
+    }
+    setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: ['productions'] });
+  };
+
+  const handleBulkArchive = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`선택한 ${selectedIds.size}개 항목을 보관하시겠습니까?`)) return;
+    for (const id of selectedIds) {
+      try { await api.patch(`/api/productions/${id}`, { status: 'archived' }); } catch { /* skip */ }
+    }
+    setSelectedIds(new Set());
+    queryClient.invalidateQueries({ queryKey: ['productions'] });
+  };
 
   const statuses = [
     { value: undefined, label: '전체' },
-    { value: 'pending', label: '대기' },
-    { value: 'started', label: '시작됨' },
     { value: 'completed', label: '완료' },
     { value: 'failed', label: '실패' },
     { value: 'paused', label: '정지' },
+    { value: 'pending', label: '대기' },
     { value: 'archived', label: '보관' },
   ];
 
@@ -136,13 +197,21 @@ export default function ProductionsClient() {
             {statuses.map((s) => (
               <Button
                 key={s.label}
-                variant={statusFilter === s.value ? 'default' : 'outline'}
+                variant={!starredFilter && statusFilter === s.value ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => { setStatusFilter(s.value); setPage(1); }}
+                onClick={() => { setStarredFilter(false); setStatusFilter(s.value); setPage(1); setSelectedIds(new Set()); }}
               >
                 {s.label}
               </Button>
             ))}
+            <Button
+              variant={starredFilter ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => { setStarredFilter(!starredFilter); setSelectedIds(new Set()); }}
+            >
+              <Star className={`h-3.5 w-3.5 mr-1 ${starredFilter ? 'fill-current' : ''}`} />
+              별표
+            </Button>
           </div>
           <div className="flex items-center gap-2">
             <Button onClick={() => setShowForm(!showForm)}>
@@ -161,12 +230,37 @@ export default function ProductionsClient() {
         {/* Whisk-style Production Form */}
         {showForm && <WhiskProductionForm />}
 
+        {/* Bulk Action Bar */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 px-4 py-2.5 bg-primary/5 border border-primary/20 rounded-lg">
+            <span className="text-sm font-medium">선택 {selectedIds.size}개</span>
+            <Button size="sm" variant="outline" onClick={handleBulkArchive}>
+              <Archive className="h-3.5 w-3.5 mr-1" />보관
+            </Button>
+            <Button size="sm" variant="outline" className="text-red-600 hover:text-red-700 hover:bg-red-50" onClick={handleBulkDelete}>
+              <Trash2 className="h-3.5 w-3.5 mr-1" />삭제
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => setSelectedIds(new Set())}>
+              취소
+            </Button>
+          </div>
+        )}
+
         {/* Production List */}
         <Card>
           <CardContent className="p-0">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
+                  <th className="px-2 py-3 w-8">
+                    <input
+                      type="checkbox"
+                      checked={!!productions?.length && productions.every((p: any) => selectedIds.has(p.id))}
+                      onChange={toggleSelectAll}
+                      className="h-4 w-4 rounded border-gray-300 accent-primary"
+                    />
+                  </th>
+                  <th className="px-2 py-3 w-8" />
                   <th className="px-4 py-3 text-left font-medium w-8" />
                   <th className="px-4 py-3 text-left font-medium">채널</th>
                   <th className="px-4 py-3 text-left font-medium">워크플로우</th>
@@ -180,13 +274,13 @@ export default function ProductionsClient() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
                       로딩 중...
                     </td>
                   </tr>
                 ) : productions?.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
+                    <td colSpan={10} className="px-4 py-8 text-center text-muted-foreground">
                       {statusFilter === 'archived' ? '보관된 제작이 없습니다.' : '제작 이력이 없습니다.'}
                     </td>
                   </tr>
@@ -200,6 +294,10 @@ export default function ProductionsClient() {
                       videoUrl={getVideoUrl(prod.assets)}
                       thumbnailUrl={getThumbnailUrl(prod.assets)}
                       script={getScript(prod.assets)}
+                      isSelected={selectedIds.has(prod.id)}
+                      onSelect={() => toggleSelect(prod.id)}
+                      isStarred={starredIds.has(prod.id)}
+                      onToggleStar={() => toggleStar(prod.id)}
                     />
                   ))
                 )}
@@ -868,6 +966,10 @@ function AccordionRow({
   videoUrl,
   thumbnailUrl,
   script,
+  isSelected,
+  onSelect,
+  isStarred,
+  onToggleStar,
 }: {
   prod: any;
   isExpanded: boolean;
@@ -875,6 +977,10 @@ function AccordionRow({
   videoUrl: string | null;
   thumbnailUrl: string | null;
   script: string | null;
+  isSelected: boolean;
+  onSelect: () => void;
+  isStarred: boolean;
+  onToggleStar: () => void;
 }) {
   const [aborting, setAborting] = useState(false);
   const [archiving, setArchiving] = useState(false);
@@ -928,9 +1034,22 @@ function AccordionRow({
   return (
     <>
       <tr
-        className={`border-b hover:bg-muted/50 cursor-pointer select-none transition-colors ${isExpanded ? 'bg-muted/30' : ''}`}
+        className={`border-b hover:bg-muted/50 cursor-pointer select-none transition-colors ${isExpanded ? 'bg-muted/30' : ''} ${isSelected ? 'bg-primary/5' : ''}`}
         onClick={onToggle}
       >
+        <td className="px-2 py-3" onClick={e => e.stopPropagation()}>
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={onSelect}
+            className="h-4 w-4 rounded border-gray-300 accent-primary"
+          />
+        </td>
+        <td className="px-2 py-3" onClick={e => e.stopPropagation()}>
+          <button onClick={onToggleStar} className="p-0.5 hover:scale-110 transition-transform">
+            <Star className={`h-4 w-4 ${isStarred ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground/30 hover:text-yellow-400'}`} />
+          </button>
+        </td>
         <td className="px-4 py-3">
           <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
         </td>
@@ -977,7 +1096,7 @@ function AccordionRow({
       </tr>
       {isExpanded && (
         <tr className="border-b bg-muted/10">
-          <td colSpan={8} className="px-6 py-5">
+          <td colSpan={10} className="px-6 py-5">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-1">
                 {videoUrl ? (
