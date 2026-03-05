@@ -16,7 +16,7 @@ export interface Channel {
 }
 
 // --- Workflow ---
-export type WorkflowType = 'shortform' | 'longform' | 'story_shorts';
+export type WorkflowType = 'shortform' | 'longform' | 'story_shorts' | 'ao';
 
 export interface Workflow {
   id: string;

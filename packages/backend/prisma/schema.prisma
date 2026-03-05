@@ -51,6 +51,7 @@ enum WorkflowType {
   shortform
   longform
   story_shorts
+  ao
 }
 
 model Character {
