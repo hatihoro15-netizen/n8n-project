@@ -9,14 +9,21 @@
 | topic | Y | string | 주제 (1줄 정의) |
 | keywords | Y | string | 키워드 (쉼표 구분) |
 | category | Y | string | 카테고리 |
-| images | N | string[] | 이미지 URL 1~4개. 슬롯 자동 매핑 |
+| images[1..4] | N | string[] | 이미지 URL 1~4개. 슬롯 자동 매핑 |
 | ref_video | N | string | 레퍼런스 영상 URL |
 | use_media | Y | string | auto / forced / off |
-| proxy_profile | N | string | auto-rotate(기본) / fixed / none |
-| upload_target | Y | string | 업로드 대상 (YouTube Shorts 등) |
+| template_id | N | string | 영상 템플릿 선택 (뉴스/광고/스토리 등) |
+| upload_target | Y | string | YouTube |
 | metadata.title | N | string | 영상 제목 |
 | metadata.description | N | string | 영상 설명 |
 | metadata.tags | N | string | 태그 (쉼표 구분) |
+
+## 파생 필드 (자동 생성)
+| 필드 | 설명 |
+|------|------|
+| prompt_lang_detected | 언어 감지 결과 (ko/en/...) |
+| prompt_en | 영문 복사용 프롬프트 |
+| prompt_to_engine | 실제 엔진에 전달된 최종 프롬프트 |
 
 ## use_media 모드
 - **auto**: 이미지/영상 있으면 활용, 없으면 프롬프트만으로 생성

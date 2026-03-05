@@ -7,10 +7,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-05
-- 현재 상태(1줄): 프로젝트 셋업 + 씨덴스 API 조사 완료
+- 현재 상태(1줄): 통합 스펙 기반 docs 전면 업데이트 완료
 - 진행중 작업: -
-- 최근 완료: 초기 셋업, 씨덴스 API 조사, Producer 초안 설계
-- 주의사항: 씨덴스 공식 API 미출시 — 서드파티 접근 필요
+- 최근 완료: 통합 스펙 반영 (Creatomate/Replicate/ElevenLabs/Supabase)
+- 주의사항: 외부 API 키 미확보, Supabase 프로젝트 미생성
 
 ---
 
@@ -40,3 +40,24 @@
 ### 📁 Files / Links
 - ao-pipeline/CLAUDE.md, HANDOFF.md, PROGRESS.md
 - ao-pipeline/docs/01~05
+
+## 2026-03-05 (2차)
+### ✅ Done
+- [x] 통합 스펙(AO_영상자동화_통합스펙.md) 기반 docs 전면 업데이트
+- [x] CLAUDE.md — 기술 스택 교체 (Creatomate/Replicate/ElevenLabs/Supabase)
+- [x] docs/01 — 아키텍처 전면 수정 (9탭 UI, 개발 우선순위 포함)
+- [x] docs/02 — DB 스키마 수정 (Supabase + 7개 테이블)
+- [x] docs/03 — 씨덴스 → 멀티 API 연동 스펙으로 교체
+- [x] docs/04 — Producer + Worker 워크플로우 설계 통합
+- [x] docs/05 — 입력 스키마 업데이트 (template_id, 파생 필드 추가)
+### 📌 Result
+- 씨덴스 단독 → Creatomate(영상) + Replicate(이미지) + ElevenLabs(TTS) 조합으로 전환
+- DB: n8n-postgres → Supabase (Storage/Auth 포함)
+- 프론트: Next.js + Tailwind + shadcn/ui (9탭 관리 UI)
+### ➡️ Next (방향만)
+- Supabase 프로젝트 생성 + DB 테이블 생성
+- Next.js 프론트 초기화
+- n8n Producer 워크플로우 구현
+### 📁 Files / Links
+- CLAUDE.md, HANDOFF.md, PROGRESS.md
+- docs/01~05 (전면 수정), docs/03-api-integration.md (신규)

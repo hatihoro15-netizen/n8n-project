@@ -1,21 +1,22 @@
 # HANDOFF.md — 세션 스냅샷 (항상 전체 Overwrite)
 
 ## Current Status
-프로젝트 초기 셋업 완료 / 씨덴스 API 조사 완료
+통합 스펙 기반 docs 전면 업데이트 완료
 
 ## Goal
-n8n Producer 워크플로우 구현 시작
+1순위 기능 구현 시작 (채널/API 연결 → 이미지 생성 → 영상 제작+큐)
 
 ## Next Actions
-1. [ ] DB 테이블 생성 (jobs, job_media, job_logs, proxy_pool)
-2. [ ] n8n Producer 워크플로우 구현 (웹훅 → 검증 → Job 생성 → Queue Push)
-3. [ ] 씨덴스 API 키 확보 및 연동 테스트
+1. [ ] Supabase 프로젝트 생성 + DB 테이블 생성
+2. [ ] Next.js 프론트 프로젝트 초기화 (채널/API 연결 탭 우선)
+3. [ ] n8n Producer 워크플로우 구현
 
 ## Last Run
-커맨드: (없음 — 초기 세팅)
-결과: -
+커맨드: docs 전면 업데이트 (통합 스펙 반영)
+결과: PASS
 위치: Local
-Last Commit: init: AO 프롬프트 영상 자동화 프로젝트 셋업
+Last Commit: docs: 통합 스펙 기반 전면 업데이트
 
 ## Blockers
-- 씨덴스 공식 API 미출시 (2026-02 기준) — 서드파티(fal.ai/ModelsLab) 또는 Dreamina CPP 필요
+- 외부 API 키 미확보 (Replicate, ElevenLabs, Creatomate, YouTube OAuth)
+- Supabase 프로젝트 미생성
