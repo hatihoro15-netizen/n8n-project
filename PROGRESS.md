@@ -7,10 +7,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-05
-- 현재 상태(1줄): 통합 스펙 기반 docs 전면 업데이트 완료
+- 현재 상태(1줄): Producer/Worker 크리덴셜 연결 + Activate + 웹훅 테스트 완료
 - 진행중 작업: -
-- 최근 완료: 통합 스펙 반영 (Creatomate/Replicate/ElevenLabs/Supabase)
-- 주의사항: 외부 API 키 미확보, Supabase 프로젝트 미생성
+- 최근 완료: 크리덴셜 생성/연결, Activate, 웹훅 테스트 성공
+- 주의사항: 외부 API 키 미확보 (Worker 풀 파이프라인 미완)
 
 ---
 
@@ -61,3 +61,23 @@
 ### 📁 Files / Links
 - CLAUDE.md, HANDOFF.md, PROGRESS.md
 - docs/01~05 (전면 수정), docs/03-api-integration.md (신규)
+
+## 2026-03-05 (3차)
+### ✅ Done
+- [x] DB 테이블 생성 (VPS n8n-postgres, 7개 테이블 + 인덱스 + 트리거)
+- [x] n8n Producer/Worker 워크플로우 import
+- [x] Postgres credential 생성 (API, ID: 4W3WKJLsJKa9hVAA)
+- [x] Producer(1개) + Worker(6개) Postgres 노드에 크리덴셜 연결
+- [x] Worker activate → Producer activate
+- [x] Producer 웹훅 테스트 성공 (job_id 반환 + DB queued→processing 확인)
+### 📌 Result
+- Producer: XV5shW265ht59MTD (active)
+- Worker: FHYohZccExR24Uha (active)
+- 테스트 Job: 032ae279-5ebf-4ee0-a917-980f3b7dd682 (processing)
+### ➡️ Next (방향만)
+- 외부 API 키 설정 (Replicate, ElevenLabs, Creatomate, YouTube OAuth)
+- Worker 풀 파이프라인 테스트
+- Next.js 프론트 초기화
+### 📁 Files / Links
+- n8n/ao_producer.json, n8n/ao_worker.json
+- supabase/ao_supabase_init.sql
