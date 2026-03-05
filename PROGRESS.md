@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 슬라이드쇼 UI 개편 완료 (20장 + 선택지 3가지) + VPS 배포 완료
-- 진행중 작업: n8n ao-produce E2E 테스트
-- 최근 완료: 슬라이드쇼 UI (SlideshowSlotCard + use_mode/auto_prompt)
+- 현재 상태(1줄): 전체 영상 제작 UI 개편 완료 (슬라이드쇼+영상화 한 페이지 통합)
+- 진행중 작업: VPS 배포 + n8n ao-produce E2E 테스트
+- 최근 완료: UI 개편 (탭→단일페이지, SlotCard 통합, AI 이미지 생성)
 - 주의사항: n8n ao-produce 웹훅 활성화 필요
 
 ---
@@ -235,3 +235,22 @@
 ### Files / Links
 - productions-client.tsx (슬라이드쇼 UI + SlideshowSlotCard)
 - productions.ts (files[] use_mode, auto_prompt)
+
+## 2026-03-06 (11차)
+### Done
+- [x] 전체 영상 제작 UI 개편: 탭(Step1/Step2) → 단일 페이지 플로우
+- [x] "이미지가 있나요?" 분기: 있으면 업로드 슬롯, 없으면 AI 생성
+- [x] AI 이미지 생성 UI: 프롬프트 + 수량(2/4/6/8) + 미리보기 그리드 + 수락/재생성
+- [x] SlotCard 통합 컴포넌트: 이미지(3가지 선택지) + 영상(간단 프리뷰)
+- [x] FileCard + SlideshowSlotCard → SlotCard 통합
+- [x] refFiles/uploadedFiles/slideshowSlots → imageSlots/videoSlots 상태 단순화
+- [x] 백엔드 has_images, generated_images 웹훅 payload 추가
+### Result
+- TypeScript + quality-check PASS
+- 코드 567 추가, 691 삭제 (124줄 감소)
+### Next (방향만)
+- VPS 배포
+- n8n ao-produce 웹훅 E2E 테스트
+### Files / Links
+- productions-client.tsx (전면 재작성)
+- productions.ts (has_images, generated_images 추가)
