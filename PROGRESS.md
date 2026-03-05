@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): AO 파이프라인 연결 + 라이브365 워크플로우 + VPS 배포 완료
+- 현재 상태(1줄): AO 워크플로우 정리 완료 (라이브365 1개만 표시)
 - 진행중 작업: n8n ao-produce E2E 테스트
-- 최근 완료: AO 파이프라인 + 워크플로우 선택 + 라이브365 DB seed
+- 최근 완료: AO Producer→라이브365 이름 변경 + AO Worker 삭제
 - 주의사항: n8n ao-produce 웹훅 활성화 필요
 
 ---
@@ -134,3 +134,32 @@
 - productions-client.tsx (워크플로우 선택 + JobStatusBadge + 폴링)
 - characters-client.tsx (프로필 이미지)
 - VPS DB: channels (라이브365), workflows (AO Producer, AO Worker)
+
+## 2026-03-06 (5차)
+### Done
+- [x] AO 영상 제작 UI 전면 재작성: 10슬롯 그리드 → 통합 드래그&드롭 파일 업로드
+- [x] 파일별 "유/무" 토글 (직접 사용 / 분석만)
+- [x] 이미지+영상 동시 업로드 지원, 자동 Claude Vision 분석
+- [x] 백엔드 POST /api/productions/ao에 files[] 배열 지원 추가 (clips[] 하위호환)
+- [x] VPS 배포 + PM2 재시작
+### Result
+- 타입 체크 통과 + VPS 배포 완료 (PM2 online)
+- 기존 슬롯 구조(Slot, RefImage, ImageSlot, RefImageSlot) 완전 제거
+- 새 구조: UploadedFile 타입 + FileCard 컴포넌트 + 통합 드롭존
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+- Cloudflare Pages 프론트엔드 빌드 확인
+### Files / Links
+- productions-client.tsx (전면 재작성: 슬롯→통합 파일 업로드)
+- productions.ts (files[] 지원 추가)
+
+## 2026-03-06 (6차)
+### Done
+- [x] AO Producer 이름 → "라이브365" 변경 (VPS DB)
+- [x] AO Worker 삭제 (내부용, 목록 노출 불필요)
+### Result
+- 워크플로우 목록에 AO 타입은 "라이브365" 1개만 표시
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+### Files / Links
+- VPS DB: workflows 테이블 UPDATE/DELETE
