@@ -21,7 +21,7 @@ export const config = {
   },
 
   minio: {
-    endpoint: process.env.MINIO_ENDPOINT || 'http://76.13.182.180:9000',
+    endpoint: process.env.MINIO_ENDPOINT || `http://${process.env.VPS_HOST || '127.0.0.1'}:9000`,
     accessKey: process.env.MINIO_ACCESS_KEY || '',
     secretKey: process.env.MINIO_SECRET_KEY || '',
     bucket: process.env.MINIO_BUCKET || 'arubto',

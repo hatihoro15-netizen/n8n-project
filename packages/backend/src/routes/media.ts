@@ -4,7 +4,7 @@ import { config } from '../config';
 import { logger } from '../utils/logger';
 import crypto from 'crypto';
 
-const ALLOWED_HOSTS = ['76.13.182.180'];
+const ALLOWED_HOSTS = [process.env.VPS_HOST || '127.0.0.1'];
 
 const s3 = new S3Client({
   endpoint: config.minio.endpoint,
