@@ -33,10 +33,10 @@ import {
   Timer,
   Star,
   Eye,
-  EyeOff,
   Image as ImageIcon,
   Video,
   Wand2,
+  RefreshCw,
 } from 'lucide-react';
 import Link from 'next/link';
 import { proxyMediaUrl } from '@/lib/media';
@@ -244,7 +244,7 @@ export default function ProductionsClient() {
           </div>
         </div>
 
-        {/* Whisk-style Production Form */}
+        {/* Production Form */}
         {showForm && <WhiskProductionForm />}
 
         {/* Bulk Action Bar */}
@@ -370,33 +370,35 @@ export default function ProductionsClient() {
 }
 
 // ══════════════════════════════════════════════
-// Whisk Production Form (2-step: Upload → Prompt)
+// Production Form (single page, no tabs)
 // ══════════════════════════════════════════════
 function WhiskProductionForm() {
-  const [activeTab, setActiveTab] = useState<'upload' | 'prompt'>('upload');
   const queryClient = useQueryClient();
   const { data: workflowsData } = useWorkflows();
   const workflows = ((workflowsData as any)?.data || []) as any[];
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const refInputRef = useRef<HTMLInputElement>(null);
-  const imgInputRef = useRef<HTMLInputElement>(null);
-  const vidInputRef = useRef<HTMLInputElement>(null);
 
-  // Step 1: Reference images (max 5)
-  const [refFiles, setRefFiles] = useState<UploadedFile[]>([]);
+  // Mode
+  const [productionMode, setProductionMode] = useState<'ai_video' | 'slideshow'>('slideshow');
+  const [hasImages, setHasImages] = useState<'yes' | 'no' | null>(null);
 
-  // Step 2: Production files — images (max 5) + videos (max 5)
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+  // AI Image Generation (hasImages === 'no')
+  const [genPrompt, setGenPrompt] = useState('');
+  const [genCount, setGenCount] = useState(4);
+  const [generating, setGenerating] = useState(false);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [generatedAccepted, setGeneratedAccepted] = useState(false);
 
-  // Step 2: Prompt fields
+  // Slots
+  const [imageSlots, setImageSlots] = useState<(UploadedFile | null)[]>([null, null, null]);
+  const [videoSlots, setVideoSlots] = useState<(UploadedFile | null)[]>([]);
+
+  // Prompt
   const [promptP1, setPromptP1] = useState('');
   const [formTopic, setFormTopic] = useState('');
   const [keywords, setKeywords] = useState('');
   const [category, setCategory] = useState('');
   const [clipDuration, setClipDuration] = useState<5 | 8>(5);
-  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>('');
-  const [productionMode, setProductionMode] = useState<'ai_video' | 'slideshow'>('ai_video');
-  const [slideDuration, setSlideDuration] = useState<2 | 3 | 5>(3);
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState('');
 
   // Form state
   const [submitting, setSubmitting] = useState(false);
@@ -409,101 +411,75 @@ function WhiskProductionForm() {
   const [jobVideoUrl, setJobVideoUrl] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const prodImages = uploadedFiles.filter(f => f.type === 'image');
-  const prodVideos = uploadedFiles.filter(f => f.type === 'video');
+  const maxImageSlots = productionMode === 'slideshow' ? 20 : 5;
+  const filledImageCount = imageSlots.filter(s => s !== null).length;
+  const filledVideoCount = videoSlots.filter(s => s !== null).length;
+  const showSlots = hasImages === 'yes' || generatedAccepted;
 
-  // Slideshow-specific state
-  const [slideshowSlots, setSlideshowSlots] = useState<(UploadedFile | null)[]>([null, null, null]);
-  const [slideshowHasImages, setSlideshowHasImages] = useState<'yes' | 'no' | null>(null);
-  const filledSlideshowCount = slideshowSlots.filter(s => s !== null).length;
-
-  // ── Add ref images (Step 1, max 5) ──
-  const addRefImages = useCallback((fileList: FileList | File[]) => {
-    const newFiles: UploadedFile[] = [];
-    for (const file of Array.from(fileList)) {
-      if (!file.type.startsWith('image/')) continue;
-      const preview = URL.createObjectURL(file);
-      newFiles.push({
-        id: nextFileId(), file, preview, type: 'image',
-        useDirectly: true, useMode: 'direct' as const, autoPrompt: null, analysis: null, analyzing: false, url: null,
-      });
+  // ── Slot handlers ──
+  const addSlot = (target: 'image' | 'video') => {
+    if (target === 'image') {
+      setImageSlots(prev => prev.length < maxImageSlots ? [...prev, null] : prev);
+    } else {
+      setVideoSlots(prev => prev.length < 5 ? [...prev, null] : prev);
     }
-    setRefFiles(prev => {
-      const combined = [...prev, ...newFiles].slice(0, 5);
-      return combined;
-    });
-    for (const uf of newFiles) {
-      analyzeFileInState(uf.id, uf.file, 'ref');
-    }
-  }, []);
+  };
 
-  const removeRefFile = (id: string) => {
-    setRefFiles(prev => {
-      const file = prev.find(f => f.id === id);
-      if (file) URL.revokeObjectURL(file.preview);
-      return prev.filter(f => f.id !== id);
+  const removeSlot = (target: 'image' | 'video', index: number) => {
+    const setter = target === 'image' ? setImageSlots : setVideoSlots;
+    setter(prev => {
+      const slot = prev[index];
+      if (slot) URL.revokeObjectURL(slot.preview);
+      return prev.filter((_, i) => i !== index);
     });
   };
 
-  const toggleRefUseDirectly = (id: string) => {
-    setRefFiles(prev => prev.map(f =>
-      f.id === id ? { ...f, useDirectly: !f.useDirectly } : f
-    ));
+  const uploadToSlot = (target: 'image' | 'video', index: number, file: File) => {
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    if (target === 'image' && !isImage) return;
+    if (target === 'video' && !isVideo) return;
+
+    const preview = URL.createObjectURL(file);
+    const uf: UploadedFile = {
+      id: nextFileId(), file, preview,
+      type: isImage ? 'image' : 'video',
+      useDirectly: true, useMode: 'direct', autoPrompt: null,
+      analysis: null, analyzing: false, url: null,
+    };
+
+    const setter = target === 'image' ? setImageSlots : setVideoSlots;
+    setter(prev => prev.map((s, i) => i === index ? uf : s));
+
+    if (isImage) {
+      analyzeSlotFile(uf.id, uf.file, target);
+    }
   };
 
-  // ── Add production files (Step 2) ──
-  const addProdFiles = useCallback((fileList: FileList | File[], filterType?: 'image' | 'video') => {
-    const newFiles: UploadedFile[] = [];
-    for (const file of Array.from(fileList)) {
-      const isImage = file.type.startsWith('image/');
-      const isVideo = file.type.startsWith('video/');
-      if (!isImage && !isVideo) continue;
-      if (filterType === 'image' && !isImage) continue;
-      if (filterType === 'video' && !isVideo) continue;
-
-      const preview = URL.createObjectURL(file);
-      newFiles.push({
-        id: nextFileId(), file, preview,
-        type: isImage ? 'image' : 'video',
-        useDirectly: true, useMode: 'direct' as const, autoPrompt: null, analysis: null, analyzing: false, url: null,
-      });
-    }
-
-    setUploadedFiles(prev => {
-      const combined = [...prev, ...newFiles];
-      // Enforce max 5 images + 5 videos
-      const images = combined.filter(f => f.type === 'image').slice(0, 5);
-      const videos = combined.filter(f => f.type === 'video').slice(0, 5);
-      return [...images, ...videos];
-    });
-
-    for (const uf of newFiles) {
-      if (uf.type === 'image') {
-        analyzeFileInState(uf.id, uf.file, 'prod');
-      }
-    }
-  }, []);
-
-  const removeFile = (id: string) => {
-    setUploadedFiles(prev => {
-      const file = prev.find(f => f.id === id);
-      if (file) URL.revokeObjectURL(file.preview);
-      return prev.filter(f => f.id !== id);
-    });
+  const changeUseMode = (target: 'image' | 'video', index: number, mode: 'direct' | 'generate' | 'analysis_only') => {
+    const setter = target === 'image' ? setImageSlots : setVideoSlots;
+    setter(prev => prev.map((s, i) => {
+      if (i !== index || !s) return s;
+      return {
+        ...s,
+        useMode: mode,
+        autoPrompt: mode === 'analysis_only' ? (s.autoPrompt || s.analysis || '') : s.autoPrompt,
+      };
+    }));
   };
 
-  const toggleUseDirectly = (id: string) => {
-    setUploadedFiles(prev => prev.map(f =>
-      f.id === id ? { ...f, useDirectly: !f.useDirectly } : f
+  const changeAutoPrompt = (target: 'image' | 'video', index: number, prompt: string) => {
+    const setter = target === 'image' ? setImageSlots : setVideoSlots;
+    setter(prev => prev.map((s, i) =>
+      i === index && s ? { ...s, autoPrompt: prompt } : s
     ));
   };
 
   // ── Claude Vision analysis ──
-  const analyzeFileInState = async (fileId: string, file: File, target: 'ref' | 'prod' | 'slideshow') => {
+  const analyzeSlotFile = async (fileId: string, file: File, target: 'image' | 'video') => {
+    const setter = target === 'image' ? setImageSlots : setVideoSlots;
     const updateFile = (updater: (f: UploadedFile) => UploadedFile) => {
-      if (target === 'ref') setRefFiles(prev => prev.map(f => f.id === fileId ? updater(f) : f));
-      else if (target === 'prod') setUploadedFiles(prev => prev.map(f => f.id === fileId ? updater(f) : f));
-      else setSlideshowSlots(prev => prev.map(s => s?.id === fileId ? updater(s) : s));
+      setter(prev => prev.map(s => s?.id === fileId ? updater(s) : s));
     };
 
     updateFile(f => ({ ...f, analyzing: true }));
@@ -511,7 +487,6 @@ function WhiskProductionForm() {
     try {
       const urls = await uploadFilesToMinIO([file]);
       if (!urls[0]) return;
-
       updateFile(f => ({ ...f, url: urls[0] }));
 
       const token = api.getToken();
@@ -536,46 +511,52 @@ function WhiskProductionForm() {
     updateFile(f => ({ ...f, analyzing: false }));
   };
 
-  // ── Slideshow slot handlers ──
-  const addSlideshowSlot = () => {
-    setSlideshowSlots(prev => prev.length < 20 ? [...prev, null] : prev);
+  // ── AI Image Generation ──
+  const handleGenerate = async () => {
+    if (!genPrompt.trim()) {
+      setFormError('이미지 생성 프롬프트를 입력해주세요.');
+      return;
+    }
+    setGenerating(true);
+    setFormError('');
+    try {
+      const token = api.getToken();
+      const res = await fetch(`${API_BASE}/api/media/generate-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ prompt: genPrompt, count: genCount }),
+      });
+      const data = await res.json();
+      if (data.data?.images?.length) {
+        setGeneratedImages(data.data.images);
+      } else {
+        setFormError('이미지 생성에 실패했습니다. 다시 시도해주세요.');
+      }
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : '이미지 생성 실패');
+    } finally {
+      setGenerating(false);
+    }
   };
 
-  const removeSlideshowSlot = (index: number) => {
-    setSlideshowSlots(prev => {
-      const slot = prev[index];
-      if (slot) URL.revokeObjectURL(slot.preview);
-      return prev.filter((_, i) => i !== index);
-    });
-  };
-
-  const uploadToSlideshowSlot = (index: number, file: File) => {
-    if (!file.type.startsWith('image/')) return;
-    const preview = URL.createObjectURL(file);
-    const uf: UploadedFile = {
-      id: nextFileId(), file, preview, type: 'image',
-      useDirectly: true, useMode: 'direct', autoPrompt: null,
-      analysis: null, analyzing: false, url: null,
-    };
-    setSlideshowSlots(prev => prev.map((s, i) => i === index ? uf : s));
-    analyzeFileInState(uf.id, uf.file, 'slideshow');
-  };
-
-  const changeSlideshowUseMode = (index: number, mode: 'direct' | 'generate' | 'analysis_only') => {
-    setSlideshowSlots(prev => prev.map((s, i) => {
-      if (i !== index || !s) return s;
-      return {
-        ...s,
-        useMode: mode,
-        autoPrompt: mode === 'analysis_only' ? (s.autoPrompt || s.analysis || '') : s.autoPrompt,
-      };
+  const acceptGeneratedImages = () => {
+    const newSlots: (UploadedFile | null)[] = generatedImages.map(url => ({
+      id: nextFileId(),
+      file: new File([], 'generated.png'),
+      preview: url,
+      type: 'image' as const,
+      useDirectly: true,
+      useMode: 'direct' as const,
+      autoPrompt: null,
+      analysis: null,
+      analyzing: false,
+      url,
     }));
-  };
-
-  const changeSlideshowAutoPrompt = (index: number, prompt: string) => {
-    setSlideshowSlots(prev => prev.map((s, i) =>
-      i === index && s ? { ...s, autoPrompt: prompt } : s
-    ));
+    setImageSlots(newSlots);
+    setGeneratedAccepted(true);
   };
 
   // ── Polling: track job status ──
@@ -612,24 +593,30 @@ function WhiskProductionForm() {
       setFormError('워크플로우를 선택해주세요.');
       return;
     }
+    if (hasImages === null) {
+      setFormError('이미지 유무를 선택해주세요.');
+      return;
+    }
 
     const isSlideshow = productionMode === 'slideshow';
 
-    if (isSlideshow) {
-      if (!promptP1.trim()) {
-        setFormError('슬라이드쇼 모드에서는 프롬프트가 필수입니다.');
-        return;
-      }
-      const filledSlots = slideshowSlots.filter((s): s is UploadedFile => s !== null);
-      if (filledSlots.length === 0) {
-        setFormError('이미지를 1개 이상 추가해주세요.');
-        return;
-      }
-    } else {
-      if (uploadedFiles.length === 0) {
-        setFormError('이미지 또는 영상을 1개 이상 추가해주세요.');
-        return;
-      }
+    if (isSlideshow && !promptP1.trim()) {
+      setFormError('슬라이드쇼 모드에서는 프롬프트가 필수입니다.');
+      return;
+    }
+
+    const filledImages = imageSlots.filter((s): s is UploadedFile => s !== null);
+    if (filledImages.length === 0 && hasImages === 'yes') {
+      setFormError('이미지를 1개 이상 추가해주세요.');
+      return;
+    }
+    if (filledImages.length === 0 && generatedAccepted) {
+      setFormError('생성된 이미지가 없습니다.');
+      return;
+    }
+    if (hasImages === 'no' && !generatedAccepted) {
+      setFormError('이미지를 먼저 생성해주세요.');
+      return;
     }
 
     setSubmitting(true);
@@ -662,11 +649,9 @@ function WhiskProductionForm() {
         return result;
       };
 
-      const fileSource = isSlideshow
-        ? slideshowSlots.filter((s): s is UploadedFile => s !== null)
-        : uploadedFiles;
-      const files = await prepareFiles(fileSource);
-      const ref_files = await prepareFiles(refFiles);
+      const filledVideos = videoSlots.filter((s): s is UploadedFile => s !== null);
+      const allFiles = [...filledImages, ...filledVideos];
+      const files = await prepareFiles(allFiles);
 
       const payload: Record<string, unknown> = {
         workflowId: selectedWorkflowId,
@@ -675,9 +660,13 @@ function WhiskProductionForm() {
         keywords: keywords.trim() || undefined,
         category: category.trim() || undefined,
         production_mode: productionMode,
+        has_images: hasImages === 'yes',
         files,
-        ref_files: ref_files.length > 0 ? ref_files : undefined,
       };
+
+      if (hasImages === 'no' && generatedImages.length > 0) {
+        payload.generated_images = generatedImages;
+      }
 
       if (!isSlideshow) {
         payload.clip_duration = clipDuration;
@@ -702,447 +691,384 @@ function WhiskProductionForm() {
 
   return (
     <Card>
-      <CardContent className="p-0">
-        {/* Tab Headers */}
-        <div className="flex border-b">
-          <button
-            type="button"
-            onClick={() => setActiveTab('upload')}
-            className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'upload'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
+      <CardContent className="p-6 space-y-5">
+        {/* 1. Workflow selector */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium" htmlFor="workflow_select">
+            워크플로우 <span className="text-red-500">*</span>
+          </label>
+          <select
+            id="workflow_select"
+            value={selectedWorkflowId}
+            onChange={e => setSelectedWorkflowId(e.target.value)}
+            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
           >
-            <Upload className="h-4 w-4" />
-            Step 1. 참고 이미지
-            {refFiles.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-xs">{refFiles.length}</Badge>
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('prompt')}
-            className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'prompt'
-                ? 'border-primary text-primary'
-                : 'border-transparent text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            <Film className="h-4 w-4" />
-            Step 2. 프롬프트 & 제작
-          </button>
+            <option value="">워크플로우를 선택하세요</option>
+            {workflows.filter((w: any) => w.isActive && w.webhookPath).map((w: any) => (
+              <option key={w.id} value={w.id}>
+                {w.channel?.name ? `[${w.channel.name}] ` : ''}{w.name}
+              </option>
+            ))}
+          </select>
         </div>
 
-        <div className="p-6">
-          {/* ── STEP 1: Reference Images ── */}
-          {activeTab === 'upload' && (
-            <div className="space-y-5">
-              <div>
-                <h4 className="text-sm font-medium mb-1">참고 이미지 (최대 5장)</h4>
-                <p className="text-xs text-muted-foreground mb-3">
-                  업로드 즉시 AI가 자동 분석합니다. 유: 이미지 생성에 직접 반영 / 무: 분석만 반영 (참고용)
-                </p>
+        {/* 2. Production mode */}
+        <div>
+          <h4 className="text-sm font-medium mb-2">제작 방식</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setProductionMode('ai_video');
+                setHasImages(null);
+                setGeneratedAccepted(false);
+                setGeneratedImages([]);
+                setImageSlots([null, null, null]);
+                setVideoSlots([]);
+              }}
+              className={`flex flex-col items-start gap-1 p-4 rounded-lg border-2 transition-colors text-left ${
+                productionMode === 'ai_video'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-muted-foreground/20 hover:border-primary/40'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Film className="h-4 w-4" />
+                <span className="text-sm font-medium">영상화 (Kling AI)</span>
+              </div>
+              <span className="text-xs text-muted-foreground">이미지를 AI가 분석해서 새 영상 생성</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setProductionMode('slideshow');
+                setHasImages(null);
+                setGeneratedAccepted(false);
+                setGeneratedImages([]);
+                setImageSlots([null, null, null]);
+                setVideoSlots([]);
+              }}
+              className={`flex flex-col items-start gap-1 p-4 rounded-lg border-2 transition-colors text-left ${
+                productionMode === 'slideshow'
+                  ? 'border-primary bg-primary/5'
+                  : 'border-muted-foreground/20 hover:border-primary/40'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <ImageIcon className="h-4 w-4" />
+                <span className="text-sm font-medium">슬라이드쇼</span>
+              </div>
+              <span className="text-xs text-muted-foreground">이미지 그대로 순서대로 이어붙이기</span>
+            </button>
+          </div>
+        </div>
 
-                {/* Ref image drop zone */}
-                {refFiles.length < 5 && (
-                  <div
-                    onDragOver={e => e.preventDefault()}
-                    onDrop={e => { e.preventDefault(); addRefImages(e.dataTransfer.files); }}
-                    onClick={() => refInputRef.current?.click()}
-                    className="border-2 border-dashed border-muted-foreground/25 rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+        {/* 3. 이미지가 있나요? */}
+        <div>
+          <h4 className="text-sm font-medium mb-2">이미지가 있나요?</h4>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                setHasImages('yes');
+                setGeneratedAccepted(false);
+                setGeneratedImages([]);
+                setImageSlots([null, null, null]);
+              }}
+              className={`flex flex-col items-center gap-1 p-4 rounded-lg border-2 transition-colors ${
+                hasImages === 'yes'
+                  ? 'border-emerald-500 bg-emerald-50'
+                  : 'border-muted-foreground/20 hover:border-emerald-400'
+              }`}
+            >
+              <Check className="h-5 w-5" />
+              <span className="text-sm font-medium">있어요</span>
+              <span className="text-xs text-muted-foreground">바로 업로드</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setHasImages('no');
+                setGeneratedAccepted(false);
+                setGeneratedImages([]);
+                setImageSlots([]);
+              }}
+              className={`flex flex-col items-center gap-1 p-4 rounded-lg border-2 transition-colors ${
+                hasImages === 'no'
+                  ? 'border-amber-500 bg-amber-50'
+                  : 'border-muted-foreground/20 hover:border-amber-400'
+              }`}
+            >
+              <Wand2 className="h-5 w-5" />
+              <span className="text-sm font-medium">없어요</span>
+              <span className="text-xs text-muted-foreground">AI로 이미지 생성</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 4a. AI Image Generation (hasImages === 'no' && not yet accepted) */}
+        {hasImages === 'no' && !generatedAccepted && (
+          <div className="space-y-3 p-4 rounded-lg border border-amber-200 bg-amber-50/50">
+            <h4 className="text-sm font-medium flex items-center gap-1.5">
+              <Wand2 className="h-4 w-4 text-amber-600" />
+              AI 이미지 생성
+            </h4>
+            <textarea
+              value={genPrompt}
+              onChange={e => setGenPrompt(e.target.value)}
+              placeholder="생성할 이미지에 대해 설명해주세요"
+              rows={3}
+              className="flex w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+            />
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">생성 수:</span>
+                {([2, 4, 6, 8] as const).map(n => (
+                  <Button
+                    key={n}
+                    type="button"
+                    variant={genCount === n ? 'default' : 'outline'}
+                    size="sm"
+                    className="h-7 w-8 text-xs"
+                    onClick={() => setGenCount(n)}
                   >
-                    <Upload className="h-6 w-6 mx-auto text-muted-foreground/40 mb-2" />
-                    <p className="text-sm text-muted-foreground">
-                      참고 이미지 드래그 또는 클릭 ({refFiles.length}/5)
-                    </p>
-                  </div>
+                    {n}
+                  </Button>
+                ))}
+              </div>
+              <Button
+                type="button"
+                onClick={handleGenerate}
+                disabled={generating || !genPrompt.trim()}
+                size="sm"
+              >
+                {generating ? (
+                  <><Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" />생성 중...</>
+                ) : (
+                  <><Wand2 className="h-3.5 w-3.5 mr-1" />이미지 생성</>
                 )}
-                <input
-                  ref={refInputRef}
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  className="hidden"
-                  onChange={e => {
-                    if (e.target.files) addRefImages(e.target.files);
-                    e.target.value = '';
-                  }}
-                />
-              </div>
+              </Button>
+            </div>
 
-              {/* Ref image cards */}
-              {refFiles.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-                  {refFiles.map((uf, i) => (
-                    <FileCard
-                      key={uf.id}
-                      index={i}
-                      file={uf}
-                      onRemove={() => removeRefFile(uf.id)}
-                      onToggleUse={() => toggleRefUseDirectly(uf.id)}
-                    />
+            {/* Generated images preview */}
+            {generatedImages.length > 0 && (
+              <div className="space-y-3">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  {generatedImages.map((url, i) => (
+                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border bg-white">
+                      <img src={url} alt={`생성 이미지 ${i + 1}`} className="w-full h-full object-cover" />
+                      <div className="absolute top-0 left-0 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-br">
+                        {i + 1}
+                      </div>
+                    </div>
                   ))}
                 </div>
-              )}
-
-              {/* Optional prompt for image generation */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium" htmlFor="prompt_p1_step1">
-                  이미지 생성 프롬프트 (선택)
-                </label>
-                <textarea
-                  id="prompt_p1_step1"
-                  value={promptP1}
-                  onChange={e => setPromptP1(e.target.value)}
-                  placeholder="비워두면 분석 결과로 자동 생성됩니다"
-                  rows={2}
-                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
-                />
+                <div className="flex items-center gap-2">
+                  <Button type="button" size="sm" onClick={acceptGeneratedImages}>
+                    <Check className="h-3.5 w-3.5 mr-1" />
+                    사용하기
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={handleGenerate}
+                    disabled={generating}
+                  >
+                    <RefreshCw className={`h-3.5 w-3.5 mr-1 ${generating ? 'animate-spin' : ''}`} />
+                    다시 생성
+                  </Button>
+                </div>
               </div>
+            )}
+          </div>
+        )}
 
-              {/* Next step */}
-              <div className="flex justify-end">
-                <Button onClick={() => setActiveTab('prompt')}>
-                  Step 2로 이동
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </div>
+        {/* 4b. Image slots (hasImages === 'yes' OR generated+accepted) */}
+        {showSlots && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-medium flex items-center gap-1.5">
+                <ImageIcon className="h-4 w-4" />
+                이미지 ({filledImageCount}/{imageSlots.length}칸, 최대 {maxImageSlots}장)
+              </h4>
             </div>
-          )}
 
-          {/* ── STEP 2: Prompt & Production ── */}
-          {activeTab === 'prompt' && (
-            <div className="space-y-5">
-              {/* Workflow selector */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium" htmlFor="workflow_select">
-                  워크플로우 <span className="text-red-500">*</span>
-                </label>
-                <select
-                  id="workflow_select"
-                  value={selectedWorkflowId}
-                  onChange={e => setSelectedWorkflowId(e.target.value)}
-                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {imageSlots.map((slot, i) => (
+                <SlotCard
+                  key={slot?.id || `img_empty_${i}`}
+                  index={i}
+                  slot={slot}
+                  slotType="image"
+                  onRemove={() => removeSlot('image', i)}
+                  onUpload={(file) => uploadToSlot('image', i, file)}
+                  onChangeUseMode={(mode) => changeUseMode('image', i, mode)}
+                  onChangeAutoPrompt={(prompt) => changeAutoPrompt('image', i, prompt)}
+                />
+              ))}
+            </div>
+
+            {imageSlots.length < maxImageSlots && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addSlot('image')}
+                className="mt-3"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                추가 ({imageSlots.length}/{maxImageSlots})
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* 5. Video slots (ai_video only) */}
+        {productionMode === 'ai_video' && showSlots && (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-sm font-medium flex items-center gap-1.5">
+                <Video className="h-4 w-4" />
+                영상 ({filledVideoCount}/{videoSlots.length}칸, 최대 5개)
+              </h4>
+            </div>
+
+            {videoSlots.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                {videoSlots.map((slot, i) => (
+                  <SlotCard
+                    key={slot?.id || `vid_empty_${i}`}
+                    index={i}
+                    slot={slot}
+                    slotType="video"
+                    onRemove={() => removeSlot('video', i)}
+                    onUpload={(file) => uploadToSlot('video', i, file)}
+                  />
+                ))}
+              </div>
+            )}
+
+            {videoSlots.length < 5 && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addSlot('video')}
+                className={videoSlots.length > 0 ? 'mt-3' : ''}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" />
+                영상 추가 ({videoSlots.length}/5)
+              </Button>
+            )}
+          </div>
+        )}
+
+        {/* 6. Clip duration (ai_video only) */}
+        {productionMode === 'ai_video' && (
+          <div>
+            <h4 className="text-sm font-medium mb-2">클립 길이</h4>
+            <div className="flex gap-2">
+              {([5, 8] as const).map(d => (
+                <Button
+                  key={d}
+                  type="button"
+                  variant={clipDuration === d ? 'default' : 'outline'}
+                  size="sm"
+                  onClick={() => setClipDuration(d)}
                 >
-                  <option value="">워크플로우를 선택하세요</option>
-                  {workflows.filter((w: any) => w.isActive && w.webhookPath).map((w: any) => (
-                    <option key={w.id} value={w.id}>
-                      {w.channel?.name ? `[${w.channel.name}] ` : ''}{w.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+                  <Timer className="h-3.5 w-3.5 mr-1" />
+                  {d}초
+                </Button>
+              ))}
+            </div>
+          </div>
+        )}
 
-              {/* Production mode selector */}
+        {/* 7. Prompt fields */}
+        <div className="space-y-1.5">
+          <label className="text-sm font-medium" htmlFor="prompt_p1">
+            {productionMode === 'slideshow' ? '프롬프트 (나레이션 방향)' : '메인 프롬프트'}
+            {productionMode === 'slideshow' && <span className="text-red-500 ml-1">*</span>}
+          </label>
+          <textarea
+            id="prompt_p1"
+            value={promptP1}
+            onChange={e => setPromptP1(e.target.value)}
+            placeholder={productionMode === 'slideshow'
+              ? '나레이션 내용과 방향을 입력하세요 (필수)'
+              : '영상 제작 프롬프트를 입력하세요 (P1)'}
+            rows={3}
+            className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium" htmlFor="form_topic">주제</label>
+            <Input id="form_topic" value={formTopic} onChange={e => setFormTopic(e.target.value)} placeholder="예: 역사 미스터리" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium" htmlFor="form_keywords">키워드</label>
+            <Input id="form_keywords" value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="쉼표 구분" />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium" htmlFor="form_category">카테고리</label>
+            <Input id="form_category" value={category} onChange={e => setCategory(e.target.value)} placeholder="예: entertainment" />
+          </div>
+        </div>
+
+        {/* Error / Success */}
+        {formError && <p className="text-sm text-destructive">{formError}</p>}
+        {formSuccess && <p className="text-sm text-emerald-600">{formSuccess}</p>}
+
+        {/* 8. Submit */}
+        <div className="flex items-center gap-3">
+          <Button onClick={handleSubmit} disabled={submitting || !selectedWorkflowId || !!jobId}>
+            {submitting ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />처리 중...</>
+            ) : (
+              <><Send className="h-4 w-4 mr-2" />영상 제작 시작</>
+            )}
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            {hasImages === null
+              ? '이미지 유무를 선택해주세요'
+              : showSlots
+                ? `이미지 ${filledImageCount}장${filledVideoCount > 0 ? ` + 영상 ${filledVideoCount}개` : ''} → ${productionMode === 'slideshow' ? '슬라이드쇼' : '영상'} 제작`
+                : '이미지를 생성해주세요'}
+          </span>
+        </div>
+
+        {/* 9. Job Status Tracker */}
+        {jobId && (
+          <div className="mt-4 p-4 rounded-lg border bg-muted/30 space-y-3">
+            <div className="flex items-center gap-3">
+              <h4 className="text-sm font-medium">제작 상태</h4>
+              <JobStatusBadge status={jobStatus} />
+            </div>
+            {jobVideoUrl && (
               <div>
-                <h4 className="text-sm font-medium mb-2">제작 방식</h4>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setProductionMode('ai_video')}
-                    className={`flex flex-col items-start gap-1 p-4 rounded-lg border-2 transition-colors text-left ${
-                      productionMode === 'ai_video'
-                        ? 'border-primary bg-primary/5'
-                        : 'border-muted-foreground/20 hover:border-primary/40'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Film className="h-4 w-4" />
-                      <span className="text-sm font-medium">영상화 (Kling AI)</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">이미지를 AI가 분석해서 새 영상 생성</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setProductionMode('slideshow')}
-                    className={`flex flex-col items-start gap-1 p-4 rounded-lg border-2 transition-colors text-left ${
-                      productionMode === 'slideshow'
-                        ? 'border-primary bg-primary/5'
-                        : 'border-muted-foreground/20 hover:border-primary/40'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <ImageIcon className="h-4 w-4" />
-                      <span className="text-sm font-medium">슬라이드쇼</span>
-                    </div>
-                    <span className="text-xs text-muted-foreground">이미지 그대로 순서대로 이어붙이기</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* === AI VIDEO MODE === */}
-              {productionMode === 'ai_video' && (
-                <>
-                  {/* Image upload area (max 5) */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-medium flex items-center gap-1.5">
-                        <ImageIcon className="h-4 w-4" /> 이미지 (최대 5장)
-                      </h4>
-                      <span className="text-xs text-muted-foreground">{prodImages.length}/5</span>
-                    </div>
-                    {prodImages.length < 5 && (
-                      <div
-                        onDragOver={e => e.preventDefault()}
-                        onDrop={e => { e.preventDefault(); addProdFiles(e.dataTransfer.files, 'image'); }}
-                        onClick={() => imgInputRef.current?.click()}
-                        className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-4 text-center cursor-pointer hover:border-primary/40 transition-colors mb-3"
-                      >
-                        <p className="text-xs text-muted-foreground">이미지 드래그 또는 클릭</p>
-                      </div>
-                    )}
-                    <input ref={imgInputRef} type="file" accept="image/*" multiple className="hidden"
-                      onChange={e => { if (e.target.files) addProdFiles(e.target.files, 'image'); e.target.value = ''; }} />
-                    {prodImages.length > 0 && (
-                      <div className="grid grid-cols-5 gap-2">
-                        {prodImages.map((uf, i) => (
-                          <FileCard key={uf.id} index={i} file={uf}
-                            onRemove={() => removeFile(uf.id)} onToggleUse={() => toggleUseDirectly(uf.id)} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Video upload area (max 5) */}
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="text-sm font-medium flex items-center gap-1.5">
-                        <Video className="h-4 w-4" /> 영상 (최대 5개)
-                      </h4>
-                      <span className="text-xs text-muted-foreground">{prodVideos.length}/5</span>
-                    </div>
-                    {prodVideos.length < 5 && (
-                      <div
-                        onDragOver={e => e.preventDefault()}
-                        onDrop={e => { e.preventDefault(); addProdFiles(e.dataTransfer.files, 'video'); }}
-                        onClick={() => vidInputRef.current?.click()}
-                        className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-4 text-center cursor-pointer hover:border-primary/40 transition-colors mb-3"
-                      >
-                        <p className="text-xs text-muted-foreground">영상 드래그 또는 클릭</p>
-                      </div>
-                    )}
-                    <input ref={vidInputRef} type="file" accept="video/*" multiple className="hidden"
-                      onChange={e => { if (e.target.files) addProdFiles(e.target.files, 'video'); e.target.value = ''; }} />
-                    {prodVideos.length > 0 && (
-                      <div className="grid grid-cols-5 gap-2">
-                        {prodVideos.map((uf, i) => (
-                          <FileCard key={uf.id} index={i} file={uf}
-                            onRemove={() => removeFile(uf.id)} onToggleUse={() => toggleUseDirectly(uf.id)} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Clip duration */}
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <h4 className="text-sm font-medium mb-2">클립 길이</h4>
-                      <div className="flex gap-2">
-                        {([5, 8] as const).map(d => (
-                          <Button
-                            key={d}
-                            type="button"
-                            variant={clipDuration === d ? 'default' : 'outline'}
-                            size="sm"
-                            onClick={() => setClipDuration(d)}
-                          >
-                            <Timer className="h-3.5 w-3.5 mr-1" />
-                            {d}초
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                    {uploadedFiles.length > 0 && (
-                      <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-lg border border-primary/10">
-                        <Film className="h-4 w-4 text-primary/60" />
-                        <span className="text-sm font-medium">
-                          이미지 {prodImages.length}/5, 영상 {prodVideos.length}/5
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-
-              {/* === SLIDESHOW MODE === */}
-              {productionMode === 'slideshow' && (
-                <>
-                  {/* "이미지가 있나요?" choice */}
-                  <div>
-                    <h4 className="text-sm font-medium mb-2">이미지가 있나요?</h4>
-                    <div className="grid grid-cols-2 gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setSlideshowHasImages('yes')}
-                        className={`flex flex-col items-center gap-1 p-4 rounded-lg border-2 transition-colors ${
-                          slideshowHasImages === 'yes'
-                            ? 'border-emerald-500 bg-emerald-50'
-                            : 'border-muted-foreground/20 hover:border-emerald-400'
-                        }`}
-                      >
-                        <Check className="h-5 w-5" />
-                        <span className="text-sm font-medium">있어요</span>
-                        <span className="text-xs text-muted-foreground">바로 업로드</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setSlideshowHasImages('no'); setActiveTab('upload'); }}
-                        className={`flex flex-col items-center gap-1 p-4 rounded-lg border-2 transition-colors ${
-                          slideshowHasImages === 'no'
-                            ? 'border-amber-500 bg-amber-50'
-                            : 'border-muted-foreground/20 hover:border-amber-400'
-                        }`}
-                      >
-                        <Wand2 className="h-5 w-5" />
-                        <span className="text-sm font-medium">없어요</span>
-                        <span className="text-xs text-muted-foreground">Step 1에서 이미지 생성</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Slideshow image slots */}
-                  {slideshowHasImages === 'yes' && (
-                    <div>
-                      <div className="flex items-center justify-between mb-3">
-                        <h4 className="text-sm font-medium flex items-center gap-1.5">
-                          <ImageIcon className="h-4 w-4" />
-                          이미지 업로드 ({filledSlideshowCount}/{slideshowSlots.length}칸, 최대 20장)
-                        </h4>
-                      </div>
-
-                      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {slideshowSlots.map((slot, i) => (
-                          <SlideshowSlotCard
-                            key={slot?.id || `empty_${i}`}
-                            index={i}
-                            slot={slot}
-                            onRemove={() => removeSlideshowSlot(i)}
-                            onUpload={(file) => uploadToSlideshowSlot(i, file)}
-                            onChangeUseMode={(mode) => changeSlideshowUseMode(i, mode)}
-                            onChangeAutoPrompt={(prompt) => changeSlideshowAutoPrompt(i, prompt)}
-                          />
-                        ))}
-                      </div>
-
-                      {slideshowSlots.length < 20 && (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={addSlideshowSlot}
-                          className="mt-3"
-                        >
-                          <Plus className="h-3.5 w-3.5 mr-1" />
-                          추가 ({slideshowSlots.length}/20)
-                        </Button>
-                      )}
-                    </div>
-                  )}
-
-                  {slideshowHasImages === 'no' && (
-                    <div className="p-6 text-center bg-amber-50 rounded-lg border border-amber-200">
-                      <Wand2 className="h-8 w-8 mx-auto text-amber-500 mb-2" />
-                      <p className="text-sm text-amber-800 mb-3">
-                        Step 1에서 참고 이미지를 추가하고 이미지를 생성해주세요.
-                      </p>
-                      <Button size="sm" onClick={() => setActiveTab('upload')}>
-                        <ChevronLeft className="h-4 w-4 mr-1" />
-                        Step 1로 이동
-                      </Button>
-                    </div>
-                  )}
-                </>
-              )}
-
-              {/* Main prompt */}
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium" htmlFor="prompt_p1">
-                  {productionMode === 'slideshow' ? '프롬프트 (나레이션 방향)' : '메인 프롬프트'}
-                  {productionMode === 'slideshow' && <span className="text-red-500 ml-1">*</span>}
-                </label>
-                <textarea
-                  id="prompt_p1"
-                  value={promptP1}
-                  onChange={e => setPromptP1(e.target.value)}
-                  placeholder={productionMode === 'slideshow'
-                    ? '나레이션 내용과 방향을 입력하세요 (필수)'
-                    : '영상 제작 프롬프트를 입력하세요 (P1)'}
-                  rows={3}
-                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+                <p className="text-xs text-muted-foreground mb-2">영상 미리보기</p>
+                <video
+                  src={jobVideoUrl}
+                  controls
+                  className="w-full max-w-md rounded-lg border"
+                  preload="metadata"
                 />
               </div>
-
-              {/* Topic / Keywords / Category */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium" htmlFor="form_topic">주제</label>
-                  <Input id="form_topic" value={formTopic} onChange={e => setFormTopic(e.target.value)} placeholder="예: 역사 미스터리" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium" htmlFor="form_keywords">키워드</label>
-                  <Input id="form_keywords" value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="쉼표 구분" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-sm font-medium" htmlFor="form_category">카테고리</label>
-                  <Input id="form_category" value={category} onChange={e => setCategory(e.target.value)} placeholder="예: entertainment" />
-                </div>
-              </div>
-
-              {/* Error / Success */}
-              {formError && <p className="text-sm text-destructive">{formError}</p>}
-              {formSuccess && <p className="text-sm text-emerald-600">{formSuccess}</p>}
-
-              {/* Submit */}
-              <div className="flex items-center gap-3">
-                <Button onClick={handleSubmit} disabled={submitting || !selectedWorkflowId || !!jobId}>
-                  {submitting ? (
-                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />처리 중...</>
-                  ) : (
-                    <><Send className="h-4 w-4 mr-2" />영상 제작 시작</>
-                  )}
-                </Button>
-                <span className="text-xs text-muted-foreground">
-                  {productionMode === 'slideshow'
-                    ? `${filledSlideshowCount}장 이미지 → 슬라이드쇼 제작`
-                    : uploadedFiles.length > 0
-                      ? `${uploadedFiles.length}개 파일 → 제작 시작`
-                      : '파일을 1개 이상 추가해주세요'}
-                </span>
-              </div>
-
-              {/* Job Status Tracker */}
-              {jobId && (
-                <div className="mt-4 p-4 rounded-lg border bg-muted/30 space-y-3">
-                  <div className="flex items-center gap-3">
-                    <h4 className="text-sm font-medium">제작 상태</h4>
-                    <JobStatusBadge status={jobStatus} />
-                  </div>
-                  {jobVideoUrl && (
-                    <div>
-                      <p className="text-xs text-muted-foreground mb-2">영상 미리보기</p>
-                      <video
-                        src={jobVideoUrl}
-                        controls
-                        className="w-full max-w-md rounded-lg border"
-                        preload="metadata"
-                      />
-                    </div>
-                  )}
-                  {jobStatus === 'completed' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => { setJobId(null); setJobStatus(null); setJobVideoUrl(null); }}
-                    >
-                      새 제작 시작
-                    </Button>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
+            )}
+            {jobStatus === 'completed' && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => { setJobId(null); setJobStatus(null); setJobVideoUrl(null); }}
+              >
+                새 제작 시작
+              </Button>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -1178,84 +1104,12 @@ function JobStatusBadge({ status }: { status: string | null }) {
 }
 
 // ══════════════════════════════════════════════
-// File Card (upload grid item with use/analyze toggle)
+// Slot Card (unified for image + video)
 // ══════════════════════════════════════════════
-function FileCard({
-  index,
-  file,
-  onRemove,
-  onToggleUse,
-}: {
-  index: number;
-  file: UploadedFile;
-  onRemove: () => void;
-  onToggleUse: () => void;
-}) {
-  const isImage = file.type === 'image';
-
-  return (
-    <div className="space-y-1.5">
-      <div className="relative group aspect-square rounded-lg overflow-hidden border bg-muted/30">
-        {isImage ? (
-          <img src={file.preview} alt={`파일 ${index + 1}`} className="w-full h-full object-cover" />
-        ) : (
-          <video src={file.preview} className="w-full h-full object-cover" muted preload="metadata" />
-        )}
-
-        {/* Index badge */}
-        <div className="absolute top-0 left-0 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-br flex items-center gap-1">
-          {isImage ? <ImageIcon className="h-3 w-3" /> : <Video className="h-3 w-3" />}
-          {index + 1}
-        </div>
-
-        {/* Remove button */}
-        <button
-          type="button"
-          onClick={onRemove}
-          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-        >
-          <X className="h-3 w-3" />
-        </button>
-
-        {/* Analysis overlay */}
-        {file.analyzing && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <Loader2 className="h-5 w-5 text-white animate-spin" />
-          </div>
-        )}
-        {file.analysis && !file.analyzing && (
-          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1.5 line-clamp-2">
-            {file.analysis}
-          </div>
-        )}
-      </div>
-
-      {/* Use directly toggle */}
-      <button
-        type="button"
-        onClick={onToggleUse}
-        className={`w-full flex items-center justify-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
-          file.useDirectly
-            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
-            : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
-        }`}
-      >
-        {file.useDirectly ? (
-          <><Eye className="h-3 w-3" />유 (직접 사용)</>
-        ) : (
-          <><EyeOff className="h-3 w-3" />무 (분석만)</>
-        )}
-      </button>
-    </div>
-  );
-}
-
-// ══════════════════════════════════════════════
-// Slideshow Slot Card
-// ══════════════════════════════════════════════
-function SlideshowSlotCard({
+function SlotCard({
   index,
   slot,
+  slotType,
   onRemove,
   onUpload,
   onChangeUseMode,
@@ -1263,12 +1117,14 @@ function SlideshowSlotCard({
 }: {
   index: number;
   slot: UploadedFile | null;
+  slotType: 'image' | 'video';
   onRemove: () => void;
   onUpload: (file: File) => void;
-  onChangeUseMode: (mode: 'direct' | 'generate' | 'analysis_only') => void;
-  onChangeAutoPrompt: (prompt: string) => void;
+  onChangeUseMode?: (mode: 'direct' | 'generate' | 'analysis_only') => void;
+  onChangeAutoPrompt?: (prompt: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const acceptType = slotType === 'image' ? 'image/*' : 'video/*';
 
   if (!slot) {
     return (
@@ -1279,12 +1135,12 @@ function SlideshowSlotCard({
           className="flex flex-col items-center gap-1.5 text-muted-foreground p-4"
         >
           <Upload className="h-5 w-5" />
-          <span className="text-xs">이미지 추가</span>
+          <span className="text-xs">{slotType === 'image' ? '이미지 추가' : '영상 추가'}</span>
         </button>
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={acceptType}
           className="hidden"
           onChange={e => {
             if (e.target.files?.[0]) onUpload(e.target.files[0]);
@@ -1302,12 +1158,19 @@ function SlideshowSlotCard({
     );
   }
 
+  const isImage = slot.type === 'image';
+
   return (
     <div className="relative border rounded-lg overflow-hidden bg-white group">
-      {/* Image preview */}
+      {/* Preview */}
       <div className="relative aspect-video bg-muted/30">
-        <img src={slot.preview} alt={`슬라이드 ${index + 1}`} className="w-full h-full object-cover" />
-        <div className="absolute top-0 left-0 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-br">
+        {isImage ? (
+          <img src={slot.preview} alt={`${slotType} ${index + 1}`} className="w-full h-full object-cover" />
+        ) : (
+          <video src={slot.preview} className="w-full h-full object-cover" muted preload="metadata" />
+        )}
+        <div className="absolute top-0 left-0 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-br flex items-center gap-1">
+          {isImage ? <ImageIcon className="h-3 w-3" /> : <Video className="h-3 w-3" />}
           {index + 1}
         </div>
         <button
@@ -1324,53 +1187,62 @@ function SlideshowSlotCard({
         )}
       </div>
 
-      {/* Use mode radio options */}
-      <div className="p-2 space-y-1 text-xs">
-        {([
-          { value: 'direct' as const, label: '직접 사용', icon: Eye },
-          { value: 'generate' as const, label: '새 이미지 생성', icon: Wand2 },
-          { value: 'analysis_only' as const, label: '분석만 반영', icon: FileText },
-        ]).map(opt => (
-          <label
-            key={opt.value}
-            className={`flex items-center gap-1.5 p-1 rounded cursor-pointer transition-colors ${
-              slot.useMode === opt.value ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted'
-            }`}
-          >
-            <input
-              type="radio"
-              name={`useMode_${slot.id}`}
-              checked={slot.useMode === opt.value}
-              onChange={() => onChangeUseMode(opt.value)}
-              className="h-3 w-3 accent-primary"
+      {/* Use mode radio options (image slots only) */}
+      {isImage && onChangeUseMode && (
+        <div className="p-2 space-y-1 text-xs">
+          {([
+            { value: 'direct' as const, label: '직접 사용', icon: Eye },
+            { value: 'generate' as const, label: '새 이미지 생성', icon: Wand2 },
+            { value: 'analysis_only' as const, label: '분석만 반영', icon: FileText },
+          ]).map(opt => (
+            <label
+              key={opt.value}
+              className={`flex items-center gap-1.5 p-1 rounded cursor-pointer transition-colors ${
+                slot.useMode === opt.value ? 'bg-primary/10 text-primary font-medium' : 'hover:bg-muted'
+              }`}
+            >
+              <input
+                type="radio"
+                name={`useMode_${slot.id}`}
+                checked={slot.useMode === opt.value}
+                onChange={() => onChangeUseMode(opt.value)}
+                className="h-3 w-3 accent-primary"
+              />
+              <opt.icon className="h-3 w-3" />
+              {opt.label}
+            </label>
+          ))}
+
+          {/* Analysis result preview (for direct / generate) */}
+          {slot.analysis && slot.useMode !== 'analysis_only' && (
+            <p className="text-[10px] text-muted-foreground line-clamp-2 mt-1 px-1">{slot.analysis}</p>
+          )}
+
+          {/* Auto prompt textarea (for analysis_only) */}
+          {slot.useMode === 'analysis_only' && onChangeAutoPrompt && (
+            <textarea
+              value={slot.autoPrompt || ''}
+              onChange={e => onChangeAutoPrompt(e.target.value)}
+              placeholder={slot.analyzing ? '분석 중...' : '분석 완료 후 자동 입력됩니다'}
+              rows={2}
+              className="w-full mt-1 rounded border border-input bg-transparent px-2 py-1 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
             />
-            <opt.icon className="h-3 w-3" />
-            {opt.label}
-          </label>
-        ))}
+          )}
+        </div>
+      )}
 
-        {/* Analysis result preview (for direct / generate) */}
-        {slot.analysis && slot.useMode !== 'analysis_only' && (
-          <p className="text-[10px] text-muted-foreground line-clamp-2 mt-1 px-1">{slot.analysis}</p>
-        )}
-
-        {/* Auto prompt textarea (for analysis_only) */}
-        {slot.useMode === 'analysis_only' && (
-          <textarea
-            value={slot.autoPrompt || ''}
-            onChange={e => onChangeAutoPrompt(e.target.value)}
-            placeholder={slot.analyzing ? '분석 중...' : '분석 완료 후 자동 입력됩니다'}
-            rows={2}
-            className="w-full mt-1 rounded border border-input bg-transparent px-2 py-1 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
-          />
-        )}
-      </div>
+      {/* Video: simple info */}
+      {!isImage && (
+        <div className="p-2 text-xs text-muted-foreground">
+          <p className="truncate">{slot.file.name || '영상'}</p>
+        </div>
+      )}
     </div>
   );
 }
 
 // ══════════════════════════════════════════════
-// AccordionRow (unchanged)
+// AccordionRow
 // ══════════════════════════════════════════════
 function AccordionRow({
   prod,

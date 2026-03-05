@@ -152,8 +152,10 @@ export async function productionRoutes(app: FastifyInstance) {
       keywords?: string;
       category?: string;
       production_mode?: 'ai_video' | 'slideshow';
+      has_images?: boolean;
       clip_duration?: number;
       slide_duration?: number;
+      generated_images?: string[];
       files?: {
         type: 'image' | 'video';
         url: string;
@@ -217,8 +219,10 @@ export async function productionRoutes(app: FastifyInstance) {
         keywords: body.keywords,
         category: body.category,
         production_mode: body.production_mode || 'ai_video',
+        has_images: body.has_images,
         clip_duration: body.clip_duration,
         slide_duration: body.slide_duration,
+        generated_images: body.generated_images,
         files: body.files,
         ref_files: body.ref_files,
         clips: body.clips,
