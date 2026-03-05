@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): include_audio 체크박스 + KIEAI_API_KEY 설정 + VPS 배포 완료
-- 진행중 작업: CLAUDE_API_KEY 추가 + n8n ao-produce 웹훅 활성화
-- 최근 완료: 슬롯별 include_audio 체크박스 + clips[] payload + KIEAI_API_KEY 설정
-- 주의사항: CLAUDE_API_KEY 미설정, n8n ao-produce 웹훅 미등록
+- 현재 상태(1줄): AO 파이프라인 연결 + 라이브365 워크플로우 + VPS 배포 완료
+- 진행중 작업: n8n ao-produce E2E 테스트
+- 최근 완료: AO 파이프라인 + 워크플로우 선택 + 라이브365 DB seed
+- 주의사항: n8n ao-produce 웹훅 활성화 필요
 
 ---
 
@@ -112,3 +112,25 @@
 ### Files / Links
 - productions-client.tsx (include_audio 체크박스, clips[] payload)
 - VPS /root/n8n-web/packages/backend/.env (KIEAI_API_KEY 추가)
+
+## 2026-03-06 (4차)
+### Done
+- [x] 제작 목록 체크박스 + 상태별 선택 드롭다운 + 별표 + 일괄 작업
+- [x] 캐릭터 카드 소형 프로필 이미지 (MinIO 업로드)
+- [x] AO 파이프라인 연결 (POST /api/productions/ao + 폴링 + 영상 미리보기)
+- [x] 워크플로우 선택 드롭다운 (Step 2)
+- [x] WorkflowType enum에 'ao' 추가 (Prisma + shared)
+- [x] 라이브365 채널 + AO Producer/Worker DB seed
+- [x] VPS 배포 + PM2 재시작
+### Result
+- 워크플로우 목록: AO Producer + AO Worker (라이브365) 정상 표시
+- API 키: KIEAI + CLAUDE 모두 설정 완료
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+- 영상 미리보기 확인
+### Files / Links
+- schema.prisma, shared/index.ts (WorkflowType ao 추가)
+- productions.ts (POST /api/productions/ao)
+- productions-client.tsx (워크플로우 선택 + JobStatusBadge + 폴링)
+- characters-client.tsx (프로필 이미지)
+- VPS DB: channels (라이브365), workflows (AO Producer, AO Worker)
