@@ -26,7 +26,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ✅ 필수값 검사 (멀티씬 + include_audio 지원)\nconst body = $input.first().json.body || $input.first().json;\n\nconst required = ['prompt_p1', 'topic', 'keywords', 'category'];\nconst missing = required.filter(k => !body[k]);\n\nif (missing.length > 0) {\n  throw new Error(`필수값 누락: ${missing.join(', ')}`);\n}\n\n// clips 검증 (최대 10개)\nconst clips = body.clips || [];\nif (clips.length > 10) {\n  throw new Error(`clips 최대 10개 (현재: ${clips.length})`);\n}\n\n// clip_duration: 4 또는 8만 허용, 그 외는 8로 고정\nconst rawDur = parseInt(body.clip_duration) || 8;\nconst clipDuration = (rawDur <= 4) ? 4 : 8;\n\n// 기본값 처리\nconst useMedia = body.use_media || 'forced';\nconst uploadTarget = body.upload_target || 'youtube';\n\n// clips에 include_audio 기본값 설정\nlet finalClips = clips.map(c => ({\n  image_url: c.image_url || '',\n  vision_analysis: c.vision_analysis || '',\n  scene_prompt: c.scene_prompt || '',\n  include_audio: c.include_audio === true\n}));\n\n// 하위 호환: images[] → clips[] 변환\nif (finalClips.length === 0 && body.images && body.images.length > 0) {\n  finalClips = body.images.map(url => ({\n    image_url: url, vision_analysis: '', scene_prompt: '', include_audio: false\n  }));\n}\n\n// 언어 감지\nconst isKorean = /[\\uAC00-\\uD7A3]/.test(body.prompt_p1 + body.topic);\nconst translateMode = body.translate_mode || 'auto';\nconst needsTranslation = translateMode === 'on' || (translateMode === 'auto' && isKorean);\n\nreturn [{\n  json: {\n    ...body,\n    clips: finalClips,\n    clip_duration: clipDuration,\n    use_media: useMedia,\n    upload_target: uploadTarget,\n    prompt_lang_detected: isKorean ? 'ko' : 'en',\n    needs_translation: needsTranslation,\n    validated_at: new Date().toISOString()\n  }\n}];"
+        "jsCode": "// ✅ 필수값 검사 (멀티씬 + include_audio 지원)\nconst body = $input.first().json.body || $input.first().json;\n\nconst required = ['prompt_p1', 'topic', 'keywords', 'category'];\nconst missing = required.filter(k => !body[k]);\n\nif (missing.length > 0) {\n  throw new Error(`필수값 누락: ${missing.join(', ')}`);\n}\n\n// clips 검증 (최대 10개)\nconst clips = body.clips || [];\nif (clips.length > 10) {\n  throw new Error(`clips 최대 10개 (현재: ${clips.length})`);\n}\n\n// clip_duration: 4 또는 8만 허용, 그 외는 8로 고정\nconst rawDur = parseInt(body.clip_duration) || 8;\nconst clipDuration = (rawDur <= 4) ? 4 : 8;\n\n// 기본값 처리\nconst useMedia = body.use_media || 'forced';\nconst uploadTarget = body.upload_target || 'youtube';\n\n// clips에 include_audio 기본값 설정\nlet finalClips = clips.map(c => ({\n  image_url: c.image_url || '',\n  vision_analysis: c.vision_analysis || '',\n  scene_prompt: c.scene_prompt || '',\n  include_audio: c.include_audio === true\n}));\n\n// 하위 호환: images[] → clips[] 변환\nif (finalClips.length === 0 && body.images && body.images.length > 0) {\n  finalClips = body.images.map(url => ({\n    image_url: url, vision_analysis: '', scene_prompt: '', include_audio: false\n  }));\n}\n\n// 언어 감지\nconst isKorean = /[\\uAC00-\\uD7A3]/.test(body.prompt_p1 + body.topic);\nconst translateMode = body.translate_mode || 'auto';\nconst needsTranslation = translateMode === 'on' || (translateMode === 'auto' && isKorean);\n\nreturn [{\n  json: {\n    ...body,\n    production_id: body.productionId || body.production_id || null,\n    clips: finalClips,\n    clip_duration: clipDuration,\n    use_media: useMedia,\n    upload_target: uploadTarget,\n    prompt_lang_detected: isKorean ? 'ko' : 'en',\n    needs_translation: needsTranslation,\n    validated_at: new Date().toISOString()\n  }\n}];"
       },
       "id": "validate-input",
       "name": "입력값 검증",
@@ -40,7 +40,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO jobs (\n  prompt_p1, topic, keywords, category,\n  use_media, upload_target, template_id,\n  clips, clip_duration,\n  metadata, prompt_lang_detected, needs_translation,\n  status, retry_count, created_at, updated_at\n) VALUES (\n  '{{ $json.prompt_p1 }}',\n  '{{ $json.topic }}',\n  '{{ $json.keywords }}',\n  '{{ $json.category }}',\n  '{{ $json.use_media }}',\n  '{{ $json.upload_target }}',\n  {{ $json.template_id ? `'${$json.template_id}'` : 'NULL' }},\n  '{{ JSON.stringify($json.clips) }}'::jsonb,\n  {{ $json.clip_duration }},\n  {{ $json.metadata ? `'${JSON.stringify($json.metadata)}'::jsonb` : 'NULL' }},\n  '{{ $json.prompt_lang_detected }}',\n  {{ $json.needs_translation }},\n  'queued', 0, NOW(), NOW()\n) RETURNING id, status, created_at;",
+        "query": "INSERT INTO jobs (\n  prompt_p1, topic, keywords, category,\n  use_media, upload_target, template_id,\n  clips, clip_duration,\n  metadata, prompt_lang_detected, needs_translation,\n  production_id,\n  status, retry_count, created_at, updated_at\n) VALUES (\n  '{{ $json.prompt_p1 }}',\n  '{{ $json.topic }}',\n  '{{ $json.keywords }}',\n  '{{ $json.category }}',\n  '{{ $json.use_media }}',\n  '{{ $json.upload_target }}',\n  {{ $json.template_id ? `'${$json.template_id}'` : 'NULL' }},\n  '{{ JSON.stringify($json.clips) }}'::jsonb,\n  {{ $json.clip_duration }},\n  {{ $json.metadata ? `'${JSON.stringify($json.metadata)}'::jsonb` : 'NULL' }},\n  '{{ $json.prompt_lang_detected }}',\n  {{ $json.needs_translation }},\n  {{ $json.production_id ? `'${$json.production_id}'` : 'NULL' }},\n  'queued', 0, NOW(), NOW()\n) RETURNING id, status, created_at, production_id;",
         "options": {}
       },
       "id": "create-job",
@@ -60,7 +60,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const job = $input.first().json;\n\nreturn [{\n  json: {\n    success: true,\n    job_id: job.id,\n    status: job.status,\n    message: 'Job이 큐에 등록되었습니다.',\n    created_at: job.created_at\n  }\n}];"
+        "jsCode": "const job = $input.first().json;\n\nreturn [{\n  json: {\n    success: true,\n    job_id: job.id,\n    production_id: job.production_id || null,\n    status: job.status,\n    message: 'Job이 큐에 등록되었습니다.',\n    created_at: job.created_at\n  }\n}];"
       },
       "id": "format-response",
       "name": "응답 포맷",
@@ -326,7 +326,7 @@
       },
       {
         "parameters": {
-          "jsCode": "const job = $input.first().json;\n\nreturn [{\n  json: {\n    success: true,\n    job_id: job.id,\n    status: job.status,\n    message: 'Job이 큐에 등록되었습니다.',\n    created_at: job.created_at\n  }\n}];"
+          "jsCode": "const job = $input.first().json;\n\nreturn [{\n  json: {\n    success: true,\n    job_id: job.id,\n    production_id: job.production_id || null,\n    status: job.status,\n    message: 'Job이 큐에 등록되었습니다.',\n    created_at: job.created_at\n  }\n}];"
         },
         "id": "format-response",
         "name": "응답 포맷",

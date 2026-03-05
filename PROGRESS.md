@@ -7,9 +7,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 멀티씬 2씬 E2E 전체 성공 (YouTube 업로드까지)
-- 진행중 작업: 웹앱 구축 (Next.js)
-- 최근 완료: YouTube 업로드 Code 노드 (환경변수 OAuth + native https), E2E 테스트 성공
+- 현재 상태(1줄): 웹앱 콜백 연동 완료 (production_id + uploaded/failed 콜백)
+- 진행중 작업: 웹앱 E2E 테스트
+- 최근 완료: 웹앱 콜백 노드 추가, Producer production_id 저장, VPS 환경변수 설정
 - 주의사항: n8n publish 시스템 주의(배포 절차 HANDOFF.md 참조)
 
 ---
@@ -190,3 +190,21 @@
 - mark-uploaded DB 자동 업데이트 확인
 ### 📁 Files / Links
 - n8n/ao_worker.json (YouTube Code 노드 수정)
+
+## 2026-03-06 (3차)
+### ✅ Done
+- [x] DB: jobs 테이블에 production_id 컬럼 추가
+- [x] Producer: productionId 입력 → production_id로 저장, 응답에 포함
+- [x] Worker: 웹앱 콜백 (성공) 노드 추가 — 상태→uploaded 후 POST 콜백
+- [x] Worker: 웹앱 콜백 (실패) 노드 추가 — 재시도/실패 후 POST 콜백
+- [x] VPS: WEBAPP_CALLBACK_URL 환경변수 추가 (https://api-n8n.xn--9g4bn4fm2bl2mb9f.com)
+- [x] n8n 배포 완료 (Producer + Worker)
+### 📌 Result
+- 콜백 body (성공): { productionId, status: 'uploaded', youtubeVideoId, youtubeUrl, renderedVideoUrl, jobId }
+- 콜백 body (실패): { productionId, status: 'failed'|'queued', error, retryCount, jobId }
+- production_id 없으면 콜백 스킵 (기존 테스트 job 호환)
+### ➡️ Next (방향만)
+- 프론트에서 productionId 포함 요청 E2E 테스트
+### 📁 Files / Links
+- n8n/ao_worker.json (콜백 노드 2개 추가)
+- n8n/ao_producer.json (production_id 저장)

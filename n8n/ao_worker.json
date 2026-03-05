@@ -363,6 +363,32 @@
         3536,
         208
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ✅ 웹앱 콜백 — 성공 (uploaded)\nconst job = $input.first().json;\nconst productionId = job.production_id;\nconst callbackUrl = $env.WEBAPP_CALLBACK_URL;\n\nif (!productionId || !callbackUrl) {\n  // production_id 또는 콜백 URL 없으면 스킵\n  return [{ json: { ...job, callback_sent: false, reason: 'no production_id or callback_url' } }];\n}\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${callbackUrl}/api/productions/callback`,\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      productionId: productionId,\n      status: 'uploaded',\n      youtubeVideoId: job.youtube_video_id || null,\n      youtubeUrl: job.youtube_url || null,\n      renderedVideoUrl: job.rendered_video_url || null,\n      jobId: job.id\n    },\n    json: true\n  });\n  return [{ json: { ...job, callback_sent: true } }];\n} catch(e) {\n  // 콜백 실패해도 파이프라인은 성공으로 유지\n  return [{ json: { ...job, callback_sent: false, callback_error: e.message } }];\n}"
+      },
+      "id": "callback-success",
+      "name": "웹앱 콜백 (성공)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4208,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ✅ 웹앱 콜백 — 실패/재시도\nconst result = $input.first().json;\nconst jobId = result.id || result.job_id;\nconst status = result.status; // 'failed' or 'queued' (retry)\nconst callbackUrl = $env.WEBAPP_CALLBACK_URL;\n\n// production_id는 원본 job에서 가져옴\nconst originalJob = $('큐에서 Job 꺼내기').first().json;\nconst productionId = originalJob?.production_id;\n\nif (!productionId || !callbackUrl) {\n  return [{ json: { ...result, callback_sent: false } }];\n}\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${callbackUrl}/api/productions/callback`,\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      productionId: productionId,\n      status: status,\n      error: result.last_error || $('에러 캡처').first().json?.error_message || null,\n      retryCount: result.retry_count || 0,\n      jobId: jobId\n    },\n    json: true\n  });\n  return [{ json: { ...result, callback_sent: true } }];\n} catch(e) {\n  return [{ json: { ...result, callback_sent: false, callback_error: e.message } }];\n}"
+      },
+      "id": "callback-fail",
+      "name": "웹앱 콜백 (실패)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2448,
+        464
+      ]
     }
   ],
   "connections": {
@@ -550,6 +576,28 @@
         [
           {
             "node": "상태 → uploaded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "상태 → uploaded": {
+      "main": [
+        [
+          {
+            "node": "웹앱 콜백 (성공)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "재시도 or 실패 처리": {
+      "main": [
+        [
+          {
+            "node": "웹앱 콜백 (실패)",
             "type": "main",
             "index": 0
           }
