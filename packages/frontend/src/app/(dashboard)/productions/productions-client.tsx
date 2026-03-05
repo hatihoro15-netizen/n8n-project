@@ -49,11 +49,12 @@ type Slot = {
   preview: string | null;
   prompt: string;
   analysis: string | null;
+  includeAudio: boolean;
 };
 
 type RefImage = { file: File | null; preview: string | null };
 
-const EMPTY_SLOT: Slot = { file: null, preview: null, prompt: '', analysis: null };
+const EMPTY_SLOT: Slot = { file: null, preview: null, prompt: '', analysis: null, includeAudio: false };
 const EMPTY_REF: RefImage = { file: null, preview: null };
 
 function createSlots(): Slot[] {
@@ -364,6 +365,14 @@ function WhiskProductionForm() {
     });
   };
 
+  const setSlotIncludeAudio = (index: number, includeAudio: boolean) => {
+    setSlots(prev => {
+      const next = [...prev];
+      next[index] = { ...next[index], includeAudio };
+      return next;
+    });
+  };
+
   // ── Claude Vision analysis ──
   const analyzeSlotImage = async (index: number, file: File) => {
     try {
@@ -411,7 +420,12 @@ function WhiskProductionForm() {
 
     try {
       // Upload local files to MinIO (skip already-uploaded URLs)
-      const scenes: { image: string; prompt: string }[] = [];
+      const clips: {
+        image_url: string;
+        vision_analysis: string;
+        scene_prompt: string;
+        include_audio: boolean;
+      }[] = [];
 
       for (const slot of slots) {
         if (!slot.file && !slot.preview) continue;
@@ -423,15 +437,11 @@ function WhiskProductionForm() {
         }
 
         if (imageUrl) {
-          // Final prompt = Vision analysis + individual prompt + main P1
-          const parts = [
-            slot.analysis?.trim(),
-            slot.prompt?.trim(),
-            promptP1.trim(),
-          ].filter(Boolean);
-          scenes.push({
-            image: imageUrl,
-            prompt: parts.join('\n\n'),
+          clips.push({
+            image_url: imageUrl,
+            vision_analysis: slot.analysis?.trim() || '',
+            scene_prompt: slot.prompt?.trim() || '',
+            include_audio: slot.includeAudio,
           });
         }
       }
@@ -442,7 +452,7 @@ function WhiskProductionForm() {
         keywords: keywords.trim() || undefined,
         category: category.trim() || undefined,
         clip_duration: clipDuration,
-        scenes,
+        clips,
       };
 
       const webhookRes = await fetch(WEBHOOK_URL, {
@@ -661,6 +671,7 @@ function WhiskProductionForm() {
                       onFile={(f) => addFileToSlot(i, f)}
                       onRemove={() => removeSlot(i)}
                       onPromptChange={(p) => setSlotPrompt(i, p)}
+                      onIncludeAudioChange={(v) => setSlotIncludeAudio(i, v)}
                     />
                   ))}
                 </div>
@@ -764,12 +775,14 @@ function ImageSlot({
   onFile,
   onRemove,
   onPromptChange,
+  onIncludeAudioChange,
 }: {
   index: number;
   slot: Slot;
   onFile: (f: File) => void;
   onRemove: () => void;
   onPromptChange: (p: string) => void;
+  onIncludeAudioChange: (v: boolean) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const hasImage = !!(slot.file || slot.preview);
@@ -811,13 +824,24 @@ function ImageSlot({
         </div>
       )}
       {hasImage && (
-        <input
-          type="text"
-          value={slot.prompt}
-          onChange={e => onPromptChange(e.target.value)}
-          placeholder="개별 프롬프트"
-          className="w-full text-[11px] px-1.5 py-1 rounded border border-input bg-transparent placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
-        />
+        <>
+          <input
+            type="text"
+            value={slot.prompt}
+            onChange={e => onPromptChange(e.target.value)}
+            placeholder="개별 프롬프트"
+            className="w-full text-[11px] px-1.5 py-1 rounded border border-input bg-transparent placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
+          />
+          <label className="flex items-center gap-1 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={slot.includeAudio}
+              onChange={e => onIncludeAudioChange(e.target.checked)}
+              className="h-3 w-3 rounded border-gray-300 accent-primary"
+            />
+            <span className="text-[10px] text-muted-foreground">나레이션/대사 포함</span>
+          </label>
+        </>
       )}
       <input
         ref={inputRef}
