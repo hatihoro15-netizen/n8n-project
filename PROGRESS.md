@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): Whisk 스타일 2탭 UI + VPS 배포 완료, API 키 미설정
-- 진행중 작업: KIEAI_API_KEY / CLAUDE_API_KEY 추가 + n8n ao-produce 웹훅 활성화
-- 최근 완료: Whisk 2탭 UI (이미지 생성 + 영상 제작) + VPS 배포
-- 주의사항: VPS .env에 KIEAI_API_KEY/CLAUDE_API_KEY 미설정, n8n ao-produce 웹훅 미등록
+- 현재 상태(1줄): include_audio 체크박스 + KIEAI_API_KEY 설정 + VPS 배포 완료
+- 진행중 작업: CLAUDE_API_KEY 추가 + n8n ao-produce 웹훅 활성화
+- 최근 완료: 슬롯별 include_audio 체크박스 + clips[] payload + KIEAI_API_KEY 설정
+- 주의사항: CLAUDE_API_KEY 미설정, n8n ao-produce 웹훅 미등록
 
 ---
 
@@ -91,3 +91,24 @@
 - packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (전면 재작성)
 - packages/backend/src/routes/media.ts (generate-image, analyze-image 추가)
 - packages/backend/src/config.ts (kieai, claude 설정)
+
+## 2026-03-06 (3차)
+### Done
+- [x] 슬롯별 include_audio 체크박스 추가 ("나레이션/대사 포함")
+- [x] 웹훅 payload를 clips[] 형식으로 변경 (image_url, vision_analysis, scene_prompt, include_audio)
+- [x] VPS .env에 KIEAI_API_KEY 추가
+- [x] VPS 배포 + PM2 재시작
+- [x] generate-image API 501 → 200 확인 (PASS)
+### Tried
+- [ ] generate-image 200 리턴하나 images[] 빈 배열 (kie.ai 태스크 타임아웃 — 실제 프롬프트로 재테스트 필요)
+### Result
+- 타입 체크 통과 + VPS 배포 완료
+- KIEAI_API_KEY 설정으로 501 해소
+- CLAUDE_API_KEY 미설정 (Vision 분석은 아직 501)
+### Next (방향만)
+- CLAUDE_API_KEY 추가
+- n8n ao-produce 웹훅 워크플로우 활성화
+- E2E 전체 플로우 테스트
+### Files / Links
+- productions-client.tsx (include_audio 체크박스, clips[] payload)
+- VPS /root/n8n-web/packages/backend/.env (KIEAI_API_KEY 추가)
