@@ -1,6 +1,7 @@
 # HANDOFF.md — 현재 상태/진행상황 (항상 전체 Overwrite)
 
-> ✅ 이 파일은 "최신 스냅샷"이 목적이라 매번 전체 Overwrite가 정석입니다. (과거 기록은 PROGRESS.md에 남기고, 여기엔 최신 상태/Next/LastRun/Blockers만 유지)
+> ✅ 이 파일은 "최신 스냅샷"이 목적이라 매번 전체 Overwrite가 정석입니다.
+> (여기엔 최신 상태/Next/LastRun/Blockers만 유지)
 
 🔎 INDEX: Current Status | Goal | Next Actions | Last Run Command | Result | Blockers | Known Issues | 변경 파일 | 다음 세션 메시지
 
