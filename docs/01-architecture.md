@@ -1,39 +1,54 @@
-# 01-architecture.md — 시스템 구조/서버 구성/데이터 흐름
+# 01-architecture.md — AO Pipeline 시스템 구조
 
-## 시스템 구성
-- n8n: 워크플로우 오케스트레이션 (self-hosted, Docker)
-- TTS: edge-tts (Docker)
-- 영상 합성: NCA FFmpeg (Docker)
-- 스토리지: MinIO (http://76.13.182.180:9000)
-- AI 스크립트: Gemini API
-- 배포: Cloudflare Pages(프론트) + PM2(백엔드 VPS)
+## 개요
+"프롬프트 100% 반영" AI 영상 자동화 파이프라인.
+프롬프트(P1)를 원문 보존한 채 변수 슬롯만 주입 → 씨덴스로 영상 생성 → 업로드.
 
-## 기술 스택
-- 언어: TypeScript / Node.js
-- 프론트: Next.js (Cloudflare Pages)
-- 백엔드: Fastify + Prisma + PostgreSQL
-- 자동화: n8n
+## 아키텍처: Producer / Worker / Queue
 
-## 데이터 흐름
-1) 웹앱 트리거 → 2) n8n 웹훅 → 3) Gemini 스크립트 생성
-→ 4) edge-tts TTS → 5) 이미지 수집 → 6) NCA 영상 합성
-→ 7) MinIO 저장 → 8) 웹앱 콜백
+```
+[웹훅/폼] → Producer → [Queue] → Worker → [씨덴스] → [업로드]
+                ↓                    ↓
+             [DB: jobs]          [DB: job_logs]
+```
 
-## 서버/환경
-- VPS: 76.13.182.180 (Hostinger KVM1)
+### Producer (작업 등록, 병렬 가능)
+1. 입력 수신 (웹훅/폼)
+2. 필수값 검사 (prompt_p1, topic, keywords, category, use_media, upload_target)
+3. Job 생성 (job_id, status=queued)
+4. Queue에 Push
+5. 응답 (job_id 반환)
+
+### Worker (작업 처리, 1건씩)
+1. Queue에서 Pop (1건)
+2. AO 프롬프트 조립 → 최종 실행 프롬프트
+3. 씨덴스 실행 (모드에 따라 미디어 첨부)
+4. 결과 저장 (video_out)
+5. 업로드 실행 (프록시 적용)
+6. 상태 업데이트
+7. 로그 기록
+
+### Job 상태 흐름
+```
+queued → processing → generated → uploading → uploaded
+                ↘ failed (retrying → processing)
+```
+
+## AO 프롬프트 조립기
+P1을 재작성하지 않음. P1 100% 유지 + 변수 슬롯 주입:
+- {TOPIC}, {KEYWORDS}, {CATEGORY}
+- {IMG_1}~{IMG_4}, {REF_VIDEO}
+- (선택) {LANG}, {TONE}, {DURATION}, {ASPECT_RATIO}
+
+## use_media 모드
+| 모드 | 동작 |
+|------|------|
+| auto | 이미지/영상 있으면 활용, 없으면 프롬프트만 |
+| forced | 제공된 미디어 반드시 사용 |
+| off | 프롬프트만 사용 (미디어 무시) |
+
+## 기존 인프라 (공유)
 - n8n: https://n8n.srv1345711.hstgr.cloud
-- 프론트: https://n8n-project-9lj.pages.dev
-- 백엔드: https://api-n8n.xn--9g4bn4fm2bl2mb9f.com
-
-## 에이전트 팀 역할
-| 역할 | 담당 |
-|---|---|
-| 인프라 에이전트 | 서버/배포/n8n 인스턴스/infra 파일 |
-| 워크플로우 에이전트 | n8n 노드/연결/로직/*.json |
-| 콘텐츠 에이전트 | 프롬프트/캐릭터/대사/콘텐츠 노드 |
-| 검증 에이전트 | 테스트/lint/동작 확인 |
-
-에이전트 규칙:
-- 자기 역할 외 파일 수정 금지
-- 작업 전 관련 docs/ 읽기
-- 작업 완료 후 보고서 작성 (발견/수정/판단/파일/검증)
+- VPS: root@76.13.182.180
+- MinIO: 76.13.182.180:9000
+- Postgres: n8n-postgres (docker exec n8n-postgres psql -U n8n -d n8ndb)
