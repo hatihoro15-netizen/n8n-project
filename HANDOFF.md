@@ -15,7 +15,7 @@
 
 ## B) 환경/의존성
 - **서버**: VPS 76.13.182.180 (Hostinger KVM1, Malaysia)
-- **Branch**: `feature/onca-shortform-v16`
+- **Branch**: `feature/onca`
 - **Environment**: Production (n8n self-hosted, queue-mode)
 - **Runtime/Versions**: TypeScript / Node.js (Next.js + Fastify + Prisma)
 - **n8n URL**: `https://n8n.srv1345711.hstgr.cloud`
@@ -59,7 +59,7 @@
 - **롤백 필요 시**: n8n API로 백업 JSON Import, 워크플로우 ID `x6xTzHJ9WbUc94ec`
 
 ## F) 변경 파일
-- `onca-shortform-v16.json` — 메인 워크플로우 (42노드)
+- `onca.json` — 메인 워크플로우 (42노드)
 - 웹앱 백엔드: 콜백 API executionId 매핑 (코드 변경 없이 재배포)
 
 ## G) 다음 세션 시작용 메시지 (복붙)

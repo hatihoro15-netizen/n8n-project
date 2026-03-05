@@ -34,7 +34,7 @@
 ## 2026-03-02~03
 ### ✅ Done
 - [x] Webhook + 콜백 시스템 구축 (`f1a620a`)
-  - Webhook POST `/onca-shortform-v16` (responseMode: onReceived)
+  - Webhook POST `/onca` (responseMode: onReceived)
   - 성공/실패 콜백, 수동 실행 시 콜백 스킵 (skipCallback 분기)
 - [x] 중간 단계 콜백 4개 (`80b9965`)
   - `script_ready`, `tts_ready`, `images_ready`, `rendering` (병렬 분기)
@@ -68,7 +68,7 @@
 - 콜백 API status 검증 로직 추가
 
 ### 📁 Files / Links
-- `onca-shortform-v16.json` (42노드)
+- `onca.json` (42노드)
 - 웹앱 백엔드: 콜백 API executionId 매핑
 
 ---

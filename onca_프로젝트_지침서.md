@@ -174,9 +174,9 @@ HANDOFF.md 먼저 읽어:
 # onca_shortform 전용 규칙 (이 프로젝트만 해당)
 
 ## 이 프로젝트 범위
-- **onca_shortform_v16** 워크플로우만 담당 (설명형 숏츠)
+- **onca** 워크플로우만 담당 (설명형 숏츠)
 - Jay&Mike, 할머니&Mike, 흑형스포츠는 **별도 프로젝트**에서 관리 — 여기서 수정하지 말 것
-- Git 브랜치: `feature/onca-shortform-v16` / worktree: `~/n8n-worktrees/onca/`
+- Git 브랜치: `feature/onca` / worktree: `~/n8n-worktrees/onca/`
 
 ## 프롬프트 수정 시 규칙
 - 프롬프트에 **예시 문장 넣지 말 것** — AI가 그대로 자막에 복붙함
