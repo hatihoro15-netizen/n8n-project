@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): AO 워크플로우 정리 완료 (라이브365 1개만 표시)
+- 현재 상태(1줄): Step1 참조이미지(유/무+분석) + Step2 이미지/영상 분리 업로드 완료 + VPS 배포 완료
 - 진행중 작업: n8n ao-produce E2E 테스트
-- 최근 완료: AO Producer→라이브365 이름 변경 + AO Worker 삭제
+- 최근 완료: Step1/Step2 UI 개편 + ref_files[] 백엔드 지원
 - 주의사항: n8n ao-produce 웹훅 활성화 필요
 
 ---
@@ -163,3 +163,54 @@
 - n8n ao-produce 웹훅 E2E 테스트
 ### Files / Links
 - VPS DB: workflows 테이블 UPDATE/DELETE
+
+## 2026-03-06 (7차)
+### Done
+- [x] config.ts MinIO endpoint → VPS_HOST 환경변수 전환
+- [x] media.ts ALLOWED_HOSTS → VPS_HOST 환경변수 전환
+- [x] VPS .env에 VPS_HOST=76.13.182.180 추가
+- [x] quality-check.sh PASS
+- [x] VPS 배포 + PM2 재시작
+### Result
+- quality-check.sh PASS (IP 하드코딩 0건)
+- TypeScript 체크 통과
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+### Files / Links
+- packages/backend/src/config.ts (MinIO endpoint)
+- packages/backend/src/routes/media.ts (ALLOWED_HOSTS)
+- VPS .env (VPS_HOST 추가)
+
+## 2026-03-06 (8차)
+### Done
+- [x] Step 2에 제작 방식 선택 UI 추가 (영상화 Kling AI / 슬라이드쇼)
+- [x] 영상화: 클립 길이 5초/8초, 슬라이드쇼: 표시 시간 2초/3초/5초
+- [x] 웹훅 payload에 production_mode, slide_duration 추가
+- [x] 백엔드 POST /api/productions/ao에 새 필드 전달
+- [x] VPS 배포 + PM2 재시작
+### Result
+- TypeScript + quality-check PASS
+- VPS PM2 online
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+### Files / Links
+- productions-client.tsx (제작 방식 선택 UI)
+- productions.ts (production_mode, slide_duration)
+
+## 2026-03-06 (9차)
+### Done
+- [x] Step1 참조 이미지 개편: max 5장, 유/무 토글, Claude Vision 자동 분석, 선택적 프롬프트
+- [x] Step2 이미지/영상 분리: 이미지 영역(max 5) + 영상 영역(max 5) 각각 드롭존
+- [x] analyzeFileInState() 리팩토링 (target: 'ref' | 'prod' 파라미터)
+- [x] 백엔드 ref_files[] 배열 지원 + 웹훅 payload 전달
+- [x] prompt_p1 optional로 변경 (프론트+백엔드)
+- [x] VPS 배포 + PM2 재시작
+### Result
+- TypeScript 체크 통과 + VPS PM2 online
+- refFiles / uploadedFiles 상태 분리 완료
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+- Cloudflare Pages 프론트엔드 빌드 확인
+### Files / Links
+- productions-client.tsx (Step1 refFiles + Step2 이미지/영상 분리)
+- productions.ts (ref_files[], prompt_p1 optional)

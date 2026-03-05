@@ -7,37 +7,35 @@
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: AO 워크플로우 정리 완료 (라이브365 1개만 표시)
+- **Current Status**: Step1/Step2 UI 개편 완료 + VPS 배포 완료
 - **Goal**: n8n ao-produce 웹훅 E2E 테스트
 
 ## B) 환경/의존성
 - **서버**: VPS 76.13.182.180
 - **환경**: Local + Prod
 - **Required Secrets**: packages/backend/.env (VPS: /root/n8n-web/packages/backend/.env)
-- **추가된 의존성**: @aws-sdk/client-s3, @fastify/multipart (이미 등록)
-- **MinIO**: admin / NcaMin10S3cure! (Docker env), bucket: arubto
-- **KIEAI_API_KEY**: 설정 완료
-- **CLAUDE_API_KEY**: 설정 완료
+- **VPS_HOST**: 76.13.182.180 (.env에 추가됨)
 
 ## C) 마지막 실행 기록
 - **Last Run Command**:
   ```
-  VPS DB: AO Producer → "라이브365" 이름 변경 + AO Worker 삭제
+  VPS: git pull + tsc + pm2 restart
   ```
-- **Result**: PASS - 워크플로우 목록에 "라이브365" 1개만 표시
-- **실행 위치**: VPS (SSH + Prisma)
-- **Last Commit**: `67ca37b feat: AO 영상 제작 UI 구조 변경 — 슬롯 → 통합 파일 업로드`
+- **Result**: PASS - PM2 online
+- **실행 위치**: VPS (SSH)
+- **Last Commit**: `d6274af feat: Step1 참조이미지 유/무+분석 + Step2 이미지/영상 분리 업로드`
 
 ## D) 완료/미완료
 
 ### Done
-- [x] 통합 드래그&드롭 파일 업로드 UI (이미지+영상, 유/무 토글)
-- [x] 백엔드 files[] 배열 지원 (clips[] 하위호환)
-- [x] AO Producer → "라이브365" 이름 변경
-- [x] AO Worker 삭제 (내부용, 목록 노출 불필요)
-- [x] 제작 목록 체크박스 + 필터 + 일괄 작업 + 별표
-- [x] AO 파이프라인 연결 (POST /api/productions/ao + 폴링 + 영상 미리보기)
-- [x] 워크플로우 선택 드롭다운
+- [x] Step1: 참조 이미지 최대 5장, 유/무 토글, Vision 자동 분석, 선택적 프롬프트
+- [x] Step2: 이미지(max 5) / 영상(max 5) 분리 업로드 영역
+- [x] analyzeFileInState() 리팩토링 (ref/prod 타겟 분리)
+- [x] 백엔드 ref_files[] 지원 추가
+- [x] prompt_p1 선택적(optional)으로 변경
+- [x] 영상 제작 방식 선택: 영상화 (Kling AI) / 슬라이드쇼
+- [x] IP 하드코딩 → VPS_HOST 환경변수 전환
+- [x] VPS 배포 + PM2 재시작
 
 ### Next Actions
 1. [ ] n8n ao-produce 웹훅 워크플로우 활성화 + E2E 테스트
@@ -49,7 +47,8 @@
 - **Known Issues**: 없음
 
 ## F) 변경 파일
-- VPS DB: workflows 테이블 (AO Producer→라이브365, AO Worker 삭제)
+- productions-client.tsx (Step1 참조이미지 + Step2 이미지/영상 분리)
+- productions.ts (ref_files[] 지원, prompt_p1 optional)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> AO 워크플로우 정리 완료 (라이브365 1개). n8n ao-produce 웹훅 E2E 테스트 필요.
+> Step1 참조이미지(유/무+분석) + Step2 이미지/영상 분리 업로드 완료. n8n ao-produce 웹훅 E2E 테스트 필요.
