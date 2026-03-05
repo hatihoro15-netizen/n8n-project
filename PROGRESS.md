@@ -6,11 +6,11 @@
 ---
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
-- 마지막 업데이트: 2026-03-05
-- 현재 상태(1줄): Worker 파이프라인 번역→이미지→TTS 성공, Creatomate 템플릿 필요
-- 진행중 작업: Creatomate 쇼츠 템플릿 생성
-- 최근 완료: 이미지 생성 Replicate→kie.ai 교체, 폴링 코드 수정, 파이프라인 테스트
-- 주의사항: Creatomate에 실제 쇼츠 템플릿 미생성 상태
+- 마지막 업데이트: 2026-03-06
+- 현재 상태(1줄): 멀티씬 순차처리 + include_audio 분기 + Creatomate 합성 전체 성공
+- 진행중 작업: YouTube OAuth 재인증, 웹앱 구축
+- 최근 완료: Worker 멀티씬 구조, include_audio 분기, Creatomate dynamic source 합성
+- 주의사항: YouTube OAuth 토큰 만료, n8n publish 시스템 주의(배포 절차 HANDOFF.md 참조)
 
 ---
 
@@ -142,3 +142,29 @@
 - Next.js 프론트 초기화
 ### 📁 Files / Links
 - n8n/ao_worker.json (업데이트)
+
+## 2026-03-06
+### ✅ Done
+- [x] Worker 멀티씬 순차 처리 구조 완성 (process-clips → 씬별 Seedance + TTS 통합)
+- [x] include_audio 분기 구현 (true: Seedance generate_audio / false: 영상만 + ElevenLabs TTS)
+- [x] Creatomate render-video: HTTP Request → Code 노드 변환 (동적 source elements)
+- [x] Producer 검증 코드 업데이트 (include_audio, duration 4/8 자동 보정)
+- [x] n8n publish 시스템 문제 해결 (activeVersionId DB 직접 갱신)
+- [x] /webhook/ao-produce 웹훅 정상 응답 확인
+- [x] 1씬 파이프라인 전체 테스트 성공 (번역→Seedance→TTS→Creatomate 합성)
+### 🔁 Tried
+- n8n CLI import → activeVersionId 미갱신 문제 발견 → DB 직접 갱신으로 해결
+- Seedance duration "5" 불허 발견 → "4"/"8"만 허용으로 수정
+- Unsplash 리다이렉트 URL → kie.ai 거부 → 이미지 실패 시 텍스트 전용 재시도 로직 추가
+- Creatomate jsonBody IIFE 구문 → n8n expression 미지원 → Code 노드로 변환
+### 📌 Result
+- Worker 19 노드 (이전 23 → 4개 삭제), 깔끔한 멀티씬 파이프라인
+- 테스트 job b61c6535: Seedance(4초)→TTS→Creatomate 합성 성공, rendered_video_url 확인
+- YouTube 업로드: OAuth 토큰 만료로 실패 (코드 문제 아님, 수동 재인증 필요)
+### ➡️ Next (방향만)
+- YouTube OAuth 재인증
+- Next.js 웹앱 초기화
+- 멀티씬 2+ 테스트
+### 📁 Files / Links
+- n8n/ao_worker.json (멀티씬 구조)
+- n8n/ao_producer.json (include_audio 지원)
