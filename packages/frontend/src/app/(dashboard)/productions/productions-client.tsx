@@ -523,22 +523,6 @@ function WhiskProductionForm() {
             />
           </div>
 
-          {/* Common: Topic / Keywords / Category */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium" htmlFor="form_topic">주제</label>
-              <Input id="form_topic" value={formTopic} onChange={e => setFormTopic(e.target.value)} placeholder="예: 역사 미스터리" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium" htmlFor="form_keywords">키워드</label>
-              <Input id="form_keywords" value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="쉼표 구분" />
-            </div>
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium" htmlFor="form_category">카테고리</label>
-              <Input id="form_category" value={category} onChange={e => setCategory(e.target.value)} placeholder="예: entertainment" />
-            </div>
-          </div>
-
           {/* ── STEP 1: Image Generation ── */}
           {activeTab === 'generate' && (
             <div className="space-y-5">
@@ -657,6 +641,22 @@ function WhiskProductionForm() {
                     </span>
                   </div>
                 )}
+              </div>
+
+              {/* Topic / Keywords / Category */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium" htmlFor="form_topic">주제</label>
+                  <Input id="form_topic" value={formTopic} onChange={e => setFormTopic(e.target.value)} placeholder="예: 역사 미스터리" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium" htmlFor="form_keywords">키워드</label>
+                  <Input id="form_keywords" value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="쉼표 구분" />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium" htmlFor="form_category">카테고리</label>
+                  <Input id="form_category" value={category} onChange={e => setCategory(e.target.value)} placeholder="예: entertainment" />
+                </div>
               </div>
 
               {/* 10 Slots Grid (5x2) */}
