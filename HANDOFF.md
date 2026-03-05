@@ -1,5 +1,8 @@
 # HANDOFF.md — 세션 스냅샷 (항상 전체 Overwrite)
 
+> ✅ 이 파일은 "최신 스냅샷"이 목적이라 매번 전체 Overwrite가 정석입니다.
+> (여기엔 최신 상태/Next/LastRun/Blockers만 유지)
+
 ## Current Status
 - 번역(Claude) ✅ / Seedance(kie.ai) ✅ / TTS(kie.ai) ✅ / Creatomate 합성 ✅ / YouTube 업로드 ✅
 - 웹앱 콜백 연동 ✅ / 통합 payload 구조 변경 ✅ / 프롬프트 자동 생성 ✅
@@ -14,14 +17,15 @@
 1. [ ] 케이스1 테스트: 파일 O + 프롬프트 O
 2. [ ] 케이스2 테스트: 파일 O + 프롬프트 X (자동 프롬프트)
 3. [ ] 케이스3 테스트: 파일 X + 프롬프트 O (텍스트 전용)
-4. [ ] 케이스4 테스트: 파일 X + 프롬프트 X (에러 확인)
 
 ## Last Run
-배포: 프롬프트 자동 생성 로직 추가
-커밋: feat: AO Worker 프롬프트 자동 생성 로직 추가
+커맨드: VPS 배포 (Producer + Worker import → DB sync → restart)
+결과: Producer + Worker active ✅
+위치: VPS (76.13.182.180)
+Last Commit: feat: AO Worker 프롬프트 자동 생성 로직 추가
 
 ## Blockers
-- 없음
+없음
 
 ## n8n 워크플로우 ID
 - AO Producer: XV5shW265ht59MTD (active)
@@ -42,7 +46,7 @@
 ## VPS docker-compose 경로
 - /docker/n8n/docker-compose.yml
 
-## Payload 구조 (새)
+## Payload 구조
 ```json
 {
   "prompt_p1": "(optional) 메인 프롬프트",
@@ -65,11 +69,6 @@
 | 2 | O | X | 분석결과 + topic/keywords 자동 프롬프트 |
 | 3 | X | O | P1만 반영, text_only 씬 생성 |
 | 4 | X | X | 에러 반환 (제작 불가) |
-
-- 모든 파일의 vision_analysis/video_analysis → 프롬프트 앞에 추가 (유/무 관계없이)
-- P1 원문 100% 보존 (있을 때, 변경/요약/누락 절대 금지)
-- use_directly=true → Seedance에 이미지 직접 전달
-- use_directly=false → 분석 결과만 프롬프트에 반영, Seedance에 미전달
 
 ## n8n 배포 주의사항 (중요)
 - n8n 2.6.4 publish 시스템: CLI import는 draft만 업데이트, activeVersionId 미갱신

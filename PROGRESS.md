@@ -2,21 +2,20 @@
 
 > ❌ 날짜별 보고서는 append만(삭제/overwrite 금지).
 > ✅ 상단 "현재 요약" 섹션만 매 세션 overwrite 가능.
+> ✅ Next Actions 정답은 HANDOFF.md에. 여기엔 방향/메모만.
 
 ---
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 프롬프트 자동 생성 로직 추가 완료 (4케이스 분기)
+- 현재 상태(1줄): 운영 시스템 구축 완료 + 프롬프트 자동 생성 로직 추가
 - 진행중 작업: 4케이스 E2E 테스트
-- 최근 완료: prompt_p1 optional 변경, 자동 프롬프트 생성, text_only 씬 지원
+- 최근 완료: 운영 시스템(docs/scripts/commands) 구축, 프롬프트 자동 생성
 - 주의사항: n8n publish 시스템 주의(배포 절차 HANDOFF.md 참조)
 
 ---
 
-## 작업 보고서 (append-only)
-
-(여기서부터 날짜별 append)
+## 작업 보고서 (append-only, 양식: docs/07-report-template.md 참조)
 
 ## 2026-03-05
 ### ✅ Done
@@ -251,3 +250,23 @@
 ### 📁 Files / Links
 - n8n/ao_worker.json (assemble-prompt + process-clips 수정)
 - n8n/ao_producer.json (prompt_p1 optional + 4케이스 검증)
+
+## 2026-03-06 (6차)
+### ✅ Done
+- [x] 운영 시스템 구축 (INIT 프롬프트 적용)
+- [x] CLAUDE.md — 새 형식으로 병합 (기존 AO 내용 보존 + 세션 시작 루틴/완료 체크/브리핑 형식 추가)
+- [x] HANDOFF.md — Last Run 형식 보완 (커맨드/결과/위치/Last Commit)
+- [x] PROGRESS.md — 참조 노트 추가 (Next Actions 정답은 HANDOFF)
+- [x] docs/ 7개 파일 생성/업데이트 (01~07, AO Pipeline 맞춤)
+- [x] docs/06 — AO 프로젝트 에러 패턴 3건 추가 (activeVersionId/duration/리다이렉트 URL)
+- [x] scripts/quality-check.sh 확인 (이미 존재, PASS)
+- [x] settings.json.sample 확인 (이미 존재)
+- [x] .claude/commands/start.md 확인 (이미 존재)
+### 📌 Result
+- 운영 시스템 전체 구축 완료 (기존 기록 100% 보존)
+- quality-check.sh PASS
+### ➡️ Next (방향만)
+- 4케이스 E2E 테스트
+### 📁 Files / Links
+- CLAUDE.md, HANDOFF.md, PROGRESS.md (형식 병합)
+- docs/01~07 (신규/업데이트)

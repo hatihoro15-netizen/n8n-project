@@ -43,3 +43,21 @@
 - 잘못된 접근: top-level nodes만 수정
 - 올바른 접근: top-level nodes와 activeVersion.nodes 양쪽 다 수정
 - 재발 방지: n8n 수정 작업 시 양쪽 확인 체크리스트 포함
+
+### [2026-03-06] n8n CLI import 후 activeVersionId 미갱신
+- 증상: import 후 에디터에서 구버전이 보임, 실행 시 구버전 실행
+- 잘못된 접근: import만 하고 끝냄
+- 올바른 접근: import → DB workflow_history 노드 갱신 → active=true → docker restart
+- 재발 방지: 배포 시 반드시 DB 동기화 절차 포함 (HANDOFF.md 배포 절차 참조)
+
+### [2026-03-06] Seedance duration 값 오류
+- 증상: duration "5" 전송 시 API 거부
+- 잘못된 접근: 사용자 입력 그대로 전달
+- 올바른 접근: "4" 또는 "8"만 허용, 그 외는 자동 보정
+- 재발 방지: Producer 검증에서 duration 4/8 자동 보정
+
+### [2026-03-06] kie.ai 리다이렉트 URL 거부
+- 증상: Unsplash 등 리다이렉트 URL을 input_urls에 전달 시 실패
+- 잘못된 접근: 리다이렉트 URL 그대로 전달
+- 올바른 접근: 직접 .jpg/.png URL만 전달, 실패 시 이미지 없이 재시도
+- 재발 방지: process-clips에 이미지 URL 실패 시 텍스트 전용 fallback 로직
