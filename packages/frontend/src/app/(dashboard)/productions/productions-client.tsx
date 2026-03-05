@@ -517,7 +517,7 @@ function WhiskProductionForm() {
               id="prompt_p1"
               value={promptP1}
               onChange={e => setPromptP1(e.target.value)}
-              placeholder="영상 제작 프롬프트를 입력하세요"
+              placeholder="이미지 생성 프롬프트를 입력하세요"
               rows={3}
               className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
             />
