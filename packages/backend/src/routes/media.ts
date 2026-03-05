@@ -118,4 +118,158 @@ export async function mediaRoutes(app: FastifyInstance) {
 
     return { success: true, data: { urls: uploaded } };
   });
+
+  // Generate images via kie.ai
+  app.post('/api/media/generate-image', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    if (!config.kieai.apiKey) {
+      return reply.status(501).send({ success: false, message: 'KIEAI_API_KEY not configured' });
+    }
+
+    const { prompt, count = 1, ref_subject, ref_scene, ref_style } = request.body as {
+      prompt: string;
+      count?: number;
+      ref_subject?: string;
+      ref_scene?: string;
+      ref_style?: string;
+    };
+
+    if (!prompt?.trim()) {
+      return reply.status(400).send({ success: false, message: 'prompt is required' });
+    }
+
+    const generateCount = Math.min(Math.max(count, 1), 3);
+    const results: string[] = [];
+
+    for (let i = 0; i < generateCount; i++) {
+      try {
+        // Create task
+        const taskBody: Record<string, unknown> = {
+          model: 'google/nano-banana-pro',
+          input: {
+            prompt: prompt.trim(),
+            ...(ref_subject ? { subject_image_url: ref_subject } : {}),
+            ...(ref_scene ? { scene_image_url: ref_scene } : {}),
+            ...(ref_style ? { style_image_url: ref_style } : {}),
+          },
+        };
+
+        const createRes = await fetch(`${config.kieai.baseUrl}/jobs/createTask`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${config.kieai.apiKey}`,
+          },
+          body: JSON.stringify(taskBody),
+        });
+
+        if (!createRes.ok) {
+          const errText = await createRes.text().catch(() => '');
+          logger.error({ status: createRes.status, body: errText }, 'kie.ai createTask failed');
+          continue;
+        }
+
+        const createData = await createRes.json() as { data?: { taskId?: string } };
+        const taskId = createData.data?.taskId;
+        if (!taskId) {
+          logger.error({ createData }, 'kie.ai no taskId returned');
+          continue;
+        }
+
+        // Poll for result (max 60s, 3s interval)
+        let imageUrl: string | null = null;
+        for (let attempt = 0; attempt < 20; attempt++) {
+          await new Promise(r => setTimeout(r, 3000));
+
+          const pollRes = await fetch(
+            `${config.kieai.baseUrl}/jobs/recordInfo?taskId=${taskId}`,
+            { headers: { Authorization: `Bearer ${config.kieai.apiKey}` } }
+          );
+
+          if (!pollRes.ok) continue;
+
+          const pollData = await pollRes.json() as {
+            data?: { status?: string; output?: { image_url?: string } };
+          };
+
+          if (pollData.data?.status === 'completed' && pollData.data.output?.image_url) {
+            imageUrl = pollData.data.output.image_url;
+            break;
+          }
+          if (pollData.data?.status === 'failed') {
+            logger.error({ taskId, pollData }, 'kie.ai task failed');
+            break;
+          }
+        }
+
+        if (imageUrl) {
+          results.push(imageUrl);
+          logger.info({ taskId, imageUrl }, 'kie.ai image generated');
+        }
+      } catch (err) {
+        logger.error({ error: err }, 'kie.ai generation error');
+      }
+    }
+
+    return { success: true, data: { images: results } };
+  });
+
+  // Analyze image via Claude Vision
+  app.post('/api/media/analyze-image', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    if (!config.claude.apiKey) {
+      return reply.status(501).send({ success: false, message: 'CLAUDE_API_KEY not configured' });
+    }
+
+    const { imageUrl } = request.body as { imageUrl: string };
+    if (!imageUrl) {
+      return reply.status(400).send({ success: false, message: 'imageUrl is required' });
+    }
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': config.claude.apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 300,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: { type: 'url', url: imageUrl },
+              },
+              {
+                type: 'text',
+                text: 'Describe this image in 2-3 sentences for a short-form video script. Focus on the subject, scene, mood, and visual style. Reply in Korean.',
+              },
+            ],
+          }],
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        logger.error({ status: res.status, body: errText }, 'Claude Vision API failed');
+        return reply.status(502).send({ success: false, message: 'Claude Vision API failed' });
+      }
+
+      const data = await res.json() as {
+        content?: { type: string; text?: string }[];
+      };
+      const analysis = data.content?.find(c => c.type === 'text')?.text || '';
+
+      return { success: true, data: { analysis } };
+    } catch (err) {
+      logger.error({ error: err }, 'Claude Vision error');
+      return reply.status(500).send({ success: false, message: 'Image analysis failed' });
+    }
+  });
 }

@@ -28,6 +28,15 @@ export const config = {
     region: process.env.MINIO_REGION || 'us-east-1',
   },
 
+  kieai: {
+    apiKey: process.env.KIEAI_API_KEY || '',
+    baseUrl: process.env.KIEAI_BASE_URL || 'https://api.kie.ai/api/v1',
+  },
+
+  claude: {
+    apiKey: process.env.CLAUDE_API_KEY || '',
+  },
+
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
 
   productionTimeoutMinutes: parseInt(process.env.PRODUCTION_TIMEOUT_MINUTES || '5', 10),
