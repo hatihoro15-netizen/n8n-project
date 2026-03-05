@@ -375,8 +375,14 @@ function WhiskProductionForm() {
   const { data: workflowsData } = useWorkflows();
   const workflows = ((workflowsData as any)?.data || []) as any[];
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const refInputRef = useRef<HTMLInputElement>(null);
+  const imgInputRef = useRef<HTMLInputElement>(null);
+  const vidInputRef = useRef<HTMLInputElement>(null);
 
-  // Step 1: Uploaded files
+  // Step 1: Reference images (max 5)
+  const [refFiles, setRefFiles] = useState<UploadedFile[]>([]);
+
+  // Step 2: Production files — images (max 5) + videos (max 5)
   const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
 
   // Step 2: Prompt fields
@@ -400,37 +406,72 @@ function WhiskProductionForm() {
   const [jobVideoUrl, setJobVideoUrl] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const imageCount = uploadedFiles.filter(f => f.type === 'image').length;
-  const videoCount = uploadedFiles.filter(f => f.type === 'video').length;
+  const prodImages = uploadedFiles.filter(f => f.type === 'image');
+  const prodVideos = uploadedFiles.filter(f => f.type === 'video');
 
-  // ── Add files ──
-  const addFiles = useCallback((fileList: FileList | File[]) => {
+  // ── Add ref images (Step 1, max 5) ──
+  const addRefImages = useCallback((fileList: FileList | File[]) => {
+    const newFiles: UploadedFile[] = [];
+    for (const file of Array.from(fileList)) {
+      if (!file.type.startsWith('image/')) continue;
+      const preview = URL.createObjectURL(file);
+      newFiles.push({
+        id: nextFileId(), file, preview, type: 'image',
+        useDirectly: true, analysis: null, analyzing: false, url: null,
+      });
+    }
+    setRefFiles(prev => {
+      const combined = [...prev, ...newFiles].slice(0, 5);
+      return combined;
+    });
+    for (const uf of newFiles) {
+      analyzeFileInState(uf.id, uf.file, 'ref');
+    }
+  }, []);
+
+  const removeRefFile = (id: string) => {
+    setRefFiles(prev => {
+      const file = prev.find(f => f.id === id);
+      if (file) URL.revokeObjectURL(file.preview);
+      return prev.filter(f => f.id !== id);
+    });
+  };
+
+  const toggleRefUseDirectly = (id: string) => {
+    setRefFiles(prev => prev.map(f =>
+      f.id === id ? { ...f, useDirectly: !f.useDirectly } : f
+    ));
+  };
+
+  // ── Add production files (Step 2) ──
+  const addProdFiles = useCallback((fileList: FileList | File[], filterType?: 'image' | 'video') => {
     const newFiles: UploadedFile[] = [];
     for (const file of Array.from(fileList)) {
       const isImage = file.type.startsWith('image/');
       const isVideo = file.type.startsWith('video/');
       if (!isImage && !isVideo) continue;
+      if (filterType === 'image' && !isImage) continue;
+      if (filterType === 'video' && !isVideo) continue;
 
       const preview = URL.createObjectURL(file);
-      const uf: UploadedFile = {
-        id: nextFileId(),
-        file,
-        preview,
+      newFiles.push({
+        id: nextFileId(), file, preview,
         type: isImage ? 'image' : 'video',
-        useDirectly: true, // default: "유" (use directly)
-        analysis: null,
-        analyzing: false,
-        url: null,
-      };
-      newFiles.push(uf);
+        useDirectly: true, analysis: null, analyzing: false, url: null,
+      });
     }
 
-    setUploadedFiles(prev => [...prev, ...newFiles]);
+    setUploadedFiles(prev => {
+      const combined = [...prev, ...newFiles];
+      // Enforce max 5 images + 5 videos
+      const images = combined.filter(f => f.type === 'image').slice(0, 5);
+      const videos = combined.filter(f => f.type === 'video').slice(0, 5);
+      return [...images, ...videos];
+    });
 
-    // Auto-analyze images
     for (const uf of newFiles) {
       if (uf.type === 'image') {
-        analyzeFile(uf.id, uf.file);
+        analyzeFileInState(uf.id, uf.file, 'prod');
       }
     }
   }, []);
@@ -450,19 +491,15 @@ function WhiskProductionForm() {
   };
 
   // ── Claude Vision analysis ──
-  const analyzeFile = async (fileId: string, file: File) => {
-    setUploadedFiles(prev => prev.map(f =>
-      f.id === fileId ? { ...f, analyzing: true } : f
-    ));
+  const analyzeFileInState = async (fileId: string, file: File, target: 'ref' | 'prod') => {
+    const setter = target === 'ref' ? setRefFiles : setUploadedFiles;
+    setter(prev => prev.map(f => f.id === fileId ? { ...f, analyzing: true } : f));
 
     try {
       const urls = await uploadFilesToMinIO([file]);
       if (!urls[0]) return;
 
-      // Save uploaded URL
-      setUploadedFiles(prev => prev.map(f =>
-        f.id === fileId ? { ...f, url: urls[0] } : f
-      ));
+      setter(prev => prev.map(f => f.id === fileId ? { ...f, url: urls[0] } : f));
 
       const token = api.getToken();
       const res = await fetch(`${API_BASE}/api/media/analyze-image`, {
@@ -477,7 +514,7 @@ function WhiskProductionForm() {
       if (!res.ok) return;
       const data = await res.json();
       if (data.data?.analysis) {
-        setUploadedFiles(prev => prev.map(f =>
+        setter(prev => prev.map(f =>
           f.id === fileId ? { ...f, analysis: data.data.analysis, analyzing: false } : f
         ));
         return;
@@ -485,16 +522,8 @@ function WhiskProductionForm() {
     } catch {
       // Vision analysis is optional
     }
-    setUploadedFiles(prev => prev.map(f =>
-      f.id === fileId ? { ...f, analyzing: false } : f
-    ));
+    setter(prev => prev.map(f => f.id === fileId ? { ...f, analyzing: false } : f));
   };
-
-  // ── Drag and drop ──
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    addFiles(e.dataTransfer.files);
-  }, [addFiles]);
 
   // ── Polling: track job status ──
   const startPolling = (productionId: string) => {
@@ -530,12 +559,8 @@ function WhiskProductionForm() {
       setFormError('워크플로우를 선택해주세요.');
       return;
     }
-    if (!promptP1.trim()) {
-      setFormError('프롬프트를 입력해주세요.');
-      return;
-    }
     if (uploadedFiles.length === 0) {
-      setFormError('파일을 1개 이상 추가해주세요.');
+      setFormError('이미지 또는 영상을 1개 이상 추가해주세요.');
       return;
     }
 
@@ -544,33 +569,28 @@ function WhiskProductionForm() {
     setFormSuccess('');
 
     try {
-      // Upload files that don't have URLs yet
-      const files: {
-        type: 'image' | 'video';
-        url: string;
-        analysis: string;
-        use_directly: boolean;
-      }[] = [];
+      // Helper to prepare file entries
+      const prepareFiles = async (list: UploadedFile[]) => {
+        const result: { type: 'image' | 'video'; url: string; analysis: string; use_directly: boolean }[] = [];
+        for (const uf of list) {
+          let url = uf.url || '';
+          if (!url) {
+            const urls = await uploadFilesToMinIO([uf.file]);
+            url = urls[0] || '';
+          }
+          if (url) {
+            result.push({ type: uf.type, url, analysis: uf.analysis?.trim() || '', use_directly: uf.useDirectly });
+          }
+        }
+        return result;
+      };
 
-      for (const uf of uploadedFiles) {
-        let url = uf.url || '';
-        if (!url) {
-          const urls = await uploadFilesToMinIO([uf.file]);
-          url = urls[0] || '';
-        }
-        if (url) {
-          files.push({
-            type: uf.type,
-            url,
-            analysis: uf.analysis?.trim() || '',
-            use_directly: uf.useDirectly,
-          });
-        }
-      }
+      const files = await prepareFiles(uploadedFiles);
+      const ref_files = await prepareFiles(refFiles);
 
       const payload = {
         workflowId: selectedWorkflowId,
-        prompt_p1: promptP1.trim(),
+        prompt_p1: promptP1.trim() || undefined,
         topic: formTopic.trim() || undefined,
         keywords: keywords.trim() || undefined,
         category: category.trim() || undefined,
@@ -578,6 +598,7 @@ function WhiskProductionForm() {
         clip_duration: productionMode === 'ai_video' ? clipDuration : undefined,
         slide_duration: productionMode === 'slideshow' ? slideDuration : undefined,
         files,
+        ref_files: ref_files.length > 0 ? ref_files : undefined,
       };
 
       const res = await api.post('/api/productions/ao', payload) as { data: any };
@@ -612,9 +633,9 @@ function WhiskProductionForm() {
             }`}
           >
             <Upload className="h-4 w-4" />
-            Step 1. 파일 업로드
-            {uploadedFiles.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-xs">{uploadedFiles.length}</Badge>
+            Step 1. 참고 이미지
+            {refFiles.length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs">{refFiles.length}</Badge>
             )}
           </button>
           <button
@@ -632,83 +653,145 @@ function WhiskProductionForm() {
         </div>
 
         <div className="p-6">
-          {/* ── STEP 1: File Upload ── */}
+          {/* ── STEP 1: Reference Images ── */}
           {activeTab === 'upload' && (
             <div className="space-y-5">
-              {/* Drop zone */}
-              <div
-                onDragOver={e => e.preventDefault()}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-muted-foreground/25 rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
-              >
-                <Upload className="h-8 w-8 mx-auto text-muted-foreground/40 mb-3" />
-                <p className="text-sm font-medium text-muted-foreground">
-                  이미지 또는 영상 파일을 드래그하거나 클릭하여 추가
+              <div>
+                <h4 className="text-sm font-medium mb-1">참고 이미지 (최대 5장)</h4>
+                <p className="text-xs text-muted-foreground mb-3">
+                  업로드 즉시 AI가 자동 분석합니다. 유: 이미지 생성에 직접 반영 / 무: 분석만 반영 (참고용)
                 </p>
-                <p className="text-xs text-muted-foreground/60 mt-1">
-                  JPG, PNG, WebP, MP4, MOV 등 지원
-                </p>
+
+                {/* Ref image drop zone */}
+                {refFiles.length < 5 && (
+                  <div
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => { e.preventDefault(); addRefImages(e.dataTransfer.files); }}
+                    onClick={() => refInputRef.current?.click()}
+                    className="border-2 border-dashed border-muted-foreground/25 rounded-xl p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+                  >
+                    <Upload className="h-6 w-6 mx-auto text-muted-foreground/40 mb-2" />
+                    <p className="text-sm text-muted-foreground">
+                      참고 이미지 드래그 또는 클릭 ({refFiles.length}/5)
+                    </p>
+                  </div>
+                )}
+                <input
+                  ref={refInputRef}
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  className="hidden"
+                  onChange={e => {
+                    if (e.target.files) addRefImages(e.target.files);
+                    e.target.value = '';
+                  }}
+                />
               </div>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept="image/*,video/*"
-                multiple
-                className="hidden"
-                onChange={e => {
-                  if (e.target.files) addFiles(e.target.files);
-                  e.target.value = '';
-                }}
-              />
 
-              {/* File summary */}
-              {uploadedFiles.length > 0 && (
-                <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                  <span className="font-medium text-foreground">{uploadedFiles.length}개 파일</span>
-                  {imageCount > 0 && (
-                    <span className="flex items-center gap-1">
-                      <ImageIcon className="h-3.5 w-3.5" /> 이미지 {imageCount}
-                    </span>
-                  )}
-                  {videoCount > 0 && (
-                    <span className="flex items-center gap-1">
-                      <Video className="h-3.5 w-3.5" /> 영상 {videoCount}
-                    </span>
-                  )}
-                </div>
-              )}
-
-              {/* File cards grid */}
-              {uploadedFiles.length > 0 && (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-                  {uploadedFiles.map((uf, i) => (
+              {/* Ref image cards */}
+              {refFiles.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+                  {refFiles.map((uf, i) => (
                     <FileCard
                       key={uf.id}
                       index={i}
                       file={uf}
-                      onRemove={() => removeFile(uf.id)}
-                      onToggleUse={() => toggleUseDirectly(uf.id)}
+                      onRemove={() => removeRefFile(uf.id)}
+                      onToggleUse={() => toggleRefUseDirectly(uf.id)}
                     />
                   ))}
                 </div>
               )}
 
-              {/* Next step hint */}
-              {uploadedFiles.length > 0 && (
-                <div className="flex justify-end">
-                  <Button onClick={() => setActiveTab('prompt')}>
-                    Step 2로 이동
-                    <ChevronRight className="h-4 w-4 ml-1" />
-                  </Button>
-                </div>
-              )}
+              {/* Optional prompt for image generation */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium" htmlFor="prompt_p1_step1">
+                  이미지 생성 프롬프트 (선택)
+                </label>
+                <textarea
+                  id="prompt_p1_step1"
+                  value={promptP1}
+                  onChange={e => setPromptP1(e.target.value)}
+                  placeholder="비워두면 분석 결과로 자동 생성됩니다"
+                  rows={2}
+                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+                />
+              </div>
+
+              {/* Next step */}
+              <div className="flex justify-end">
+                <Button onClick={() => setActiveTab('prompt')}>
+                  Step 2로 이동
+                  <ChevronRight className="h-4 w-4 ml-1" />
+                </Button>
+              </div>
             </div>
           )}
 
           {/* ── STEP 2: Prompt & Production ── */}
           {activeTab === 'prompt' && (
             <div className="space-y-5">
+              {/* Image upload area (max 5) */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-medium flex items-center gap-1.5">
+                    <ImageIcon className="h-4 w-4" /> 이미지 (최대 5장)
+                  </h4>
+                  <span className="text-xs text-muted-foreground">{prodImages.length}/5</span>
+                </div>
+                {prodImages.length < 5 && (
+                  <div
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => { e.preventDefault(); addProdFiles(e.dataTransfer.files, 'image'); }}
+                    onClick={() => imgInputRef.current?.click()}
+                    className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-4 text-center cursor-pointer hover:border-primary/40 transition-colors mb-3"
+                  >
+                    <p className="text-xs text-muted-foreground">이미지 드래그 또는 클릭</p>
+                  </div>
+                )}
+                <input ref={imgInputRef} type="file" accept="image/*" multiple className="hidden"
+                  onChange={e => { if (e.target.files) addProdFiles(e.target.files, 'image'); e.target.value = ''; }} />
+                {prodImages.length > 0 && (
+                  <div className="grid grid-cols-5 gap-2">
+                    {prodImages.map((uf, i) => (
+                      <FileCard key={uf.id} index={i} file={uf}
+                        onRemove={() => removeFile(uf.id)} onToggleUse={() => toggleUseDirectly(uf.id)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Video upload area (max 5) */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="text-sm font-medium flex items-center gap-1.5">
+                    <Video className="h-4 w-4" /> 영상 (최대 5개)
+                  </h4>
+                  <span className="text-xs text-muted-foreground">{prodVideos.length}/5</span>
+                </div>
+                {prodVideos.length < 5 && (
+                  <div
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={e => { e.preventDefault(); addProdFiles(e.dataTransfer.files, 'video'); }}
+                    onClick={() => vidInputRef.current?.click()}
+                    className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-4 text-center cursor-pointer hover:border-primary/40 transition-colors mb-3"
+                  >
+                    <p className="text-xs text-muted-foreground">영상 드래그 또는 클릭</p>
+                  </div>
+                )}
+                <input ref={vidInputRef} type="file" accept="video/*" multiple className="hidden"
+                  onChange={e => { if (e.target.files) addProdFiles(e.target.files, 'video'); e.target.value = ''; }} />
+                {prodVideos.length > 0 && (
+                  <div className="grid grid-cols-5 gap-2">
+                    {prodVideos.map((uf, i) => (
+                      <FileCard key={uf.id} index={i} file={uf}
+                        onRemove={() => removeFile(uf.id)} onToggleUse={() => toggleUseDirectly(uf.id)} />
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Main prompt */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium" htmlFor="prompt_p1">
@@ -824,10 +907,7 @@ function WhiskProductionForm() {
                   <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-lg border border-primary/10">
                     <Film className="h-4 w-4 text-primary/60" />
                     <span className="text-sm font-medium">
-                      {uploadedFiles.length}개 파일 업로드됨
-                      {imageCount > 0 && ` (이미지 ${imageCount}`}
-                      {videoCount > 0 && `, 영상 ${videoCount}`}
-                      {(imageCount > 0 || videoCount > 0) && ')'}
+                      이미지 {prodImages.length}/5, 영상 {prodVideos.length}/5
                     </span>
                   </div>
                 )}

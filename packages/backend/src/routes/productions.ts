@@ -147,7 +147,7 @@ export async function productionRoutes(app: FastifyInstance) {
   }, async (request, reply) => {
     const body = request.body as {
       workflowId: string;
-      prompt_p1: string;
+      prompt_p1?: string;
       topic?: string;
       keywords?: string;
       category?: string;
@@ -156,6 +156,12 @@ export async function productionRoutes(app: FastifyInstance) {
       slide_duration?: number;
       files?: {
         type: 'image' | 'video';
+        url: string;
+        analysis?: string;
+        use_directly?: boolean;
+      }[];
+      ref_files?: {
+        type: 'image';
         url: string;
         analysis?: string;
         use_directly?: boolean;
@@ -170,9 +176,6 @@ export async function productionRoutes(app: FastifyInstance) {
 
     if (!body.workflowId) {
       return reply.status(400).send({ success: false, message: 'workflowId is required' });
-    }
-    if (!body.prompt_p1?.trim()) {
-      return reply.status(400).send({ success: false, message: 'prompt_p1 is required' });
     }
 
     // Find selected workflow
@@ -193,7 +196,7 @@ export async function productionRoutes(app: FastifyInstance) {
       data: {
         workflowId: workflow.id,
         channelId: workflow.channelId,
-        topic: body.topic || body.prompt_p1.slice(0, 100),
+        topic: body.topic || body.prompt_p1?.slice(0, 100) || 'AO Production',
         status: 'pending',
       },
       include: { workflow: true, channel: true },
@@ -211,6 +214,7 @@ export async function productionRoutes(app: FastifyInstance) {
         clip_duration: body.clip_duration,
         slide_duration: body.slide_duration,
         files: body.files,
+        ref_files: body.ref_files,
         clips: body.clips,
       });
 
