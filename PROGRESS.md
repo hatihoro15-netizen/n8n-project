@@ -7,9 +7,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 통합 payload 구조 변경 완료 (clips[] → files[] + use_directly)
-- 진행중 작업: 웹앱 E2E 테스트 (새 payload 구조)
-- 최근 완료: Producer/Worker files[] 구조 대응, use_directly 분기, 분석 결과 프롬프트 통합
+- 현재 상태(1줄): 프롬프트 자동 생성 로직 추가 완료 (4케이스 분기)
+- 진행중 작업: 4케이스 E2E 테스트
+- 최근 완료: prompt_p1 optional 변경, 자동 프롬프트 생성, text_only 씬 지원
 - 주의사항: n8n publish 시스템 주의(배포 절차 HANDOFF.md 참조)
 
 ---
@@ -229,3 +229,25 @@
 ### 📁 Files / Links
 - n8n/ao_worker.json (assemble-prompt + process-clips 수정)
 - n8n/ao_producer.json (입력값 검증 수정)
+
+## 2026-03-06 (5차)
+### ✅ Done
+- [x] Producer: prompt_p1 필수 → optional 변경
+- [x] Producer: 파일X+프롬프트X 에러 검증 추가
+- [x] Worker assemble-prompt: P1 없으면 topic+keywords+분석결과로 자동 프롬프트 생성
+- [x] Worker process-clips: 파일 없으면 text_only 씬으로 프롬프트 전용 영상 생성
+- [x] prompt_auto_generated 플래그 추가 (디버깅용)
+- [x] VPS 배포 완료 (Producer + Worker active)
+### 📌 Result
+- 4케이스 분기 완성:
+  1. 파일O + P1O → 분석결과 + P1 100% 보존
+  2. 파일O + P1X → 분석결과 + 자동 프롬프트
+  3. 파일X + P1O → P1만으로 text_only 씬 생성
+  4. 파일X + P1X → 에러 반환
+- P1 있을 때 100% 보존 원칙 유지
+### ➡️ Next (방향만)
+- 4케이스 E2E 테스트
+- 프론트 UI 구조 변경 (web 워크트리)
+### 📁 Files / Links
+- n8n/ao_worker.json (assemble-prompt + process-clips 수정)
+- n8n/ao_producer.json (prompt_p1 optional + 4케이스 검증)
