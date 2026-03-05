@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/status-badge';
 import { ProductionProgress } from '@/components/production-progress';
 import { VideoPlayer } from '@/components/video-player';
-import { useProductions } from '@/hooks/use-dashboard';
+import { useProductions, useWorkflows } from '@/hooks/use-dashboard';
 import { api } from '@/lib/api';
 import { useQueryClient } from '@tanstack/react-query';
 import {
@@ -376,6 +376,8 @@ export default function ProductionsClient() {
 function WhiskProductionForm() {
   const [activeTab, setActiveTab] = useState<'generate' | 'video'>('generate');
   const queryClient = useQueryClient();
+  const { data: workflowsData } = useWorkflows();
+  const workflows = ((workflowsData as any)?.data || []) as any[];
 
   // Common form fields
   const [promptP1, setPromptP1] = useState('');
@@ -383,6 +385,7 @@ function WhiskProductionForm() {
   const [keywords, setKeywords] = useState('');
   const [category, setCategory] = useState('');
   const [clipDuration, setClipDuration] = useState<5 | 8>(5);
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>('');
 
   // Step 1: Reference images
   const [refImages, setRefImages] = useState<{ subject: RefImage; scene: RefImage; style: RefImage }>({
@@ -587,6 +590,10 @@ function WhiskProductionForm() {
 
   // ── Submit: upload slot images → backend AO endpoint ──
   const handleSubmit = async () => {
+    if (!selectedWorkflowId) {
+      setFormError('워크플로우를 선택해주세요.');
+      return;
+    }
     if (!promptP1.trim()) {
       setFormError('프롬프트를 입력해주세요.');
       return;
@@ -629,6 +636,7 @@ function WhiskProductionForm() {
       }
 
       const payload = {
+        workflowId: selectedWorkflowId,
         prompt_p1: promptP1.trim(),
         topic: formTopic.trim() || undefined,
         keywords: keywords.trim() || undefined,
@@ -795,6 +803,26 @@ function WhiskProductionForm() {
           {/* ── STEP 2: Video Generation ── */}
           {activeTab === 'video' && (
             <div className="space-y-5">
+              {/* Workflow selector */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium" htmlFor="workflow_select">
+                  워크플로우 <span className="text-red-500">*</span>
+                </label>
+                <select
+                  id="workflow_select"
+                  value={selectedWorkflowId}
+                  onChange={e => setSelectedWorkflowId(e.target.value)}
+                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="">워크플로우를 선택하세요</option>
+                  {workflows.filter((w: any) => w.isActive && w.webhookPath).map((w: any) => (
+                    <option key={w.id} value={w.id}>
+                      {w.channel?.name ? `[${w.channel.name}] ` : ''}{w.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Clip duration + estimated length */}
               <div className="flex items-center gap-4">
                 <div>
@@ -864,7 +892,7 @@ function WhiskProductionForm() {
 
               {/* Submit */}
               <div className="flex items-center gap-3">
-                <Button onClick={handleSubmit} disabled={submitting || filledSlots.length === 0 || !!jobId}>
+                <Button onClick={handleSubmit} disabled={submitting || filledSlots.length === 0 || !selectedWorkflowId || !!jobId}>
                   {submitting ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" />처리 중...</>
                   ) : (

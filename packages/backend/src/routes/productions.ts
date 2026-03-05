@@ -141,11 +141,12 @@ export async function productionRoutes(app: FastifyInstance) {
     return { success: true, data: updated };
   });
 
-  // AO Pipeline: create production + trigger webhook
+  // AO Pipeline: create production + trigger webhook (with workflow selection)
   app.post('/api/productions/ao', {
     preHandler: [app.authenticate],
   }, async (request, reply) => {
     const body = request.body as {
+      workflowId: string;
       prompt_p1: string;
       topic?: string;
       keywords?: string;
@@ -159,39 +160,31 @@ export async function productionRoutes(app: FastifyInstance) {
       }[];
     };
 
+    if (!body.workflowId) {
+      return reply.status(400).send({ success: false, message: 'workflowId is required' });
+    }
     if (!body.prompt_p1?.trim()) {
       return reply.status(400).send({ success: false, message: 'prompt_p1 is required' });
     }
 
-    // Find or create AO channel + workflow
-    let channel = await prisma.channel.findUnique({ where: { slug: 'ao' } });
-    if (!channel) {
-      channel = await prisma.channel.create({
-        data: { name: 'AO (아럽토)', slug: 'ao' },
-      });
-    }
-
-    let workflow = await prisma.workflow.findFirst({
-      where: { channelId: channel.id, webhookPath: 'ao-produce' },
+    // Find selected workflow
+    const workflow = await prisma.workflow.findUnique({
+      where: { id: body.workflowId },
+      include: { channel: true },
     });
+
     if (!workflow) {
-      workflow = await prisma.workflow.create({
-        data: {
-          channelId: channel.id,
-          n8nWorkflowId: 'ao-produce',
-          name: 'AO Producer',
-          type: 'shortform',
-          webhookPath: 'ao-produce',
-          stepperType: 'tts_based',
-        },
-      });
+      return reply.status(404).send({ success: false, message: '워크플로우를 찾을 수 없습니다.' });
+    }
+    if (!workflow.webhookPath) {
+      return reply.status(400).send({ success: false, message: '웹훅 경로가 설정되지 않은 워크플로우입니다.' });
     }
 
     // Create production record
     const production = await prisma.production.create({
       data: {
         workflowId: workflow.id,
-        channelId: channel.id,
+        channelId: workflow.channelId,
         topic: body.topic || body.prompt_p1.slice(0, 100),
         status: 'pending',
       },
@@ -200,7 +193,7 @@ export async function productionRoutes(app: FastifyInstance) {
 
     // Trigger n8n webhook with productionId + full payload
     try {
-      await n8nClient.triggerWebhook('ao-produce', {
+      await n8nClient.triggerWebhook(workflow.webhookPath, {
         productionId: production.id,
         prompt_p1: body.prompt_p1,
         topic: body.topic,
@@ -215,7 +208,7 @@ export async function productionRoutes(app: FastifyInstance) {
         data: { status: 'started', startedAt: new Date() },
       });
 
-      logger.info({ productionId: production.id }, 'AO production triggered');
+      logger.info({ productionId: production.id, workflowId: workflow.id }, 'AO production triggered');
     } catch (error) {
       await prisma.production.update({
         where: { id: production.id },
