@@ -1,29 +1,44 @@
-> ❌ 이 파일은 "진행 일지(히스토리)"입니다. 날짜별 기록은 append만(삭제/overwrite 금지). (선택) 상단 요약 섹션이 있다면 그 부분만 최신으로 갱신 가능.
-
 # PROGRESS.md — 진행 일지
 
-## 요약 (최신 상태로 갱신 가능)
-- Phase 1(기반) 완료, Phase 2(제작 컨트롤) 완료, Phase 3(프롬프트+캐릭터) API만 완료
-- 현재: Phase 3 UI 작업 대기 중
+> ❌ 날짜별 보고서는 append만(삭제/overwrite 금지).
+> ✅ 상단 "현재 요약" 섹션만 매 세션 overwrite 가능.
+> ✅ Next Actions 정답은 HANDOFF.md에. 여기엔 방향/메모만.
 
 ---
 
+## 현재 요약 (이 섹션만 overwrite 가능)
+- 마지막 업데이트: 2026-03-05
+- 현재 상태(1줄): 운영 시스템 초기 구축 완료
+- 진행중 작업: -
+- 최근 완료: 운영 시스템 초기 구축
+- 주의사항: -
+
+---
+
+## 작업 보고서 (append-only, 양식: docs/07-report-template.md 참조)
+
+(여기서부터 날짜별 append)
+
 ## 2026-03-05
 ### ✅ Done
-- [x] 프로젝트 문서 체계 정리 (4파일 체계: CLAUDE/HANDOFF/process/PROGRESS)
-- [x] CLAUDE.md, HANDOFF.md, process.md를 `중요 클라우드코드 지식/` → 프로젝트 루트로 이동
-- [x] HANDOFF.md 새 템플릿 형식으로 재작성 (기존 내용 전체 포함)
-- [x] CLAUDE.md 업데이트 (4파일 체계 운영 규칙, n8n 규칙 추가)
-- [x] 기획서 v5.2 → v5.5 교체
+- [x] CLAUDE.md 운영 지침 생성 (5파일 체계 + docs/ 참조 테이블 + 에이전트 역할)
+- [x] HANDOFF.md 세션 스냅샷 생성 (A~G 섹션 구조)
+- [x] PROGRESS.md 진행 일지 생성
+- [x] process.md 지식베이스 유지
+- [x] docs/ 7개 참조 문서 생성 (01-architecture ~ 07-report-template)
+- [x] scripts/quality-check.sh 생성 + chmod +x (오탐지 패턴 정밀화)
+- [x] settings.json.sample 생성 (6개 워크트리 PostToolUse hook)
+- [x] .claude/commands/start.md 생성 (/start 슬래시 커맨드)
 ### 🔁 Tried
-- (없음)
+- [ ] quality-check.sh 실행 → 기존 코드(media.ts) IP 하드코딩 탐지
 ### 📌 Result
-- 4개 문서 파일이 프로젝트 루트에 통합 완료
-- 다음 세션부터 CLAUDE.md 자동 로드 가능
+- 운영 시스템 파일 전체 구축 완료
+- quality-check.sh: 기존 코드 1건 IP 하드코딩 감지 (packages/backend/src/routes/media.ts ALLOWED_HOSTS)
+- 오탐지 패턴 정밀화: 0.0.0.0/127.0.0.1 제외, 변수 선언 token= 제외, .vercel/.next/dist 빌드산출물 제외
 ### ➡️ Next (방향만 / 실행 커맨드는 HANDOFF)
-- Phase 3 UI 구현 시작 (프롬프트 에디터, 캐릭터 관리)
+- media.ts ALLOWED_HOSTS를 환경변수로 전환 (기존 코드 개선)
+- 워크플로우 실제 작업 시작
 ### 📁 Files / Links
-- `CLAUDE.md` — 운영 지침 (4파일 체계)
-- `HANDOFF.md` — 최신 스냅샷
-- `process.md` — 지식베이스
-- `PROGRESS.md` — 진행 일지 (신규 생성)
+- CLAUDE.md, HANDOFF.md, PROGRESS.md, process.md
+- docs/01~07, scripts/quality-check.sh
+- settings.json.sample, .claude/commands/start.md

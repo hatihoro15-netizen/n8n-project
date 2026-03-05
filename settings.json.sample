@@ -1,0 +1,48 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "pwd | grep -q 'n8n-worktrees/web' && cd /Users/gimdongseog/n8n-worktrees/web && ./scripts/quality-check.sh || true"
+        }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "pwd | grep -q 'n8n-worktrees/onca' && cd /Users/gimdongseog/n8n-worktrees/onca && ./scripts/quality-check.sh || true"
+        }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "pwd | grep -q 'n8n-worktrees/prompt' && cd /Users/gimdongseog/n8n-worktrees/prompt && ./scripts/quality-check.sh || true"
+        }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "pwd | grep -q 'n8n-worktrees/lumix' && cd /Users/gimdongseog/n8n-worktrees/lumix && ./scripts/quality-check.sh || true"
+        }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "pwd | grep -q 'claude-sports-v16' && cd /Users/gimdongseog/n8n-worktrees/sports/claude-sports-v16 && ./scripts/quality-check.sh || true"
+        }]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [{
+          "type": "command",
+          "command": "pwd | grep -q 'onca-capture' && cd /Users/gimdongseog/n8n-worktrees/onca-capture && ./scripts/quality-check.sh || true"
+        }]
+      }
+    ]
+  }
+}
