@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 빠른 제작 폼 + MinIO 업로드 + VPS 배포 완료, n8n 웹훅 미등록
-- 진행중 작업: n8n make-video 웹훅 워크플로우 생성 필요
-- 최근 완료: 빠른 제작 폼 UI + MinIO 업로드 + VPS 배포 + E2E 업로드 검증
-- 주의사항: n8n make-video 웹훅이 404 (워크플로우 미생성/미활성화)
+- 현재 상태(1줄): Whisk 스타일 2탭 UI + VPS 배포 완료, API 키 미설정
+- 진행중 작업: KIEAI_API_KEY / CLAUDE_API_KEY 추가 + n8n ao-produce 웹훅 활성화
+- 최근 완료: Whisk 2탭 UI (이미지 생성 + 영상 제작) + VPS 배포
+- 주의사항: VPS .env에 KIEAI_API_KEY/CLAUDE_API_KEY 미설정, n8n ao-produce 웹훅 미등록
 
 ---
 
@@ -67,3 +67,27 @@
 - packages/frontend/src/app/(dashboard)/productions/productions-client.tsx
 - packages/backend/src/routes/media.ts, server.ts, config.ts
 - VPS: /root/n8n-web/packages/backend/.env
+
+## 2026-03-06 (2차)
+### Done
+- [x] Whisk 스타일 2탭 UI 구현 (Step 1: 이미지 생성, Step 2: 영상 제작)
+- [x] Step 1: kie.ai 연동 + 참고 이미지 (subject/scene/style) + 생성 수 선택
+- [x] Step 2: 10슬롯 그리드 + Claude Vision 자동 분석 + 개별 프롬프트
+- [x] 최종 프롬프트 조합: Vision 분석 + 개별 프롬프트 + 메인 P1
+- [x] 웹훅 URL ao-produce로 변경
+- [x] 백엔드: /api/media/generate-image, /api/media/analyze-image 엔드포인트
+- [x] config.ts에 kieai, claude 설정 추가
+- [x] VPS 배포 (git pull + npm install + tsc build + PM2 restart) - PASS
+### Tried
+- [ ] KIEAI_API_KEY / CLAUDE_API_KEY → VPS .env 미추가 (키 미제공)
+### Result
+- 타입 체크 통과 + VPS 배포 완료 (PM2 online)
+- 이미지 생성/분석 기능은 API 키 추가 후 동작 예정
+### Next (방향만)
+- VPS .env에 KIEAI_API_KEY, CLAUDE_API_KEY 추가
+- n8n ao-produce 웹훅 워크플로우 생성 + 활성화
+- E2E 전체 플로우 테스트
+### Files / Links
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (전면 재작성)
+- packages/backend/src/routes/media.ts (generate-image, analyze-image 추가)
+- packages/backend/src/config.ts (kieai, claude 설정)

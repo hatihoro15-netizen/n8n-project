@@ -1,15 +1,14 @@
 # HANDOFF.md — 세션 스냅샷 (항상 전체 Overwrite)
 
-> ✅ 이 파일은 "최신 스냅샷"이 목적이라 매번 전체 Overwrite가 정석입니다.
-> (여기엔 최신 상태/Next/LastRun/Blockers만 유지)
+> 이 파일은 "최신 스냅샷"이 목적이라 매번 전체 Overwrite가 정석입니다.
 
 ---
 
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: 빠른 제작 폼 UI + MinIO 업로드 + VPS 배포 완료
-- **Goal**: n8n make-video 웹훅 워크플로우 활성화 후 E2E 완성
+- **Current Status**: Whisk 스타일 2탭 UI + VPS 배포 완료
+- **Goal**: VPS .env에 KIEAI_API_KEY / CLAUDE_API_KEY 추가 후 E2E 검증
 
 ## B) 환경/의존성
 - **서버**: VPS 76.13.182.180
@@ -21,42 +20,38 @@
 ## C) 마지막 실행 기록
 - **Last Run Command**:
   ```
-  curl -X POST http://localhost:3001/api/media/upload -H "Authorization: Bearer $TOKEN" -F "files=@/tmp/test-upload.png"
+  ssh root@76.13.182.180 'cd /root/n8n-web && pm2 restart deploy/ecosystem.config.js'
   ```
-- **Result**: PASS - MinIO arubto/uploads/ 에 파일 저장 확인
+- **Result**: PASS - Backend online at 0.0.0.0:3001
 - **실행 위치**: VPS (SSH)
-- **Last Commit**: `feat: add quick production form with MinIO image upload`
+- **Last Commit**: `d9d32b7 feat: Whisk 스타일 이미지 생성 + 영상 제작 UI`
 
 ## D) 완료/미완료
 
-### Done ✅
+### Done
 - [x] 운영 시스템 파일 구축
-- [x] productions-client.tsx 빠른 제작 폼 UI (prompt_p1, topic, keywords, category)
-- [x] 이미지 첨부 (드래그앤드롭 + 클릭, 최대 4장, 미리보기 + 삭제)
-- [x] 백엔드 POST /api/media/upload → MinIO (arubto) 엔드포인트
-- [x] 프론트 → MinIO 업로드 → images[] URL → 웹훅 호출 로직
-- [x] 사진 없을 때 use_media: "auto" 분기
+- [x] Whisk 스타일 2탭 UI (Step 1: 이미지 생성, Step 2: 영상 제작)
+- [x] Step 1: kie.ai 이미지 생성 + 참고 이미지 (subject/scene/style)
+- [x] Step 2: 10슬롯 그리드 + Claude Vision 자동 분석 + 개별 프롬프트
+- [x] 최종 프롬프트 = Vision 분석 + 개별 프롬프트 + 메인 P1 조합
+- [x] 웹훅 URL: ao-produce
+- [x] 백엔드: generate-image, analyze-image, media proxy, upload 엔드포인트
 - [x] VPS 배포 (npm install, tsc build, PM2 restart)
-- [x] VPS .env에 MINIO_* 크레덴셜 추가
-- [x] E2E: 이미지 업로드 → MinIO 저장 확인 (PASS)
 
-### Next Actions ➡️ (우선순위 1~3)
-1. [ ] n8n에서 make-video 웹훅 워크플로우 생성 + 활성화 (현재 404)
-2. [ ] 웹훅 활성화 후 E2E 재테스트 (이미지 + auto 양쪽)
-3. [ ] Cloudflare Pages 프론트엔드 배포 확인
+### Next Actions
+1. [ ] VPS .env에 KIEAI_API_KEY, CLAUDE_API_KEY 추가 (사용자가 키 제공 필요)
+2. [ ] n8n에서 ao-produce 웹훅 워크플로우 생성 + 활성화
+3. [ ] E2E 테스트: 이미지 생성 → Vision 분석 → 영상 제작 웹훅 호출
+4. [ ] Cloudflare Pages 프론트엔드 배포 확인
 
 ## E) Blockers / Issues
-- **Blockers**: n8n make-video 웹훅 워크플로우가 아직 미등록 (production/test URL 모두 404)
-- **Known Issues**: 없음
-- **롤백 필요 시**: git revert d73be60
+- **Blockers**: VPS .env에 KIEAI_API_KEY / CLAUDE_API_KEY 미설정 (이미지 생성/분석 501 응답)
+- **Known Issues**: n8n ao-produce 웹훅 워크플로우 미등록 (404 예상)
 
 ## F) 변경 파일
-- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx
-- packages/backend/src/routes/media.ts (MinIO 업로드 엔드포인트)
-- packages/backend/src/server.ts (@fastify/multipart 등록)
-- packages/backend/src/config.ts (MinIO 설정)
-- packages/backend/package.json (@aws-sdk/client-s3)
-- VPS /root/n8n-web/packages/backend/.env (MINIO_* 추가)
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (Whisk UI 전체 재작성)
+- packages/backend/src/routes/media.ts (generate-image, analyze-image, proxy 추가)
+- packages/backend/src/config.ts (kieai, claude 설정 추가)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> 빠른 제작 폼 + MinIO 업로드 배포 완료. n8n make-video 웹훅 워크플로우 생성/활성화 필요 (현재 404).
+> Whisk 스타일 2탭 UI + VPS 배포 완료. KIEAI_API_KEY/CLAUDE_API_KEY .env 추가 + n8n ao-produce 웹훅 활성화 필요.
