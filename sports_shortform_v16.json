@@ -1,0 +1,906 @@
+{
+  "updatedAt": "2026-02-28T06:37:32.993Z",
+  "createdAt": "2026-02-25T21:09:13.257Z",
+  "id": "vdl0YHQCpt9cXI2f",
+  "name": "[테스트] 스포츠 픽 숏츠 v16",
+  "description": null,
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        304
+      ],
+      "id": "2dfad90a-639d-4d9b-a3b8-08217ee81dd7",
+      "name": "수동 실행"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 종목/리그 랜덤 선택 + 말투 스타일 랜덤 선택\n// ESPN API (해외 리그, 키 없음), TheSportsDB (한국 리그, 키: 123), football-data.org (축구 순위 보조)\nconst LEAGUES = [\n  // ESPN 해외 축구\n  { sport: 'soccer', league: 'eng.1', name: 'Premier League', apiType: 'espn', sportPath: 'soccer' },\n  { sport: 'soccer', league: 'esp.1', name: 'La Liga', apiType: 'espn', sportPath: 'soccer' },\n  { sport: 'soccer', league: 'ita.1', name: 'Serie A', apiType: 'espn', sportPath: 'soccer' },\n  { sport: 'soccer', league: 'ger.1', name: 'Bundesliga', apiType: 'espn', sportPath: 'soccer' },\n  { sport: 'soccer', league: 'fra.1', name: 'Ligue 1', apiType: 'espn', sportPath: 'soccer' },\n  // ESPN 농구\n  { sport: 'basketball', league: 'nba', name: 'NBA', apiType: 'espn', sportPath: 'basketball/nba' },\n  // ESPN 야구\n  { sport: 'baseball', league: 'mlb', name: 'MLB', apiType: 'espn', sportPath: 'baseball/mlb' },\n  // TheSportsDB 한국 리그\n  { sport: 'soccer', league: '4491', name: 'K League 1', apiType: 'thesportsdb', sportPath: 'soccer' },\n  { sport: 'baseball', league: '4407', name: 'KBO', apiType: 'thesportsdb', sportPath: 'baseball' }\n];\n\n// football-data.org 리그 매핑 (축구 순위용)\nconst FDO_LEAGUE_MAP = {\n  'eng.1': 'PL',\n  'esp.1': 'PD',\n  'ita.1': 'SA',\n  'ger.1': 'BL1',\n  'fra.1': 'FL1'\n};\n\nconst idx = Math.floor(Math.random() * LEAGUES.length);\nconst sel = LEAGUES[idx];\n\nconst TONE_STYLES = [\n  {\n    name: '형',\n    guide: '반말 사용, 친근하고 확신에 찬 말투. \"야 이거 봐\", \"이거 무조건이야\", \"형이 알려줄게\" 스타일.',\n    examples: ['야 이거 봐 진짜 미쳤어', '이거 무조건이야 내가 장담해', '형이 알려줄게 잘 들어']\n  },\n  {\n    name: '빡침',\n    guide: '반말 사용, 답답하고 빡친 말투. \"아 진짜 제발 데이터 좀 보고 찍어\", \"이걸 왜 몰라?\" 스타일.',\n    examples: ['아 진짜 제발 데이터 좀 보고 찍어', '이걸 왜 몰라 진짜 답답해', '아니 이게 말이 되냐고']\n  },\n  {\n    name: 'ASMR',\n    guide: '존댓말 사용, 차분하고 전문적인 말투. \"심상치 않습니다\", \"주목해야 할 부분이 있습니다\" 스타일.',\n    examples: ['여러분 이건 심상치 않습니다', '주목해야 할 부분이 있습니다', '데이터가 말해주고 있습니다']\n  }\n];\n\nconst toneIdx = Math.floor(Math.random() * TONE_STYLES.length);\nconst selectedTone = TONE_STYLES[toneIdx];\n\nconst today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD\nconst todayCompact = today.replace(/-/g, ''); // YYYYMMDD\n\nlet fixturesUrl = '';\nlet standingsUrl = '';\nlet useFdo = false;\nlet fdoLeagueCode = '';\n\nif (sel.apiType === 'espn') {\n  fixturesUrl = 'https://site.api.espn.com/apis/site/v2/sports/' + sel.sportPath + '/scoreboard?dates=' + todayCompact;\n  if (sel.sport === 'soccer') {\n    fixturesUrl += '&league=' + sel.league;\n    // football-data.org로 순위 조회\n    fdoLeagueCode = FDO_LEAGUE_MAP[sel.league] || '';\n    if (fdoLeagueCode) {\n      useFdo = true;\n      standingsUrl = 'https://api.football-data.org/v4/competitions/' + fdoLeagueCode + '/standings';\n    } else {\n      standingsUrl = 'https://site.api.espn.com/apis/v2/sports/' + sel.sportPath + '/standings?league=' + sel.league;\n    }\n  } else {\n    standingsUrl = 'https://site.api.espn.com/apis/v2/sports/' + sel.sportPath + '/standings';\n  }\n} else {\n  // TheSportsDB\n  fixturesUrl = 'https://www.thesportsdb.com/api/v1/json/123/eventsround.php?id=' + sel.league + '&r=1&s=2025-2026';\n  standingsUrl = 'https://www.thesportsdb.com/api/v1/json/123/lookuptable.php?l=' + sel.league + '&s=2025-2026';\n}\n\nreturn [{\n  json: {\n    apiType: sel.apiType,\n    sport: sel.sport,\n    league: { id: sel.league, name: sel.name },\n    toneStyle: selectedTone.name,\n    toneGuide: selectedTone.guide,\n    toneExamples: selectedTone.examples,\n    today,\n    fixturesUrl,\n    standingsUrl,\n    useFdo,\n    fdoKey: 'e0397df419be4d21b4133e75af030ba6',\n    category: 5\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        304
+      ],
+      "id": "91e42d3f-744b-4f74-a329-58cee252144e",
+      "name": "종목 결정"
+    },
+    {
+      "parameters": {
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "스포츠 픽"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        340,
+        520
+      ],
+      "id": "eed5390a-311e-4d7a-9bfc-7f5845905a2f",
+      "name": "이전 픽 조회",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('종목 결정').first().json.fixturesUrl }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        340,
+        304
+      ],
+      "id": "8283d355-1203-45f6-8484-eb92d19547e4",
+      "name": "오늘 경기 조회"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ESPN / TheSportsDB 경기 목록 파싱\nconst sportData = $('종목 결정').first().json;\nconst raw = $input.first().json;\nconst apiType = sportData.apiType;\n\nlet parsed = [];\n\nif (apiType === 'espn') {\n  const events = raw.events || [];\n  if (events.length === 0) {\n    throw new Error('오늘 ' + sportData.league.name + ' 경기가 없습니다. 다시 실행해주세요.');\n  }\n  parsed = events.map(ev => {\n    const comp = ev.competitions && ev.competitions[0];\n    if (!comp) return null;\n    const teams = comp.competitors || [];\n    const home = teams.find(t => t.homeAway === 'home') || teams[0] || {};\n    const away = teams.find(t => t.homeAway === 'away') || teams[1] || {};\n    return {\n      fixtureId: ev.id,\n      date: ev.date,\n      homeTeam: { id: home.id, name: home.team ? home.team.displayName : 'Home' },\n      awayTeam: { id: away.id, name: away.team ? away.team.displayName : 'Away' },\n      status: ev.status ? ev.status.type.name : '',\n      venue: comp.venue ? comp.venue.fullName : ''\n    };\n  }).filter(Boolean);\n} else {\n  // TheSportsDB\n  const events = raw.events || [];\n  if (!events || events.length === 0) {\n    throw new Error('오늘 ' + sportData.league.name + ' 경기가 없습니다. 다시 실행해주세요.');\n  }\n  parsed = events.map(ev => ({\n    fixtureId: ev.idEvent,\n    date: ev.dateEvent + 'T' + (ev.strTime || '00:00:00'),\n    homeTeam: { id: ev.idHomeTeam, name: ev.strHomeTeam },\n    awayTeam: { id: ev.idAwayTeam, name: ev.strAwayTeam },\n    status: ev.strStatus || '',\n    venue: ev.strVenue || ''\n  }));\n}\n\n// 아직 시작 안 한 경기 필터\nconst upcoming = parsed.filter(g => {\n  const s = (g.status || '').toLowerCase();\n  return !s || s === 'scheduled' || s === 'pre' || s === 'ns' || s === 'not started' || s === 'STATUS_SCHEDULED';\n});\nconst gameList = upcoming.length > 0 ? upcoming : parsed;\n\nif (gameList.length === 0) {\n  throw new Error('파싱된 경기가 없습니다.');\n}\n\nreturn [{\n  json: {\n    fixtures: gameList,\n    fixtureCount: gameList.length\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        600,
+        304
+      ],
+      "id": "952a1d5c-2096-4331-a08b-afc7424c7685",
+      "name": "경기 목록 파싱"
+    },
+    {
+      "parameters": {
+        "url": "={{ $('종목 결정').first().json.standingsUrl }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Auth-Token",
+              "value": "={{ $('종목 결정').first().json.useFdo ? $('종목 결정').first().json.fdoKey : '' }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        860,
+        304
+      ],
+      "id": "5976b647-6c26-4b5b-92e2-15300d70deda",
+      "name": "순위표 조회"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ESPN/TheSportsDB는 부상 API를 제공하지 않음\n// 빈 결과 반환\nreturn [{\n  json: {\n    response: [],\n    available: false\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        304
+      ],
+      "id": "8605851b-d0a1-4aa0-8a72-697a1217ca9e",
+      "name": "부상자 조회"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ESPN/TheSportsDB는 H2H API를 제공하지 않음\n// 빈 결과 반환\nreturn [{\n  json: {\n    response: [],\n    available: false\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1380,
+        304
+      ],
+      "id": "7dfb69fc-fce6-47e3-8c2b-d96a8cb4a4db",
+      "name": "상대전적 조회"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 순위 + 이전 픽 데이터 통합 (ESPN/TheSportsDB/football-data.org)\nconst sportData = $('종목 결정').first().json;\nconst fixtureData = $('경기 목록 파싱').first().json;\nconst standingsRaw = $('순위표 조회').first().json;\nconst injuriesData = $('부상자 조회').first().json;\nconst h2hData = $('상대전적 조회').first().json;\n\n// 순위 파싱 (3가지 포맷 지원)\nlet standingsSummary = '';\ntry {\n  if (sportData.useFdo && standingsRaw.standings) {\n    // football-data.org 형식\n    const table = standingsRaw.standings[0]?.table || [];\n    standingsSummary = table.map(s => {\n      return s.position + '위 ' + s.team.name + ' (' + s.points + '점, 폼:' + (s.form || '?') + ', ' + s.won + '승' + s.draw + '무' + s.lost + '패)';\n    }).join('\\n');\n  } else if (sportData.apiType === 'espn') {\n    // ESPN 형식\n    const children = standingsRaw.children || [];\n    if (children.length > 0) {\n      const entries = children[0]?.standings?.entries || [];\n      standingsSummary = entries.slice(0, 20).map((e, i) => {\n        const stats = {};\n        (e.stats || []).forEach(s => { stats[s.name] = s.value || s.displayValue; });\n        return (i+1) + '위 ' + (e.team?.displayName || '?') + ' (' + (stats.points || stats.wins || '?') + '점, ' + (stats.gamesPlayed || stats.wins || '?') + '경기)';\n      }).join('\\n');\n    } else {\n      standingsSummary = '순위 데이터 없음';\n    }\n  } else {\n    // TheSportsDB 형식\n    const table = standingsRaw.table || [];\n    standingsSummary = table.map(s => {\n      return s.intRank + '위 ' + s.strTeam + ' (' + s.intPoints + '점, ' + s.intWin + '승' + s.intDraw + '무' + s.intLoss + '패)';\n    }).join('\\n');\n  }\n} catch(e) {\n  standingsSummary = '순위 데이터 파싱 실패: ' + e.message;\n}\nif (!standingsSummary) standingsSummary = '순위 데이터 없음';\n\n// 부상자 (현재 미지원)\nconst injuriesSummary = injuriesData.available ? JSON.stringify(injuriesData.response).substring(0, 1000) : '부상 정보는 현재 API에서 제공하지 않습니다';\n\n// H2H (현재 미지원)\nconst h2hSummary = h2hData.available ? JSON.stringify(h2hData.response).substring(0, 1000) : '상대전적 정보는 현재 API에서 제공하지 않습니다';\n\n// 이전 픽 데이터\nlet prevPickResult = '미확인';\nlet prevMatchup = '';\nlet prevPick = '';\nlet isFirstPick = true;\ntry {\n  const sheetData = $('이전 픽 조회').all();\n  if (sheetData && sheetData.length > 0) {\n    const lastRow = sheetData[sheetData.length - 1].json;\n    prevPickResult = lastRow.pickResult || '미확인';\n    prevMatchup = lastRow.matchup || '';\n    prevPick = lastRow.pick || '';\n    isFirstPick = false;\n  }\n} catch(e) { /* 첫 실행이거나 시트 비어있음 */ }\n\n// 경기 목록 요약\nconst fixturesSummary = fixtureData.fixtures.map((f, i) => {\n  return (i+1) + '. ' + f.homeTeam.name + ' vs ' + f.awayTeam.name + ' (ID: ' + f.fixtureId + ')';\n}).join('\\n');\n\nreturn [{\n  json: {\n    sport: sportData.sport,\n    league: sportData.league,\n    toneStyle: sportData.toneStyle,\n    toneGuide: sportData.toneGuide,\n    toneExamples: sportData.toneExamples,\n    fixtures: fixtureData.fixtures,\n    fixturesSummary,\n    standingsSummary,\n    injuriesSummary,\n    h2hSummary,\n    prevPickResult,\n    prevMatchup,\n    prevPick,\n    isFirstPick,\n    today: sportData.today,\n    category: 5\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1640,
+        304
+      ],
+      "id": "f7dcf265-7aa5-4a4b-9592-57598f87bef3",
+      "name": "데이터 병합"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "너는 스포츠 분석 전문가야. 아래 경기 목록과 데이터를 보고 가장 흥미로운 1경기를 선택해줘.\n\n## 종목: {{ $json.sport }} / 리그: {{ $json.league.name }}\n\n## 오늘 경기 목록\n{{ $json.fixturesSummary }}\n\n## 리그 순위표\n{{ $json.standingsSummary }}\n\n## 부상/결장 정보\n{{ $json.injuriesSummary }}\n\n## 상대전적\n{{ $json.h2hSummary }}\n\n## 선택 기준\n- 순위 차이가 적절한 경기 (너무 일방적이지 않은)\n- 최근 폼이 흥미로운 팀이 포함된 경기\n- 분석 포인트가 많은 경기\n- 반전 요소가 있을 수 있는 경기\n\n## 출력 형식 (순수 JSON만, 코드블록 없이)\n{ \"selectedFixtureId\": 경기ID, \"homeTeam\": \"홈팀명\", \"awayTeam\": \"어웨이팀명\", \"reason\": \"선택 이유 한줄\", \"angle\": \"분석 각도 한줄\", \"hookIdea\": \"훅 아이디어 한줄\" }"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1900,
+        304
+      ],
+      "id": "b6792186-ddb8-4f11-9b0f-03162994b1fd",
+      "name": "AI 경기 선택",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// AI 경기 선택 결과 파싱\nconst raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nconst cleanText = text.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n\nlet data;\ntry {\n  data = JSON.parse(cleanText);\n} catch(e) {\n  const first = cleanText.indexOf('{');\n  const last = cleanText.lastIndexOf('}');\n  if (first !== -1 && last > first) {\n    data = JSON.parse(cleanText.substring(first, last + 1));\n  } else {\n    throw new Error('AI 경기 선택 JSON 파싱 실패: ' + cleanText.substring(0, 300));\n  }\n}\n\nif (!data.selectedFixtureId) {\n  throw new Error('selectedFixtureId가 없습니다: ' + JSON.stringify(data));\n}\n\nconst mergedData = $('데이터 병합').first().json;\n\n// 선택된 경기 찾기\nconst selectedFixture = mergedData.fixtures.find(f => String(f.fixtureId) === String(data.selectedFixtureId)) || mergedData.fixtures[0];\n\nreturn [{\n  json: {\n    selectedFixtureId: data.selectedFixtureId,\n    homeTeam: data.homeTeam || selectedFixture.homeTeam.name,\n    awayTeam: data.awayTeam || selectedFixture.awayTeam.name,\n    matchup: (data.homeTeam || selectedFixture.homeTeam.name) + ' vs ' + (data.awayTeam || selectedFixture.awayTeam.name),\n    reason: data.reason || '',\n    angle: data.angle || '',\n    hookIdea: data.hookIdea || '',\n    sport: mergedData.sport,\n    league: mergedData.league,\n    toneStyle: mergedData.toneStyle,\n    toneGuide: mergedData.toneGuide,\n    toneExamples: mergedData.toneExamples,\n    standingsSummary: mergedData.standingsSummary,\n    injuriesSummary: mergedData.injuriesSummary,\n    h2hSummary: mergedData.h2hSummary,\n    prevPickResult: mergedData.prevPickResult,\n    prevMatchup: mergedData.prevMatchup,\n    prevPick: mergedData.prevPick,\n    isFirstPick: mergedData.isFirstPick,\n    today: mergedData.today,\n    category: 5\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        304
+      ],
+      "id": "8df6a907-62c9-4436-8405-fc64347e7351",
+      "name": "경기 선택 파싱"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 스포츠 분석 프롬프트 생성\nconst data = $input.first().json;\n\n// 이전 픽 결과에 따른 오프닝 가이드\nlet prevPickGuide = '';\nif (data.isFirstPick) {\n  prevPickGuide = '이번이 첫 번째 픽이야! \"첫 번째 픽을 들고 왔다\" 느낌으로 시작해.';\n} else if (data.prevPickResult === '적중') {\n  prevPickGuide = '지난 픽 \"' + data.prevMatchup + ' → ' + data.prevPick + '\"이 적중했어! 자신감 있게 언급해. 예: \"지난번 적중했는데 오늘도 갈게\"';\n} else if (data.prevPickResult === '실패') {\n  prevPickGuide = '지난 픽 \"' + data.prevMatchup + ' → ' + data.prevPick + '\"이 틀렸어. 솔직하게 인정하고 오늘은 다르다고 해. 예: \"지난번은 틀렸지만 오늘 데이터는 다르다\"';\n} else {\n  prevPickGuide = '이전 픽 결과가 아직 미확인이야. 가볍게 넘어가. 예: \"이전 경기 결과는 나오면 알려줄게\"';\n}\n\n// 말투 스타일 가이드\nconst toneBlock = '## 말투 스타일: ' + data.toneStyle + '\\n' +\n  data.toneGuide + '\\n' +\n  '예시 문장:\\n' +\n  '- ' + data.toneExamples[0] + '\\n' +\n  '- ' + data.toneExamples[1] + '\\n' +\n  '- ' + data.toneExamples[2] + '\\n' +\n  '전체 자막을 이 말투로 통일해!';\n\nconst prompt = '너는 스포츠 분석 유튜브 쇼츠(Shorts) 대본 전문가야.\\n' +\n  '아래 실제 크롤링 데이터를 바탕으로 35~40초 분량의 스포츠 픽 영상 스크립트를 작성해.\\n\\n' +\n\n  '## 경기 정보\\n' +\n  '종목: ' + data.sport + ' / 리그: ' + data.league.name + '\\n' +\n  '대진: ' + data.matchup + '\\n' +\n  '날짜: ' + data.today + '\\n' +\n  'AI 분석 각도: ' + data.angle + '\\n\\n' +\n\n  '## 실제 데이터 (크롤링 결과)\\n\\n' +\n  '### 리그 순위\\n' + data.standingsSummary + '\\n\\n' +\n  '### 부상/결장\\n' + data.injuriesSummary + '\\n\\n' +\n  '### 상대전적 (최근)\\n' + data.h2hSummary + '\\n\\n' +\n\n  '## ★★★ 팩트 포장 규칙 (핵심 제약) ★★★\\n' +\n  '1. 크롤링 데이터에 있는 수치/사실만 사용 - 순위, 폼, 부상자명, H2H 결과 등\\n' +\n  '2. 데이터에 없는 내용 추측/지어내기 절대 금지 - \"분위기가 좋다\", \"사기가 높다\" 등 주관적 해석 금지\\n' +\n  '3. 숫자는 API 원본 그대로 - 반올림/변형 금지\\n' +\n  '4. 팩트를 재미있게 포장하는 것만 허용 - \"3연패 중\" 가능, \"분위기 최악\" 불가\\n\\n' +\n\n  toneBlock + '\\n\\n' +\n\n  '## 이전 픽 결과\\n' + prevPickGuide + '\\n\\n' +\n\n  '## 영상 구조 (자막 흐름) - 반드시 이 순서!\\n' +\n  '[1~2] 이전 픽 적중 여부 언급 (시리즈 연결)\\n' +\n  '[3~4] 훅 - 궁금증/충격 유발. 결론을 숨기고 궁금하게\\n' +\n  '[5~9] 데이터 분석 - 순위, 최근 폼, 부상자, 홈/원정 성적. 팩트만 사용\\n' +\n  '[10~11] 반전 요소 (필수) - \"근데 여기서 반전이야\" 같은 전개. 상대전적/숨은 변수\\n' +\n  '[12~14] 최종 픽 (70% 이후에 공개) - 확실한 픽 제시 + 데이터 근거\\n' +\n  '[15~16] CTA - \"온카스터디\" 구체적 언급 필수\\n\\n' +\n\n  '## 자막(subtitles) 규칙\\n' +\n  '- 각 subtitle: 띄어쓰기 포함 5자 ~ 15자 (한 호흡 단위)\\n' +\n  '- subtitles 총 개수: 12~16개\\n' +\n  '- 단어 1~2개만 단독 금지\\n' +\n  '- 마침표 찍지 마\\n' +\n  '- <em>태그</em>로 핵심 수치/사실 강조\\n\\n' +\n\n  '## 이미지(images) 규칙\\n' +\n  '- 4~6개 (자막보다 적게)\\n' +\n  '- keyword: Pexels에서 검색될 영어 명사 1~2개 (스포츠 관련)\\n' +\n  '- visual_type: \"image\" 또는 \"meme\" (meme은 최대 2개)\\n' +\n  '- meme일 때 meme_mood: thinking, excited, shocked, sad, angry, cool, celebrating, money 중 택1\\n\\n' +\n\n  '## CTA 규칙\\n' +\n  '마지막 자막에 반드시 \"온카스터디\" 구체적 언급!\\n' +\n  '예: \"온카스터디에서 실시간 분석 확인해\", \"온카스터디 검색해봐\"\\n\\n' +\n\n  '## 출력 형식 (순수 JSON만, 코드블록 없이)\\n' +\n  '{\\n' +\n  '  \"hook_title\": \"첫 화면 어그로 자막 (15자 내외)\",\\n' +\n  '  \"images\": [{\"keyword\": \"영어 명사\", \"visual_type\": \"image\"}, ...],\\n' +\n  '  \"subtitles\": [\"자막1\", \"<em>강조</em> 자막\", ...],\\n' +\n  '  \"Subject\": \"제목 #온카스터디 #스포츠분석\",\\n' +\n  '  \"Caption\": \"설명 #온카스터디\",\\n' +\n  '  \"Comment\": \"온카스터디에서 더 많은 분석 확인!\",\\n' +\n  '  \"pick\": \"최종 픽 (예: 알라베스 승)\",\\n' +\n  '  \"pickDetail\": \"픽 근거 요약 (데이터 기반)\",\\n' +\n  '  \"confidence\": \"높음/보통/낮음\"\\n' +\n  '}';\n\nreturn [{\n  json: {\n    prompt,\n    matchup: data.matchup,\n    sport: data.sport,\n    league: data.league,\n    toneStyle: data.toneStyle,\n    selectedFixtureId: data.selectedFixtureId,\n    homeTeam: data.homeTeam,\n    awayTeam: data.awayTeam,\n    today: data.today,\n    category: 5,\n    prevPickResult: data.prevPickResult,\n    isFirstPick: data.isFirstPick\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2420,
+        304
+      ],
+      "id": "02dea349-600d-45e5-a409-dc02b2986b60",
+      "name": "스포츠 프롬프트 생성"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "={{ $json.prompt }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        2680,
+        304
+      ],
+      "id": "5df5ffe5-b4b3-41c7-9149-0cd8c3e069c7",
+      "name": "AI 콘텐츠 생성",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IKP349r08J9Hoz5E",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first().json;\nlet text = '';\nif (raw.content && raw.content.parts) {\n  text = raw.content.parts[0].text;\n} else if (typeof raw === 'string') {\n  text = raw;\n} else if (raw.text) {\n  text = raw.text;\n} else {\n  text = JSON.stringify(raw);\n}\n\nfunction cleanGeminiJson(raw) {\n  let s = raw.replace(/```json\\n?/g, '').replace(/```\\n?/g, '').trim();\n  const first = s.indexOf('{');\n  const last = s.lastIndexOf('}');\n  if (first !== -1 && last > first) {\n    s = s.substring(first, last + 1);\n  }\n  let result = '';\n  let inStr = false;\n  let esc = false;\n  for (let i = 0; i < s.length; i++) {\n    const c = s[i];\n    if (esc) { result += c; esc = false; continue; }\n    if (c === '\\\\' && inStr) { result += c; esc = true; continue; }\n    if (c === '\"') { inStr = !inStr; result += c; continue; }\n    if (inStr) {\n      if (c === '\\n' || c === '\\r') { result += ' '; continue; }\n      if (c === '\\t') { result += ' '; continue; }\n      if (c.charCodeAt(0) < 0x20) { continue; }\n    }\n    result += c;\n  }\n  result = result.replace(/,(\\s*[}\\]])/g, '$1');\n  return result;\n}\n\nlet cleanText = cleanGeminiJson(text);\nlet data;\n\ntry {\n  data = JSON.parse(cleanText);\n} catch (e1) {\n  try {\n    let fixed = cleanText\n      .replace(/[\\u201C\\u201D\\u201E\\u201F\\u2033\\u2036]/g, '\"')\n      .replace(/[\\u2018\\u2019\\u201A\\u201B\\u2032\\u2035]/g, \"'\")\n      .replace(/^\\uFEFF/, '');\n    data = JSON.parse(fixed);\n  } catch (e2) {\n    const posMatch = e1.message.match(/position (\\d+)/);\n    const pos = posMatch ? parseInt(posMatch[1]) : 0;\n    const start = Math.max(0, pos - 80);\n    const end = Math.min(cleanText.length, pos + 80);\n    const around = cleanText.substring(start, end);\n    throw new Error(\n      'JSON 파싱 실패: ' + e1.message + '\\n' +\n      '--- 에러 위치(' + pos + ') 주변 ---\\n' + around + '\\n' +\n      '처음 300자: ' + cleanText.substring(0, 300)\n    );\n  }\n}\n\n// images + subtitles 검증\nif (!data.images || data.images.length < 4) {\n  throw new Error('images must have at least 4 items, got: ' + (data.images ? data.images.length : 0));\n}\nif (!data.subtitles || data.subtitles.length < 6) {\n  throw new Error('subtitles must have at least 6 items, got: ' + (data.subtitles ? data.subtitles.length : 0));\n}\n\nconst VALID_MOODS = ['thinking', 'excited', 'shocked', 'sad', 'angry', 'cool', 'celebrating', 'snacking', 'speechless', 'smoking', 'disappointed', 'thumbsup', 'crying', 'desperate', 'bored', 'suspicious', 'money'];\n\ndata.images = data.images.map((img, idx) => {\n  if (!img.visual_type || !['image', 'meme'].includes(img.visual_type)) {\n    img.visual_type = 'image';\n  }\n  if (img.visual_type === 'meme') {\n    if (!img.meme_mood || !VALID_MOODS.includes(img.meme_mood)) {\n      img.meme_mood = VALID_MOODS[idx % VALID_MOODS.length];\n    }\n  } else {\n    img.meme_mood = '';\n    if (!img.keyword) {\n      img.keyword = 'sports stadium';\n    }\n  }\n  return img;\n});\n\nconst fullDialogue = data.subtitles.join(' ');\nconst memeCount = data.images.filter(i => i.visual_type === 'meme').length;\n\nconst promptData = $('스포츠 프롬프트 생성').first().json;\n\nreturn [{\n  json: {\n    hook_title: data.hook_title,\n    images: data.images,\n    subtitles: data.subtitles,\n    Subject: data.Subject,\n    Caption: data.Caption,\n    Comment: data.Comment,\n    fullDialogue,\n    Narration: fullDialogue,\n    imageCount: data.images.length,\n    subtitleCount: data.subtitles.length,\n    memeCount,\n    Status: '생성 중',\n    generatedAt: new Date().toISOString(),\n    sport: promptData.sport,\n    league: promptData.league.name,\n    matchup: promptData.matchup,\n    matchDate: promptData.today,\n    fixtureId: promptData.selectedFixtureId,\n    pick: data.pick || '',\n    pickDetail: data.pickDetail || '',\n    confidence: data.confidence || '보통',\n    toneStyle: promptData.toneStyle,\n    prevPickResult: promptData.prevPickResult || '미확인',\n    category: 5\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2940,
+        304
+      ],
+      "id": "a897b9e6-dc14-482c-8012-255b6fe09077",
+      "name": "콘텐츠 파싱"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "스포츠 픽"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {}
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        3200,
+        304
+      ],
+      "id": "823cc8f0-97a8-435f-8b12-90c3c6bb7716",
+      "name": "시트 기록",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * TTS 세그먼트 분리\n * - subtitles 배열을 3그룹(intro/body/outro)으로 분리\n * - 각 그룹의 텍스트를 결합하여 개별 TTS 요청 아이템으로 출력\n * - HTML 태그, 이모지 클리닝 포함\n */\nconst data = $('콘텐츠 파싱').first().json;\nconst subtitles = data.subtitles || [];\n\nif (subtitles.length < 4) {\n  throw new Error('subtitles가 4개 미만입니다: ' + subtitles.length);\n}\n\n/**\n * TTS용 텍스트 클리닝\n * @param {string} text - 원본 텍스트\n * @returns {string} 클리닝된 텍스트\n */\nfunction cleanForTts(text) {\n  return (text || '')\n    .replace(/<[^>]*>?/gm, '')\n    .replace(/[\\u{1F600}-\\u{1F64F}\\u{1F300}-\\u{1F5FF}\\u{1F680}-\\u{1F6FF}\\u{1F1E0}-\\u{1F1FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}]/gu, '')\n    .trim();\n}\n\nconst n = subtitles.length;\nconst introSubs = subtitles.slice(0, 2);\nconst outroSubs = subtitles.slice(n - 2);\nconst bodySubs = subtitles.slice(2, n - 2);\n\nconst segments = [\n  { id: 'intro', text: cleanForTts(introSubs.join(' ')) },\n  { id: 'body',  text: cleanForTts(bodySubs.join(' ')) },\n  { id: 'outro', text: cleanForTts(outroSubs.join(' ')) }\n];\n\nreturn segments.map(seg => ({\n  json: {\n    id: seg.id,\n    text: seg.text,\n    voice_id: 'tc_6059dad0b83880769a50502f',\n    emotion: 'happy',\n    tempo: 1.4\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3300,
+        160
+      ],
+      "id": "sp-v16-tts-segment-split",
+      "name": "TTS 세그먼트 분리"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:5100/tts",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"text\": {{ JSON.stringify($json.text) }},\n  \"voice_id\": {{ JSON.stringify($json.voice_id) }},\n  \"emotion\": {{ JSON.stringify($json.emotion) }},\n  \"tempo\": {{ $json.tempo }}\n}",
+        "options": {
+          "timeout": 60000,
+          "batching": {
+            "batch": {
+              "batchSize": 1,
+              "batchInterval": 2000
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3460,
+        160
+      ],
+      "id": "fe8b82fb-797c-4f1f-bf39-801185c734a4",
+      "name": "TTS 요청"
+    },
+    {
+      "parameters": {
+        "jsCode": "/**\n * TTS 결과 처리\n * - 3개 세그먼트 TTS 응답을 tts_results 배열로 통합\n * - 각 세그먼트의 실제 duration_sec 사용\n * - 하위호환: audio_url 필드 유지\n */\nconst ttsItems = $input.all();\nconst segItems = $('TTS 세그먼트 분리').all();\n\nconst tts_results = ttsItems.map((item, i) => {\n  const segId = segItems[i]?.json?.id || ['intro', 'body', 'outro'][i];\n  const audioUrl = item.json.audio_url;\n  const durationSec = item.json.duration_sec;\n\n  if (!audioUrl) {\n    throw new Error('TTS 응답에 audio_url 없음 (segment: ' + segId + '): ' + JSON.stringify(item.json));\n  }\n\n  return {\n    id: segId,\n    url: audioUrl,\n    duration_sec: Number(durationSec || 0)\n  };\n});\n\nconst totalDuration = tts_results.reduce((sum, r) => sum + r.duration_sec, 0);\n\nreturn [{\n  json: {\n    tts_results,\n    totalDuration,\n    audio_url: tts_results[0]?.url || ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3720,
+        160
+      ],
+      "id": "ed11d1b0-d11f-4e98-8f6e-6692cdcc3351",
+      "name": "TTS 결과 처리"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $('콘텐츠 파싱').first().json;\nconst images = data.images || [];\n\n// images 배열만 세그먼트로 분리 (이미지 검색용)\nreturn images.map((img, i) => ({\n  json: {\n    index: i,\n    keyword: img.keyword || 'abstract background',\n    visual_type: img.visual_type || 'image',\n    meme_mood: img.meme_mood || '',\n  }\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3460,
+        480
+      ],
+      "id": "3fa1b098-8745-40bd-84c4-63439968242b",
+      "name": "세그먼트 분리"
+    },
+    {
+      "parameters": {
+        "url": "=https://api.pexels.com/v1/search?query={{ encodeURIComponent($json.keyword || $json.image_prompt?.split(',')[0] || 'abstract background') }}&per_page=3&orientation=portrait",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        3720,
+        480
+      ],
+      "id": "76aadc3c-5ec1-487b-a68c-6725f0fd4ba6",
+      "name": "이미지 검색",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "1vPRgFSX7u4ecIy4",
+          "name": "Pexels"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 밈 카탈로그: MinIO에 호스팅된 밈/리액션 영상 URL (35개)\nconst MEME_CATALOG = {\n  thinking: [\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_01.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_02.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_03.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_04.mp4',\n    'http://76.13.182.180:9000/memes/thinking/meme_thinking_05.mp4',\n    'http://76.13.182.180:9000/memes/thinking/big_brain_time.png',\n    'http://76.13.182.180:9000/memes/thinking/18d7459865c4bbdeb.mp4',\n    'http://76.13.182.180:9000/memes/thinking/charlie_conspiracy.jpg',\n    'http://76.13.182.180:9000/memes/thinking/hackerman.jpg',\n    'http://76.13.182.180:9000/memes/thinking/sherlock_magnifying.jpg',\n    'http://76.13.182.180:9000/memes/thinking/anime_studying.png',\n    'http://76.13.182.180:9000/memes/thinking/detective_pikachu_twist.png',\n    'http://76.13.182.180:9000/memes/thinking/roll_safe_think.jpg',\n    'http://76.13.182.180:9000/memes/thinking/simpsons_lenny_praying.jpg',\n  ],\n  excited: [\n    'http://76.13.182.180:9000/memes/excited/meme_excited_01.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_02.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_03.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_04.mp4',\n    'http://76.13.182.180:9000/memes/excited/meme_excited_05.mp4',\n    'http://76.13.182.180:9000/memes/excited/%EC%A7%90%EC%BA%90%EB%A6%AC%20%ED%82%A4%EB%B3%B4%EB%93%9C.mp4',\n  ],\n  shocked: [\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_01.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_02.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_03.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_04.mp4',\n    'http://76.13.182.180:9000/memes/shocked/meme_shocked_05.mp4',\n    'http://76.13.182.180:9000/memes/shocked/anime_shocked.jpg',\n    'http://76.13.182.180:9000/memes/shocked/surprised_pikachu.jpg',\n    'http://76.13.182.180:9000/memes/shocked/spongebob_shocked.png',\n    'http://76.13.182.180:9000/memes/shocked/cat_shocked.jpg',\n    'http://76.13.182.180:9000/memes/shocked/pepe_shocked.png',\n    'http://76.13.182.180:9000/memes/shocked/the_office_no.jpg',\n    'http://76.13.182.180:9000/memes/shocked/oprah_surprised.jpg',\n  ],\n  sad: [\n    'http://76.13.182.180:9000/memes/sad/meme_sad_01.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_02.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_03.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_04.mp4',\n    'http://76.13.182.180:9000/memes/sad/meme_sad_05.mp4',\n    'http://76.13.182.180:9000/memes/sad/%ED%98%80%20%EB%82%B4%EB%AF%BC%20%EB%A9%8D%ED%95%9C%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/sad/squidward_window.jpg',\n  ],\n  angry: [\n    'http://76.13.182.180:9000/memes/angry/meme_angry_01.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_02.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_03.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_04.mp4',\n    'http://76.13.182.180:9000/memes/angry/meme_angry_05.mp4',\n    'http://76.13.182.180:9000/memes/angry/%EB%B9%A8%EA%B0%84%20%EB%B6%84%EB%85%B8%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/angry/table_flip.jpg',\n    'http://76.13.182.180:9000/memes/angry/thanos_snap.png',\n  ],\n  cool: [\n    'http://76.13.182.180:9000/memes/cool/meme_cool_01.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_02.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_03.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_04.mp4',\n    'http://76.13.182.180:9000/memes/cool/meme_cool_05.mp4',\n    'http://76.13.182.180:9000/memes/cool/mic_drop.jpg',\n    'http://76.13.182.180:9000/memes/cool/onepiece_admirals.jpg',\n    'http://76.13.182.180:9000/memes/cool/cool_guys_explosion.png',\n    'http://76.13.182.180:9000/memes/cool/tony_stark_sunglasses.jpg',\n    'http://76.13.182.180:9000/memes/cool/pepe_tuxedo_wine.jpg',\n    'http://76.13.182.180:9000/memes/cool/chad_yes.jpg',\n    'http://76.13.182.180:9000/memes/cool/kanye_shrug.jpg',\n  ],\n  celebrating: [\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_01.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_02.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_03.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_04.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/meme_celebrating_05.mp4',\n    'http://76.13.182.180:9000/memes/celebrating/%ED%8C%8C%ED%8B%B0%EB%AA%A8%EC%9E%90%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/celebrating/leonardo_toast.jpg',\n  ],\n  money: [\n    'http://76.13.182.180:9000/memes/money/wolf_wallstreet_money.jpg',\n    'http://76.13.182.180:9000/memes/money/mr_krabs_money.jpg',\n    'http://76.13.182.180:9000/memes/money/make_it_rain.jpg',\n    'http://76.13.182.180:9000/memes/money/stonks_meme.jpg',\n    'http://76.13.182.180:9000/memes/money/shut_up_take_money.jpg',\n    'http://76.13.182.180:9000/memes/money/empty_wallet.jpg',\n    'http://76.13.182.180:9000/memes/money/money_printer.jpg',\n    'http://76.13.182.180:9000/memes/money/scrooge_swimming.jpg',\n  ],\n  snacking: [\n    'http://76.13.182.180:9000/memes/snacking/%EA%B3%BC%EC%9E%90%20%EB%A8%B9%EB%8A%94%20%ED%8E%98%ED%8E%98.png',\n  ],\n  speechless: [\n    'http://76.13.182.180:9000/memes/speechless/%22...%22%20%EB%A9%8D%ED%95%9C%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/speechless/nick_young_confused.jpg',\n    'http://76.13.182.180:9000/memes/speechless/joey_confused.jpg',\n    'http://76.13.182.180:9000/memes/speechless/john_travolta_confused.jpg',\n    'http://76.13.182.180:9000/memes/speechless/confused_math.jpg',\n    'http://76.13.182.180:9000/memes/speechless/blinking_guy.jpg',\n  ],\n  smoking: [\n    'http://76.13.182.180:9000/memes/smoking/%EB%8B%B4%EB%B0%B0%20%ED%94%BC%EB%8A%94%20%ED%8E%98%ED%8E%98.png',\n  ],\n  disappointed: [\n    'http://76.13.182.180:9000/memes/disappointed/%EC%8A%A4%ED%8D%BC%EC%8A%A4%20%EC%9C%A0%EB%8B%88%ED%8F%BC%20%EC%9A%B0%EC%9A%B8%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/disappointed/facepalm_picard.jpg',\n  ],\n  thumbsup: [\n    'http://76.13.182.180:9000/memes/thumbsup/%EC%97%84%EC%A7%80%EC%B2%99%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/thumbsup/obama_not_bad.jpg',\n  ],\n  crying: [\n    'http://76.13.182.180:9000/memes/crying/%EC%9A%B0%EB%8A%94%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/crying/pedro_pascal_crying.jpg',\n    'http://76.13.182.180:9000/memes/crying/jordan_crying.jpg',\n    'http://76.13.182.180:9000/memes/crying/pepe_crying.jpg',\n  ],\n  desperate: [\n    'http://76.13.182.180:9000/memes/desperate/%EC%BD%98%EC%84%BC%ED%8A%B8%20%ED%8F%AC%ED%81%AC%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/desperate/this_is_fine_dog.jpg',\n    'http://76.13.182.180:9000/memes/desperate/spongebob_fire.jpg',\n    'http://76.13.182.180:9000/memes/desperate/ron_swanson_computer.mp4',\n  ],\n  bored: [\n    'http://76.13.182.180:9000/memes/bored/%ED%97%A4%EB%93%9C%ED%8F%B0%20%EB%AC%B4%ED%91%9C%EC%A0%95%20%ED%8E%98%ED%8E%98.png',\n    'http://76.13.182.180:9000/memes/bored/jim_halpert_look.jpg',\n    'http://76.13.182.180:9000/memes/bored/cat_newspaper.jpg',\n  ],\n  suspicious: [\n    'http://76.13.182.180:9000/memes/suspicious/%ED%9B%84%EB%93%9C%20%EC%93%B4%20%EC%82%90%EC%A7%84%20%ED%8E%98%ED%8E%98.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/kevin_hart_face.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/side_eye_chloe.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/palpatine_good.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/dark_robot_ai.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/burns_excellent.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/joker_card.jpg',\n    'http://76.13.182.180:9000/memes/suspicious/grinch_smile.jpg',\n  ],\n};\n\nconst items = $input.all();\nconst segAll = $('세그먼트 분리').all();\n\nconst usedMemes = new Set();\n\nreturn items.map((item, i) => {\n  const data = item.json;\n  const segData = segAll[i]?.json || {};\n  const visualType = segData.visual_type || 'image';\n  const memeMood = segData.meme_mood || 'thinking';\n\n  if (visualType === 'meme') {\n    const catalog = MEME_CATALOG[memeMood] || MEME_CATALOG.thinking;\n    // 중복 방지: 이미 사용된 밈 제외\n    const available = catalog.filter(url => !usedMemes.has(url));\n    const pool = available.length > 0 ? available : catalog;\n    const randomIdx = Math.floor(Math.random() * pool.length);\n    const selectedUrl = pool[randomIdx];\n    usedMemes.add(selectedUrl);\n    return {\n      json: {\n        ...data,\n        visual_type: 'meme',\n        meme_mood: memeMood,\n        images: [{ url: selectedUrl }],\n        is_video: selectedUrl.endsWith('.mp4'),\n      }\n    };\n  } else {\n    const photos = data.photos || [];\n    let imageUrl = '';\n    if (photos.length > 0) {\n      const randPhoto = photos[Math.floor(Math.random() * photos.length)];\n      imageUrl = randPhoto.src?.portrait || randPhoto.src?.large || randPhoto.src?.medium || '';\n    }\n    if (!imageUrl) {\n      imageUrl = 'https://images.pexels.com/photos/3021120/pexels-photo-3021120.jpeg?auto=compress&cs=tinysrgb&w=1080';\n    }\n    return {\n      json: {\n        ...data,\n        visual_type: 'image',\n        meme_mood: '',\n        images: [{ url: imageUrl }],\n        is_video: false,\n      }\n    };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3980,
+        480
+      ],
+      "id": "417f9a14-190f-48d9-a466-fde992082665",
+      "name": "이미지 URL 추출"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        4240,
+        304
+      ],
+      "id": "e4169643-cf73-4bb2-8194-ebb35c9e595c",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        4500,
+        304
+      ],
+      "id": "e9719f9a-8472-4fe5-b527-b1e9cda104a9",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "// NCA v8: images + subtitles 분리 구조\nconst hookTitle = $('콘텐츠 파싱').first().json.hook_title;\nconst hookClean = hookTitle.replace(/<[^>]*>?/gm, '');\nconst subtitles = $('콘텐츠 파싱').first().json.subtitles || [];\nconst imageCount = $('콘텐츠 파싱').first().json.imageCount;\n\nconst ttsResult = $('TTS 결과 처리').first().json;\nconst ttsResults = ttsResult.tts_results || [];\nconst audioDuration = ttsResult.totalDuration;\nlet totalDuration = audioDuration;  // TTS 3-segment 합산\n\nconst BGM_URL = 'http://76.13.182.180:9000/audio/bgm_new.mp3';\n\n// === 아웃트로 영상 (카테고리 결정 노드에서 사전 선택) ===\nconst OUTRO_BASE = 'http://76.13.182.180:9000/outro/';\nconst category = 5;\nconst outroFile = 'sports_news.mp4' || '';\nconst outroCta = '온카스터디에서 더 많은 분석 확인!' || '';\nconst outroUrl = outroFile ? OUTRO_BASE + outroFile : '';\nconst SFX_MAP = {\n  whoosh: 'http://76.13.182.180:9000/audio/sfx_whoosh1.mp3',\n  pop: 'http://76.13.182.180:9000/audio/sfx_pop_user.mp3',\n  ding: 'http://76.13.182.180:9000/audio/sfx_ding1.mp3',\n  ding2: 'http://76.13.182.180:9000/audio/sfx_ding2.mp3',\n  ppook: 'http://76.13.182.180:9000/audio/sfx_ppook.wav',\n  wow: 'http://76.13.182.180:9000/audio/sfx_wow.wav'\n};\n\nfunction escapeDrawtext(text) {\n  if (!text) return '';\n  // 이모지 제거 (NanumGothicBold에 이모지 글리프 없음)\n  text = text.replace(/[\\u{1F600}-\\u{1F64F}\\u{1F300}-\\u{1F5FF}\\u{1F680}-\\u{1F6FF}\\u{1F1E0}-\\u{1F1FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}\\u{FE00}-\\u{FE0F}\\u{1F900}-\\u{1F9FF}\\u{1FA00}-\\u{1FA6F}\\u{1FA70}-\\u{1FAFF}\\u{200D}\\u{20E3}\\u{FE0F}]/gu, '').trim();\n  return text.replace(/\\\\/g, '\\\\\\\\').replace(/'/g, '\\u2019').replace(/\"/g, '\\u201D').replace(/:/g, '\\\\:').replace(/;/g, '\\\\;').replace(/,/g, '\\\\,').replace(/\\[/g, '\\\\[').replace(/\\]/g, '\\\\]').replace(/\\n/g, ' ');\n}\nfunction escapeDrawtextMultiline(text) {\n  if (!text) return '';\n  text = text.replace(/[\\u{1F600}-\\u{1F64F}\\u{1F300}-\\u{1F5FF}\\u{1F680}-\\u{1F6FF}\\u{1F1E0}-\\u{1F1FF}\\u{2600}-\\u{26FF}\\u{2700}-\\u{27BF}\\u{FE00}-\\u{FE0F}\\u{1F900}-\\u{1F9FF}\\u{1FA00}-\\u{1FA6F}\\u{1FA70}-\\u{1FAFF}\\u{200D}\\u{20E3}\\u{FE0F}]/gu, '').trim();\n  return text.replace(/\\\\/g, '\\\\\\\\').replace(/'/g, '\\u2019').replace(/\"/g, '\\u201D').replace(/:/g, '\\\\:').replace(/;/g, '\\\\;').replace(/,/g, '\\\\,').replace(/\\[/g, '\\\\[').replace(/\\]/g, '\\\\]');\n}\nfunction wrapSubtitle(text, maxLen) {\n  if (!text) return '';\n  const words = text.split(' ');\n  let lines = [];\n  let currentLine = '';\n  for (const word of words) {\n    if (currentLine.length + word.length > maxLen && currentLine.length > 0) {\n      lines.push(currentLine.trim());\n      currentLine = word + ' ';\n    } else {\n      currentLine += word + ' ';\n    }\n  }\n  if (currentLine) lines.push(currentLine.trim());\n  return lines.join('\\n');\n}\n\nif (!subtitles || subtitles.length === 0) {\n  throw new Error('subtitles 배열이 비어있습니다. 콘텐츠 파싱 결과를 확인하세요.');\n}\n\n// === 이미지: audioDuration / imageCount 균등 배분 ===\nconst imgResults = $('이미지 URL 추출').all();\nconst imgDuration = audioDuration / imageCount;\nlet imgSegments = [];\nfor (let i = 0; i < imageCount; i++) {\n  const imgData = imgResults[i]?.json || {};\n  const imageUrl = imgData.images?.[0]?.url || '';\n  const isVideo = imgData.is_video || false;\n  const visualType = imgData.visual_type || 'image';\n  if (!imageUrl) throw new Error(`이미지 ${i+1} URL 없음`);\n  imgSegments.push({\n    index: i,\n    imageUrl,\n    isVideo,\n    visualType,\n    start: i * imgDuration,\n    duration: imgDuration\n  });\n}\n\n// === 자막: 글자수 비율 + min/max 보정 타이밍 ===\nconst MIN_SUB_DUR = 0.70;\nconst MAX_SUB_DUR = 1.80;\n\n// 1단계: 글자수 비율로 rawDur 계산\nconst totalChars = subtitles.reduce((sum, s) => {\n  return sum + s.replace(/<[^>]*>?/gm, '').replace(/\\s+/g, '').length;\n}, 0);\n\nlet subMeta = subtitles.map((raw, i) => {\n  const clean = raw.replace(/<[^>]*>?/gm, '');\n  const chars = clean.replace(/\\s+/g, '').length;\n  const ratio = totalChars > 0 ? chars / totalChars : 1 / subtitles.length;\n  const rawDur = ratio * audioDuration;\n  return { index: i, raw, clean, chars, rawDur, hasEm: raw.includes('<em>') };\n});\n\n// 2단계: min/max 클램프 + 차이 계산\nlet excess = 0;\nlet clampedDurs = subMeta.map(s => {\n  if (s.rawDur < MIN_SUB_DUR) {\n    excess += s.rawDur - MIN_SUB_DUR;\n    return MIN_SUB_DUR;\n  } else if (s.rawDur > MAX_SUB_DUR) {\n    excess += s.rawDur - MAX_SUB_DUR;\n    return MAX_SUB_DUR;\n  }\n  return s.rawDur;\n});\n\n// 3단계: 클램프 안 걸린 자막에 비례 재분배\nif (Math.abs(excess) > 0.001) {\n  const unclamped = clampedDurs.map((d, i) => d !== MIN_SUB_DUR && d !== MAX_SUB_DUR ? i : -1).filter(i => i >= 0);\n  const unclampedTotal = unclamped.reduce((sum, i) => sum + clampedDurs[i], 0);\n  if (unclampedTotal > 0) {\n    for (const i of unclamped) {\n      const share = (clampedDurs[i] / unclampedTotal) * excess;\n      clampedDurs[i] = Math.max(MIN_SUB_DUR, Math.min(MAX_SUB_DUR, clampedDurs[i] + share));\n    }\n  }\n}\n\n// 4단계: start 시간 순차 재계산\nlet subSegments = [];\nlet subStart = 0;\nfor (let i = 0; i < subtitles.length; i++) {\n  subSegments.push({\n    index: i,\n    raw: subMeta[i].raw,\n    clean: subMeta[i].clean,\n    start: subStart,\n    duration: clampedDurs[i],\n    hasEm: subMeta[i].hasEm\n  });\n  subStart += clampedDurs[i];\n}\n\n// === FFmpeg inputs ===\nlet inputs = [];\nlet inputIndex = 0;\nconst mediaInputs = [];\n\n// 1) 이미지/영상 (4~6개)\nfor (const img of imgSegments) {\n  if (img.isVideo) {\n    inputs.push({ file_url: img.imageUrl, options: [{ option: \"-stream_loop\", argument: \"-1\" }] });\n  } else {\n    inputs.push({ file_url: img.imageUrl, options: [{ option: \"-loop\", argument: \"1\" }, { option: \"-framerate\", argument: \"30\" }, { option: \"-t\", argument: img.duration.toFixed(2) }] });\n  }\n  mediaInputs.push({ idx: inputIndex, isVideo: img.isVideo, duration: img.duration });\n  inputIndex++;\n}\n\n// 2) TTS 3-segment (intro/body/outro)\nconst audioIdxStart = inputIndex;\nfor (const tts of ttsResults) {\n  inputs.push({ file_url: tts.url, options: [] });\n  inputIndex++;\n}\n\n// 3) BGM\nconst bgmIdx = inputIndex;\ninputs.push({ file_url: BGM_URL, options: [{ option: \"-stream_loop\", argument: \"-1\" }] });\ninputIndex++;\n\n// 4) 아웃트로 영상 (비디오만 사용, 오디오 무시)\nlet outroIdx = -1;\nlet outroDuration = 4 || 4;\nif (outroUrl) {\n  outroIdx = inputIndex;\n  inputs.push({ file_url: outroUrl, options: [] });\n  inputIndex++;\n}\n\n// 5) SFX: 이미지 전환 + 강조 em\nconst sfxInputs = [];\nfor (let i = 0; i < imgSegments.length - 1; i++) {\n  const next = imgSegments[i + 1];\n  let sfxType = 'ppook';\n  inputs.push({ file_url: SFX_MAP[sfxType], options: [] });\n  sfxInputs.push({ idx: inputIndex, type: sfxType, timeMs: Math.round(next.start * 1000) });\n  inputIndex++;\n}\nfor (const sub of subSegments) {\n  if (sub.hasEm) {\n    const emSfx = /\\d/.test(sub.raw) ? 'ding2' : 'pop';\n    inputs.push({ file_url: SFX_MAP[emSfx], options: [] });\n    sfxInputs.push({ idx: inputIndex, type: emSfx, timeMs: Math.round((sub.start + 0.3) * 1000) });\n    inputIndex++;\n  }\n}\n\n// === FILTER COMPLEX ===\nlet filterParts = [];\n\n// 비디오 스케일 + concat\nfor (let i = 0; i < imgSegments.length; i++) {\n  const m = mediaInputs[i];\n  if (m.isVideo) {\n    filterParts.push(`[${m.idx}:v]trim=duration=${m.duration.toFixed(2)},setpts=PTS-STARTPTS,scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30[v${i}]`);\n  } else {\n    filterParts.push(`[${m.idx}:v]scale=1080:1080:force_original_aspect_ratio=increase,crop=1080:1080,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30[v${i}]`);\n  }\n}\nconst vLabels = imgSegments.map((_, i) => `[v${i}]`).join('');\nfilterParts.push(`${vLabels}concat=n=${imgSegments.length}:v=1:a=0[vconcat]`);\n\n// 오디오: TTS 3-segment concat\nfor (let ai = 0; ai < ttsResults.length; ai++) {\n  filterParts.push(`[${audioIdxStart + ai}:a]asetpts=PTS-STARTPTS[a${ai}]`);\n}\nfilterParts.push(`[a0][a1][a2]concat=n=3:v=0:a=1[tts_raw]`);\nconst bgmTotalDur = outroUrl ? totalDuration + outroDuration : totalDuration;\nfilterParts.push(`[${bgmIdx}:a]atrim=duration=${bgmTotalDur},asetpts=PTS-STARTPTS,afade=t=out:st=${Math.max(0, bgmTotalDur - 2)}:d=2[bgm]`);\n\n// SFX mix\nconst sfxCount = sfxInputs.length;\nif (sfxCount > 0) {\n  for (let i = 0; i < sfxCount; i++) {\n    const si = sfxInputs[i];\n    filterParts.push(`[${si.idx}:a]atrim=duration=0.3,asetpts=PTS-STARTPTS,volume=0.6,adelay=${si.timeMs}|${si.timeMs}[sfx${i}]`);\n  }\n  const sfxMixLabels = sfxInputs.map((_, i) => `[sfx${i}]`).join('');\n  filterParts.push(`${sfxMixLabels}amix=inputs=${sfxCount}:duration=longest:normalize=0[sfx_mix]`);\n  filterParts.push(`[tts_raw][bgm][sfx_mix]amix=inputs=3:duration=longest:weights=1 1 0.8:normalize=0[amain]`);\n} else {\n  filterParts.push(`[tts_raw][bgm]amix=inputs=2:duration=longest:weights=1 1:normalize=0[amain]`);\n}\n\n// === 아웃트로 비디오 concat ===\nif (outroIdx >= 0) {\n  filterParts.push(`[${outroIdx}:v]scale=1080:1920:force_original_aspect_ratio=decrease,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,format=yuv420p,fps=30[voutro]`);\n  filterParts.push(`[vconcat]format=yuv420p[vmain_fmt]`);\n  filterParts.push(`[vmain_fmt][voutro]concat=n=2:v=1:a=0[vwithoutro]`);\n} else {\n  filterParts.push(`[vconcat]null[vwithoutro]`);\n}\n\n// === 오디오: 메인만 사용, 아웃트로 구간은 무음 패딩 ===\nif (outroIdx >= 0) {\n  const fullDuration = totalDuration + outroDuration;\n  filterParts.push(`[amain]apad=whole_dur=${fullDuration.toFixed(2)}[afinal]`);\n} else {\n  filterParts.push(`[amain]anull[afinal]`);\n}\n\n// 자막 오버레이 (상단 제목 + 하단 자막 + 훅)\nlet overlayFilter = `[vwithoutro]drawbox=y=40:w=1080:h=280:color=#000000@1.0:t=fill,drawtext=expansion=none:text='${escapeDrawtext(hookClean)}':fontsize=72:fontcolor=white:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=120:line_spacing=12`;\n\n// 자막 (글자수 비율 기반 타이밍, 이미지 전환과 독립)\nfor (const sub of subSegments) {\n  const subText = escapeDrawtext(wrapSubtitle(sub.clean, 12));\n  const startT = sub.start.toFixed(2);\n  const endT = (sub.start + sub.duration).toFixed(2);\n  overlayFilter += `,drawtext=expansion=none:text='${subText}':fontsize=80:fontcolor=white:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=h-280:borderw=4:bordercolor=black:enable='between(t,${startT},${endT})'`;\n}\n\n// 훅 자막\nconst hookEscaped = escapeDrawtextMultiline(wrapSubtitle(hookClean, 10));\nconst hookEndT = 2.5;\noverlayFilter += `,drawbox=y=(h-400)/2:w=1080:h=400:color=#000000@0.7:t=fill:enable='between(t,0,${hookEndT})'`;\noverlayFilter += `,drawtext=expansion=none:text='${hookEscaped}':fontsize=80:fontcolor=#CCFF00:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=(h-th)/2:borderw=4:bordercolor=black:enable='between(t,0,${hookEndT})'`;\n// 아웃트로 CTA 자막 (아웃트로 구간에만 표시)\nif (outroIdx >= 0) {\n  totalDuration += outroDuration;  // CTA 계산 전에 아웃트로 길이 반영\n  const ctaText = escapeDrawtextMultiline(wrapSubtitle(outroCta, 14));\n  const outroStartT = (totalDuration - outroDuration).toFixed(2);\n  const outroEndT = totalDuration.toFixed(2);\n  overlayFilter += `,drawbox=y=h-350:w=1080:h=120:color=#000000@0.7:t=fill:enable='between(t,${outroStartT},${outroEndT})'`;\n  overlayFilter += `,drawtext=expansion=none:text='${ctaText}':fontsize=60:fontcolor=#CCFF00:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=h-320:borderw=3:bordercolor=black:enable='between(t,${outroStartT},${outroEndT})'`;\n}\n\noverlayFilter += '[vfinal]';\nfilterParts.push(overlayFilter);\n\nconst nca_payload = {\n  inputs,\n  filters: [{ filter: filterParts.join(';') }],\n  outputs: [{\n    options: [\n      { option: \"-map\", argument: \"[vfinal]\" }, { option: \"-map\", argument: \"[afinal]\" },\n      { option: \"-c:v\", argument: \"libx264\" }, { option: \"-preset\", argument: \"fast\" }, { option: \"-crf\", argument: \"23\" },\n      { option: \"-c:a\", argument: \"aac\" }, { option: \"-b:a\", argument: \"192k\" },\n      { option: \"-pix_fmt\", argument: \"yuv420p\" }, { option: \"-movflags\", argument: \"+faststart\" }, { option: \"-t\", argument: totalDuration.toFixed(2) }\n    ],\n    file_name: \"kkultip_shorts_final.mp4\"\n  }]\n};\n\nreturn [{\n  json: {\n    nca_payload,\n    totalDuration,\n    imageCount: imgSegments.length,\n    subtitleCount: subSegments.length,\n    hookTitle,\n    subject: $('콘텐츠 파싱').first().json.Subject,\n    caption: $('콘텐츠 파싱').first().json.Caption,\n    comment: $('콘텐츠 파싱').first().json.Comment,\n    category,\n    outroFile,\n    debugCategory: {\n      from_contentParsing: $('콘텐츠 파싱').first().json.category,\n      from_topicParsing: $('경기 선택 파싱').first().json.category,\n      usedCategory: category,\n      selectedOutro: outroFile || 'none',\n      selectedCta: outroCta || 'none'\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4760,
+        304
+      ],
+      "id": "404f0c26-7e0a-4ea9-9a92-b409b2881a08",
+      "name": "NCA 데이터 준비"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://76.13.182.180:8080/v1/ffmpeg/compose",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x-api-key",
+              "value": "nca-sagong-2026"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.nca_payload) }}",
+        "options": {
+          "timeout": 600000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        5020,
+        304
+      ],
+      "id": "aceed59c-8a84-4d5c-9462-c4029b65e4ae",
+      "name": "NCA 영상 제작"
+    },
+    {
+      "parameters": {
+        "jsCode": "// NCA 결과 처리\nconst result = $input.first().json;\nconst prevData = $('NCA 데이터 준비').first().json;\n\nlet videoUrl = '';\nif (Array.isArray(result.response)) {\n  videoUrl = result.response[0]?.file_url || '';\n} else if (typeof result.response === 'string') {\n  videoUrl = result.response;\n} else {\n  videoUrl = result.output_url || result.url || result.video_url || result.file_url || '';\n}\n\nif (!videoUrl) {\n  throw new Error('NCA 영상 제작 결과 URL 없음: ' + JSON.stringify(result).substring(0, 500));\n}\n\nreturn [{\n  json: {\n    '영상 URL': videoUrl,\n    Status: '완료',\n    topic: $('경기 선택 파싱').first().json.matchup,\n    category: prevData.category,\n    outro_file: prevData.outroFile || '',\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5280,
+        304
+      ],
+      "id": "b450da49-f5c0-47b1-b8aa-89ad7451c1e8",
+      "name": "NCA 결과 처리"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1gkRjLIcK3HxbnTbLCvG6oknMGVt2uz9pgboM3EF_VKg",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "스포츠 픽"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [
+            "matchup"
+          ],
+          "schema": [
+            {
+              "id": "matchup",
+              "displayName": "matchup",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "영상 URL",
+              "displayName": "영상 URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        5540,
+        304
+      ],
+      "id": "319950f6-698f-4a59-84d3-04217db6b3b2",
+      "name": "상태 업데이트",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "CWBUyXUqCU9p5VAg",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "수동 실행": {
+      "main": [
+        [
+          {
+            "node": "종목 결정",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "종목 결정": {
+      "main": [
+        [
+          {
+            "node": "이전 픽 조회",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "오늘 경기 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "오늘 경기 조회": {
+      "main": [
+        [
+          {
+            "node": "경기 목록 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "경기 목록 파싱": {
+      "main": [
+        [
+          {
+            "node": "순위표 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "순위표 조회": {
+      "main": [
+        [
+          {
+            "node": "부상자 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "부상자 조회": {
+      "main": [
+        [
+          {
+            "node": "상대전적 조회",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "상대전적 조회": {
+      "main": [
+        [
+          {
+            "node": "데이터 병합",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "데이터 병합": {
+      "main": [
+        [
+          {
+            "node": "AI 경기 선택",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 경기 선택": {
+      "main": [
+        [
+          {
+            "node": "경기 선택 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "경기 선택 파싱": {
+      "main": [
+        [
+          {
+            "node": "스포츠 프롬프트 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "스포츠 프롬프트 생성": {
+      "main": [
+        [
+          {
+            "node": "AI 콘텐츠 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI 콘텐츠 생성": {
+      "main": [
+        [
+          {
+            "node": "콘텐츠 파싱",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "콘텐츠 파싱": {
+      "main": [
+        [
+          {
+            "node": "시트 기록",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "시트 기록": {
+      "main": [
+        [
+          {
+            "node": "TTS 세그먼트 분리",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "세그먼트 분리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 세그먼트 분리": {
+      "main": [
+        [
+          {
+            "node": "TTS 요청",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "세그먼트 분리": {
+      "main": [
+        [
+          {
+            "node": "이미지 검색",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 요청": {
+      "main": [
+        [
+          {
+            "node": "TTS 결과 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TTS 결과 처리": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 검색": {
+      "main": [
+        [
+          {
+            "node": "이미지 URL 추출",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 URL 추출": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "NCA 데이터 준비",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 데이터 준비": {
+      "main": [
+        [
+          {
+            "node": "NCA 영상 제작",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 영상 제작": {
+      "main": [
+        [
+          {
+            "node": "NCA 결과 처리",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NCA 결과 처리": {
+      "main": [
+        [
+          {
+            "node": "상태 업데이트",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "80b24c91-3707-4989-a5e4-d4e6036f5784",
+  "activeVersionId": null,
+  "versionCounter": 218,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-02-25T21:09:13.257Z",
+      "createdAt": "2026-02-25T21:09:13.257Z",
+      "role": "workflow:owner",
+      "workflowId": "vdl0YHQCpt9cXI2f",
+      "projectId": "W6LETsSnBzw4J5Aa",
+      "project": {
+        "updatedAt": "2026-02-09T04:42:12.235Z",
+        "createdAt": "2026-02-07T19:04:11.494Z",
+        "id": "W6LETsSnBzw4J5Aa",
+        "name": "hatihoro15 hatihoro15 <hatihoro15@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null,
+        "creatorId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+        "projectRelations": [
+          {
+            "updatedAt": "2026-02-07T19:04:11.494Z",
+            "createdAt": "2026-02-07T19:04:11.494Z",
+            "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+            "projectId": "W6LETsSnBzw4J5Aa",
+            "user": {
+              "updatedAt": "2026-02-27T23:00:59.741Z",
+              "createdAt": "2026-02-07T19:04:09.331Z",
+              "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
+              "email": "hatihoro15@gmail.com",
+              "firstName": "hatihoro15",
+              "lastName": "hatihoro15",
+              "personalizationAnswers": {
+                "version": "v4",
+                "personalization_survey_submitted_at": "2026-02-07T19:24:51.818Z",
+                "personalization_survey_n8n_version": "2.6.4"
+              },
+              "settings": {
+                "userActivated": true,
+                "easyAIWorkflowOnboarded": true,
+                "firstSuccessfulWorkflowId": "dEtWqwWQPJfwCWiIM0QYd",
+                "userActivatedAt": 1771888859109,
+                "npsSurvey": {
+                  "waitingForResponse": true,
+                  "ignoredCount": 2,
+                  "lastShownAt": 1772185245155
+                }
+              },
+              "disabled": false,
+              "mfaEnabled": false,
+              "lastActiveAt": "2026-02-27",
+              "isPending": false
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "tags": [],
+  "activeVersion": null
+}
