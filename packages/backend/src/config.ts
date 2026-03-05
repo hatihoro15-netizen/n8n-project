@@ -20,6 +20,14 @@ export const config = {
     password: process.env.ADMIN_PASSWORD || 'changeme',
   },
 
+  minio: {
+    endpoint: process.env.MINIO_ENDPOINT || 'http://76.13.182.180:9000',
+    accessKey: process.env.MINIO_ACCESS_KEY || '',
+    secretKey: process.env.MINIO_SECRET_KEY || '',
+    bucket: process.env.MINIO_BUCKET || 'arubto',
+    region: process.env.MINIO_REGION || 'us-east-1',
+  },
+
   corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
 
   productionTimeoutMinutes: parseInt(process.env.PRODUCTION_TIMEOUT_MINUTES || '5', 10),

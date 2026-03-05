@@ -1,6 +1,7 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import jwt from '@fastify/jwt';
+import multipart from '@fastify/multipart';
 import { config } from './config';
 import { logger } from './utils/logger';
 import { prisma } from './utils/prisma';
@@ -45,6 +46,11 @@ async function buildServer() {
     origin: config.corsOrigin.split(','),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  });
+
+  // Multipart (file upload)
+  await app.register(multipart, {
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB per file
   });
 
   // JWT

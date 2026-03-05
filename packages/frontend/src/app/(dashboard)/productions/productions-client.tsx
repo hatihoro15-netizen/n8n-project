@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { Header } from '@/components/layout/header';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { StatusBadge } from '@/components/status-badge';
 import { ProductionProgress } from '@/components/production-progress';
 import { VideoPlayer } from '@/components/video-player';
@@ -23,18 +24,146 @@ import {
   Archive,
   ArchiveRestore,
   Trash2,
+  ImagePlus,
+  X,
+  Loader2,
+  Send,
 } from 'lucide-react';
 import Link from 'next/link';
 import { proxyMediaUrl } from '@/lib/media';
+
+const WEBHOOK_URL = 'https://n8n.srv1345711.hstgr.cloud/webhook/make-video';
 
 export default function ProductionsClient() {
   const [page, setPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Quick production form
+  const [showForm, setShowForm] = useState(false);
+  const [promptP1, setPromptP1] = useState('');
+  const [formTopic, setFormTopic] = useState('');
+  const [keywords, setKeywords] = useState('');
+  const [category, setCategory] = useState('');
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState('');
+  const [formSuccess, setFormSuccess] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { data, isLoading } = useProductions({ page, status: statusFilter });
   const productions = data?.data;
   const pagination = data?.pagination;
+
+  const addImages = useCallback((files: FileList | File[]) => {
+    const newFiles = Array.from(files).filter(f => f.type.startsWith('image/'));
+    const available = 4 - imageFiles.length;
+    const toAdd = newFiles.slice(0, available);
+    if (toAdd.length === 0) return;
+
+    setImageFiles(prev => [...prev, ...toAdd]);
+    toAdd.forEach(f => {
+      const url = URL.createObjectURL(f);
+      setImagePreviews(prev => [...prev, url]);
+    });
+  }, [imageFiles.length]);
+
+  const removeImage = useCallback((index: number) => {
+    URL.revokeObjectURL(imagePreviews[index]);
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  }, [imagePreviews]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (e.dataTransfer.files.length > 0) {
+      addImages(e.dataTransfer.files);
+    }
+  }, [addImages]);
+
+  const resetForm = () => {
+    setPromptP1('');
+    setFormTopic('');
+    setKeywords('');
+    setCategory('');
+    imagePreviews.forEach(url => URL.revokeObjectURL(url));
+    setImageFiles([]);
+    setImagePreviews([]);
+    setFormError('');
+    setFormSuccess('');
+  };
+
+  const handleMakeVideo = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!promptP1.trim()) {
+      setFormError('프롬프트를 입력해주세요.');
+      return;
+    }
+
+    setSubmitting(true);
+    setFormError('');
+    setFormSuccess('');
+
+    try {
+      let images: string[] | undefined;
+
+      // Upload images to MinIO if any
+      if (imageFiles.length > 0) {
+        const formData = new FormData();
+        imageFiles.forEach(f => formData.append('files', f));
+
+        const token = api.getToken();
+        const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+        const uploadRes = await fetch(`${API_BASE}/api/media/upload`, {
+          method: 'POST',
+          headers: token ? { Authorization: `Bearer ${token}` } : {},
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json().catch(() => ({}));
+          throw new Error(err.message || '이미지 업로드에 실패했습니다.');
+        }
+
+        const uploadData = await uploadRes.json();
+        images = uploadData.data.urls;
+      }
+
+      // Build webhook payload
+      const payload: Record<string, unknown> = {
+        prompt_p1: promptP1.trim(),
+        topic: formTopic.trim() || undefined,
+        keywords: keywords.trim() || undefined,
+        category: category.trim() || undefined,
+      };
+
+      if (images && images.length > 0) {
+        payload.images = images;
+      } else {
+        payload.use_media = 'auto';
+      }
+
+      // Call n8n webhook directly
+      const webhookRes = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!webhookRes.ok) {
+        throw new Error(`웹훅 호출 실패 (${webhookRes.status})`);
+      }
+
+      setFormSuccess('영상 제작이 시작되었습니다!');
+      resetForm();
+      setShowForm(false);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : '요청에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const statuses = [
     { value: undefined, label: '전체' },
@@ -91,13 +220,149 @@ export default function ProductionsClient() {
               </Button>
             ))}
           </div>
-          <Link href="/productions/new">
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              새 제작
+          <div className="flex items-center gap-2">
+            <Button onClick={() => { setShowForm(!showForm); setFormError(''); setFormSuccess(''); }}>
+              {showForm ? <X className="h-4 w-4 mr-2" /> : <Send className="h-4 w-4 mr-2" />}
+              {showForm ? '닫기' : '빠른 제작'}
             </Button>
-          </Link>
+            <Link href="/productions/new">
+              <Button variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                새 제작
+              </Button>
+            </Link>
+          </div>
         </div>
+
+        {/* Quick Production Form */}
+        {showForm && (
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-lg">빠른 영상 제작</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleMakeVideo} className="space-y-4">
+                {/* Prompt P1 */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium" htmlFor="prompt_p1">
+                    프롬프트 <span className="text-red-500">*</span>
+                  </label>
+                  <textarea
+                    id="prompt_p1"
+                    value={promptP1}
+                    onChange={e => setPromptP1(e.target.value)}
+                    placeholder="영상 제작 프롬프트를 입력하세요"
+                    rows={3}
+                    className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+                  />
+                </div>
+
+                {/* Topic / Keywords / Category */}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium" htmlFor="form_topic">주제</label>
+                    <Input
+                      id="form_topic"
+                      value={formTopic}
+                      onChange={e => setFormTopic(e.target.value)}
+                      placeholder="예: 역사 미스터리"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium" htmlFor="form_keywords">키워드</label>
+                    <Input
+                      id="form_keywords"
+                      value={keywords}
+                      onChange={e => setKeywords(e.target.value)}
+                      placeholder="쉼표 구분"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium" htmlFor="form_category">카테고리</label>
+                    <Input
+                      id="form_category"
+                      value={category}
+                      onChange={e => setCategory(e.target.value)}
+                      placeholder="예: entertainment"
+                    />
+                  </div>
+                </div>
+
+                {/* Image Upload */}
+                <div className="space-y-1.5">
+                  <label className="text-sm font-medium">
+                    사진 첨부 <span className="text-xs text-muted-foreground font-normal">(최대 4장, 없으면 자동 생성)</span>
+                  </label>
+                  <div
+                    onDragOver={e => e.preventDefault()}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                  >
+                    <ImagePlus className="h-8 w-8 mx-auto mb-2 text-muted-foreground/50" />
+                    <p className="text-sm text-muted-foreground">
+                      클릭하거나 이미지를 드래그하세요
+                    </p>
+                    <p className="text-xs text-muted-foreground/60 mt-1">
+                      JPG, PNG, WebP, GIF (최대 10MB)
+                    </p>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      className="hidden"
+                      onChange={e => {
+                        if (e.target.files) addImages(e.target.files);
+                        e.target.value = '';
+                      }}
+                    />
+                  </div>
+
+                  {/* Image Previews */}
+                  {imagePreviews.length > 0 && (
+                    <div className="flex gap-3 mt-3 flex-wrap">
+                      {imagePreviews.map((src, i) => (
+                        <div key={i} className="relative group">
+                          <img
+                            src={src}
+                            alt={`첨부 ${i + 1}`}
+                            className="w-20 h-20 object-cover rounded-lg border"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(i)}
+                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          >
+                            <X className="h-3 w-3" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {formError && <p className="text-sm text-destructive">{formError}</p>}
+                {formSuccess && <p className="text-sm text-emerald-600">{formSuccess}</p>}
+
+                <div className="flex items-center gap-3">
+                  <Button type="submit" disabled={submitting}>
+                    {submitting ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />처리 중...</>
+                    ) : (
+                      <><Send className="h-4 w-4 mr-2" />영상 제작 시작</>
+                    )}
+                  </Button>
+                  <span className="text-xs text-muted-foreground">
+                    {imageFiles.length > 0
+                      ? `사진 ${imageFiles.length}장 → MinIO 업로드 후 웹훅 호출`
+                      : 'use_media: "auto" (kie.ai 자동 생성)'}
+                  </span>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Production List */}
         <Card>
