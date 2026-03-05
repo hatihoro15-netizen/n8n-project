@@ -1,21 +1,24 @@
 # HANDOFF.md — 세션 스냅샷 (항상 전체 Overwrite)
 
 ## Current Status
-Worker 파이프라인 테스트: 번역 → 이미지 → TTS 까지 성공, Creatomate 렌더링 템플릿 미생성
+- 번역(Claude) ✅ / 이미지(kie.ai) ✅ / TTS(kie.ai) ✅ / Creatomate 렌더링 ✅ / YouTube OAuth ✅
+- template_id 056a9082-710f-4345-b964-c6384103fbf6 하드코딩으로 렌더링 성공
+- Next.js 웹앱 미생성
 
 ## Goal
-Creatomate 쇼츠 템플릿 생성 → 풀 파이프라인 완성
+웹앱 구축 + 나레이션 스크립트 노드 추가
 
 ## Next Actions
-1. [ ] Creatomate 쇼츠 템플릿 생성 (9:16, 이미지+텍스트+오디오)
-2. [ ] Worker Creatomate 노드에 template_id 연결
-3. [ ] 풀 파이프라인 재테스트 (렌더링 → YouTube 업로드)
-4. [ ] Next.js 프론트 프로젝트 초기화
+1. [ ] Next.js 웹앱 초기화 (web/ 디렉토리)
+2. [ ] 프롬프트 입력칸 + 사진 첨부칸 UI
+3. [ ] 나레이션 스크립트 생성 노드 추가 (Claude API → narration_script → TTS)
 
 ## Last Run
-테스트 Job: 0b87f808-d0d4-478f-b02e-db214eaa79d7
-결과: 번역(Claude) ✅ → 이미지(kie.ai) ✅ → TTS(kie.ai) ✅ → Creatomate ❌ (template_id 없음)
-위치: Production (VPS)
+커밋: e4fb0b0 feat: Worker 파이프라인 전면 수정 — 렌더링까지 성공
+결과: 번역→이미지→TTS→Creatomate 렌더링 전부 성공
+
+## Blockers
+없음
 
 ## n8n 워크플로우 ID
 - AO Producer: XV5shW265ht59MTD (active)
@@ -28,8 +31,5 @@ Creatomate 쇼츠 템플릿 생성 → 풀 파이프라인 완성
 - Claude API: mr2FTmB2pmyvlbWK
 - YouTube OAuth2: FHvjDOGBtI0zvyFA
 
-## VPS 환경변수 (docker-compose)
+## VPS 환경변수
 - KIEAI_API_KEY, CREATOMATE_API_KEY, N8N_BLOCK_ENV_ACCESS_IN_NODE=false
-
-## Blockers
-- Creatomate 쇼츠 템플릿 미생성
