@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 슬라이드쇼 edge-tts + NCA FFmpeg 렌더링 성공, YouTube 업로드 차단 이슈
-- 진행중 작업: YouTube 업로드 require('https') 차단 해결
-- 최근 완료: 슬라이드쇼 NCA FFmpeg 합성 (onca 방식), Kling AI 3.0 렌더링
-- 주의사항: n8n Task Runner가 require('https') 차단 → YouTube 업로드 불가 (ai_video/slideshow 공통)
+- 현재 상태(1줄): 전체 파이프라인 개편 완료 — 슬라이드쇼+영상화 E2E 성공 (YouTube 업로드 일시 비활성화)
+- 진행중 작업: YouTube 업로드 활성화, 프론트 웹앱 연동
+- 최근 완료: 파이프라인 개편 (use_mode 분기, NCA FFmpeg 통합, kie.ai TTS)
+- 주의사항: YouTube 업로드 일시 비활성화 (require('https') 차단), NCA URL 확장자 필수
 
 ---
 
@@ -270,7 +270,41 @@
 - n8n/ao_worker.json (process-clips + render-video 슬라이드쇼 분기)
 - n8n/ao_producer.json (production_mode + slide_duration)
 
-## 2026-03-06 (슬라이드쇼 edge-tts + NCA FFmpeg)
+## 2026-03-06 (전체 파이프라인 개편)
+### ✅ Done
+- [x] Producer: use_mode(direct/generate/analysis_only), generated_images, auto_prompt 필드 추가
+- [x] Producer: INSERT 쿼리에 generated_images 컬럼 추가
+- [x] Worker process-clips: use_mode별 이미지 처리 (direct/generate/analysis_only)
+  - generate: vision_analysis 기반 kie.ai 이미지 생성
+  - analysis_only: auto_prompt 기반 kie.ai 이미지 생성
+- [x] Worker process-clips: generated_images 합류 지원
+- [x] Worker process-clips: TTS를 kie.ai (ElevenLabs multilingual v2)로 통합
+  - 자막 타이밍: 문장 분리 + 글자수 비율 배분
+- [x] Worker render-video: ai_video도 NCA FFmpeg로 변경 (Kling 영상 + TTS + 자막 + BGM + SFX)
+- [x] Worker render-video: ensureExtension 함수 추가 (NCA URL 확장자 필수)
+- [x] Worker render-video: URL 클래스 미사용 (n8n Task Runner 제한)
+- [x] Worker render-video: -shortest → -t 명시적 시간 (NCA API 호환)
+- [x] YouTube 업로드 일시 비활성화 (나중에 활성화)
+- [x] 기존 Creatomate/Seedance 코드 비활성화(보존)
+- [x] VPS 배포 완료 + E2E 테스트 성공
+### 🔁 Tried
+- NCA FFmpeg 500: picsum URL에 확장자 없음 → ensureExtension 추가
+- NCA FFmpeg 500: URL 클래스 미사용 오류 → 문자열 파싱으로 교체
+- NCA FFmpeg 500: -shortest argument 빈값 → -t 명시적 시간으로 교체
+### 📌 Result
+- 슬라이드쇼 E2E 성공: Job 599c3af3 → uploaded ✅ (이미지 3장 + TTS + 자막 + BGM + SFX)
+- 영상화 E2E 성공: Job c1ea1a83 → uploaded ✅ (Kling AI + TTS + 자막 + BGM + SFX)
+- 4시나리오 분기 구조 완성 (use_mode + generated_images)
+- YouTube 업로드 일시 비활성화 (require('https') 차단 미해결)
+### ➡️ Next (방향만)
+- YouTube 업로드 활성화
+- use_mode generate/analysis_only E2E 테스트
+- 프론트 웹앱 연동
+### 📁 Files / Links
+- n8n/ao_worker.json (process-clips + render-video + poll-render + YouTube 업로드 전면 수정)
+- n8n/ao_producer.json (use_mode + generated_images + auto_prompt)
+
+## 2026-03-06 (이전: 슬라이드쇼 edge-tts + NCA FFmpeg)
 ### ✅ Done
 - [x] Worker process-clips: 슬라이드쇼 TTS를 kie.ai → edge-tts 교체
   - POST http://172.17.0.1:5100/tts (voice_id, emotion, tempo)
