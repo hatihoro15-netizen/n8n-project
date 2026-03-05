@@ -292,7 +292,7 @@
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"template_id\": \"056a9082-710f-4345-b964-c6384103fbf6\",\n  \"modifications\": {\n    \"Video-1.source\": \"{{ $json.generated_images?.[0] || '' }}\",\n    \"Narration-1.source\": \"{{ $json.tts_audio_url || '' }}\",\n    \"Text-1.text\": \"{{ $json.topic || '' }}\"\n  }\n}",
+        "jsonBody": "={\n  \"template_id\": \"056a9082-710f-4345-b964-c6384103fbf6\",\n  \"modifications\": {\n    \"Video-1.source\": \"{{ $json.seedance_video_url || '' }}\",\n    \"Narration-1.source\": \"{{ $json.tts_audio_url || '' }}\",\n    \"Text-1.text\": \"{{ $json.topic || '' }}\"\n  }\n}",
         "options": {}
       },
       "id": "render-video",
@@ -476,7 +476,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ✅ kie.ai TTS 폴링 — 오디오 URL 획득\nconst ttsResponse = $input.first().json;\nconst taskId = ttsResponse?.data?.taskId;\nif (!taskId) throw new Error('TTS taskId 없음 - TTS 응답: ' + JSON.stringify(ttsResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet audioUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    audioUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`TTS 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!audioUrl) throw new Error('TTS 생성 타임아웃 (150초)');\n\n// ✅ 이전 노드 데이터 병합\nconst prevData = $('이미지 생성 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    tts_audio_url: audioUrl,\n    tts_task_id: taskId\n  }\n}];"
+        "jsCode": "// ✅ kie.ai TTS 폴링 — 오디오 URL 획득\nconst ttsResponse = $input.first().json;\nconst taskId = ttsResponse?.data?.taskId;\nif (!taskId) throw new Error('TTS taskId 없음 - TTS 응답: ' + JSON.stringify(ttsResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet audioUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    audioUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`TTS 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!audioUrl) throw new Error('TTS 생성 타임아웃 (150초)');\n\n// ✅ 이전 노드 데이터 병합\nconst prevData = $('Seedance 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    tts_audio_url: audioUrl,\n    tts_task_id: taskId\n  }\n}];"
       },
       "id": "tts-poll",
       "name": "TTS 생성 대기 (폴링)",
@@ -485,6 +485,45 @@
       "position": [
         2776,
         208
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"model\": \"bytedance/seedance-1.5-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"input_urls\": [\"{{ $json.generated_images?.[0] || '' }}\"],\n    \"aspect_ratio\": \"9:16\",\n    \"resolution\": \"720p\",\n    \"duration\": \"8\",\n    \"fixed_lens\": false,\n    \"generate_audio\": false\n  }\n}",
+        "options": {}
+      },
+      "id": "generate-seedance",
+      "name": "Seedance 영상 생성 (kie.ai)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2520,
+        144
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "OipYAEtrzhD1lJmL",
+          "name": "KieAI TTS"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ✅ kie.ai Seedance 영상 생성 폴링\nconst seedanceResponse = $input.first().json;\nconst taskId = seedanceResponse?.data?.taskId;\nif (!taskId) throw new Error('Seedance taskId 없음 - 응답: ' + JSON.stringify(seedanceResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 60;\nconst interval = 10000;\n\nlet videoUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    videoUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || state === 'fail' || resp?.data?.failMsg) {\n    throw new Error(`Seedance 영상 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!videoUrl) throw new Error('Seedance 영상 생성 타임아웃 (600초)');\n\nconst prevData = $('이미지 생성 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    seedance_video_url: videoUrl,\n    seedance_task_id: taskId\n  }\n}];"
+      },
+      "id": "poll-seedance",
+      "name": "Seedance 대기 (폴링)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2596,
+        144
       ]
     }
   ],
@@ -610,6 +649,28 @@
       ]
     },
     "이미지 생성 대기 (폴링)": {
+      "main": [
+        [
+          {
+            "node": "Seedance 영상 생성 (kie.ai)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seedance 영상 생성 (kie.ai)": {
+      "main": [
+        [
+          {
+            "node": "Seedance 대기 (폴링)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seedance 대기 (폴링)": {
       "main": [
         [
           {
@@ -1104,7 +1165,7 @@
           "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={\n  \"template_id\": \"056a9082-710f-4345-b964-c6384103fbf6\",\n  \"modifications\": {\n    \"Video-1.source\": \"{{ $json.generated_images?.[0] || '' }}\",\n    \"Narration-1.source\": \"{{ $json.tts_audio_url || '' }}\",\n    \"Text-1.text\": \"{{ $json.topic || '' }}\"\n  }\n}",
+          "jsonBody": "={\n  \"template_id\": \"056a9082-710f-4345-b964-c6384103fbf6\",\n  \"modifications\": {\n    \"Video-1.source\": \"{{ $json.seedance_video_url || '' }}\",\n    \"Narration-1.source\": \"{{ $json.tts_audio_url || '' }}\",\n    \"Text-1.text\": \"{{ $json.topic || '' }}\"\n  }\n}",
           "options": {}
         },
         "id": "render-video",
@@ -1288,7 +1349,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// ✅ kie.ai TTS 폴링 — 오디오 URL 획득\nconst ttsResponse = $input.first().json;\nconst taskId = ttsResponse?.data?.taskId;\nif (!taskId) throw new Error('TTS taskId 없음 - TTS 응답: ' + JSON.stringify(ttsResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet audioUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    audioUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`TTS 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!audioUrl) throw new Error('TTS 생성 타임아웃 (150초)');\n\n// ✅ 이전 노드 데이터 병합\nconst prevData = $('이미지 생성 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    tts_audio_url: audioUrl,\n    tts_task_id: taskId\n  }\n}];"
+          "jsCode": "// ✅ kie.ai TTS 폴링 — 오디오 URL 획득\nconst ttsResponse = $input.first().json;\nconst taskId = ttsResponse?.data?.taskId;\nif (!taskId) throw new Error('TTS taskId 없음 - TTS 응답: ' + JSON.stringify(ttsResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet audioUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    audioUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`TTS 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!audioUrl) throw new Error('TTS 생성 타임아웃 (150초)');\n\n// ✅ 이전 노드 데이터 병합\nconst prevData = $('Seedance 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    tts_audio_url: audioUrl,\n    tts_task_id: taskId\n  }\n}];"
         },
         "id": "tts-poll",
         "name": "TTS 생성 대기 (폴링)",
@@ -1297,6 +1358,45 @@
         "position": [
           2776,
           208
+        ]
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://api.kie.ai/api/v1/jobs/createTask",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "httpHeaderAuth",
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"model\": \"bytedance/seedance-1.5-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"input_urls\": [\"{{ $json.generated_images?.[0] || '' }}\"],\n    \"aspect_ratio\": \"9:16\",\n    \"resolution\": \"720p\",\n    \"duration\": \"8\",\n    \"fixed_lens\": false,\n    \"generate_audio\": false\n  }\n}",
+          "options": {}
+        },
+        "id": "generate-seedance",
+        "name": "Seedance 영상 생성 (kie.ai)",
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.2,
+        "position": [
+          2520,
+          144
+        ],
+        "credentials": {
+          "httpHeaderAuth": {
+            "id": "OipYAEtrzhD1lJmL",
+            "name": "KieAI TTS"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// ✅ kie.ai Seedance 영상 생성 폴링\nconst seedanceResponse = $input.first().json;\nconst taskId = seedanceResponse?.data?.taskId;\nif (!taskId) throw new Error('Seedance taskId 없음 - 응답: ' + JSON.stringify(seedanceResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 60;\nconst interval = 10000;\n\nlet videoUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    videoUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || state === 'fail' || resp?.data?.failMsg) {\n    throw new Error(`Seedance 영상 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!videoUrl) throw new Error('Seedance 영상 생성 타임아웃 (600초)');\n\nconst prevData = $('이미지 생성 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    seedance_video_url: videoUrl,\n    seedance_task_id: taskId\n  }\n}];"
+        },
+        "id": "poll-seedance",
+        "name": "Seedance 대기 (폴링)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2596,
+          144
         ]
       }
     ],
@@ -1422,6 +1522,28 @@
         ]
       },
       "이미지 생성 대기 (폴링)": {
+        "main": [
+          [
+            {
+              "node": "Seedance 영상 생성 (kie.ai)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Seedance 영상 생성 (kie.ai)": {
+        "main": [
+          [
+            {
+              "node": "Seedance 대기 (폴링)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Seedance 대기 (폴링)": {
         "main": [
           [
             {
