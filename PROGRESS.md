@@ -7,11 +7,11 @@
 ---
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
-- 마지막 업데이트: 2026-03-05
-- 현재 상태(1줄): 운영 시스템 초기 구축 완료
-- 진행중 작업: -
-- 최근 완료: 운영 시스템 초기 구축
-- 주의사항: -
+- 마지막 업데이트: 2026-03-06
+- 현재 상태(1줄): 빠른 제작 폼 + MinIO 업로드 + VPS 배포 완료, n8n 웹훅 미등록
+- 진행중 작업: n8n make-video 웹훅 워크플로우 생성 필요
+- 최근 완료: 빠른 제작 폼 UI + MinIO 업로드 + VPS 배포 + E2E 업로드 검증
+- 주의사항: n8n make-video 웹훅이 404 (워크플로우 미생성/미활성화)
 
 ---
 
@@ -42,3 +42,28 @@
 - CLAUDE.md, HANDOFF.md, PROGRESS.md, process.md
 - docs/01~07, scripts/quality-check.sh
 - settings.json.sample, .claude/commands/start.md
+
+## 2026-03-06
+### ✅ Done
+- [x] productions-client.tsx: 빠른 제작 폼 UI (prompt_p1, topic, keywords, category + 이미지 첨부)
+- [x] 백엔드 POST /api/media/upload → MinIO(arubto) 엔드포인트 신규
+- [x] @aws-sdk/client-s3 + @fastify/multipart 추가
+- [x] config.ts에 MinIO 설정 추가
+- [x] VPS 배포 (git pull + npm install + tsc build + PM2 restart)
+- [x] VPS .env에 MINIO_ENDPOINT/ACCESS_KEY/SECRET_KEY/BUCKET 추가
+- [x] E2E: 이미지 업로드 → MinIO arubto/uploads/ 저장 확인 (PASS)
+### 🔁 Tried
+- [ ] n8n make-video 웹훅 호출 → 404 (워크플로우 미등록/미활성화)
+- [ ] webhook-test URL도 404 (워크플로우 자체가 n8n에 없음)
+### 📌 Result
+- 업로드 파이프라인 정상: 프론트 → 백엔드 /api/media/upload → MinIO arubto → URL 반환
+- 웹훅 미연결: n8n에 make-video 웹훅 워크플로우가 아직 없음
+- MinIO 크레덴셜: Docker env에서 admin/NcaMin10S3cure! 확인 → .env에 반영
+### ➡️ Next (방향만 / 실행 커맨드는 HANDOFF)
+- n8n에서 AO Producer 워크플로우 생성 + make-video 웹훅 활성화
+- 웹훅 활성화 후 E2E 재테스트
+- Cloudflare Pages 프론트엔드 배포 확인
+### 📁 Files / Links
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx
+- packages/backend/src/routes/media.ts, server.ts, config.ts
+- VPS: /root/n8n-web/packages/backend/.env
