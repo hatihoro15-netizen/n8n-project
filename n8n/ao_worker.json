@@ -263,34 +263,8 @@
     },
     {
       "parameters": {
-        "method": "POST",
-        "url": "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-        "authentication": "genericCredentialType",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"snippet\": {\n    \"title\": \"{{ $json.metadata?.title || $json.topic }}\",\n    \"description\": \"{{ $json.metadata?.description || '' }}\",\n    \"tags\": {{ JSON.stringify($json.metadata?.tags || $json.keywords.split(',')) }},\n    \"categoryId\": \"22\"\n  },\n  \"status\": {\n    \"privacyStatus\": \"{{ $json.metadata?.privacy || 'public' }}\"\n  }\n}",
-        "options": {},
-        "genericAuthType": "googleOAuth2Api"
-      },
-      "id": "upload-youtube",
-      "name": "YouTube 업로드",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        3760,
-        208
-      ],
-      "credentials": {
-        "googleOAuth2Api": {
-          "id": "FHvjDOGBtI0zvyFA",
-          "name": "YouTube OAuth2"
-        }
-      }
-    },
-    {
-      "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE jobs\nSET status = 'uploaded',\n    youtube_video_id = '{{ $json.id }}',\n    youtube_url = CONCAT('https://youtu.be/', '{{ $json.id }}'),\n    completed_at = NOW(),\n    updated_at = NOW()\nWHERE id = '{{ $node[\"상태 → uploading\"].json.id }}'\nRETURNING *;\n\nINSERT INTO job_logs (job_id, level, message, created_at)\nVALUES (\n  '{{ $node[\"상태 → uploading\"].json.id }}',\n  'info',\n  'YouTube 업로드 완료',\n  NOW()\n);",
+        "query": "UPDATE jobs\nSET status = 'uploaded',\n    youtube_video_id = '{{ $json.youtube_video_id }}',\n    youtube_url = '{{ $json.youtube_url }}',\n    completed_at = NOW(),\n    updated_at = NOW()\nWHERE id = '{{ $json.id }}'\nRETURNING *;\n\nINSERT INTO job_logs (job_id, level, message, created_at)\nVALUES (\n  '{{ $json.id }}',\n  'info',\n  'YouTube 업로드 완료',\n  NOW()\n);",
         "options": {}
       },
       "id": "mark-uploaded",
@@ -374,6 +348,19 @@
       "typeVersion": 2,
       "position": [
         2000,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// ✅ YouTube 업로드 — OAuth token refresh + chunked upload\nconst job = $input.first().json;\nconst videoUrl = job.rendered_video_url;\nif (!videoUrl) throw new Error('rendered_video_url 없음');\n\n// 1) OAuth 토큰 갱신\nconst tokenResp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://oauth2.googleapis.com/token',\n  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },\n  body: `grant_type=refresh_token&client_id=${$env.YT_CLIENT_ID}&client_secret=${$env.YT_CLIENT_SECRET}&refresh_token=${$env.YT_REFRESH_TOKEN}`,\n  json: true\n});\nconst accessToken = tokenResp.access_token;\nif (!accessToken) throw new Error('YouTube token refresh 실패');\n\n// 2) 영상 크기 확인\nconst headResp = await this.helpers.httpRequest({\n  method: 'HEAD',\n  url: videoUrl,\n  returnFullResponse: true\n});\nconst contentLength = headResp.headers?.['content-length'] || '0';\n\nconst title = job.metadata?.title || job.topic || 'AO 자동 생성 영상';\nconst description = job.metadata?.description || [job.topic, job.keywords].filter(Boolean).join(' - ');\nconst tags = job.metadata?.tags || (job.keywords ? job.keywords.split(',').map(t => t.trim()) : []);\n\n// 3) Resumable upload 초기화\nconst initResp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',\n  headers: {\n    'Authorization': `Bearer ${accessToken}`,\n    'Content-Type': 'application/json; charset=UTF-8',\n    'X-Upload-Content-Length': contentLength,\n    'X-Upload-Content-Type': 'video/mp4'\n  },\n  body: { snippet: { title, description, tags, categoryId: '22' }, status: { privacyStatus: 'unlisted' } },\n  json: true,\n  returnFullResponse: true\n});\n\nconst uploadUrl = initResp.headers?.location;\nif (!uploadUrl) throw new Error('resumable URL 없음');\n\n// 4) 영상 다운로드 (Buffer)\nconst videoResp = await this.helpers.httpRequest({\n  method: 'GET',\n  url: videoUrl,\n  encoding: null,\n  returnFullResponse: true\n});\nconst videoBuffer = videoResp.body;\n\n// 5) PUT 업로드 — Node.js https 모듈 사용 (EPIPE 우회)\nconst https = require('https');\nconst url = require('url');\n\nconst uploadResult = await new Promise((resolve, reject) => {\n  const parsed = new URL(uploadUrl);\n  const options = {\n    hostname: parsed.hostname,\n    path: parsed.pathname + parsed.search,\n    method: 'PUT',\n    headers: {\n      'Content-Type': 'video/mp4',\n      'Content-Length': videoBuffer.length\n    }\n  };\n\n  const req = https.request(options, (res) => {\n    let data = '';\n    res.on('data', chunk => data += chunk);\n    res.on('end', () => {\n      try { resolve(JSON.parse(data)); }\n      catch(e) { resolve({ raw: data }); }\n    });\n  });\n\n  req.on('error', reject);\n  req.write(videoBuffer);\n  req.end();\n});\n\nconst youtubeId = uploadResult?.id;\nconst youtubeUrl = youtubeId ? `https://youtube.com/watch?v=${youtubeId}` : null;\n\nif (!youtubeId) throw new Error('YouTube 업로드 실패: ' + JSON.stringify(uploadResult).substring(0, 200));\n\nreturn [{\n  json: {\n    ...job,\n    youtube_video_id: youtubeId,\n    youtube_url: youtubeUrl\n  }\n}];"
+      },
+      "id": "upload-youtube",
+      "name": "YouTube 업로드",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3536,
         208
       ]
     }
@@ -503,17 +490,6 @@
         ]
       ]
     },
-    "YouTube 업로드": {
-      "main": [
-        [
-          {
-            "node": "상태 → uploaded",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "에러 캡처": {
       "main": [
         [
@@ -563,6 +539,17 @@
         [
           {
             "node": "렌더링 대기 (폴링)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "YouTube 업로드": {
+      "main": [
+        [
+          {
+            "node": "상태 → uploaded",
             "type": "main",
             "index": 0
           }

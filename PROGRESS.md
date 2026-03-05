@@ -7,10 +7,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 멀티씬 순차처리 + include_audio 분기 + Creatomate 합성 전체 성공
-- 진행중 작업: YouTube OAuth 재인증, 웹앱 구축
-- 최근 완료: Worker 멀티씬 구조, include_audio 분기, Creatomate dynamic source 합성
-- 주의사항: YouTube OAuth 토큰 만료, n8n publish 시스템 주의(배포 절차 HANDOFF.md 참조)
+- 현재 상태(1줄): 멀티씬 2씬 E2E 전체 성공 (YouTube 업로드까지)
+- 진행중 작업: 웹앱 구축 (Next.js)
+- 최근 완료: YouTube 업로드 Code 노드 (환경변수 OAuth + native https), E2E 테스트 성공
+- 주의사항: n8n publish 시스템 주의(배포 절차 HANDOFF.md 참조)
 
 ---
 
@@ -168,3 +168,25 @@
 ### 📁 Files / Links
 - n8n/ao_worker.json (멀티씬 구조)
 - n8n/ao_producer.json (include_audio 지원)
+
+## 2026-03-06 (2차)
+### ✅ Done
+- [x] YouTube 업로드 Code 노드 전면 수정
+  - n8n OAuth 크리덴셜 → 환경변수 직접 OAuth token refresh
+  - this.helpers.httpRequest EPIPE → Node.js native https 모듈로 PUT 업로드
+  - VPS 환경변수 추가: YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN
+- [x] 멀티씬 2씬 E2E 테스트 성공 (번역→Seedance→TTS→Creatomate→YouTube)
+- [x] YouTube 업로드 재테스트 성공 (제목 변경 확인)
+  - 테스트 영상 1: "AO 테스트" (job 0a552f9f)
+  - 테스트 영상 2: "AO 파이프라인 테스트 2" (ID: HeYLrBD3pmo, curl 직접 업로드)
+### 🔁 Tried
+- n8n HTTP Request + googleOAuth2Api → Code 노드에서 토큰 주입 안됨 → 환경변수 방식으로 전환
+- this.helpers.httpRequest 바이너리 PUT → write EPIPE → native https 모듈로 해결
+### 📌 Result
+- 전체 E2E 파이프라인 완성 (입력→번역→Seedance→TTS→Creatomate→YouTube)
+- YouTube 업로드 안정적 동작 확인 (2회 연속 성공)
+### ➡️ Next (방향만)
+- Next.js 웹앱 초기화
+- mark-uploaded DB 자동 업데이트 확인
+### 📁 Files / Links
+- n8n/ao_worker.json (YouTube Code 노드 수정)
