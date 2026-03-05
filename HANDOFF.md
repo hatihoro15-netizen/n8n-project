@@ -1,21 +1,21 @@
 # HANDOFF.md — 세션 스냅샷 (항상 전체 Overwrite)
 
 ## Current Status
-외부 API 크리덴셜 전체 연결 완료 (5건) + YouTube OAuth 브라우저 인증 대기
+Worker 파이프라인 테스트: 번역 → 이미지 → TTS 까지 성공, Creatomate 렌더링 템플릿 미생성
 
 ## Goal
-Worker 실제 동작 검증 (이미지 생성 → TTS → 렌더 → 업로드)
+Creatomate 쇼츠 템플릿 생성 → 풀 파이프라인 완성
 
 ## Next Actions
-1. [ ] YouTube OAuth 브라우저 인증 (n8n 웹 에디터 > Credentials > Sign in with Google)
-2. [ ] Worker 풀 파이프라인 테스트 (실제 영상 생성)
-3. [ ] Next.js 프론트 프로젝트 초기화
+1. [ ] Creatomate 쇼츠 템플릿 생성 (9:16, 이미지+텍스트+오디오)
+2. [ ] Worker Creatomate 노드에 template_id 연결
+3. [ ] 풀 파이프라인 재테스트 (렌더링 → YouTube 업로드)
+4. [ ] Next.js 프론트 프로젝트 초기화
 
 ## Last Run
-커맨드: n8n API로 YouTube OAuth2 credential 생성 + Worker 노드 연결
-결과: credential 생성 완료, 업로드 노드 연결 완료, OAuth 토큰 미발급 (브라우저 인증 필요)
+테스트 Job: 0b87f808-d0d4-478f-b02e-db214eaa79d7
+결과: 번역(Claude) ✅ → 이미지(kie.ai) ✅ → TTS(kie.ai) ✅ → Creatomate ❌ (template_id 없음)
 위치: Production (VPS)
-Last Commit: feat: YouTube OAuth 연결 완료
 
 ## n8n 워크플로우 ID
 - AO Producer: XV5shW265ht59MTD (active)
@@ -23,11 +23,13 @@ Last Commit: feat: YouTube OAuth 연결 완료
 
 ## n8n 크리덴셜 ID
 - Postgres: 4W3WKJLsJKa9hVAA
-- Replicate API: iG2Q9pXtGuE2xdoS
-- KieAI TTS: OipYAEtrzhD1lJmL
+- KieAI (TTS+Image): OipYAEtrzhD1lJmL
 - Creatomate API: 7uzM44eLOitv8ubQ
 - Claude API: mr2FTmB2pmyvlbWK
 - YouTube OAuth2: FHvjDOGBtI0zvyFA
 
+## VPS 환경변수 (docker-compose)
+- KIEAI_API_KEY, CREATOMATE_API_KEY, N8N_BLOCK_ENV_ACCESS_IN_NODE=false
+
 ## Blockers
-- YouTube OAuth 브라우저 인증 필요 (n8n 웹 에디터에서 Google 로그인)
+- Creatomate 쇼츠 템플릿 미생성

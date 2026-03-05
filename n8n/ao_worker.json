@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-03-05T12:05:45.237Z",
+  "updatedAt": "2026-03-05T12:34:11.747Z",
   "createdAt": "2026-03-05T10:52:54.255Z",
   "id": "FHYohZccExR24Uha",
   "name": "AO Worker",
@@ -216,16 +216,16 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions",
+        "url": "https://api.kie.ai/api/v1/jobs/createTask",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"output_format\": \"jpg\",\n    \"output_quality\": 90\n  }\n}",
+        "jsonBody": "={\n  \"model\": \"nano-banana-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"resolution\": \"1K\",\n    \"output_format\": \"jpg\"\n  }\n}",
         "options": {}
       },
       "id": "generate-image",
-      "name": "이미지 생성 (Replicate Flux Pro)",
+      "name": "이미지 생성 (kie.ai Nano Banana Pro)",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
@@ -234,14 +234,14 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "iG2Q9pXtGuE2xdoS",
-          "name": "Replicate API"
+          "id": "OipYAEtrzhD1lJmL",
+          "name": "KieAI TTS"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "// Replicate 폴링 — 완료될 때까지 대기\nconst predictionId = $input.first().json.id;\nconst apiKey = $credentials?.httpHeaderAuth?.value || '';\n\nlet status = 'starting';\nlet output = null;\nlet attempts = 0;\nconst maxAttempts = 30;\n\nwhile (!['succeeded', 'failed', 'canceled'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 3000));\n  const resp = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {\n    headers: { 'Authorization': `Bearer ${apiKey}` }\n  });\n  const data = await resp.json();\n  status = data.status;\n  output = data.output;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !output) {\n  throw new Error(`이미지 생성 실패: ${status}`);\n}\n\nconst prev = $('이미지 생성 필요 여부').first().json;\nreturn [{\n  json: {\n    ...prev,\n    generated_images: Array.isArray(output) ? output : [output]\n  }\n}];"
+        "jsCode": "// ✅ kie.ai 이미지 생성 폴링 (n8n $http 사용)\nconst taskId = $input.first().json.data?.taskId;\nif (!taskId) throw new Error('taskId 없음');\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet imageUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    imageUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`이미지 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!imageUrl) throw new Error('이미지 생성 타임아웃 (150초)');\n\nreturn [{\n  json: {\n    ...$input.first().json,\n    generated_images: [imageUrl],\n    image_task_id: taskId\n  }\n}];"
       },
       "id": "poll-image",
       "name": "이미지 생성 대기 (폴링)",
@@ -253,8 +253,8 @@
       ],
       "credentials": {
         "httpHeaderAuth": {
-          "id": "iG2Q9pXtGuE2xdoS",
-          "name": "Replicate API"
+          "id": "OipYAEtrzhD1lJmL",
+          "name": "KieAI TTS"
         }
       }
     },
@@ -318,7 +318,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Creatomate 렌더 폴링\nconst renderId = $input.first().json.id || $input.first().json[0]?.id;\nconst apiKey = $credentials?.httpHeaderAuth?.value || '';\n\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await fetch(`https://api.creatomate.com/v1/renders/${renderId}`, {\n    headers: { 'Authorization': `Bearer ${apiKey}` }\n  });\n  const data = await resp.json();\n  status = data.status;\n  url = data.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\nconst prev = $('영상 렌더링 (Creatomate)').first().json;\nreturn [{\n  json: {\n    ...prev,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
+        "jsCode": "// Creatomate 렌더 폴링\nconst renderId = $input.first().json.id || $input.first().json[0]?.id;\nconst apiKey = $env.CREATOMATE_API_KEY || '';\n\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.creatomate.com/v1/renders/${renderId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n  const data = resp;\n  status = data.status;\n  url = data.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\nconst prev = $('영상 렌더링 (Creatomate)').first().json;\nreturn [{\n  json: {\n    ...prev,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
       },
       "id": "poll-render",
       "name": "렌더링 대기 (폴링)",
@@ -588,7 +588,7 @@
       "main": [
         [
           {
-            "node": "이미지 생성 (Replicate Flux Pro)",
+            "node": "이미지 생성 (kie.ai Nano Banana Pro)",
             "type": "main",
             "index": 0
           }
@@ -596,17 +596,6 @@
         [
           {
             "node": "TTS 생성 (ElevenLabs)",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "이미지 생성 (Replicate Flux Pro)": {
-      "main": [
-        [
-          {
-            "node": "이미지 생성 대기 (폴링)",
             "type": "main",
             "index": 0
           }
@@ -711,6 +700,17 @@
           }
         ]
       ]
+    },
+    "이미지 생성 (kie.ai Nano Banana Pro)": {
+      "main": [
+        [
+          {
+            "node": "이미지 생성 대기 (폴링)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -735,9 +735,9 @@
       }
     ]
   },
-  "versionId": "a436afaf-ae54-4625-bf2f-eac867af8519",
-  "activeVersionId": "a436afaf-ae54-4625-bf2f-eac867af8519",
-  "versionCounter": 23,
+  "versionId": "d01787cb-adc0-4790-9cfd-d909e58beb79",
+  "activeVersionId": "d01787cb-adc0-4790-9cfd-d909e58beb79",
+  "versionCounter": 41,
   "triggerCount": 1,
   "shared": [
     {
@@ -762,7 +762,7 @@
             "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
             "projectId": "W6LETsSnBzw4J5Aa",
             "user": {
-              "updatedAt": "2026-03-05T11:14:00.062Z",
+              "updatedAt": "2026-03-05T12:31:17.668Z",
               "createdAt": "2026-02-07T19:04:09.331Z",
               "id": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2",
               "email": "hatihoro15@gmail.com",
@@ -796,9 +796,9 @@
   ],
   "tags": [],
   "activeVersion": {
-    "updatedAt": "2026-03-05T12:05:45.238Z",
-    "createdAt": "2026-03-05T12:05:45.238Z",
-    "versionId": "a436afaf-ae54-4625-bf2f-eac867af8519",
+    "updatedAt": "2026-03-05T12:34:11.749Z",
+    "createdAt": "2026-03-05T12:34:11.749Z",
+    "versionId": "d01787cb-adc0-4790-9cfd-d909e58beb79",
     "workflowId": "FHYohZccExR24Uha",
     "nodes": [
       {
@@ -1010,16 +1010,16 @@
       {
         "parameters": {
           "method": "POST",
-          "url": "https://api.replicate.com/v1/models/black-forest-labs/flux-pro/predictions",
+          "url": "https://api.kie.ai/api/v1/jobs/createTask",
           "authentication": "genericCredentialType",
           "genericAuthType": "httpHeaderAuth",
           "sendBody": true,
           "specifyBody": "json",
-          "jsonBody": "={\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"output_format\": \"jpg\",\n    \"output_quality\": 90\n  }\n}",
+          "jsonBody": "={\n  \"model\": \"nano-banana-pro\",\n  \"input\": {\n    \"prompt\": \"{{ $json.prompt_en || $json.prompt_to_engine }}\",\n    \"aspect_ratio\": \"9:16\",\n    \"resolution\": \"1K\",\n    \"output_format\": \"jpg\"\n  }\n}",
           "options": {}
         },
         "id": "generate-image",
-        "name": "이미지 생성 (Replicate Flux Pro)",
+        "name": "이미지 생성 (kie.ai Nano Banana Pro)",
         "type": "n8n-nodes-base.httpRequest",
         "typeVersion": 4.2,
         "position": [
@@ -1028,14 +1028,14 @@
         ],
         "credentials": {
           "httpHeaderAuth": {
-            "id": "iG2Q9pXtGuE2xdoS",
-            "name": "Replicate API"
+            "id": "OipYAEtrzhD1lJmL",
+            "name": "KieAI TTS"
           }
         }
       },
       {
         "parameters": {
-          "jsCode": "// Replicate 폴링 — 완료될 때까지 대기\nconst predictionId = $input.first().json.id;\nconst apiKey = $credentials?.httpHeaderAuth?.value || '';\n\nlet status = 'starting';\nlet output = null;\nlet attempts = 0;\nconst maxAttempts = 30;\n\nwhile (!['succeeded', 'failed', 'canceled'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 3000));\n  const resp = await fetch(`https://api.replicate.com/v1/predictions/${predictionId}`, {\n    headers: { 'Authorization': `Bearer ${apiKey}` }\n  });\n  const data = await resp.json();\n  status = data.status;\n  output = data.output;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !output) {\n  throw new Error(`이미지 생성 실패: ${status}`);\n}\n\nconst prev = $('이미지 생성 필요 여부').first().json;\nreturn [{\n  json: {\n    ...prev,\n    generated_images: Array.isArray(output) ? output : [output]\n  }\n}];"
+          "jsCode": "// ✅ kie.ai 이미지 생성 폴링 (n8n $http 사용)\nconst taskId = $input.first().json.data?.taskId;\nif (!taskId) throw new Error('taskId 없음');\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet imageUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    imageUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`이미지 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!imageUrl) throw new Error('이미지 생성 타임아웃 (150초)');\n\nreturn [{\n  json: {\n    ...$input.first().json,\n    generated_images: [imageUrl],\n    image_task_id: taskId\n  }\n}];"
         },
         "id": "poll-image",
         "name": "이미지 생성 대기 (폴링)",
@@ -1047,8 +1047,8 @@
         ],
         "credentials": {
           "httpHeaderAuth": {
-            "id": "iG2Q9pXtGuE2xdoS",
-            "name": "Replicate API"
+            "id": "OipYAEtrzhD1lJmL",
+            "name": "KieAI TTS"
           }
         }
       },
@@ -1112,7 +1112,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// Creatomate 렌더 폴링\nconst renderId = $input.first().json.id || $input.first().json[0]?.id;\nconst apiKey = $credentials?.httpHeaderAuth?.value || '';\n\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await fetch(`https://api.creatomate.com/v1/renders/${renderId}`, {\n    headers: { 'Authorization': `Bearer ${apiKey}` }\n  });\n  const data = await resp.json();\n  status = data.status;\n  url = data.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\nconst prev = $('영상 렌더링 (Creatomate)').first().json;\nreturn [{\n  json: {\n    ...prev,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
+          "jsCode": "// Creatomate 렌더 폴링\nconst renderId = $input.first().json.id || $input.first().json[0]?.id;\nconst apiKey = $env.CREATOMATE_API_KEY || '';\n\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.creatomate.com/v1/renders/${renderId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n  const data = resp;\n  status = data.status;\n  url = data.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\nconst prev = $('영상 렌더링 (Creatomate)').first().json;\nreturn [{\n  json: {\n    ...prev,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
         },
         "id": "poll-render",
         "name": "렌더링 대기 (폴링)",
@@ -1382,7 +1382,7 @@
         "main": [
           [
             {
-              "node": "이미지 생성 (Replicate Flux Pro)",
+              "node": "이미지 생성 (kie.ai Nano Banana Pro)",
               "type": "main",
               "index": 0
             }
@@ -1390,17 +1390,6 @@
           [
             {
               "node": "TTS 생성 (ElevenLabs)",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "이미지 생성 (Replicate Flux Pro)": {
-        "main": [
-          [
-            {
-              "node": "이미지 생성 대기 (폴링)",
               "type": "main",
               "index": 0
             }
@@ -1505,6 +1494,17 @@
             }
           ]
         ]
+      },
+      "이미지 생성 (kie.ai Nano Banana Pro)": {
+        "main": [
+          [
+            {
+              "node": "이미지 생성 대기 (폴링)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
       }
     },
     "authors": "hatihoro15 hatihoro15",
@@ -1513,18 +1513,18 @@
     "autosaved": false,
     "workflowPublishHistory": [
       {
-        "createdAt": "2026-03-05T12:05:45.340Z",
-        "id": 716,
+        "createdAt": "2026-03-05T12:34:11.810Z",
+        "id": 722,
         "workflowId": "FHYohZccExR24Uha",
-        "versionId": "a436afaf-ae54-4625-bf2f-eac867af8519",
+        "versionId": "d01787cb-adc0-4790-9cfd-d909e58beb79",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       },
       {
-        "createdAt": "2026-03-05T12:06:09.676Z",
-        "id": 717,
+        "createdAt": "2026-03-05T12:34:12.620Z",
+        "id": 723,
         "workflowId": "FHYohZccExR24Uha",
-        "versionId": "a436afaf-ae54-4625-bf2f-eac867af8519",
+        "versionId": "d01787cb-adc0-4790-9cfd-d909e58beb79",
         "event": "activated",
         "userId": "2ddbfebd-4622-4c10-ae9d-fb1eddcee9b2"
       }

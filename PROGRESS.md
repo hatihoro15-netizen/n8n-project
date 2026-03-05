@@ -7,10 +7,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-05
-- 현재 상태(1줄): 외부 API 크리덴셜 5건 전체 연결 완료 (YouTube OAuth 브라우저 인증 대기)
-- 진행중 작업: YouTube OAuth 브라우저 인증
-- 최근 완료: Claude API + YouTube OAuth2 크리덴셜 생성/노드 연결
-- 주의사항: n8n 웹 에디터에서 YouTube OAuth Sign in with Google 필요
+- 현재 상태(1줄): Worker 파이프라인 번역→이미지→TTS 성공, Creatomate 템플릿 필요
+- 진행중 작업: Creatomate 쇼츠 템플릿 생성
+- 최근 완료: 이미지 생성 Replicate→kie.ai 교체, 폴링 코드 수정, 파이프라인 테스트
+- 주의사항: Creatomate에 실제 쇼츠 템플릿 미생성 상태
 
 ---
 
@@ -106,6 +106,24 @@
 - Worker 풀 파이프라인 테스트
 ### 📁 Files / Links
 - n8n/ao_worker.json (업데이트)
+
+## 2026-03-05 (이미지 노드 교체)
+### ✅ Done
+- [x] 이미지 생성 노드 Replicate Flux Pro → kie.ai Nano Banana Pro 교체
+- [x] 이미지 폴링 노드: fetch → this.helpers.httpRequest 수정
+- [x] VPS 환경변수 추가 (KIEAI_API_KEY, CREATOMATE_API_KEY, N8N_BLOCK_ENV_ACCESS_IN_NODE=false)
+- [x] 폴링 코드 $credentials → $env 변경
+- [x] 파이프라인 테스트: 번역(Claude) ✅ → 이미지(kie.ai) ✅ → TTS(kie.ai) ✅ → Creatomate ❌
+### 📌 Result
+- 이미지 생성 성공 (kie.ai nano-banana-pro, ~27초)
+- TTS 생성 성공 (kie.ai)
+- Creatomate 실패: template_id 미설정 (빈 템플릿만 존재)
+### ➡️ Next (방향만)
+- Creatomate 쇼츠 템플릿 생성
+- 풀 파이프라인 재테스트
+### 📁 Files / Links
+- n8n/ao_worker.json (이미지 노드 교체)
+- /docker/n8n/docker-compose.yml (env vars 추가)
 
 ## 2026-03-05 (5차)
 ### ✅ Done
