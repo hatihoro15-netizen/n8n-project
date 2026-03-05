@@ -23,7 +23,7 @@
 - **Required Secrets**: N8N_API_KEY (값 기재 금지)
 
 ## C) 마지막 실행 기록 (필수)
-- **Last Run Command**: Webhook POST `/onca-shortform-v16` (웹앱 E2E 테스트)
+- **Last Run Command**: Webhook POST `/onca` (웹앱 E2E 테스트)
 - **Result**: 실행 #1310 — category 1, subtopic "먹튀 제보와 검증 과정" → Gemini가 "스포츠 승무패 예측" 생성 (소재 무관) → 주제 파싱 통과 (category 1은 금지어 제외) → AI 콘텐츠 생성에서 에러 → 실패 경로 진행
 - **실행 위치**: VPS (n8n 서버)
 
