@@ -189,7 +189,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ✅ Creatomate 최종 영상 합성 — ai_video / slideshow 분기\nconst job = $input.first().json;\nconst productionMode = job.production_mode || 'ai_video';\nconst scenes = job.scene_results || [];\nconst apiKey = $env.CREATOMATE_API_KEY;\n\nif (scenes.length === 0) throw new Error('scene_results가 비어있음');\n\nlet elements = [];\n\nif (productionMode === 'slideshow') {\n  // ===== SLIDESHOW: 이미지 슬라이드 + TTS + 자막 =====\n  const slideDur = parseInt(job.slide_duration) || 3;\n  const totalDur = scenes.length * slideDur;\n\n  // 이미지 슬라이드\n  scenes.forEach((s, i) => {\n    elements.push({\n      type: 'image',\n      source: s.image_url,\n      time: i * slideDur,\n      duration: slideDur,\n      fit: 'cover',\n      animations: [\n        { type: 'scale', fade: false, scope: 'element', start_scale: '100%', end_scale: '120%' }\n      ]\n    });\n  });\n\n  // TTS 나레이션 (전체 길이)\n  if (job.tts_audio_url) {\n    elements.push({\n      type: 'audio',\n      source: job.tts_audio_url,\n      time: 0,\n      duration: totalDur\n    });\n  }\n\n  // 자막 (TTS 텍스트)\n  if (job.tts_text) {\n    elements.push({\n      type: 'text',\n      text: job.tts_text,\n      time: 0,\n      duration: Math.min(totalDur, 10),\n      y: '80%',\n      width: '90%',\n      x_alignment: '50%',\n      y_alignment: '50%',\n      font_family: 'Noto Sans KR',\n      font_weight: 700,\n      font_size: '7 vmin',\n      fill_color: '#ffffff',\n      stroke_color: '#000000',\n      stroke_width: '1.5 vmin',\n      background_color: 'rgba(0,0,0,0.5)',\n      background_x_padding: '3 vmin',\n      background_y_padding: '2 vmin',\n      background_border_radius: '1 vmin'\n    });\n  }\n} else {\n  // ===== AI_VIDEO: 기존 씬별 클립 이어붙이기 (변경 없음) =====\n  const dur = parseInt(job.clip_duration) <= 4 ? 4 : 8;\n  scenes.forEach((s, i) => {\n    elements.push({\n      type: 'video',\n      source: s.video_url,\n      time: i * dur,\n      duration: dur,\n      fit: 'cover'\n    });\n    if (s.audio_url) {\n      elements.push({\n        type: 'audio',\n        source: s.audio_url,\n        time: i * dur,\n        duration: dur\n      });\n    }\n  });\n}\n\nconst body = {\n  source: {\n    output_format: 'mp4',\n    width: 1080,\n    height: 1920,\n    elements: elements\n  }\n};\n\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.creatomate.com/v1/renders',\n  headers: {\n    'Authorization': `Bearer ${apiKey}`,\n    'Content-Type': 'application/json'\n  },\n  body: body,\n  json: true\n});\n\nconst render = Array.isArray(resp) ? resp[0] : resp;\nreturn [{ json: render }];"
+        "jsCode": "// ✅ Creatomate 최종 영상 합성 — ai_video / slideshow 분기\nconst job = $input.first().json;\nconst productionMode = job.production_mode || 'ai_video';\nconst scenes = job.scene_results || [];\nconst apiKey = $env.CREATOMATE_API_KEY;\n\nif (scenes.length === 0) throw new Error('scene_results가 비어있음');\n\nlet elements = [];\n\nif (productionMode === 'slideshow') {\n  // ===== SLIDESHOW: NCA FFmpeg 합성 (onca 방식) =====\n  const imgUrls = job.slide_image_urls || [];\n  const audioUrl = job.tts_audio_url;\n  const audioDuration = job.tts_duration || job.total_duration;\n  const timestamps = job.tts_timestamps || [];\n  const ttsText = (job.tts_text || '').replace(/<[^>]*>?/gm, '');\n  const imgDur = job.img_duration || (audioDuration / imgUrls.length);\n  const totalDuration = audioDuration;\n  const BGM_URL = 'http://76.13.182.180:9000/audio/bgm_new.mp3';\n  const SFX_URL = 'http://76.13.182.180:9000/audio/sfx_ppook.wav';\n\n  function esc(t) {\n    if (!t) return '';\n    return t.replace(/[\\u{1F600}-\\u{1FAFF}\\u{200D}\\u{20E3}\\u{FE0F}]/gu,'').trim()\n      .replace(/\\\\/g,'\\\\\\\\').replace(/'/g,'\\u2019').replace(/\"/g,'\\u201D')\n      .replace(/:/g,'\\\\:').replace(/;/g,'\\;').replace(/,/g,'\\\\,')\n      .replace(/\\[/g,'\\\\[').replace(/\\]/g,'\\\\]').replace(/\\n/g,' ');\n  }\n  function wrap(t, max) {\n    if (!t || t.replace(/\\s+/g,'').length <= max) return t || '';\n    const mid = Math.floor(t.length / 2);\n    let best = -1, minD = t.length;\n    for (let i = 1; i < t.length - 1; i++) {\n      if (t[i] === ' ' && Math.abs(i - mid) < minD) { minD = Math.abs(i - mid); best = i; }\n    }\n    return best > 0 ? t.substring(0, best).trim() + '\\n' + t.substring(best).trim() : t;\n  }\n\n  // subtitle segments from timestamps\n  let subs = [];\n  if (timestamps.length > 0) {\n    for (const ts of timestamps) subs.push({ text: ts.text, start: ts.offset, duration: ts.duration });\n  } else {\n    const sentences = ttsText.split(/[.!?\\u3002]+/).filter(s => s.trim());\n    const segDur = totalDuration / Math.max(sentences.length, 1);\n    sentences.forEach((s, i) => subs.push({ text: s.trim(), start: i * segDur, duration: segDur }));\n  }\n\n  let inputs = [];\n  let idx = 0;\n  const mediaIdx = [];\n\n  for (const url of imgUrls) {\n    inputs.push({ file_url: url, options: [{ option: '-loop', argument: '1' }, { option: '-framerate', argument: '30' }, { option: '-t', argument: imgDur.toFixed(2) }] });\n    mediaIdx.push(idx++);\n  }\n  const audioIdx = idx;\n  inputs.push({ file_url: audioUrl, options: [] }); idx++;\n  const bgmIdx = idx;\n  inputs.push({ file_url: BGM_URL, options: [{ option: '-stream_loop', argument: '-1' }] }); idx++;\n  const sfxList = [];\n  for (let i = 1; i < imgUrls.length; i++) {\n    inputs.push({ file_url: SFX_URL, options: [] });\n    sfxList.push({ idx: idx, ms: Math.round(i * imgDur * 1000) }); idx++;\n  }\n\n  let fp = [];\n  for (let i = 0; i < imgUrls.length; i++) {\n    fp.push(`[${mediaIdx[i]}:v]scale=1080:1080:force_original_aspect_ratio=increase,crop=1080:1080,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30[v${i}]`);\n  }\n  fp.push(`${imgUrls.map((_,i) => `[v${i}]`).join('')}concat=n=${imgUrls.length}:v=1:a=0[vconcat]`);\n\n  fp.push(`[${audioIdx}:a]atrim=duration=${audioDuration.toFixed(2)},asetpts=PTS-STARTPTS[tts_raw]`);\n  fp.push(`[${bgmIdx}:a]atrim=duration=${totalDuration.toFixed(2)},asetpts=PTS-STARTPTS,afade=t=out:st=${Math.max(0, totalDuration - 2).toFixed(2)}:d=2[bgm]`);\n\n  if (sfxList.length > 0) {\n    sfxList.forEach((s, i) => fp.push(`[${s.idx}:a]atrim=duration=0.3,asetpts=PTS-STARTPTS,volume=0.6,adelay=${s.ms}|${s.ms}[sfx${i}]`));\n    fp.push(`${sfxList.map((_,i) => `[sfx${i}]`).join('')}amix=inputs=${sfxList.length}:duration=longest:normalize=0[sfx_mix]`);\n    fp.push(`[tts_raw][bgm][sfx_mix]amix=inputs=3:duration=longest:weights=1 1 0.8:normalize=0[amain]`);\n  } else {\n    fp.push(`[tts_raw][bgm]amix=inputs=2:duration=longest:weights=1 1:normalize=0[amain]`);\n  }\n\n  let ov = '[vconcat]null';\n  for (const sub of subs) {\n    const st = esc(wrap(sub.text, 12));\n    if (!st) continue;\n    ov += `,drawtext=expansion=none:text='${st}':fontsize=70:fontcolor=white:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=h-280:borderw=4:bordercolor=black:enable='between(t,${sub.start.toFixed(2)},${(sub.start + sub.duration).toFixed(2)})'`;\n  }\n  ov += '[vfinal]';\n  fp.push(ov);\n\n  const payload = {\n    inputs,\n    filters: [{ filter: fp.join(';') }],\n    outputs: [{ options: [\n      { option: '-map', argument: '[vfinal]' }, { option: '-map', argument: '[amain]' },\n      { option: '-c:v', argument: 'libx264' }, { option: '-preset', argument: 'fast' }, { option: '-crf', argument: '23' },\n      { option: '-c:a', argument: 'aac' }, { option: '-b:a', argument: '192k' },\n      { option: '-pix_fmt', argument: 'yuv420p' }, { option: '-movflags', argument: '+faststart' },\n      { option: '-t', argument: totalDuration.toFixed(2) }\n    ], file_name: 'ao_slideshow.mp4' }]\n  };\n\n  const ncaResp = await this.helpers.httpRequest({\n    method: 'POST', url: 'http://76.13.182.180:8080/v1/ffmpeg/compose',\n    headers: { 'x-api-key': 'nca-sagong-2026', 'Content-Type': 'application/json' },\n    body: payload, json: true, timeout: 600000\n  });\n\n  let videoUrl = '';\n  if (Array.isArray(ncaResp.response)) videoUrl = ncaResp.response[0]?.file_url || '';\n  else if (typeof ncaResp.response === 'string') videoUrl = ncaResp.response;\n  else videoUrl = ncaResp.output_url || ncaResp.url || ncaResp.video_url || '';\n  if (!videoUrl) throw new Error('NCA 영상 URL 없음: ' + JSON.stringify(ncaResp).substring(0, 500));\n\n  return [{ json: { id: 'nca-slideshow', status: 'succeeded', url: videoUrl } }];\n} else {\n  // ===== AI_VIDEO: 기존 씬별 클립 이어붙이기 (변경 없음) =====\n  const dur = parseInt(job.clip_duration) <= 4 ? 4 : 8;\n  scenes.forEach((s, i) => {\n    elements.push({\n      type: 'video',\n      source: s.video_url,\n      time: i * dur,\n      duration: dur,\n      fit: 'cover'\n    });\n    if (s.audio_url) {\n      elements.push({\n        type: 'audio',\n        source: s.audio_url,\n        time: i * dur,\n        duration: dur\n      });\n    }\n  });\n}\n\nconst body = {\n  source: {\n    output_format: 'mp4',\n    width: 1080,\n    height: 1920,\n    elements: elements\n  }\n};\n\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.creatomate.com/v1/renders',\n  headers: {\n    'Authorization': `Bearer ${apiKey}`,\n    'Content-Type': 'application/json'\n  },\n  body: body,\n  json: true\n});\n\nconst render = Array.isArray(resp) ? resp[0] : resp;\nreturn [{ json: render }];"
       },
       "id": "render-video",
       "name": "최종 영상 합성 (Creatomate)",
@@ -202,7 +202,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Creatomate 렌더 폴링\nconst renderResponse = $input.first().json;\nconst renderId = renderResponse.id || (Array.isArray(renderResponse) ? renderResponse[0]?.id : null);\nif (!renderId) throw new Error('renderId 없음');\n\nconst apiKey = $env.CREATOMATE_API_KEY || '';\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.creatomate.com/v1/renders/${renderId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n  status = resp.status;\n  url = resp.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\n// ✅ TTS 폴링 출력에서 job 원본 데이터 병합\nconst prevData = $('멀티씬 순차 처리').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
+        "jsCode": "// NCA slideshow: 이미 완료, 폴링 불필요\nconst renderResponse = $input.first().json;\nif (renderResponse.status === 'succeeded' && renderResponse.url) {\n  const prevData = $('멀티씬 순차 처리').first().json;\n  return [{ json: { ...prevData, rendered_video_url: renderResponse.url, render_id: renderResponse.id || 'nca' } }];\n}\n// Creatomate 렌더 폴링 (ai_video만 해당)\nconst renderId = renderResponse.id || (Array.isArray(renderResponse) ? renderResponse[0]?.id : null);\nif (!renderId) throw new Error('renderId 없음');\n\nconst apiKey = $env.CREATOMATE_API_KEY || '';\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.creatomate.com/v1/renders/${renderId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n  status = resp.status;\n  url = resp.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\n// ✅ TTS 폴링 출력에서 job 원본 데이터 병합\nconst prevData = $('멀티씬 순차 처리').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
       },
       "id": "poll-render",
       "name": "렌더링 대기 (폴링)",
@@ -340,7 +340,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// ✅ 영상/슬라이드쇼 처리 — production_mode 분기\nconst job = $input.first().json;\nconst productionMode = job.production_mode || 'ai_video';\nlet files = job.files || [];\nif (typeof files === 'string') { try { files = JSON.parse(files); } catch(e) { files = []; } }\n\nconst directFiles = files.filter(f => f.use_directly !== false);\nconst apiKey = $env.KIEAI_API_KEY;\nconst promptBase = job.prompt_en || job.prompt_to_engine || job.prompt_p1;\n\n// kie.ai 폴링 (공통)\nasync function pollTask(taskId) {\n  for (let i = 0; i < 90; i++) {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n      headers: { 'Authorization': `Bearer ${apiKey}` },\n      json: true\n    });\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const result = JSON.parse(resp.data.resultJson || '{}');\n      return result.resultUrls?.[0] || null;\n    }\n    if (state === 'failed' || state === 'fail') {\n      throw new Error(`Task 실패: ${resp.data.failMsg || state}`);\n    }\n    await new Promise(r => setTimeout(r, 10000));\n  }\n  throw new Error('Task 타임아웃 (900초)');\n}\n\n// TTS 생성 (공통)\nasync function generateTTS(text) {\n  if (!text) return null;\n  const ttsResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/jobs/createTask',\n    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n    body: {\n      model: 'elevenlabs/text-to-speech-multilingual-v2',\n      input: { text: text, voice_id: 'EXAVITQu4vr4xnSDxMaL' }\n    },\n    json: true\n  });\n  const ttsTaskId = ttsResp?.data?.taskId;\n  if (ttsTaskId) return await pollTask.call(this, ttsTaskId);\n  return null;\n}\n\n// 이미지 URL 수집\nconst imageUrls = directFiles\n  .filter(f => f.type === 'image' && f.url)\n  .map(f => f.url);\n\n// ===== SLIDESHOW 모드 =====\nif (productionMode === 'slideshow') {\n  if (imageUrls.length === 0) throw new Error('slideshow 모드: 이미지가 없습니다');\n  const slideDur = parseInt(job.slide_duration) || 3;\n  const ttsText = job.prompt_p1 || job.topic || '';\n  const audioUrl = await generateTTS.call(this, ttsText);\n\n  return [{\n    json: {\n      ...job,\n      production_mode: 'slideshow',\n      slide_image_urls: imageUrls,\n      slide_duration: slideDur,\n      tts_audio_url: audioUrl,\n      tts_text: ttsText,\n      scene_results: imageUrls.map((url, i) => ({\n        index: i,\n        image_url: url,\n        audio_url: i === 0 ? audioUrl : null,\n        type: 'slide'\n      })),\n      total_scenes: imageUrls.length,\n      total_duration: imageUrls.length * slideDur\n    }\n  }];\n}\n\n// ===== AI_VIDEO 모드 (기존 Kling 3.0 — 변경 없음) =====\nif (directFiles.length === 0) {\n  if (!job.prompt_p1 && !job.prompt_to_engine) throw new Error('파일과 프롬프트 모두 없음');\n}\n\nconst rawDur = parseInt(job.clip_duration) || 8;\nconst duration = String(Math.max(3, Math.min(15, rawDur)));\n\nconst klingInput = {\n  prompt: promptBase,\n  aspect_ratio: '9:16',\n  mode: 'std',\n  sound: false,\n  duration: duration\n};\n\nif (imageUrls.length > 0) {\n  klingInput.image_urls = imageUrls.slice(0, 2);\n}\n\nlet taskResp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.kie.ai/api/v1/jobs/createTask',\n  headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n  body: { model: 'kling-3.0/video', input: klingInput },\n  json: true\n});\n\nif (taskResp?.code !== 200 && klingInput.image_urls) {\n  delete klingInput.image_urls;\n  taskResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/jobs/createTask',\n    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n    body: { model: 'kling-3.0/video', input: klingInput },\n    json: true\n  });\n}\n\nconst klingTaskId = taskResp?.data?.taskId;\nif (!klingTaskId) throw new Error('Kling taskId 없음: ' + JSON.stringify(taskResp).substring(0, 200));\n\nconst videoUrl = await pollTask.call(this, klingTaskId);\nif (!videoUrl) throw new Error('Kling 영상 URL 없음');\n\nconst audioUrl = await generateTTS.call(this, job.topic);\n\nconst sceneResults = [{\n  index: 0,\n  video_url: videoUrl,\n  file_urls: imageUrls,\n  audio_url: audioUrl,\n  model: 'kling-3.0/video'\n}];\n\nreturn [{\n  json: {\n    ...job,\n    production_mode: 'ai_video',\n    scene_results: sceneResults,\n    total_scenes: 1,\n    total_duration: parseInt(duration)\n  }\n}];\n\n/* === 기존 Seedance 코드 (보존) ===\n// ... Seedance polling + TTS ...\n=== 기존 Seedance 코드 끝 === */"
+        "jsCode": "// ✅ 영상/슬라이드쇼 처리 — production_mode 분기\nconst job = $input.first().json;\nconst productionMode = job.production_mode || 'ai_video';\nlet files = job.files || [];\nif (typeof files === 'string') { try { files = JSON.parse(files); } catch(e) { files = []; } }\n\nconst directFiles = files.filter(f => f.use_directly !== false);\nconst apiKey = $env.KIEAI_API_KEY;\nconst promptBase = job.prompt_en || job.prompt_to_engine || job.prompt_p1;\n\n// kie.ai 폴링 (공통)\nasync function pollTask(taskId) {\n  for (let i = 0; i < 90; i++) {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n      headers: { 'Authorization': `Bearer ${apiKey}` },\n      json: true\n    });\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const result = JSON.parse(resp.data.resultJson || '{}');\n      return result.resultUrls?.[0] || null;\n    }\n    if (state === 'failed' || state === 'fail') {\n      throw new Error(`Task 실패: ${resp.data.failMsg || state}`);\n    }\n    await new Promise(r => setTimeout(r, 10000));\n  }\n  throw new Error('Task 타임아웃 (900초)');\n}\n\n// TTS 생성 (공통)\nasync function generateTTS(text) {\n  if (!text) return null;\n  const ttsResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/jobs/createTask',\n    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n    body: {\n      model: 'elevenlabs/text-to-speech-multilingual-v2',\n      input: { text: text, voice_id: 'EXAVITQu4vr4xnSDxMaL' }\n    },\n    json: true\n  });\n  const ttsTaskId = ttsResp?.data?.taskId;\n  if (ttsTaskId) return await pollTask.call(this, ttsTaskId);\n  return null;\n}\n\n// 이미지 URL 수집\nconst imageUrls = directFiles\n  .filter(f => f.type === 'image' && f.url)\n  .map(f => f.url);\n\n// ===== SLIDESHOW 모드 (edge-tts + NCA FFmpeg) =====\nif (productionMode === 'slideshow') {\n  if (imageUrls.length === 0) throw new Error('slideshow 모드: 이미지가 없습니다');\n  const ttsText = (job.prompt_p1 || job.topic || '').replace(/<[^>]*>?/gm, '');\n  if (!ttsText) throw new Error('slideshow: 나레이션 텍스트 없음');\n\n  // edge-tts 나레이션 생성\n  const ttsResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'http://172.17.0.1:5100/tts',\n    headers: { 'Content-Type': 'application/json' },\n    body: { text: ttsText, voice_id: 'tc_6059dad0b83880769a50502f', emotion: 'happy', tempo: 1.2 },\n    json: true,\n    timeout: 60000\n  });\n  const audioUrl = ttsResp.audio_url;\n  const audioDuration = ttsResp.duration_sec;\n  const timestamps = ttsResp.timestamps || [];\n  if (!audioUrl) throw new Error('edge-tts audio_url 없음: ' + JSON.stringify(ttsResp).substring(0, 300));\n\n  const imgDuration = audioDuration / imageUrls.length;\n\n  return [{\n    json: {\n      ...job,\n      production_mode: 'slideshow',\n      slide_image_urls: imageUrls,\n      tts_audio_url: audioUrl,\n      tts_duration: audioDuration,\n      tts_timestamps: timestamps,\n      tts_text: ttsText,\n      img_duration: imgDuration,\n      scene_results: imageUrls.map((url, i) => ({\n        index: i, image_url: url, start: i * imgDuration, duration: imgDuration, type: 'slide'\n      })),\n      total_scenes: imageUrls.length,\n      total_duration: audioDuration\n    }\n  }];\n}\n\n// ===== AI_VIDEO 모드 (기존 Kling 3.0 — 변경 없음) =====\nif (directFiles.length === 0) {\n  if (!job.prompt_p1 && !job.prompt_to_engine) throw new Error('파일과 프롬프트 모두 없음');\n}\n\nconst rawDur = parseInt(job.clip_duration) || 8;\nconst duration = String(Math.max(3, Math.min(15, rawDur)));\n\nconst klingInput = {\n  prompt: promptBase,\n  aspect_ratio: '9:16',\n  mode: 'std',\n  sound: false,\n  duration: duration,\n  multi_shots: false\n};\n\nif (imageUrls.length > 0) {\n  klingInput.image_urls = imageUrls.slice(0, 2);\n}\n\nlet taskResp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.kie.ai/api/v1/jobs/createTask',\n  headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n  body: { model: 'kling-3.0/video', input: klingInput },\n  json: true\n});\n\nif (taskResp?.code !== 200 && klingInput.image_urls) {\n  delete klingInput.image_urls;\n  taskResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/jobs/createTask',\n    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n    body: { model: 'kling-3.0/video', input: klingInput },\n    json: true\n  });\n}\n\nconst klingTaskId = taskResp?.data?.taskId;\nif (!klingTaskId) throw new Error('Kling taskId 없음: ' + JSON.stringify(taskResp).substring(0, 200));\n\nconst videoUrl = await pollTask.call(this, klingTaskId);\nif (!videoUrl) throw new Error('Kling 영상 URL 없음');\n\nconst audioUrl = await generateTTS.call(this, job.topic);\n\nconst sceneResults = [{\n  index: 0,\n  video_url: videoUrl,\n  file_urls: imageUrls,\n  audio_url: audioUrl,\n  model: 'kling-3.0/video'\n}];\n\nreturn [{\n  json: {\n    ...job,\n    production_mode: 'ai_video',\n    scene_results: sceneResults,\n    total_scenes: 1,\n    total_duration: parseInt(duration)\n  }\n}];\n\n/* === 기존 Seedance 코드 (보존) ===\n// ... Seedance polling + TTS ...\n=== 기존 Seedance 코드 끝 === */"
       },
       "id": "process-clips",
       "name": "멀티씬 순차 처리",
@@ -875,66 +875,27 @@
       },
       {
         "parameters": {
-          "method": "POST",
-          "url": "https://api.kie.ai/api/v1/jobs/createTask",
-          "authentication": "genericCredentialType",
-          "genericAuthType": "httpHeaderAuth",
-          "sendBody": true,
-          "specifyBody": "json",
-          "jsonBody": "={\n  \"model\": \"elevenlabs/text-to-speech-multilingual-v2\",\n  \"input\": {\n    \"text\": \"{{ $json.narration_script || $json.topic }}\",\n    \"voice_id\": \"EXAVITQu4vr4xnSDxMaL\"\n  }\n}",
-          "options": {}
-        },
-        "id": "generate-tts",
-        "name": "TTS 생성 (ElevenLabs)",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.2,
-        "position": [
-          2672,
-          208
-        ],
-        "credentials": {
-          "httpHeaderAuth": {
-            "id": "OipYAEtrzhD1lJmL",
-            "name": "KieAI TTS"
-          }
-        }
-      },
-      {
-        "parameters": {
-          "method": "POST",
-          "url": "https://api.creatomate.com/v1/renders",
-          "authentication": "genericCredentialType",
-          "genericAuthType": "httpHeaderAuth",
-          "sendBody": true,
-          "specifyBody": "json",
-          "jsonBody": "={\n  \"source\": {\n    \"output_format\": \"mp4\",\n    \"width\": 1080,\n    \"height\": 1920,\n    \"duration\": null,\n    \"elements\": [\n      ...(() => {\n        const clips = $json.clip_videos || [];\n        const dur = $json.clip_duration || 8;\n        return clips.map((c, i) => ({\n          \"type\": \"video\",\n          \"source\": c.video_url,\n          \"time\": i * dur,\n          \"duration\": dur,\n          \"fit\": \"cover\"\n        }));\n      })(),\n      ...(() => {\n        const audioUrl = $json.tts_audio_url;\n        return audioUrl ? [{ \"type\": \"audio\", \"source\": audioUrl, \"time\": 0, \"duration\": null }] : [];\n      })()\n    ]\n  }\n}",
-          "options": {}
+          "jsCode": "// ✅ Creatomate 최종 영상 합성 — ai_video / slideshow 분기\nconst job = $input.first().json;\nconst productionMode = job.production_mode || 'ai_video';\nconst scenes = job.scene_results || [];\nconst apiKey = $env.CREATOMATE_API_KEY;\n\nif (scenes.length === 0) throw new Error('scene_results가 비어있음');\n\nlet elements = [];\n\nif (productionMode === 'slideshow') {\n  // ===== SLIDESHOW: NCA FFmpeg 합성 (onca 방식) =====\n  const imgUrls = job.slide_image_urls || [];\n  const audioUrl = job.tts_audio_url;\n  const audioDuration = job.tts_duration || job.total_duration;\n  const timestamps = job.tts_timestamps || [];\n  const ttsText = (job.tts_text || '').replace(/<[^>]*>?/gm, '');\n  const imgDur = job.img_duration || (audioDuration / imgUrls.length);\n  const totalDuration = audioDuration;\n  const BGM_URL = 'http://76.13.182.180:9000/audio/bgm_new.mp3';\n  const SFX_URL = 'http://76.13.182.180:9000/audio/sfx_ppook.wav';\n\n  function esc(t) {\n    if (!t) return '';\n    return t.replace(/[\\u{1F600}-\\u{1FAFF}\\u{200D}\\u{20E3}\\u{FE0F}]/gu,'').trim()\n      .replace(/\\\\/g,'\\\\\\\\').replace(/'/g,'\\u2019').replace(/\"/g,'\\u201D')\n      .replace(/:/g,'\\\\:').replace(/;/g,'\\;').replace(/,/g,'\\\\,')\n      .replace(/\\[/g,'\\\\[').replace(/\\]/g,'\\\\]').replace(/\\n/g,' ');\n  }\n  function wrap(t, max) {\n    if (!t || t.replace(/\\s+/g,'').length <= max) return t || '';\n    const mid = Math.floor(t.length / 2);\n    let best = -1, minD = t.length;\n    for (let i = 1; i < t.length - 1; i++) {\n      if (t[i] === ' ' && Math.abs(i - mid) < minD) { minD = Math.abs(i - mid); best = i; }\n    }\n    return best > 0 ? t.substring(0, best).trim() + '\\n' + t.substring(best).trim() : t;\n  }\n\n  // subtitle segments from timestamps\n  let subs = [];\n  if (timestamps.length > 0) {\n    for (const ts of timestamps) subs.push({ text: ts.text, start: ts.offset, duration: ts.duration });\n  } else {\n    const sentences = ttsText.split(/[.!?\\u3002]+/).filter(s => s.trim());\n    const segDur = totalDuration / Math.max(sentences.length, 1);\n    sentences.forEach((s, i) => subs.push({ text: s.trim(), start: i * segDur, duration: segDur }));\n  }\n\n  let inputs = [];\n  let idx = 0;\n  const mediaIdx = [];\n\n  for (const url of imgUrls) {\n    inputs.push({ file_url: url, options: [{ option: '-loop', argument: '1' }, { option: '-framerate', argument: '30' }, { option: '-t', argument: imgDur.toFixed(2) }] });\n    mediaIdx.push(idx++);\n  }\n  const audioIdx = idx;\n  inputs.push({ file_url: audioUrl, options: [] }); idx++;\n  const bgmIdx = idx;\n  inputs.push({ file_url: BGM_URL, options: [{ option: '-stream_loop', argument: '-1' }] }); idx++;\n  const sfxList = [];\n  for (let i = 1; i < imgUrls.length; i++) {\n    inputs.push({ file_url: SFX_URL, options: [] });\n    sfxList.push({ idx: idx, ms: Math.round(i * imgDur * 1000) }); idx++;\n  }\n\n  let fp = [];\n  for (let i = 0; i < imgUrls.length; i++) {\n    fp.push(`[${mediaIdx[i]}:v]scale=1080:1080:force_original_aspect_ratio=increase,crop=1080:1080,pad=1080:1920:(ow-iw)/2:(oh-ih)/2:black,setsar=1,fps=30[v${i}]`);\n  }\n  fp.push(`${imgUrls.map((_,i) => `[v${i}]`).join('')}concat=n=${imgUrls.length}:v=1:a=0[vconcat]`);\n\n  fp.push(`[${audioIdx}:a]atrim=duration=${audioDuration.toFixed(2)},asetpts=PTS-STARTPTS[tts_raw]`);\n  fp.push(`[${bgmIdx}:a]atrim=duration=${totalDuration.toFixed(2)},asetpts=PTS-STARTPTS,afade=t=out:st=${Math.max(0, totalDuration - 2).toFixed(2)}:d=2[bgm]`);\n\n  if (sfxList.length > 0) {\n    sfxList.forEach((s, i) => fp.push(`[${s.idx}:a]atrim=duration=0.3,asetpts=PTS-STARTPTS,volume=0.6,adelay=${s.ms}|${s.ms}[sfx${i}]`));\n    fp.push(`${sfxList.map((_,i) => `[sfx${i}]`).join('')}amix=inputs=${sfxList.length}:duration=longest:normalize=0[sfx_mix]`);\n    fp.push(`[tts_raw][bgm][sfx_mix]amix=inputs=3:duration=longest:weights=1 1 0.8:normalize=0[amain]`);\n  } else {\n    fp.push(`[tts_raw][bgm]amix=inputs=2:duration=longest:weights=1 1:normalize=0[amain]`);\n  }\n\n  let ov = '[vconcat]null';\n  for (const sub of subs) {\n    const st = esc(wrap(sub.text, 12));\n    if (!st) continue;\n    ov += `,drawtext=expansion=none:text='${st}':fontsize=70:fontcolor=white:fontfile=/usr/share/fonts/truetype/nanum/NanumGothicBold.ttf:x=(w-tw)/2:y=h-280:borderw=4:bordercolor=black:enable='between(t,${sub.start.toFixed(2)},${(sub.start + sub.duration).toFixed(2)})'`;\n  }\n  ov += '[vfinal]';\n  fp.push(ov);\n\n  const payload = {\n    inputs,\n    filters: [{ filter: fp.join(';') }],\n    outputs: [{ options: [\n      { option: '-map', argument: '[vfinal]' }, { option: '-map', argument: '[amain]' },\n      { option: '-c:v', argument: 'libx264' }, { option: '-preset', argument: 'fast' }, { option: '-crf', argument: '23' },\n      { option: '-c:a', argument: 'aac' }, { option: '-b:a', argument: '192k' },\n      { option: '-pix_fmt', argument: 'yuv420p' }, { option: '-movflags', argument: '+faststart' },\n      { option: '-t', argument: totalDuration.toFixed(2) }\n    ], file_name: 'ao_slideshow.mp4' }]\n  };\n\n  const ncaResp = await this.helpers.httpRequest({\n    method: 'POST', url: 'http://76.13.182.180:8080/v1/ffmpeg/compose',\n    headers: { 'x-api-key': 'nca-sagong-2026', 'Content-Type': 'application/json' },\n    body: payload, json: true, timeout: 600000\n  });\n\n  let videoUrl = '';\n  if (Array.isArray(ncaResp.response)) videoUrl = ncaResp.response[0]?.file_url || '';\n  else if (typeof ncaResp.response === 'string') videoUrl = ncaResp.response;\n  else videoUrl = ncaResp.output_url || ncaResp.url || ncaResp.video_url || '';\n  if (!videoUrl) throw new Error('NCA 영상 URL 없음: ' + JSON.stringify(ncaResp).substring(0, 500));\n\n  return [{ json: { id: 'nca-slideshow', status: 'succeeded', url: videoUrl } }];\n} else {\n  // ===== AI_VIDEO: 기존 씬별 클립 이어붙이기 (변경 없음) =====\n  const dur = parseInt(job.clip_duration) <= 4 ? 4 : 8;\n  scenes.forEach((s, i) => {\n    elements.push({\n      type: 'video',\n      source: s.video_url,\n      time: i * dur,\n      duration: dur,\n      fit: 'cover'\n    });\n    if (s.audio_url) {\n      elements.push({\n        type: 'audio',\n        source: s.audio_url,\n        time: i * dur,\n        duration: dur\n      });\n    }\n  });\n}\n\nconst body = {\n  source: {\n    output_format: 'mp4',\n    width: 1080,\n    height: 1920,\n    elements: elements\n  }\n};\n\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.creatomate.com/v1/renders',\n  headers: {\n    'Authorization': `Bearer ${apiKey}`,\n    'Content-Type': 'application/json'\n  },\n  body: body,\n  json: true\n});\n\nconst render = Array.isArray(resp) ? resp[0] : resp;\nreturn [{ json: render }];"
         },
         "id": "render-video",
-        "name": "영상 렌더링 (Creatomate)",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.2,
+        "name": "최종 영상 합성 (Creatomate)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
         "position": [
-          2880,
+          2224,
           208
-        ],
-        "credentials": {
-          "httpHeaderAuth": {
-            "id": "7uzM44eLOitv8ubQ",
-            "name": "Creatomate API"
-          }
-        }
+        ]
       },
       {
         "parameters": {
-          "jsCode": "// Creatomate 렌더 폴링\nconst renderResponse = $input.first().json;\nconst renderId = renderResponse.id || (Array.isArray(renderResponse) ? renderResponse[0]?.id : null);\nif (!renderId) throw new Error('renderId 없음');\n\nconst apiKey = $env.CREATOMATE_API_KEY || '';\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.creatomate.com/v1/renders/${renderId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n  status = resp.status;\n  url = resp.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\n// ✅ TTS 폴링 출력에서 job 원본 데이터 병합\nconst prevData = $('TTS 생성 대기 (폴링)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
+          "jsCode": "// NCA slideshow: 이미 완료, 폴링 불필요\nconst renderResponse = $input.first().json;\nif (renderResponse.status === 'succeeded' && renderResponse.url) {\n  const prevData = $('멀티씬 순차 처리').first().json;\n  return [{ json: { ...prevData, rendered_video_url: renderResponse.url, render_id: renderResponse.id || 'nca' } }];\n}\n// Creatomate 렌더 폴링 (ai_video만 해당)\nconst renderId = renderResponse.id || (Array.isArray(renderResponse) ? renderResponse[0]?.id : null);\nif (!renderId) throw new Error('renderId 없음');\n\nconst apiKey = $env.CREATOMATE_API_KEY || '';\nlet status = 'planned';\nlet url = null;\nlet attempts = 0;\nconst maxAttempts = 60;\n\nwhile (!['succeeded', 'failed'].includes(status) && attempts < maxAttempts) {\n  await new Promise(r => setTimeout(r, 5000));\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.creatomate.com/v1/renders/${renderId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n  status = resp.status;\n  url = resp.url;\n  attempts++;\n}\n\nif (status !== 'succeeded' || !url) {\n  throw new Error(`영상 렌더링 실패: ${status}`);\n}\n\n// ✅ TTS 폴링 출력에서 job 원본 데이터 병합\nconst prevData = $('멀티씬 순차 처리').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    rendered_video_url: url,\n    render_id: renderId\n  }\n}];"
         },
         "id": "poll-render",
         "name": "렌더링 대기 (폴링)",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          3104,
+          2448,
           208
         ],
         "credentials": {
@@ -988,34 +949,8 @@
       },
       {
         "parameters": {
-          "method": "POST",
-          "url": "https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status",
-          "authentication": "genericCredentialType",
-          "sendBody": true,
-          "specifyBody": "json",
-          "jsonBody": "={\n  \"snippet\": {\n    \"title\": \"{{ $json.metadata?.title || $json.topic }}\",\n    \"description\": \"{{ $json.metadata?.description || '' }}\",\n    \"tags\": {{ JSON.stringify($json.metadata?.tags || $json.keywords.split(',')) }},\n    \"categoryId\": \"22\"\n  },\n  \"status\": {\n    \"privacyStatus\": \"{{ $json.metadata?.privacy || 'public' }}\"\n  }\n}",
-          "options": {},
-          "genericAuthType": "googleOAuth2Api"
-        },
-        "id": "upload-youtube",
-        "name": "YouTube 업로드",
-        "type": "n8n-nodes-base.httpRequest",
-        "typeVersion": 4.2,
-        "position": [
-          3760,
-          208
-        ],
-        "credentials": {
-          "googleOAuth2Api": {
-            "id": "FHvjDOGBtI0zvyFA",
-            "name": "YouTube OAuth2"
-          }
-        }
-      },
-      {
-        "parameters": {
           "operation": "executeQuery",
-          "query": "UPDATE jobs\nSET status = 'uploaded',\n    youtube_video_id = '{{ $json.id }}',\n    youtube_url = CONCAT('https://youtu.be/', '{{ $json.id }}'),\n    completed_at = NOW(),\n    updated_at = NOW()\nWHERE id = '{{ $node[\"상태 → uploading\"].json.id }}'\nRETURNING *;\n\nINSERT INTO job_logs (job_id, level, message, created_at)\nVALUES (\n  '{{ $node[\"상태 → uploading\"].json.id }}',\n  'info',\n  'YouTube 업로드 완료',\n  NOW()\n);",
+          "query": "UPDATE jobs\nSET status = 'uploaded',\n    youtube_video_id = '{{ $json.youtube_video_id }}',\n    youtube_url = '{{ $json.youtube_url }}',\n    completed_at = NOW(),\n    updated_at = NOW()\nWHERE id = '{{ $json.id }}'\nRETURNING *;\n\nINSERT INTO job_logs (job_id, level, message, created_at)\nVALUES (\n  '{{ $json.id }}',\n  'info',\n  'YouTube 업로드 완료',\n  NOW()\n);",
           "options": {}
         },
         "id": "mark-uploaded",
@@ -1091,23 +1026,10 @@
       },
       {
         "parameters": {
-          "jsCode": "// ✅ kie.ai TTS 폴링 — 오디오 URL 획득\nconst ttsResponse = $input.first().json;\nconst taskId = ttsResponse?.data?.taskId;\nif (!taskId) throw new Error('TTS taskId 없음 - TTS 응답: ' + JSON.stringify(ttsResponse).substring(0, 200));\n\nconst apiKey = $env.KIEAI_API_KEY || '';\nconst maxRetries = 30;\nconst interval = 5000;\n\nlet audioUrl = null;\nfor (let i = 0; i < maxRetries; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n    headers: { 'Authorization': `Bearer ${apiKey}` },\n    json: true\n  });\n\n  const state = resp?.data?.state;\n  if (state === 'success') {\n    const resultJson = JSON.parse(resp.data.resultJson || '{}');\n    audioUrl = resultJson.resultUrls?.[0] || null;\n    break;\n  }\n  if (state === 'failed' || resp?.data?.failMsg) {\n    throw new Error(`TTS 생성 실패: ${resp.data.failMsg || state}`);\n  }\n  await new Promise(r => setTimeout(r, interval));\n}\n\nif (!audioUrl) throw new Error('TTS 생성 타임아웃 (150초)');\n\n// ✅ 이전 노드 데이터 병합\nconst prevData = $('나레이션 생성 (Claude)').first().json;\nreturn [{\n  json: {\n    ...prevData,\n    tts_audio_url: audioUrl,\n    tts_task_id: taskId\n  }\n}];"
-        },
-        "id": "tts-poll",
-        "name": "TTS 생성 대기 (폴링)",
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
-        "position": [
-          2776,
-          208
-        ]
-      },
-      {
-        "parameters": {
-          "jsCode": "// ✅ 멀티클립 순차 처리 — clips[] 루프\nconst job = $input.first().json;\nlet clips = [];\ntry {\n  clips = typeof job.clips === 'string' ? JSON.parse(job.clips) : (job.clips || []);\n} catch(e) { clips = []; }\n\nif (clips.length === 0) throw new Error('clips 배열이 비어있음');\n\nconst duration = String(job.clip_duration || 8);\nconst apiKey = $env.KIEAI_API_KEY;\nconst promptBase = job.prompt_en || job.prompt_to_engine || job.prompt_p1;\nconst clipVideos = [];\n\n// kie.ai 폴링 헬퍼\nasync function pollTask(taskId, helpers) {\n  for (let i = 0; i < 60; i++) {\n    const resp = await helpers.httpRequest({\n      method: 'GET',\n      url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n      headers: { 'Authorization': `Bearer ${apiKey}` },\n      json: true\n    });\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const result = JSON.parse(resp.data.resultJson || '{}');\n      return result.resultUrls?.[0] || null;\n    }\n    if (state === 'failed' || state === 'fail') {\n      throw new Error(`Task 실패: ${resp.data.failMsg || state}`);\n    }\n    await new Promise(r => setTimeout(r, 10000));\n  }\n  throw new Error('Task 타임아웃 (600초)');\n}\n\nfor (let i = 0; i < clips.length; i++) {\n  const clip = clips[i];\n\n  // 1) 영상 프롬프트 조립: vision_analysis + scene_prompt + P1\n  const parts = [];\n  if (clip.vision_analysis) parts.push(`[Image: ${clip.vision_analysis}]`);\n  if (clip.scene_prompt) parts.push(`[Scene: ${clip.scene_prompt}]`);\n  parts.push(promptBase);\n  const videoPrompt = parts.join('\\n');\n\n  // 2) Seedance createTask\n  const taskResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/jobs/createTask',\n    headers: {\n      'Authorization': `Bearer ${apiKey}`,\n      'Content-Type': 'application/json'\n    },\n    body: {\n      model: 'bytedance/seedance-1.5-pro',\n      input: {\n        prompt: videoPrompt,\n        input_urls: clip.image_url ? [clip.image_url] : [],\n        aspect_ratio: '9:16',\n        resolution: '720p',\n        duration: duration,\n        fixed_lens: false,\n        generate_audio: false\n      }\n    },\n    json: true\n  });\n\n  const taskId = taskResp?.data?.taskId;\n  if (!taskId) throw new Error(`Clip ${i+1} Seedance taskId 없음`);\n\n  // 3) 폴링\n  const videoUrl = await pollTask(taskId, this.helpers);\n  if (!videoUrl) throw new Error(`Clip ${i+1} 영상 URL 없음`);\n\n  clipVideos.push({ index: i, video_url: videoUrl, image_url: clip.image_url || '' });\n}\n\nreturn [{\n  json: {\n    ...job,\n    clip_videos: clipVideos,\n    total_clips: clipVideos.length,\n    total_duration: clipVideos.length * parseInt(duration)\n  }\n}];"
+          "jsCode": "// ✅ 영상/슬라이드쇼 처리 — production_mode 분기\nconst job = $input.first().json;\nconst productionMode = job.production_mode || 'ai_video';\nlet files = job.files || [];\nif (typeof files === 'string') { try { files = JSON.parse(files); } catch(e) { files = []; } }\n\nconst directFiles = files.filter(f => f.use_directly !== false);\nconst apiKey = $env.KIEAI_API_KEY;\nconst promptBase = job.prompt_en || job.prompt_to_engine || job.prompt_p1;\n\n// kie.ai 폴링 (공통)\nasync function pollTask(taskId) {\n  for (let i = 0; i < 90; i++) {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n      headers: { 'Authorization': `Bearer ${apiKey}` },\n      json: true\n    });\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const result = JSON.parse(resp.data.resultJson || '{}');\n      return result.resultUrls?.[0] || null;\n    }\n    if (state === 'failed' || state === 'fail') {\n      throw new Error(`Task 실패: ${resp.data.failMsg || state}`);\n    }\n    await new Promise(r => setTimeout(r, 10000));\n  }\n  throw new Error('Task 타임아웃 (900초)');\n}\n\n// TTS 생성 (공통)\nasync function generateTTS(text) {\n  if (!text) return null;\n  const ttsResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/jobs/createTask',\n    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n    body: {\n      model: 'elevenlabs/text-to-speech-multilingual-v2',\n      input: { text: text, voice_id: 'EXAVITQu4vr4xnSDxMaL' }\n    },\n    json: true\n  });\n  const ttsTaskId = ttsResp?.data?.taskId;\n  if (ttsTaskId) return await pollTask.call(this, ttsTaskId);\n  return null;\n}\n\n// 이미지 URL 수집\nconst imageUrls = directFiles\n  .filter(f => f.type === 'image' && f.url)\n  .map(f => f.url);\n\n// ===== SLIDESHOW 모드 (edge-tts + NCA FFmpeg) =====\nif (productionMode === 'slideshow') {\n  if (imageUrls.length === 0) throw new Error('slideshow 모드: 이미지가 없습니다');\n  const ttsText = (job.prompt_p1 || job.topic || '').replace(/<[^>]*>?/gm, '');\n  if (!ttsText) throw new Error('slideshow: 나레이션 텍스트 없음');\n\n  // edge-tts 나레이션 생성\n  const ttsResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'http://172.17.0.1:5100/tts',\n    headers: { 'Content-Type': 'application/json' },\n    body: { text: ttsText, voice_id: 'tc_6059dad0b83880769a50502f', emotion: 'happy', tempo: 1.2 },\n    json: true,\n    timeout: 60000\n  });\n  const audioUrl = ttsResp.audio_url;\n  const audioDuration = ttsResp.duration_sec;\n  const timestamps = ttsResp.timestamps || [];\n  if (!audioUrl) throw new Error('edge-tts audio_url 없음: ' + JSON.stringify(ttsResp).substring(0, 300));\n\n  const imgDuration = audioDuration / imageUrls.length;\n\n  return [{\n    json: {\n      ...job,\n      production_mode: 'slideshow',\n      slide_image_urls: imageUrls,\n      tts_audio_url: audioUrl,\n      tts_duration: audioDuration,\n      tts_timestamps: timestamps,\n      tts_text: ttsText,\n      img_duration: imgDuration,\n      scene_results: imageUrls.map((url, i) => ({\n        index: i, image_url: url, start: i * imgDuration, duration: imgDuration, type: 'slide'\n      })),\n      total_scenes: imageUrls.length,\n      total_duration: audioDuration\n    }\n  }];\n}\n\n// ===== AI_VIDEO 모드 (기존 Kling 3.0 — 변경 없음) =====\nif (directFiles.length === 0) {\n  if (!job.prompt_p1 && !job.prompt_to_engine) throw new Error('파일과 프롬프트 모두 없음');\n}\n\nconst rawDur = parseInt(job.clip_duration) || 8;\nconst duration = String(Math.max(3, Math.min(15, rawDur)));\n\nconst klingInput = {\n  prompt: promptBase,\n  aspect_ratio: '9:16',\n  mode: 'std',\n  sound: false,\n  duration: duration,\n  multi_shots: false\n};\n\nif (imageUrls.length > 0) {\n  klingInput.image_urls = imageUrls.slice(0, 2);\n}\n\nlet taskResp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.kie.ai/api/v1/jobs/createTask',\n  headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n  body: { model: 'kling-3.0/video', input: klingInput },\n  json: true\n});\n\nif (taskResp?.code !== 200 && klingInput.image_urls) {\n  delete klingInput.image_urls;\n  taskResp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/jobs/createTask',\n    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n    body: { model: 'kling-3.0/video', input: klingInput },\n    json: true\n  });\n}\n\nconst klingTaskId = taskResp?.data?.taskId;\nif (!klingTaskId) throw new Error('Kling taskId 없음: ' + JSON.stringify(taskResp).substring(0, 200));\n\nconst videoUrl = await pollTask.call(this, klingTaskId);\nif (!videoUrl) throw new Error('Kling 영상 URL 없음');\n\nconst audioUrl = await generateTTS.call(this, job.topic);\n\nconst sceneResults = [{\n  index: 0,\n  video_url: videoUrl,\n  file_urls: imageUrls,\n  audio_url: audioUrl,\n  model: 'kling-3.0/video'\n}];\n\nreturn [{\n  json: {\n    ...job,\n    production_mode: 'ai_video',\n    scene_results: sceneResults,\n    total_scenes: 1,\n    total_duration: parseInt(duration)\n  }\n}];\n\n/* === 기존 Seedance 코드 (보존) ===\n// ... Seedance polling + TTS ...\n=== 기존 Seedance 코드 끝 === */"
         },
         "id": "process-clips",
-        "name": "클립 순차 처리 (Seedance)",
+        "name": "멀티씬 순차 처리",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
@@ -1117,15 +1039,41 @@
       },
       {
         "parameters": {
-          "jsCode": "// ✅ Claude API로 나레이션 대본 생성\nconst job = $input.first().json;\nconst totalDuration = job.total_duration || 40;\nconst clipCount = job.total_clips || 5;\n\nconst apiKey = $env.CLAUDE_API_KEY || '';\n\nconst resp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://api.anthropic.com/v1/messages',\n  headers: {\n    'x-api-key': apiKey,\n    'anthropic-version': '2023-06-01',\n    'Content-Type': 'application/json'\n  },\n  body: {\n    model: 'claude-sonnet-4-20250514',\n    max_tokens: 1500,\n    messages: [{\n      role: 'user',\n      content: `다음 영상의 나레이션 대본을 작성해줘.\\n\\n주제: ${job.topic || ''}\\n키워드: ${job.keywords || ''}\\n메인 지시: ${job.prompt_p1}\\n총 영상 길이: ${totalDuration}초 (${clipCount}개 장면)\\n\\n규칙:\\n- 총 ${totalDuration}초 분량에 맞는 나레이션\\n- 자연스러운 한국어\\n- 나레이션 텍스트만 출력 (설명/주석 없이)`\n    }]\n  },\n  json: true\n});\n\nconst narrationScript = resp?.content?.[0]?.text || job.topic || '';\n\nreturn [{\n  json: {\n    ...job,\n    narration_script: narrationScript\n  }\n}];"
+          "jsCode": "// ✅ YouTube 업로드 — OAuth token refresh + chunked upload\nconst job = $input.first().json;\nconst videoUrl = job.rendered_video_url;\nif (!videoUrl) throw new Error('rendered_video_url 없음');\n\n// 1) OAuth 토큰 갱신\nconst tokenResp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://oauth2.googleapis.com/token',\n  headers: { 'Content-Type': 'application/x-www-form-urlencoded' },\n  body: `grant_type=refresh_token&client_id=${$env.YT_CLIENT_ID}&client_secret=${$env.YT_CLIENT_SECRET}&refresh_token=${$env.YT_REFRESH_TOKEN}`,\n  json: true\n});\nconst accessToken = tokenResp.access_token;\nif (!accessToken) throw new Error('YouTube token refresh 실패');\n\n// 2) 영상 크기 확인\nconst headResp = await this.helpers.httpRequest({\n  method: 'HEAD',\n  url: videoUrl,\n  returnFullResponse: true\n});\nconst contentLength = headResp.headers?.['content-length'] || '0';\n\nconst title = job.metadata?.title || job.topic || 'AO 자동 생성 영상';\nconst description = job.metadata?.description || [job.topic, job.keywords].filter(Boolean).join(' - ');\nconst tags = job.metadata?.tags || (job.keywords ? job.keywords.split(',').map(t => t.trim()) : []);\n\n// 3) Resumable upload 초기화\nconst initResp = await this.helpers.httpRequest({\n  method: 'POST',\n  url: 'https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status',\n  headers: {\n    'Authorization': `Bearer ${accessToken}`,\n    'Content-Type': 'application/json; charset=UTF-8',\n    'X-Upload-Content-Length': contentLength,\n    'X-Upload-Content-Type': 'video/mp4'\n  },\n  body: { snippet: { title, description, tags, categoryId: '22' }, status: { privacyStatus: 'unlisted' } },\n  json: true,\n  returnFullResponse: true\n});\n\nconst uploadUrl = initResp.headers?.location;\nif (!uploadUrl) throw new Error('resumable URL 없음');\n\n// 4) 영상 다운로드 (Buffer)\nconst videoResp = await this.helpers.httpRequest({\n  method: 'GET',\n  url: videoUrl,\n  encoding: null,\n  returnFullResponse: true\n});\nconst videoBuffer = videoResp.body;\n\n// 5) PUT 업로드 — Node.js https 모듈 사용 (EPIPE 우회)\nconst https = require('https');\nconst url = require('url');\n\nconst uploadResult = await new Promise((resolve, reject) => {\n  const parsed = new URL(uploadUrl);\n  const options = {\n    hostname: parsed.hostname,\n    path: parsed.pathname + parsed.search,\n    method: 'PUT',\n    headers: {\n      'Content-Type': 'video/mp4',\n      'Content-Length': videoBuffer.length\n    }\n  };\n\n  const req = https.request(options, (res) => {\n    let data = '';\n    res.on('data', chunk => data += chunk);\n    res.on('end', () => {\n      try { resolve(JSON.parse(data)); }\n      catch(e) { resolve({ raw: data }); }\n    });\n  });\n\n  req.on('error', reject);\n  req.write(videoBuffer);\n  req.end();\n});\n\nconst youtubeId = uploadResult?.id;\nconst youtubeUrl = youtubeId ? `https://youtube.com/watch?v=${youtubeId}` : null;\n\nif (!youtubeId) throw new Error('YouTube 업로드 실패: ' + JSON.stringify(uploadResult).substring(0, 200));\n\nreturn [{\n  json: {\n    ...job,\n    youtube_video_id: youtubeId,\n    youtube_url: youtubeUrl\n  }\n}];"
         },
-        "id": "generate-narration",
-        "name": "나레이션 생성 (Claude)",
+        "id": "upload-youtube",
+        "name": "YouTube 업로드",
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          2224,
+          3536,
           208
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// ✅ 웹앱 콜백 — 성공 (uploaded)\nconst job = $input.first().json;\nconst productionId = job.production_id;\nconst callbackUrl = $env.WEBAPP_CALLBACK_URL;\n\nif (!productionId || !callbackUrl) {\n  // production_id 또는 콜백 URL 없으면 스킵\n  return [{ json: { ...job, callback_sent: false, reason: 'no production_id or callback_url' } }];\n}\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${callbackUrl}/api/productions/callback`,\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      productionId: productionId,\n      status: 'uploaded',\n      youtubeVideoId: job.youtube_video_id || null,\n      youtubeUrl: job.youtube_url || null,\n      renderedVideoUrl: job.rendered_video_url || null,\n      jobId: job.id\n    },\n    json: true\n  });\n  return [{ json: { ...job, callback_sent: true } }];\n} catch(e) {\n  // 콜백 실패해도 파이프라인은 성공으로 유지\n  return [{ json: { ...job, callback_sent: false, callback_error: e.message } }];\n}"
+        },
+        "id": "callback-success",
+        "name": "웹앱 콜백 (성공)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4208,
+          208
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "// ✅ 웹앱 콜백 — 실패/재시도\nconst result = $input.first().json;\nconst jobId = result.id || result.job_id;\nconst status = result.status; // 'failed' or 'queued' (retry)\nconst callbackUrl = $env.WEBAPP_CALLBACK_URL;\n\n// production_id는 원본 job에서 가져옴\nconst originalJob = $('큐에서 Job 꺼내기').first().json;\nconst productionId = originalJob?.production_id;\n\nif (!productionId || !callbackUrl) {\n  return [{ json: { ...result, callback_sent: false } }];\n}\n\ntry {\n  await this.helpers.httpRequest({\n    method: 'POST',\n    url: `${callbackUrl}/api/productions/callback`,\n    headers: { 'Content-Type': 'application/json' },\n    body: {\n      productionId: productionId,\n      status: status,\n      error: result.last_error || $('에러 캡처').first().json?.error_message || null,\n      retryCount: result.retry_count || 0,\n      jobId: jobId\n    },\n    json: true\n  });\n  return [{ json: { ...result, callback_sent: true } }];\n} catch(e) {\n  return [{ json: { ...result, callback_sent: false, callback_error: e.message } }];\n}"
+        },
+        "id": "callback-fail",
+        "name": "웹앱 콜백 (실패)",
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2448,
+          464
         ]
       }
     ],
@@ -1203,7 +1151,7 @@
           ],
           [
             {
-              "node": "클립 순차 처리 (Seedance)",
+              "node": "멀티씬 순차 처리",
               "type": "main",
               "index": 0
             }
@@ -1215,28 +1163,6 @@
           [
             {
               "node": "번역 결과 병합",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "TTS 생성 (ElevenLabs)": {
-        "main": [
-          [
-            {
-              "node": "TTS 생성 대기 (폴링)",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "영상 렌더링 (Creatomate)": {
-        "main": [
-          [
-            {
-              "node": "렌더링 대기 (폴링)",
               "type": "main",
               "index": 0
             }
@@ -1276,17 +1202,6 @@
           ]
         ]
       },
-      "YouTube 업로드": {
-        "main": [
-          [
-            {
-              "node": "상태 → uploaded",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
       "에러 캡처": {
         "main": [
           [
@@ -1309,44 +1224,66 @@
           ]
         ]
       },
-      "TTS 생성 대기 (폴링)": {
-        "main": [
-          [
-            {
-              "node": "영상 렌더링 (Creatomate)",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
       "번역 결과 병합": {
         "main": [
           [
             {
-              "node": "클립 순차 처리 (Seedance)",
+              "node": "멀티씬 순차 처리",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "클립 순차 처리 (Seedance)": {
+      "멀티씬 순차 처리": {
         "main": [
           [
             {
-              "node": "나레이션 생성 (Claude)",
+              "node": "최종 영상 합성 (Creatomate)",
               "type": "main",
               "index": 0
             }
           ]
         ]
       },
-      "나레이션 생성 (Claude)": {
+      "최종 영상 합성 (Creatomate)": {
         "main": [
           [
             {
-              "node": "TTS 생성 (ElevenLabs)",
+              "node": "렌더링 대기 (폴링)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "YouTube 업로드": {
+        "main": [
+          [
+            {
+              "node": "상태 → uploaded",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "상태 → uploaded": {
+        "main": [
+          [
+            {
+              "node": "웹앱 콜백 (성공)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "재시도 or 실패 처리": {
+        "main": [
+          [
+            {
+              "node": "웹앱 콜백 (실패)",
               "type": "main",
               "index": 0
             }
