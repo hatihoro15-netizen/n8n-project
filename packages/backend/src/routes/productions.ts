@@ -152,7 +152,13 @@ export async function productionRoutes(app: FastifyInstance) {
       keywords?: string;
       category?: string;
       clip_duration?: number;
-      clips: {
+      files?: {
+        type: 'image' | 'video';
+        url: string;
+        analysis?: string;
+        use_directly?: boolean;
+      }[];
+      clips?: {
         image_url: string;
         vision_analysis?: string;
         scene_prompt?: string;
@@ -200,6 +206,7 @@ export async function productionRoutes(app: FastifyInstance) {
         keywords: body.keywords,
         category: body.category,
         clip_duration: body.clip_duration,
+        files: body.files,
         clips: body.clips,
       });
 

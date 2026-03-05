@@ -24,19 +24,18 @@ import {
   Archive,
   ArchiveRestore,
   Trash2,
-  ImagePlus,
+  Upload,
   X,
   Loader2,
   Send,
-  Sparkles,
   Film,
-  User,
-  Mountain,
-  Palette,
-  RefreshCw,
   Check,
   Timer,
   Star,
+  Eye,
+  EyeOff,
+  Image as ImageIcon,
+  Video,
 } from 'lucide-react';
 import Link from 'next/link';
 import { proxyMediaUrl } from '@/lib/media';
@@ -45,22 +44,19 @@ const WEBHOOK_URL = 'https://n8n.srv1345711.hstgr.cloud/webhook/ao-produce';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // ── Types ──
-type Slot = {
-  file: File | null;
-  preview: string | null;
-  prompt: string;
+type UploadedFile = {
+  id: string;
+  file: File;
+  preview: string;
+  type: 'image' | 'video';
+  useDirectly: boolean; // true = "유" (use directly), false = "무" (analyze only)
   analysis: string | null;
-  includeAudio: boolean;
+  analyzing: boolean;
+  url: string | null; // MinIO uploaded URL
 };
 
-type RefImage = { file: File | null; preview: string | null };
-
-const EMPTY_SLOT: Slot = { file: null, preview: null, prompt: '', analysis: null, includeAudio: false };
-const EMPTY_REF: RefImage = { file: null, preview: null };
-
-function createSlots(): Slot[] {
-  return Array.from({ length: 10 }, () => ({ ...EMPTY_SLOT }));
-}
+let fileIdCounter = 0;
+function nextFileId() { return `file_${++fileIdCounter}_${Date.now()}`; }
 
 // ── Helper: upload files to MinIO via backend ──
 async function uploadFilesToMinIO(files: File[]): Promise<string[]> {
@@ -233,7 +229,7 @@ export default function ProductionsClient() {
           </div>
           <div className="flex items-center gap-2">
             <Button onClick={() => setShowForm(!showForm)}>
-              {showForm ? <X className="h-4 w-4 mr-2" /> : <Sparkles className="h-4 w-4 mr-2" />}
+              {showForm ? <X className="h-4 w-4 mr-2" /> : <Film className="h-4 w-4 mr-2" />}
               {showForm ? '닫기' : '영상 제작'}
             </Button>
             <Link href="/productions/new">
@@ -371,15 +367,19 @@ export default function ProductionsClient() {
 }
 
 // ══════════════════════════════════════════════
-// Whisk Production Form (2-tab)
+// Whisk Production Form (2-step: Upload → Prompt)
 // ══════════════════════════════════════════════
 function WhiskProductionForm() {
-  const [activeTab, setActiveTab] = useState<'generate' | 'video'>('generate');
+  const [activeTab, setActiveTab] = useState<'upload' | 'prompt'>('upload');
   const queryClient = useQueryClient();
   const { data: workflowsData } = useWorkflows();
   const workflows = ((workflowsData as any)?.data || []) as any[];
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Common form fields
+  // Step 1: Uploaded files
+  const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
+
+  // Step 2: Prompt fields
   const [promptP1, setPromptP1] = useState('');
   const [formTopic, setFormTopic] = useState('');
   const [keywords, setKeywords] = useState('');
@@ -387,19 +387,7 @@ function WhiskProductionForm() {
   const [clipDuration, setClipDuration] = useState<5 | 8>(5);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState<string>('');
 
-  // Step 1: Reference images
-  const [refImages, setRefImages] = useState<{ subject: RefImage; scene: RefImage; style: RefImage }>({
-    subject: { ...EMPTY_REF },
-    scene: { ...EMPTY_REF },
-    style: { ...EMPTY_REF },
-  });
-  const [generateCount, setGenerateCount] = useState<1 | 2 | 3>(2);
-  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
-  const [generating, setGenerating] = useState(false);
-  const [genError, setGenError] = useState('');
-
-  // Step 2: Slots
-  const [slots, setSlots] = useState<Slot[]>(createSlots);
+  // Form state
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
   const [formSuccess, setFormSuccess] = useState('');
@@ -410,129 +398,69 @@ function WhiskProductionForm() {
   const [jobVideoUrl, setJobVideoUrl] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const filledSlots = slots.filter(s => s.file || s.preview);
-  const estimatedLength = filledSlots.length * clipDuration;
+  const imageCount = uploadedFiles.filter(f => f.type === 'image').length;
+  const videoCount = uploadedFiles.filter(f => f.type === 'video').length;
 
-  // ── Ref image handlers ──
-  const setRefImage = (key: 'subject' | 'scene' | 'style', file: File) => {
-    const preview = URL.createObjectURL(file);
-    setRefImages(prev => {
-      if (prev[key].preview) URL.revokeObjectURL(prev[key].preview!);
-      return { ...prev, [key]: { file, preview } };
-    });
-  };
+  // ── Add files ──
+  const addFiles = useCallback((fileList: FileList | File[]) => {
+    const newFiles: UploadedFile[] = [];
+    for (const file of Array.from(fileList)) {
+      const isImage = file.type.startsWith('image/');
+      const isVideo = file.type.startsWith('video/');
+      if (!isImage && !isVideo) continue;
 
-  const removeRefImage = (key: 'subject' | 'scene' | 'style') => {
-    setRefImages(prev => {
-      if (prev[key].preview) URL.revokeObjectURL(prev[key].preview!);
-      return { ...prev, [key]: { ...EMPTY_REF } };
-    });
-  };
-
-  // ── AI image generation ──
-  const handleGenerate = async () => {
-    if (!promptP1.trim()) {
-      setGenError('프롬프트를 입력해주세요.');
-      return;
+      const preview = URL.createObjectURL(file);
+      const uf: UploadedFile = {
+        id: nextFileId(),
+        file,
+        preview,
+        type: isImage ? 'image' : 'video',
+        useDirectly: true, // default: "유" (use directly)
+        analysis: null,
+        analyzing: false,
+        url: null,
+      };
+      newFiles.push(uf);
     }
-    setGenerating(true);
-    setGenError('');
 
-    try {
-      // Upload ref images to MinIO first
-      const refUrls: Record<string, string> = {};
-      for (const [key, ref] of Object.entries(refImages)) {
-        if (ref.file) {
-          const urls = await uploadFilesToMinIO([ref.file]);
-          if (urls[0]) refUrls[key] = urls[0];
-        }
+    setUploadedFiles(prev => [...prev, ...newFiles]);
+
+    // Auto-analyze images
+    for (const uf of newFiles) {
+      if (uf.type === 'image') {
+        analyzeFile(uf.id, uf.file);
       }
-
-      const token = api.getToken();
-      const res = await fetch(`${API_BASE}/api/media/generate-image`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify({
-          prompt: promptP1.trim(),
-          count: generateCount,
-          ref_subject: refUrls.subject,
-          ref_scene: refUrls.scene,
-          ref_style: refUrls.style,
-        }),
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || `생성 실패 (${res.status})`);
-      }
-
-      const data = await res.json();
-      setGeneratedImages(data.data.images || []);
-    } catch (err) {
-      setGenError(err instanceof Error ? err.message : '이미지 생성에 실패했습니다.');
-    } finally {
-      setGenerating(false);
     }
-  };
+  }, []);
 
-  // ── Use generated image → add to first empty slot ──
-  const useGeneratedImage = (imageUrl: string) => {
-    setSlots(prev => {
-      const next = [...prev];
-      const emptyIdx = next.findIndex(s => !s.file && !s.preview);
-      if (emptyIdx === -1) return prev;
-      next[emptyIdx] = { ...next[emptyIdx], preview: imageUrl, file: null };
-      return next;
-    });
-    setActiveTab('video');
-  };
-
-  // ── Slot file drop/click ──
-  const addFileToSlot = (index: number, file: File) => {
-    const preview = URL.createObjectURL(file);
-    setSlots(prev => {
-      const next = [...prev];
-      if (next[index].preview && next[index].file) URL.revokeObjectURL(next[index].preview!);
-      next[index] = { ...next[index], file, preview };
-      return next;
-    });
-    // Trigger vision analysis
-    analyzeSlotImage(index, file);
-  };
-
-  const removeSlot = (index: number) => {
-    setSlots(prev => {
-      const next = [...prev];
-      if (next[index].preview && next[index].file) URL.revokeObjectURL(next[index].preview!);
-      next[index] = { ...EMPTY_SLOT };
-      return next;
+  const removeFile = (id: string) => {
+    setUploadedFiles(prev => {
+      const file = prev.find(f => f.id === id);
+      if (file) URL.revokeObjectURL(file.preview);
+      return prev.filter(f => f.id !== id);
     });
   };
 
-  const setSlotPrompt = (index: number, prompt: string) => {
-    setSlots(prev => {
-      const next = [...prev];
-      next[index] = { ...next[index], prompt };
-      return next;
-    });
-  };
-
-  const setSlotIncludeAudio = (index: number, includeAudio: boolean) => {
-    setSlots(prev => {
-      const next = [...prev];
-      next[index] = { ...next[index], includeAudio };
-      return next;
-    });
+  const toggleUseDirectly = (id: string) => {
+    setUploadedFiles(prev => prev.map(f =>
+      f.id === id ? { ...f, useDirectly: !f.useDirectly } : f
+    ));
   };
 
   // ── Claude Vision analysis ──
-  const analyzeSlotImage = async (index: number, file: File) => {
+  const analyzeFile = async (fileId: string, file: File) => {
+    setUploadedFiles(prev => prev.map(f =>
+      f.id === fileId ? { ...f, analyzing: true } : f
+    ));
+
     try {
       const urls = await uploadFilesToMinIO([file]);
       if (!urls[0]) return;
+
+      // Save uploaded URL
+      setUploadedFiles(prev => prev.map(f =>
+        f.id === fileId ? { ...f, url: urls[0] } : f
+      ));
 
       const token = api.getToken();
       const res = await fetch(`${API_BASE}/api/media/analyze-image`, {
@@ -547,16 +475,24 @@ function WhiskProductionForm() {
       if (!res.ok) return;
       const data = await res.json();
       if (data.data?.analysis) {
-        setSlots(prev => {
-          const next = [...prev];
-          next[index] = { ...next[index], analysis: data.data.analysis };
-          return next;
-        });
+        setUploadedFiles(prev => prev.map(f =>
+          f.id === fileId ? { ...f, analysis: data.data.analysis, analyzing: false } : f
+        ));
+        return;
       }
     } catch {
-      // Vision analysis is optional, silently fail
+      // Vision analysis is optional
     }
+    setUploadedFiles(prev => prev.map(f =>
+      f.id === fileId ? { ...f, analyzing: false } : f
+    ));
   };
+
+  // ── Drag and drop ──
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    addFiles(e.dataTransfer.files);
+  }, [addFiles]);
 
   // ── Polling: track job status ──
   const startPolling = (productionId: string) => {
@@ -571,12 +507,10 @@ function WhiskProductionForm() {
         const prod = res.data;
         setJobStatus(prod.status);
 
-        // Extract video URL from assets
         const assets = prod.assets as Record<string, string> | null;
         const videoUrl = assets?.videoUrl || assets?.video_url || assets?.rendered_video_url || null;
         if (videoUrl) setJobVideoUrl(proxyMediaUrl(videoUrl));
 
-        // Stop polling on terminal states
         if (['completed', 'failed', 'paused'].includes(prod.status)) {
           if (pollingRef.current) clearInterval(pollingRef.current);
           pollingRef.current = null;
@@ -585,10 +519,10 @@ function WhiskProductionForm() {
       } catch {
         // polling failure, keep trying
       }
-    }, 10000); // 10초 간격
+    }, 10000);
   };
 
-  // ── Submit: upload slot images → backend AO endpoint ──
+  // ── Submit ──
   const handleSubmit = async () => {
     if (!selectedWorkflowId) {
       setFormError('워크플로우를 선택해주세요.');
@@ -598,8 +532,8 @@ function WhiskProductionForm() {
       setFormError('프롬프트를 입력해주세요.');
       return;
     }
-    if (filledSlots.length === 0) {
-      setFormError('이미지를 1장 이상 추가해주세요.');
+    if (uploadedFiles.length === 0) {
+      setFormError('파일을 1개 이상 추가해주세요.');
       return;
     }
 
@@ -608,29 +542,26 @@ function WhiskProductionForm() {
     setFormSuccess('');
 
     try {
-      // Upload local files to MinIO (skip already-uploaded URLs)
-      const clips: {
-        image_url: string;
-        vision_analysis: string;
-        scene_prompt: string;
-        include_audio: boolean;
+      // Upload files that don't have URLs yet
+      const files: {
+        type: 'image' | 'video';
+        url: string;
+        analysis: string;
+        use_directly: boolean;
       }[] = [];
 
-      for (const slot of slots) {
-        if (!slot.file && !slot.preview) continue;
-
-        let imageUrl = slot.preview || '';
-        if (slot.file) {
-          const urls = await uploadFilesToMinIO([slot.file]);
-          imageUrl = urls[0] || '';
+      for (const uf of uploadedFiles) {
+        let url = uf.url || '';
+        if (!url) {
+          const urls = await uploadFilesToMinIO([uf.file]);
+          url = urls[0] || '';
         }
-
-        if (imageUrl) {
-          clips.push({
-            image_url: imageUrl,
-            vision_analysis: slot.analysis?.trim() || '',
-            scene_prompt: slot.prompt?.trim() || '',
-            include_audio: slot.includeAudio,
+        if (url) {
+          files.push({
+            type: uf.type,
+            url,
+            analysis: uf.analysis?.trim() || '',
+            use_directly: uf.useDirectly,
           });
         }
       }
@@ -642,7 +573,7 @@ function WhiskProductionForm() {
         keywords: keywords.trim() || undefined,
         category: category.trim() || undefined,
         clip_duration: clipDuration,
-        clips,
+        files,
       };
 
       const res = await api.post('/api/productions/ao', payload) as { data: any };
@@ -669,140 +600,126 @@ function WhiskProductionForm() {
         <div className="flex border-b">
           <button
             type="button"
-            onClick={() => setActiveTab('generate')}
+            onClick={() => setActiveTab('upload')}
             className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'generate'
+              activeTab === 'upload'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
-            <Sparkles className="h-4 w-4" />
-            Step 1. 이미지 생성
+            <Upload className="h-4 w-4" />
+            Step 1. 파일 업로드
+            {uploadedFiles.length > 0 && (
+              <Badge variant="secondary" className="ml-1 text-xs">{uploadedFiles.length}</Badge>
+            )}
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('video')}
+            onClick={() => setActiveTab('prompt')}
             className={`flex items-center gap-2 px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-              activeTab === 'video'
+              activeTab === 'prompt'
                 ? 'border-primary text-primary'
                 : 'border-transparent text-muted-foreground hover:text-foreground'
             }`}
           >
             <Film className="h-4 w-4" />
-            Step 2. 영상 생성
-            {filledSlots.length > 0 && (
-              <Badge variant="secondary" className="ml-1 text-xs">{filledSlots.length}</Badge>
-            )}
+            Step 2. 프롬프트 & 제작
           </button>
         </div>
 
         <div className="p-6">
-          {/* Common: Main prompt */}
-          <div className="space-y-1.5 mb-4">
-            <label className="text-sm font-medium" htmlFor="prompt_p1">
-              메인 프롬프트 <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              id="prompt_p1"
-              value={promptP1}
-              onChange={e => setPromptP1(e.target.value)}
-              placeholder={activeTab === 'generate' ? '이미지 생성 프롬프트를 입력하세요' : '영상 제작 프롬프트를 입력하세요 (P1)'}
-              rows={3}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
-            />
-          </div>
-
-          {/* ── STEP 1: Image Generation ── */}
-          {activeTab === 'generate' && (
+          {/* ── STEP 1: File Upload ── */}
+          {activeTab === 'upload' && (
             <div className="space-y-5">
-              {/* Reference Images */}
-              <div>
-                <h4 className="text-sm font-medium mb-3">참고 이미지 (선택)</h4>
-                <div className="grid grid-cols-3 gap-4">
-                  {([
-                    { key: 'subject' as const, label: '피사체', icon: User },
-                    { key: 'scene' as const, label: '장면', icon: Mountain },
-                    { key: 'style' as const, label: '스타일', icon: Palette },
-                  ]).map(({ key, label, icon: Icon }) => (
-                    <RefImageSlot
-                      key={key}
-                      label={label}
-                      icon={<Icon className="h-6 w-6" />}
-                      preview={refImages[key].preview}
-                      onFile={(f) => setRefImage(key, f)}
-                      onRemove={() => removeRefImage(key)}
+              {/* Drop zone */}
+              <div
+                onDragOver={e => e.preventDefault()}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className="border-2 border-dashed border-muted-foreground/25 rounded-xl p-8 text-center cursor-pointer hover:border-primary/50 hover:bg-primary/5 transition-colors"
+              >
+                <Upload className="h-8 w-8 mx-auto text-muted-foreground/40 mb-3" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  이미지 또는 영상 파일을 드래그하거나 클릭하여 추가
+                </p>
+                <p className="text-xs text-muted-foreground/60 mt-1">
+                  JPG, PNG, WebP, MP4, MOV 등 지원
+                </p>
+              </div>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*,video/*"
+                multiple
+                className="hidden"
+                onChange={e => {
+                  if (e.target.files) addFiles(e.target.files);
+                  e.target.value = '';
+                }}
+              />
+
+              {/* File summary */}
+              {uploadedFiles.length > 0 && (
+                <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                  <span className="font-medium text-foreground">{uploadedFiles.length}개 파일</span>
+                  {imageCount > 0 && (
+                    <span className="flex items-center gap-1">
+                      <ImageIcon className="h-3.5 w-3.5" /> 이미지 {imageCount}
+                    </span>
+                  )}
+                  {videoCount > 0 && (
+                    <span className="flex items-center gap-1">
+                      <Video className="h-3.5 w-3.5" /> 영상 {videoCount}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              {/* File cards grid */}
+              {uploadedFiles.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                  {uploadedFiles.map((uf, i) => (
+                    <FileCard
+                      key={uf.id}
+                      index={i}
+                      file={uf}
+                      onRemove={() => removeFile(uf.id)}
+                      onToggleUse={() => toggleUseDirectly(uf.id)}
                     />
                   ))}
                 </div>
-              </div>
+              )}
 
-              {/* Generate count */}
-              <div>
-                <h4 className="text-sm font-medium mb-2">생성 개수</h4>
-                <div className="flex gap-2">
-                  {([1, 2, 3] as const).map(n => (
-                    <Button
-                      key={n}
-                      type="button"
-                      variant={generateCount === n ? 'default' : 'outline'}
-                      size="sm"
-                      onClick={() => setGenerateCount(n)}
-                    >
-                      {n}개
-                    </Button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Generate button */}
-              <Button onClick={handleGenerate} disabled={generating || !promptP1.trim()}>
-                {generating ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />생성 중...</>
-                ) : (
-                  <><Sparkles className="h-4 w-4 mr-2" />이미지 생성</>
-                )}
-              </Button>
-
-              {genError && <p className="text-sm text-destructive">{genError}</p>}
-
-              {/* Generated results grid */}
-              {generatedImages.length > 0 && (
-                <div>
-                  <h4 className="text-sm font-medium mb-3">생성 결과</h4>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {generatedImages.map((url, i) => (
-                      <div key={i} className="border rounded-lg overflow-hidden">
-                        <img src={url} alt={`생성 ${i + 1}`} className="w-full aspect-square object-cover" />
-                        <div className="flex gap-1 p-2">
-                          <Button
-                            size="sm"
-                            variant="default"
-                            className="flex-1 text-xs"
-                            onClick={() => useGeneratedImage(url)}
-                          >
-                            <Check className="h-3 w-3 mr-1" />사용
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 text-xs"
-                            onClick={handleGenerate}
-                            disabled={generating}
-                          >
-                            <RefreshCw className="h-3 w-3 mr-1" />재생성
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              {/* Next step hint */}
+              {uploadedFiles.length > 0 && (
+                <div className="flex justify-end">
+                  <Button onClick={() => setActiveTab('prompt')}>
+                    Step 2로 이동
+                    <ChevronRight className="h-4 w-4 ml-1" />
+                  </Button>
                 </div>
               )}
             </div>
           )}
 
-          {/* ── STEP 2: Video Generation ── */}
-          {activeTab === 'video' && (
+          {/* ── STEP 2: Prompt & Production ── */}
+          {activeTab === 'prompt' && (
             <div className="space-y-5">
+              {/* Main prompt */}
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium" htmlFor="prompt_p1">
+                  메인 프롬프트 <span className="text-red-500">*</span>
+                </label>
+                <textarea
+                  id="prompt_p1"
+                  value={promptP1}
+                  onChange={e => setPromptP1(e.target.value)}
+                  placeholder="영상 제작 프롬프트를 입력하세요 (P1)"
+                  rows={3}
+                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+                />
+              </div>
+
               {/* Workflow selector */}
               <div className="space-y-1.5">
                 <label className="text-sm font-medium" htmlFor="workflow_select">
@@ -823,7 +740,7 @@ function WhiskProductionForm() {
                 </select>
               </div>
 
-              {/* Clip duration + estimated length */}
+              {/* Clip duration + file count summary */}
               <div className="flex items-center gap-4">
                 <div>
                   <h4 className="text-sm font-medium mb-2">클립 길이</h4>
@@ -842,11 +759,14 @@ function WhiskProductionForm() {
                     ))}
                   </div>
                 </div>
-                {filledSlots.length > 0 && (
+                {uploadedFiles.length > 0 && (
                   <div className="flex items-center gap-2 px-4 py-2 bg-primary/5 rounded-lg border border-primary/10">
                     <Film className="h-4 w-4 text-primary/60" />
                     <span className="text-sm font-medium">
-                      {filledSlots.length}장 x {clipDuration}초 = <span className="text-primary">{estimatedLength}초</span>
+                      {uploadedFiles.length}개 파일 업로드됨
+                      {imageCount > 0 && ` (이미지 ${imageCount}`}
+                      {videoCount > 0 && `, 영상 ${videoCount}`}
+                      {(imageCount > 0 || videoCount > 0) && ')'}
                     </span>
                   </div>
                 )}
@@ -868,31 +788,13 @@ function WhiskProductionForm() {
                 </div>
               </div>
 
-              {/* 10 Slots Grid (5x2) */}
-              <div>
-                <h4 className="text-sm font-medium mb-3">이미지 슬롯 (최대 10장)</h4>
-                <div className="grid grid-cols-5 gap-3">
-                  {slots.map((slot, i) => (
-                    <ImageSlot
-                      key={i}
-                      index={i}
-                      slot={slot}
-                      onFile={(f) => addFileToSlot(i, f)}
-                      onRemove={() => removeSlot(i)}
-                      onPromptChange={(p) => setSlotPrompt(i, p)}
-                      onIncludeAudioChange={(v) => setSlotIncludeAudio(i, v)}
-                    />
-                  ))}
-                </div>
-              </div>
-
               {/* Error / Success */}
               {formError && <p className="text-sm text-destructive">{formError}</p>}
               {formSuccess && <p className="text-sm text-emerald-600">{formSuccess}</p>}
 
               {/* Submit */}
               <div className="flex items-center gap-3">
-                <Button onClick={handleSubmit} disabled={submitting || filledSlots.length === 0 || !selectedWorkflowId || !!jobId}>
+                <Button onClick={handleSubmit} disabled={submitting || uploadedFiles.length === 0 || !selectedWorkflowId || !!jobId}>
                   {submitting ? (
                     <><Loader2 className="h-4 w-4 mr-2 animate-spin" />처리 중...</>
                   ) : (
@@ -900,9 +802,9 @@ function WhiskProductionForm() {
                   )}
                 </Button>
                 <span className="text-xs text-muted-foreground">
-                  {filledSlots.length > 0
-                    ? `${filledSlots.length}장 MinIO 업로드 후 제작 시작`
-                    : '이미지를 1장 이상 추가해주세요'}
+                  {uploadedFiles.length > 0
+                    ? `${uploadedFiles.length}개 파일 → 제작 시작`
+                    : '파일을 1개 이상 추가해주세요 (Step 1)'}
                 </span>
               </div>
 
@@ -973,155 +875,74 @@ function JobStatusBadge({ status }: { status: string | null }) {
 }
 
 // ══════════════════════════════════════════════
-// Reference Image Slot (피사체/장면/스타일)
+// File Card (upload grid item with use/analyze toggle)
 // ══════════════════════════════════════════════
-function RefImageSlot({
-  label,
-  icon,
-  preview,
-  onFile,
+function FileCard({
+  index,
+  file,
   onRemove,
+  onToggleUse,
 }: {
-  label: string;
-  icon: React.ReactNode;
-  preview: string | null;
-  onFile: (f: File) => void;
+  index: number;
+  file: UploadedFile;
   onRemove: () => void;
+  onToggleUse: () => void;
 }) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const isImage = file.type === 'image';
 
   return (
     <div className="space-y-1.5">
-      <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      {preview ? (
-        <div className="relative group aspect-square rounded-lg overflow-hidden border">
-          <img src={preview} alt={label} className="w-full h-full object-cover" />
-          <button
-            type="button"
-            onClick={onRemove}
-            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <X className="h-3 w-3" />
-          </button>
+      <div className="relative group aspect-square rounded-lg overflow-hidden border bg-muted/30">
+        {isImage ? (
+          <img src={file.preview} alt={`파일 ${index + 1}`} className="w-full h-full object-cover" />
+        ) : (
+          <video src={file.preview} className="w-full h-full object-cover" muted preload="metadata" />
+        )}
+
+        {/* Index badge */}
+        <div className="absolute top-0 left-0 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-br flex items-center gap-1">
+          {isImage ? <ImageIcon className="h-3 w-3" /> : <Video className="h-3 w-3" />}
+          {index + 1}
         </div>
-      ) : (
-        <div
-          onClick={() => inputRef.current?.click()}
-          onDragOver={e => e.preventDefault()}
-          onDrop={e => {
-            e.preventDefault();
-            const f = e.dataTransfer.files[0];
-            if (f?.type.startsWith('image/')) onFile(f);
-          }}
-          className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/25 flex flex-col items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+
+        {/* Remove button */}
+        <button
+          type="button"
+          onClick={onRemove}
+          className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
         >
-          <div className="text-muted-foreground/40">{icon}</div>
-          <span className="text-xs text-muted-foreground/50 mt-1">첨부</span>
-        </div>
-      )}
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={e => {
-          const f = e.target.files?.[0];
-          if (f) onFile(f);
-          e.target.value = '';
-        }}
-      />
-    </div>
-  );
-}
+          <X className="h-3 w-3" />
+        </button>
 
-// ══════════════════════════════════════════════
-// Image Slot (10칸 그리드 개별 슬롯)
-// ══════════════════════════════════════════════
-function ImageSlot({
-  index,
-  slot,
-  onFile,
-  onRemove,
-  onPromptChange,
-  onIncludeAudioChange,
-}: {
-  index: number;
-  slot: Slot;
-  onFile: (f: File) => void;
-  onRemove: () => void;
-  onPromptChange: (p: string) => void;
-  onIncludeAudioChange: (v: boolean) => void;
-}) {
-  const inputRef = useRef<HTMLInputElement>(null);
-  const hasImage = !!(slot.file || slot.preview);
-
-  return (
-    <div className="space-y-1">
-      {hasImage ? (
-        <div className="relative group aspect-square rounded-lg overflow-hidden border">
-          <img src={slot.preview!} alt={`슬롯 ${index + 1}`} className="w-full h-full object-cover" />
-          <div className="absolute top-0 left-0 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-br">
-            {index + 1}
+        {/* Analysis overlay */}
+        {file.analyzing && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <Loader2 className="h-5 w-5 text-white animate-spin" />
           </div>
-          <button
-            type="button"
-            onClick={onRemove}
-            className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <X className="h-3 w-3" />
-          </button>
-          {slot.analysis && (
-            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1.5 line-clamp-2">
-              {slot.analysis}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div
-          onClick={() => inputRef.current?.click()}
-          onDragOver={e => e.preventDefault()}
-          onDrop={e => {
-            e.preventDefault();
-            const f = e.dataTransfer.files[0];
-            if (f?.type.startsWith('image/')) onFile(f);
-          }}
-          className="aspect-square rounded-lg border-2 border-dashed border-muted-foreground/20 flex flex-col items-center justify-center cursor-pointer hover:border-primary/40 transition-colors"
-        >
-          <span className="text-xs text-muted-foreground/30 font-medium">{index + 1}</span>
-          <ImagePlus className="h-5 w-5 text-muted-foreground/20 mt-0.5" />
-        </div>
-      )}
-      {hasImage && (
-        <>
-          <input
-            type="text"
-            value={slot.prompt}
-            onChange={e => onPromptChange(e.target.value)}
-            placeholder="개별 프롬프트"
-            className="w-full text-[11px] px-1.5 py-1 rounded border border-input bg-transparent placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 focus:ring-ring"
-          />
-          <label className="flex items-center gap-1 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={slot.includeAudio}
-              onChange={e => onIncludeAudioChange(e.target.checked)}
-              className="h-3 w-3 rounded border-gray-300 accent-primary"
-            />
-            <span className="text-[10px] text-muted-foreground">나레이션/대사 포함</span>
-          </label>
-        </>
-      )}
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={e => {
-          const f = e.target.files?.[0];
-          if (f) onFile(f);
-          e.target.value = '';
-        }}
-      />
+        )}
+        {file.analysis && !file.analyzing && (
+          <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-[10px] p-1.5 line-clamp-2">
+            {file.analysis}
+          </div>
+        )}
+      </div>
+
+      {/* Use directly toggle */}
+      <button
+        type="button"
+        onClick={onToggleUse}
+        className={`w-full flex items-center justify-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium transition-colors ${
+          file.useDirectly
+            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100'
+            : 'bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100'
+        }`}
+      >
+        {file.useDirectly ? (
+          <><Eye className="h-3 w-3" />유 (직접 사용)</>
+        ) : (
+          <><EyeOff className="h-3 w-3" />무 (분석만)</>
+        )}
+      </button>
     </div>
   );
 }
