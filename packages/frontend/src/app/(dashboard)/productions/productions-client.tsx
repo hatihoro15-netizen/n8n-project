@@ -123,6 +123,24 @@ export default function ProductionsClient() {
     });
   };
 
+  const [showSelectMenu, setShowSelectMenu] = useState(false);
+
+  const selectByStatus = (status?: string) => {
+    if (!productions?.length) return;
+    const ids = status
+      ? productions.filter((p: any) => p.status === status).map((p: any) => p.id)
+      : productions.map((p: any) => p.id);
+    setSelectedIds(new Set(ids));
+    setShowSelectMenu(false);
+  };
+
+  const selectStarred = () => {
+    if (!productions?.length) return;
+    const ids = productions.filter((p: any) => starredIds.has(p.id)).map((p: any) => p.id);
+    setSelectedIds(new Set(ids));
+    setShowSelectMenu(false);
+  };
+
   const toggleSelectAll = () => {
     if (!productions?.length) return;
     const allIds = productions.map((p: any) => p.id);
@@ -252,13 +270,42 @@ export default function ProductionsClient() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
-                  <th className="px-2 py-3 w-8">
-                    <input
-                      type="checkbox"
-                      checked={!!productions?.length && productions.every((p: any) => selectedIds.has(p.id))}
-                      onChange={toggleSelectAll}
-                      className="h-4 w-4 rounded border-gray-300 accent-primary"
-                    />
+                  <th className="px-2 py-3 w-8 relative">
+                    <div className="flex items-center gap-0.5">
+                      <input
+                        type="checkbox"
+                        checked={!!productions?.length && productions.every((p: any) => selectedIds.has(p.id))}
+                        onChange={toggleSelectAll}
+                        className="h-4 w-4 rounded border-gray-300 accent-primary"
+                      />
+                      <button
+                        onClick={() => setShowSelectMenu(!showSelectMenu)}
+                        className="p-0.5 hover:bg-muted rounded"
+                      >
+                        <ChevronDown className="h-3 w-3 text-muted-foreground" />
+                      </button>
+                    </div>
+                    {showSelectMenu && (
+                      <div className="absolute top-full left-0 z-50 mt-1 bg-white border rounded-lg shadow-lg py-1 min-w-[130px]">
+                        {[
+                          { label: '전체 선택', action: () => selectByStatus() },
+                          { label: '완료만', action: () => selectByStatus('completed') },
+                          { label: '실패만', action: () => selectByStatus('failed') },
+                          { label: '정지만', action: () => selectByStatus('paused') },
+                          { label: '대기만', action: () => selectByStatus('pending') },
+                          { label: '별표만', action: selectStarred },
+                          { label: '선택 해제', action: () => { setSelectedIds(new Set()); setShowSelectMenu(false); } },
+                        ].map(item => (
+                          <button
+                            key={item.label}
+                            onClick={item.action}
+                            className="w-full text-left px-3 py-1.5 text-sm hover:bg-muted transition-colors"
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </th>
                   <th className="px-2 py-3 w-8" />
                   <th className="px-4 py-3 text-left font-medium w-8" />
