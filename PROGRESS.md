@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 운영 시스템 구축 완료 + 프롬프트 자동 생성 로직 추가
-- 진행중 작업: 4케이스 E2E 테스트
-- 최근 완료: 운영 시스템(docs/scripts/commands) 구축, 프롬프트 자동 생성
-- 주의사항: n8n publish 시스템 주의(배포 절차 HANDOFF.md 참조)
+- 현재 상태(1줄): 슬라이드쇼 edge-tts + NCA FFmpeg 렌더링 성공, YouTube 업로드 차단 이슈
+- 진행중 작업: YouTube 업로드 require('https') 차단 해결
+- 최근 완료: 슬라이드쇼 NCA FFmpeg 합성 (onca 방식), Kling AI 3.0 렌더링
+- 주의사항: n8n Task Runner가 require('https') 차단 → YouTube 업로드 불가 (ai_video/slideshow 공통)
 
 ---
 
@@ -250,6 +250,66 @@
 ### 📁 Files / Links
 - n8n/ao_worker.json (assemble-prompt + process-clips 수정)
 - n8n/ao_producer.json (prompt_p1 optional + 4케이스 검증)
+
+## 2026-03-06 (슬라이드쇼 모드)
+### ✅ Done
+- [x] Producer: production_mode (ai_video/slideshow) + slide_duration 필드 추가
+- [x] Producer: slideshow 모드 시 이미지 최소 1장 검증
+- [x] Worker process-clips: slideshow 분기 — Kling 스킵, 이미지 URL + TTS 수집
+- [x] Worker render-video: slideshow 분기 — 이미지 슬라이드 + TTS + 자막 Creatomate 렌더
+  - scale 애니메이션 (100%→120%), Noto Sans KR 자막, 반투명 배경
+- [x] DB: jobs 테이블에 production_mode, slide_duration 컬럼 추가
+- [x] VPS 배포 완료 (Producer + Worker active)
+### 📌 Result
+- production_mode 분기 완성 (ai_video: 기존 Kling 흐름 / slideshow: 이미지→Creatomate 직접)
+- 기존 ai_video 코드 변경 없음
+### ➡️ Next (방향만)
+- 슬라이드쇼 모드 E2E 테스트
+- Kling AI E2E 테스트
+### 📁 Files / Links
+- n8n/ao_worker.json (process-clips + render-video 슬라이드쇼 분기)
+- n8n/ao_producer.json (production_mode + slide_duration)
+
+## 2026-03-06 (슬라이드쇼 edge-tts + NCA FFmpeg)
+### ✅ Done
+- [x] Worker process-clips: 슬라이드쇼 TTS를 kie.ai → edge-tts 교체
+  - POST http://172.17.0.1:5100/tts (voice_id, emotion, tempo)
+  - 반환: audio_url, duration_sec, timestamps[] (자막 타이밍)
+  - 이미지 표시 시간 = 나레이션 길이 / 이미지 수 (자동 계산)
+- [x] Worker render-video: 슬라이드쇼 Creatomate → NCA FFmpeg 교체
+  - POST http://76.13.182.180:8080/v1/ffmpeg/compose
+  - filter_complex: scale+concat, amix(TTS:BGM:SFX = 1:1:0.8), drawtext 자막
+  - BGM 루프 + fade-out, SFX 전환음 (이미지 전환 시점)
+- [x] Worker poll-render: NCA 응답 시 Creatomate 폴링 스킵 (early return)
+- [x] VPS 배포 완료 (Producer + Worker active)
+- [x] 슬라이드쇼 E2E 테스트: 렌더링 성공 ✅
+### 📌 Result
+- 테스트 Job 79495ae0: edge-tts + NCA FFmpeg → rendered_video_url 생성 성공
+- YouTube 업로드에서 멈춤 (require('https') 차단 — 기존 알려진 이슈)
+- onca 방식 (edge-tts + FFmpeg) 성공적으로 arubto에 이식
+### ➡️ Next (방향만)
+- YouTube 업로드 require('https') 해결
+- 전체 E2E 완성 (렌더링→업로드)
+### 📁 Files / Links
+- n8n/ao_worker.json (process-clips + render-video + poll-render 수정)
+
+## 2026-03-06 (Kling AI 연동)
+### ✅ Done
+- [x] Worker process-clips: Seedance → Kling 3.0 교체 (kling-3.0/video)
+  - N이미지 → 영상 1개 직접 생성 (멀티씬 Creatomate 합성 불필요)
+  - image_urls 최대 2장, duration 3~15초
+  - Seedance 코드 주석으로 보존 (롤백용)
+- [x] Producer: clip_duration 검증 4/8 → 3~15 범위 보정으로 변경
+- [x] VPS 배포 완료 (Producer + Worker active)
+### 📌 Result
+- Kling 3.0으로 단일 API 호출로 영상 생성 (이전: Seedance 씬별 + Creatomate 합성)
+- workflow_history PK 컬럼명: versionId (id 아님) 확인
+### ➡️ Next (방향만)
+- Kling AI E2E 테스트 (이미지 2장 → 영상 1개)
+- 4케이스 프롬프트 분기 E2E 테스트
+### 📁 Files / Links
+- n8n/ao_worker.json (process-clips Kling 3.0 교체)
+- n8n/ao_producer.json (duration 검증 변경)
 
 ## 2026-03-06 (6차)
 ### ✅ Done
