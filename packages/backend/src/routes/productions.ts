@@ -446,14 +446,17 @@ export async function productionRoutes(app: FastifyInstance) {
   const STATUS_ORDER: Record<string, number> = {
     pending: 0,
     started: 1,
-    script_ready: 2,
-    tts_ready: 3,
-    images_ready: 4,
-    videos_ready: 5,
-    rendering: 6,
-    uploading: 7,
-    completed: 8,
-    failed: 9,
+    processing: 2,
+    script_ready: 3,
+    tts_ready: 4,
+    images_ready: 5,
+    generated: 6,
+    videos_ready: 7,
+    rendering: 8,
+    uploading: 9,
+    uploaded: 10,
+    completed: 11,
+    failed: 12,
     paused: -1, // special: handled via exception
     archived: -2, // special: handled via exception
   };
@@ -527,20 +530,23 @@ export async function productionRoutes(app: FastifyInstance) {
     if (thumbnailUrl) mergedAssets.thumbnailUrl = thumbnailUrl;
     if (script) mergedAssets.script = script;
 
-    const data: Record<string, unknown> = { status, assets: mergedAssets };
+    // uploaded → completed 매핑 (n8n Worker 최종 상태 → 웹앱 최종 상태)
+    const finalStatus = status === 'uploaded' ? 'completed' : status;
+
+    const data: Record<string, unknown> = { status: finalStatus, assets: mergedAssets };
     if (title) data.title = title;
     if (youtubeVideoId) data.youtubeVideoId = youtubeVideoId;
     if (youtubeUrl) data.youtubeUrl = youtubeUrl;
     if (errorMessage) data.errorMessage = errorMessage;
     if (executionId) data.n8nExecutionId = executionId;
-    if (status === 'completed' || status === 'failed') data.completedAt = new Date();
+    if (finalStatus === 'completed' || finalStatus === 'failed') data.completedAt = new Date();
 
     const production = await prisma.production.update({
       where: { id: productionId },
       data,
     });
 
-    logger.info({ productionId, status }, 'Production callback received');
+    logger.info({ productionId, status: finalStatus, originalStatus: status }, 'Production callback received');
 
     // TODO: broadcast via WebSocket to connected clients
 
