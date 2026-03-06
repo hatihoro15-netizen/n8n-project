@@ -80,7 +80,10 @@ export async function mediaRoutes(app: FastifyInstance) {
   app.post('/api/media/upload', {
     preHandler: [app.authenticate],
   }, async (request, reply) => {
-    const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    const ALLOWED_TYPES = [
+      'image/jpeg', 'image/png', 'image/webp', 'image/gif',
+      'video/mp4', 'video/quicktime', 'video/webm',
+    ];
     const MAX_FILES = 4;
 
     const parts = request.parts();
