@@ -1,0 +1,83 @@
+{
+  "id": "d5b35fb7f1724e448",
+  "name": "AO Image Generator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ao-generate-image",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "b4109d15-af9d-4de0-8b81-8ca9bb2d99ae",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        250,
+        300
+      ],
+      "webhookId": "d0697b0e-6185-4593-8877-fc9f10ce5f93"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 이미지 생성 — 입력 검증 + 프롬프트 조합 + kie.ai 생성 + MinIO 저장\nconst body = $input.first().json.body || $input.first().json;\n\n// 입력 검증\nconst prompt = body.prompt;\nif (!prompt) throw new Error('prompt는 필수입니다.');\nconst aspectRatio = body.aspect_ratio || '9:16';\nif (!['9:16', '16:9', '1:1'].includes(aspectRatio)) throw new Error('aspect_ratio: 9:16 / 16:9 / 1:1');\nconst count = Math.min(3, Math.max(1, parseInt(body.count) || 1));\nconst slots = body.slots || {};\n\n// 슬롯별 vision_analysis 수집 (use: true만)\nconst promptParts = [];\n\nif (slots.subject?.use && slots.subject?.vision_analysis) {\n  promptParts.push(`[Subject - include this person/object exactly as described]: ${slots.subject.vision_analysis}`);\n}\nif (slots.scene?.use && slots.scene?.vision_analysis) {\n  promptParts.push(`[Scene - use this background/setting]: ${slots.scene.vision_analysis}`);\n}\nif (slots.style?.use && slots.style?.vision_analysis) {\n  promptParts.push(`[Style - apply this mood/art style]: ${slots.style.vision_analysis}`);\n}\n\n// 최종 프롬프트\npromptParts.push(prompt);\nconst finalPrompt = promptParts.join('\\n');\n\n// kie.ai 이미지 생성\nconst apiKey = $env.KIEAI_API_KEY;\n\nasync function pollTask(taskId) {\n  for (let i = 0; i < 60; i++) {\n    const resp = await this.helpers.httpRequest({\n      method: 'GET',\n      url: `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`,\n      headers: { 'Authorization': `Bearer ${apiKey}` },\n      json: true\n    });\n    const state = resp?.data?.state;\n    if (state === 'success') {\n      const result = JSON.parse(resp.data.resultJson || '{}');\n      return result.resultUrls || [];\n    }\n    if (state === 'failed' || state === 'fail') {\n      throw new Error(`이미지 생성 실패: ${resp.data.failMsg || state}`);\n    }\n    await new Promise(r => setTimeout(r, 5000));\n  }\n  throw new Error('이미지 생성 타임아웃 (300초)');\n}\n\n// count개 이미지 생성 (순차 요청)\nconst taskIds = [];\nfor (let i = 0; i < count; i++) {\n  const resp = await this.helpers.httpRequest({\n    method: 'POST',\n    url: 'https://api.kie.ai/api/v1/jobs/createTask',\n    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },\n    body: { model: 'nano-banana-pro', input: { prompt: finalPrompt, aspect_ratio: aspectRatio } },\n    json: true\n  });\n  const taskId = resp?.data?.taskId;\n  if (!taskId) throw new Error(`이미지 생성 요청 실패 (${i+1}): ` + JSON.stringify(resp).substring(0, 200));\n  taskIds.push(taskId);\n}\n\n// 폴링 (순차)\nconst allUrls = [];\nfor (const taskId of taskIds) {\n  const urls = await pollTask.call(this, taskId);\n  allUrls.push(...urls);\n}\n\nif (allUrls.length === 0) throw new Error('생성된 이미지 없음');\n\n// MinIO 저장\nconst minioBase = $env.MINIO_BASE_URL || 'http://76.13.182.180:9000';\nconst bucket = $env.MINIO_BUCKET || 'arubto';\nconst timestamp = Date.now();\nconst savedUrls = [];\n\nfor (let i = 0; i < allUrls.length; i++) {\n  const sourceUrl = allUrls[i];\n  // 이미지 다운로드\n  const imgResp = await this.helpers.httpRequest({\n    method: 'GET',\n    url: sourceUrl,\n    encoding: 'arraybuffer',\n    returnFullResponse: true\n  });\n  const imgBuffer = Buffer.from(imgResp.body);\n\n  // MinIO에 업로드 (generated/ 경로, 인증 불필요)\n  const fileName = `generated/${timestamp}_${i}.jpg`;\n  const minioUrl = `${minioBase}/${bucket}/${fileName}`;\n\n  await this.helpers.httpRequest({\n    method: 'PUT',\n    url: minioUrl,\n    headers: { 'Content-Type': 'image/jpeg' },\n    body: imgBuffer,\n    json: false,\n    timeout: 60000\n  });\n\n  savedUrls.push(minioUrl);\n}\n\nreturn [{\n  json: {\n    success: true,\n    count: savedUrls.length,\n    images: savedUrls,\n    prompt: finalPrompt,\n    aspect_ratio: aspectRatio,\n    slots_used: {\n      subject: !!(slots.subject?.use),\n      scene: !!(slots.scene?.use),\n      style: !!(slots.style?.use)\n    }\n  }\n}];"
+      },
+      "id": "4dfab394-41cf-48d9-98ba-e6493d57d342",
+      "name": "이미지 생성",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        470,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "92173869-757f-4961-a394-abe60b1fd9b5",
+      "name": "응답 반환",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        690,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "이미지 생성",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "이미지 생성": {
+      "main": [
+        [
+          {
+            "node": "응답 반환",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "tags": [],
+  "triggerCount": 0
+}
