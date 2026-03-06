@@ -37,6 +37,7 @@ type GeneratedImage = {
   url: string;
   saving: boolean;
   saved: boolean;
+  selected: boolean;
 };
 
 type MyPhoto = {
@@ -206,7 +207,7 @@ export default function ImagesClient() {
 
       const data = await res.json();
       if (data.data?.images?.length) {
-        setResults(data.data.images.map((url: string) => ({ url, saving: false, saved: false })));
+        setResults(data.data.images.map((url: string) => ({ url, saving: false, saved: false, selected: true })));
       } else {
         setError('이미지 생성에 실패했습니다. 다시 시도해주세요.');
       }
@@ -244,16 +245,30 @@ export default function ImagesClient() {
     }
   };
 
-  // Send to productions page
-  const handleSendToProductions = (imageUrl: string) => {
+  // Send selected images to productions page
+  const handleSendToProductions = () => {
+    const selectedUrls = results.filter(r => r.selected).map(r => r.url);
+    if (selectedUrls.length === 0) return;
     try {
       const existing = JSON.parse(localStorage.getItem('pending_production_images') || '[]');
-      existing.push(imageUrl);
-      localStorage.setItem('pending_production_images', JSON.stringify(existing));
+      localStorage.setItem('pending_production_images', JSON.stringify([...existing, ...selectedUrls]));
     } catch {
-      localStorage.setItem('pending_production_images', JSON.stringify([imageUrl]));
+      localStorage.setItem('pending_production_images', JSON.stringify(selectedUrls));
     }
     router.push('/productions');
+  };
+
+  // Download image
+  const handleDownload = async (url: string, index: number) => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `generated-image-${index + 1}.${blob.type.includes('png') ? 'png' : 'jpg'}`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch { /* ignore */ }
   };
 
   return (
@@ -426,17 +441,33 @@ export default function ImagesClient() {
         {/* 6. Results Grid */}
         {results.length > 0 && (
           <Card>
-            <CardContent className="p-6">
-              <h4 className="text-sm font-medium mb-4">생성 결과</h4>
+            <CardContent className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-medium">생성 결과</h4>
+                <span className="text-xs text-muted-foreground">
+                  {results.filter(r => r.selected).length}/{results.length}개 선택
+                </span>
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {results.map((img, i) => (
-                  <div key={i} className="border rounded-lg overflow-hidden bg-white">
+                  <div key={i} className={`border rounded-lg overflow-hidden bg-white transition-colors ${img.selected ? 'border-primary ring-1 ring-primary/30' : ''}`}>
                     <div className={`relative bg-muted/30 ${aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-video'}`}>
                       <img
                         src={img.url}
                         alt={`생성 이미지 ${i + 1}`}
                         className="w-full h-full object-cover"
                       />
+                      {/* Checkbox overlay */}
+                      <label className="absolute top-2 left-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={img.selected}
+                          onChange={() => setResults(prev => prev.map((r, j) =>
+                            j === i ? { ...r, selected: !r.selected } : r
+                          ))}
+                          className="h-4 w-4 rounded border-gray-300 accent-primary"
+                        />
+                      </label>
                     </div>
                     <div className="flex items-center gap-2 p-3">
                       <Button
@@ -455,23 +486,33 @@ export default function ImagesClient() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={handleGenerate}
-                        disabled={generating}
+                        onClick={() => handleDownload(img.url, i)}
                       >
-                        <RefreshCw className={`h-3.5 w-3.5 mr-1 ${generating ? 'animate-spin' : ''}`} />
-                        재생성
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleSendToProductions(img.url)}
-                      >
-                        <Film className="h-3.5 w-3.5 mr-1" />
-                        영상 제작
+                        <Download className="h-3.5 w-3.5 mr-1" />
+                        다운로드
                       </Button>
                     </div>
                   </div>
                 ))}
+              </div>
+              <div className="flex items-center gap-2 pt-2">
+                <Button
+                  type="button"
+                  onClick={handleSendToProductions}
+                  disabled={results.filter(r => r.selected).length === 0}
+                >
+                  <Film className="h-3.5 w-3.5 mr-1" />
+                  선택한 이미지로 영상 제작 ({results.filter(r => r.selected).length}개)
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGenerate}
+                  disabled={generating}
+                >
+                  <RefreshCw className={`h-3.5 w-3.5 mr-1 ${generating ? 'animate-spin' : ''}`} />
+                  재생성
+                </Button>
               </div>
             </CardContent>
           </Card>

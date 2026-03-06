@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): CF Pages 배포 정상 (모든 페이지 200) + VPS 배포 완료
-- 진행중 작업: n8n ao-produce E2E 테스트
-- 최근 완료: CF Pages 배포 확인 완료 (/, /productions, /images, /login 모두 200)
-- 주의사항: n8n ao-produce 웹훅 활성화 필요, PM2 프로세스명=n8n-web-backend
+- 현재 상태(1줄): 이미지 생성 버그 수정 + 내 사진 + n8n 웹훅 연결 완료 + VPS 배포
+- 진행중 작업: 브라우저 E2E 테스트
+- 최근 완료: ao-generate-image 웹훅 200 + 이미지 반환 확인
+- 주의사항: ao-produce 500 (n8n 내부), PM2 프로세스명=n8n-web-backend
 
 ---
 
@@ -353,3 +353,25 @@
 ### Files / Links
 - wrangler.toml: packages/frontend/wrangler.toml
 - build:cf: `npx @cloudflare/next-on-pages`
+
+## 2026-03-06 (18차)
+### Done
+- [x] 버그1: 프롬프트만으로 이미지 생성 버튼 활성화 (activeSlots.length > 0 조건 제거)
+- [x] 버그2: generate-image를 n8n ao-generate-image 웹훅으로 전환 (kie.ai 직접 호출 제거)
+- [x] 내 사진으로 만들기 섹션 추가 (접기/펴기, 최대 10장, Claude Vision, 3가지 모드)
+- [x] triggerWebhook에 res.ok 체크 추가 (에러 핸들링 개선)
+- [x] ao-generate-image 웹훅 E2E 테스트 PASS (200 + 이미지 URL 반환)
+- [x] VPS 배포 + PM2 재시작
+### Tried
+- [x] ao-produce 웹훅 → 500 (n8n 워크플로우 내부 실행 실패, 웹훅 연결 자체는 정상)
+### Result
+- ao-generate-image: 200 + images 배열 반환 (정상)
+- ao-produce: 500 (n8n 워크플로우 내부 문제, 웹앱→n8n 연결은 정상)
+- TypeScript + VPS 배포 PASS
+### Next (방향만)
+- 브라우저에서 이미지 생성 E2E 테스트
+- ao-produce n8n 워크플로우 디버깅
+### Files / Links
+- packages/frontend/src/app/(dashboard)/images/images-client.tsx (버그 수정 + 내 사진 섹션)
+- packages/backend/src/routes/media.ts (kie.ai → n8n webhook)
+- packages/backend/src/utils/n8n-client.ts (에러 핸들링)

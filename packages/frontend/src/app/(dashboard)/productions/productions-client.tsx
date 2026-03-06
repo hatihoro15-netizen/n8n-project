@@ -37,6 +37,7 @@ import {
   Video,
   Wand2,
   RefreshCw,
+  Download,
 } from 'lucide-react';
 import Link from 'next/link';
 import { proxyMediaUrl } from '@/lib/media';
@@ -388,7 +389,7 @@ function WhiskProductionForm() {
   const [genPrompt, setGenPrompt] = useState('');
   const [genCount, setGenCount] = useState(4);
   const [generating, setGenerating] = useState(false);
-  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [generatedImages, setGeneratedImages] = useState<{ url: string; selected: boolean }[]>([]);
   const [generatedAccepted, setGeneratedAccepted] = useState(false);
 
   // Slots
@@ -560,7 +561,7 @@ function WhiskProductionForm() {
       });
       const data = await res.json();
       if (data.data?.images?.length) {
-        setGeneratedImages(data.data.images);
+        setGeneratedImages(data.data.images.map((url: string) => ({ url, selected: true })));
       } else {
         setFormError('이미지 생성에 실패했습니다. 다시 시도해주세요.');
       }
@@ -572,20 +573,35 @@ function WhiskProductionForm() {
   };
 
   const acceptGeneratedImages = () => {
-    const newSlots: (UploadedFile | null)[] = generatedImages.map(url => ({
+    const selected = generatedImages.filter(img => img.selected);
+    if (selected.length === 0) return;
+    const newSlots: (UploadedFile | null)[] = selected.map(img => ({
       id: nextFileId(),
       file: new File([], 'generated.png'),
-      preview: url,
+      preview: img.url,
       type: 'image' as const,
       useDirectly: true,
       useMode: 'direct' as const,
       autoPrompt: null,
       analysis: null,
       analyzing: false,
-      url,
+      url: img.url,
     }));
     setImageSlots(newSlots);
     setGeneratedAccepted(true);
+  };
+
+  // Download image
+  const handleImageDownload = async (url: string, index: number) => {
+    try {
+      const res = await fetch(url);
+      const blob = await res.blob();
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `generated-image-${index + 1}.${blob.type.includes('png') ? 'png' : 'jpg'}`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    } catch { /* ignore */ }
   };
 
   // ── Polling: track job status (2s lightweight) ──
@@ -694,7 +710,7 @@ function WhiskProductionForm() {
       };
 
       if (hasImages === 'no' && generatedImages.length > 0) {
-        payload.generated_images = generatedImages;
+        payload.generated_images = generatedImages.filter(img => img.selected).map(img => img.url);
       }
 
       if (!isSlideshow) {
@@ -913,20 +929,45 @@ function WhiskProductionForm() {
             {/* Generated images preview */}
             {generatedImages.length > 0 && (
               <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {generatedImages.filter(img => img.selected).length}/{generatedImages.length}개 선택
+                  </span>
+                </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                  {generatedImages.map((url, i) => (
-                    <div key={i} className="relative aspect-square rounded-lg overflow-hidden border bg-white">
-                      <img src={url} alt={`생성 이미지 ${i + 1}`} className="w-full h-full object-cover" />
-                      <div className="absolute top-0 left-0 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-br">
-                        {i + 1}
-                      </div>
+                  {generatedImages.map((img, i) => (
+                    <div key={i} className={`relative aspect-square rounded-lg overflow-hidden border bg-white transition-colors ${img.selected ? 'border-primary ring-1 ring-primary/30' : ''}`}>
+                      <img src={img.url} alt={`생성 이미지 ${i + 1}`} className="w-full h-full object-cover" />
+                      <label className="absolute top-1.5 left-1.5 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={img.selected}
+                          onChange={() => setGeneratedImages(prev => prev.map((g, j) =>
+                            j === i ? { ...g, selected: !g.selected } : g
+                          ))}
+                          className="h-4 w-4 rounded border-gray-300 accent-primary"
+                        />
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => handleImageDownload(img.url, i)}
+                        className="absolute top-1.5 right-1.5 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
+                        title="다운로드"
+                      >
+                        <Download className="h-3 w-3" />
+                      </button>
                     </div>
                   ))}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Button type="button" size="sm" onClick={acceptGeneratedImages}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={acceptGeneratedImages}
+                    disabled={generatedImages.filter(img => img.selected).length === 0}
+                  >
                     <Check className="h-3.5 w-3.5 mr-1" />
-                    사용하기
+                    선택한 이미지 사용 ({generatedImages.filter(img => img.selected).length}개)
                   </Button>
                   <Button
                     type="button"
