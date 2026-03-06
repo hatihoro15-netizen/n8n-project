@@ -443,22 +443,23 @@ export async function productionRoutes(app: FastifyInstance) {
   });
 
   // Status progression order (higher = more advanced)
+  // Prisma enum 기준 순서 + n8n Worker가 보내는 status도 포함 (매핑 전 regression guard용)
   const STATUS_ORDER: Record<string, number> = {
     pending: 0,
     started: 1,
-    processing: 2,
+    processing: 2,     // n8n Worker → skip (매핑: no-op)
     script_ready: 3,
     tts_ready: 4,
     images_ready: 5,
-    generated: 6,
+    generated: 6,       // n8n Worker → videos_ready
     videos_ready: 7,
     rendering: 8,
     uploading: 9,
-    uploaded: 10,
+    uploaded: 10,       // n8n Worker → completed
     completed: 11,
     failed: 12,
-    paused: -1, // special: handled via exception
-    archived: -2, // special: handled via exception
+    paused: -1,
+    archived: -2,
   };
 
   // n8n callback endpoint (no auth - called by n8n)
@@ -530,8 +531,17 @@ export async function productionRoutes(app: FastifyInstance) {
     if (thumbnailUrl) mergedAssets.thumbnailUrl = thumbnailUrl;
     if (script) mergedAssets.script = script;
 
-    // uploaded → completed 매핑 (n8n Worker 최종 상태 → 웹앱 최종 상태)
-    const finalStatus = status === 'uploaded' ? 'completed' : status;
+    // n8n Worker status → Prisma enum 매핑 (스키마 변경 없이 처리)
+    // processing → skip (이미 started 상태), generated → videos_ready, uploaded → completed
+    if (status === 'processing') {
+      logger.info({ productionId, status }, 'Callback: processing status skipped (already started)');
+      return { success: true, skipped: true, message: 'processing mapped to started (no-op)' };
+    }
+    const STATUS_MAP: Record<string, string> = {
+      generated: 'videos_ready',
+      uploaded: 'completed',
+    };
+    const finalStatus = STATUS_MAP[status] || status;
 
     const data: Record<string, unknown> = { status: finalStatus, assets: mergedAssets };
     if (title) data.title = title;
