@@ -402,6 +402,8 @@ function WhiskProductionForm() {
   const [keywords, setKeywords] = useState('');
   const [category, setCategory] = useState('');
   const [clipDuration, setClipDuration] = useState<5 | 8>(5);
+  const [narrationMode, setNarrationMode] = useState<'auto' | 'manual'>('auto');
+  const [narrationText, setNarrationText] = useState('');
   const [selectedWorkflowId, setSelectedWorkflowId] = useState('');
 
   // Form state
@@ -496,6 +498,9 @@ function WhiskProductionForm() {
         autoPrompt: mode === 'analysis_only' ? (s.autoPrompt || s.analysis || '') : s.autoPrompt,
       };
     }));
+    if (mode === 'direct') {
+      setProductionMode('ai_video');
+    }
   };
 
   const changeAutoPrompt = (target: 'image' | 'video', index: number, prompt: string) => {
@@ -705,6 +710,8 @@ function WhiskProductionForm() {
         category: category.trim(),
         aspect_ratio: aspectRatio,
         production_mode: productionMode,
+        narration_mode: narrationMode,
+        ...(narrationMode === 'manual' && narrationText.trim() ? { narration_text: narrationText.trim() } : {}),
         has_images: hasImages === 'yes',
         files,
       };
@@ -1102,6 +1109,49 @@ function WhiskProductionForm() {
             rows={3}
             className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
           />
+        </div>
+
+        {/* 7-1. Narration mode */}
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium">나레이션</h4>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="narration_mode"
+                checked={narrationMode === 'auto'}
+                onChange={() => setNarrationMode('auto')}
+                className="accent-primary"
+              />
+              <span className="text-sm">AI 자동 생성</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="narration_mode"
+                checked={narrationMode === 'manual'}
+                onChange={() => setNarrationMode('manual')}
+                className="accent-primary"
+              />
+              <span className="text-sm">직접 입력</span>
+            </label>
+          </div>
+          {narrationMode === 'auto' ? (
+            <div className="rounded-md bg-muted/50 border p-3 text-xs text-muted-foreground leading-relaxed">
+              프롬프트 + 주제 + 키워드 + 카테고리를 기반으로<br />
+              Claude가 자동으로 나레이션을 생성합니다.<br />
+              <span className="text-foreground/60">예) 주제: 농구장의 총잡이 →</span><br />
+              <span className="text-foreground/60">&lsquo;농구장에 울려퍼지는 총성, 꽃을 입에 문 총잡이의 등장...&rsquo;</span>
+            </div>
+          ) : (
+            <textarea
+              value={narrationText}
+              onChange={e => setNarrationText(e.target.value)}
+              placeholder="예) 총이 콩알탄이라면 어떨까요? 총소리는 나지만 아무도 다치지 않는 신기한 세상..."
+              rows={4}
+              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+            />
+          )}
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
