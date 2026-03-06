@@ -7,8 +7,8 @@
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: 이미지 생성 버그 수정 + 내 사진으로 만들기 + n8n 웹훅 연결 완료 + VPS 배포
-- **Goal**: E2E 실제 브라우저 테스트
+- **Current Status**: 이미지 개별 선택 + 다운로드 기능 추가 + VPS 배포 완료
+- **Goal**: 브라우저 E2E 테스트
 
 ## B) 환경/의존성
 - **서버**: VPS 76.13.182.180
@@ -22,35 +22,31 @@
 ## C) 마지막 실행 기록
 - **Last Run Command**:
   ```
-  VPS: git pull + tsc + pm2 restart n8n-web-backend
+  VPS: git pull origin feature/web-app (프론트엔드만 변경, 백엔드 재시작 불필요)
   ```
-- **Result**: PASS - PM2 online + ao-generate-image 웹훅 200 + 이미지 반환 확인
+- **Result**: PASS - PM2 online
 - **실행 위치**: VPS (SSH)
-- **Last Commit**: `3ff04ce feat: 이미지 생성 버그 수정 + 내 사진으로 만들기 추가`
+- **Last Commit**: `f58145f feat: 이미지 개별 선택 + 다운로드 기능 추가`
 
 ## D) 완료/미완료
 
 ### Done
-- [x] 버그1: 프롬프트만으로 이미지 생성 버튼 활성화 (activeSlots 조건 제거)
-- [x] 버그2: generate-image → n8n ao-generate-image 웹훅 경로 전환
-- [x] 내 사진으로 만들기 섹션 (접기/펴기, 최대 10장, Claude Vision, 3가지 모드)
-- [x] triggerWebhook 에러 핸들링 개선 (res.ok 체크)
-- [x] ao-generate-image 웹훅 200 + 이미지 반환 E2E 확인
-- [x] VPS 배포 + PM2 재시작
+- [x] 이미지 생성 페이지: 체크박스 선택 + 다운로드 + 선택한 이미지만 영상 제작 전송
+- [x] 영상 제작 페이지: 생성 이미지 체크박스 + 다운로드 + 선택한 이미지만 슬롯 추가
+- [x] VPS 배포 완료
 
 ### Next Actions
-1. [ ] 브라우저에서 이미지 생성 E2E 테스트 (프롬프트만 / 참조이미지+프롬프트 / 내사진+프롬프트)
+1. [ ] 브라우저에서 이미지 생성 E2E 테스트 (프롬프트만 / 참조이미지 / 내사진)
 2. [ ] ao-produce 웹훅 500 해결 (n8n 워크플로우 내부 문제)
-3. [ ] 프론트엔드 브라우저 실제 동작 확인 (로그인 → 제작 → 이미지 생성 전체 플로우)
+3. [ ] 전체 플로우 E2E (로그인 → 이미지 생성 → 선택 → 영상 제작)
 
 ## E) Blockers / Issues
-- **Blockers**: ao-produce 웹훅 500 (n8n 워크플로우 내부 실행 실패 — 웹훅 연결 자체는 정상)
+- **Blockers**: ao-produce 웹훅 500 (n8n 워크플로우 내부 실행 실패)
 - **Known Issues**: 없음
 
 ## F) 변경 파일
-- packages/frontend/src/app/(dashboard)/images/images-client.tsx (버그 수정 + 내 사진 섹션)
-- packages/backend/src/routes/media.ts (kie.ai → n8n webhook 전환)
-- packages/backend/src/utils/n8n-client.ts (에러 핸들링)
+- images-client.tsx (체크박스 + 다운로드 + 통합 영상제작 버튼)
+- productions-client.tsx (generatedImages 객체 배열 + 체크박스 + 다운로드)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> 이미지 생성 버그 수정 + 내 사진 + n8n 웹훅 연결 완료. ao-generate-image 200 확인. ao-produce 500 (n8n 내부). 브라우저 E2E 테스트 필요.
+> 이미지 선택 + 다운로드 추가 완료. VPS 배포됨. 브라우저 E2E 테스트 필요. ao-produce 500 (n8n 내부).

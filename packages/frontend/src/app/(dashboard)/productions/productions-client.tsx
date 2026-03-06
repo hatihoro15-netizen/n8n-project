@@ -699,10 +699,10 @@ function WhiskProductionForm() {
 
       const payload: Record<string, unknown> = {
         workflowId: selectedWorkflowId,
-        prompt_p1: promptP1.trim() || undefined,
-        topic: formTopic.trim() || undefined,
-        keywords: keywords.trim() || undefined,
-        category: category.trim() || undefined,
+        prompt_p1: promptP1.trim(),
+        topic: formTopic.trim(),
+        keywords: keywords.trim(),
+        category: category.trim(),
         aspect_ratio: aspectRatio,
         production_mode: productionMode,
         has_images: hasImages === 'yes',

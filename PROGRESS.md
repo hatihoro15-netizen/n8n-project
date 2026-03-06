@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 이미지 생성 버그 수정 + 내 사진 + n8n 웹훅 연결 완료 + VPS 배포
+- 현재 상태(1줄): 이미지 선택 + 다운로드 추가 완료 + VPS 배포
 - 진행중 작업: 브라우저 E2E 테스트
-- 최근 완료: ao-generate-image 웹훅 200 + 이미지 반환 확인
+- 최근 완료: 이미지 체크박스 선택 + 다운로드 + 선택한 이미지만 사용
 - 주의사항: ao-produce 500 (n8n 내부), PM2 프로세스명=n8n-web-backend
 
 ---
@@ -375,3 +375,19 @@
 - packages/frontend/src/app/(dashboard)/images/images-client.tsx (버그 수정 + 내 사진 섹션)
 - packages/backend/src/routes/media.ts (kie.ai → n8n webhook)
 - packages/backend/src/utils/n8n-client.ts (에러 핸들링)
+
+## 2026-03-06 (19차)
+### Done
+- [x] 이미지 생성 페이지: 체크박스 선택 + 다운로드 + 선택한 이미지만 영상 제작 전송
+- [x] 영상 제작 페이지: 생성 이미지 체크박스 + 다운로드 + 선택한 이미지만 슬롯 추가
+- [x] generatedImages: string[] → {url, selected}[] 객체 배열로 변경
+- [x] VPS 배포 (git pull만, 백엔드 변경 없음)
+### Result
+- TypeScript PASS
+- VPS PM2 online
+### Next (방향만)
+- 브라우저 E2E 테스트
+- ao-produce n8n 워크플로우 디버깅
+### Files / Links
+- images-client.tsx (체크박스 + 다운로드 + 통합 영상제작 버튼)
+- productions-client.tsx (generatedImages 객체 배열 + 체크박스 + 다운로드)
