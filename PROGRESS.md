@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 이미지 생성 웹훅 E2E 성공 + 파이프라인 개편 완료 (YouTube 비활성화)
+- 현재 상태(1줄): aspect_ratio 분기 추가 완료 (9:16/16:9 E2E 성공), YouTube 비활성화
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: 이미지 생성 웹훅 (Whisk 방식), 파이프라인 개편 (NCA FFmpeg 통합)
-- 주의사항: YouTube 업로드 비활성화 (별도 작업 예정), NCA URL 확장자 필수
+- 최근 완료: aspect_ratio 분기 처리, 이미지 생성 웹훅, 파이프라인 개편
+- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, NCA URL 확장자 필수
 
 ---
 
@@ -385,3 +385,24 @@
 - generated_images를 영상 제작 파이프라인에 전달 E2E
 ### Files / Links
 - n8n/ao_image_generator.json (신규)
+
+## 2026-03-06 (aspect_ratio 분기)
+### Done
+- [x] Producer: aspect_ratio 필드 추가 (기본값 9:16, 허용: 9:16/16:9)
+- [x] Producer: DB INSERT에 aspect_ratio 컬럼 추가
+- [x] Worker assemble-prompt: ASPECT_RATIO 하드코딩 → job.aspect_ratio 동적 참조
+- [x] Worker process-clips: generateImage + Kling AI aspect_ratio 동적화
+- [x] Worker render-video: slideshow/ai_video NCA FFmpeg 해상도 동적화
+  - 9:16 → 1080x1920, 16:9 → 1920x1080
+- [x] DB: jobs 테이블 aspect_ratio 컬럼 추가
+- [x] NCA toolkit GUNICORN_TIMEOUT=600 설정 (worker timeout 방지)
+- [x] VPS 배포 + E2E 테스트 성공
+### Result
+- 9:16 Job 8c75155b → uploaded ✅ (슬라이드쇼 세로)
+- 16:9 Job ca5f3cbe → uploaded ✅ (슬라이드쇼 가로)
+- NCA FFmpeg 9:16/16:9 모두 정상 렌더링 (2~3초)
+### Next (방향만)
+- 프론트 웹앱 연동
+### Files / Links
+- n8n/ao_producer.json (aspect_ratio 필드/INSERT)
+- n8n/ao_worker.json (assemble-prompt + process-clips + render-video)
