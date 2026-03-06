@@ -469,6 +469,7 @@ export async function productionRoutes(app: FastifyInstance) {
 
   // n8n callback endpoint (no auth - called by n8n)
   app.post('/api/productions/callback', async (request, reply) => {
+    logger.info({ callbackBody: request.body }, 'Callback raw body');
     const {
       productionId,
       status,
