@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { config } from '../config';
 import { logger } from '../utils/logger';
+import { n8nClient } from '../utils/n8n-client';
 import crypto from 'crypto';
 
 const ALLOWED_HOSTS = [process.env.VPS_HOST || '127.0.0.1'];
@@ -119,102 +120,49 @@ export async function mediaRoutes(app: FastifyInstance) {
     return { success: true, data: { urls: uploaded } };
   });
 
-  // Generate images via kie.ai
+  // Generate images via n8n webhook (ao-generate-image)
   app.post('/api/media/generate-image', {
     preHandler: [app.authenticate],
   }, async (request, reply) => {
-    if (!config.kieai.apiKey) {
-      return reply.status(501).send({ success: false, message: 'KIEAI_API_KEY not configured' });
-    }
-
-    const { prompt, count = 1, aspect_ratio, ref_subject, ref_scene, ref_style } = request.body as {
+    const { prompt, count = 1, aspect_ratio, ref_subject, ref_scene, ref_style, my_images } = request.body as {
       prompt: string;
       count?: number;
       aspect_ratio?: '9:16' | '16:9';
       ref_subject?: string;
       ref_scene?: string;
       ref_style?: string;
+      my_images?: { url: string; use_mode: string; analysis?: string; auto_prompt?: string }[];
     };
 
     if (!prompt?.trim()) {
       return reply.status(400).send({ success: false, message: 'prompt is required' });
     }
 
-    const generateCount = Math.min(Math.max(count, 1), 3);
-    const results: string[] = [];
+    try {
+      const webhookPayload: Record<string, unknown> = {
+        prompt: prompt.trim(),
+        count: Math.min(Math.max(count, 1), 3),
+        aspect_ratio: aspect_ratio || '9:16',
+      };
+      if (ref_subject) webhookPayload.ref_subject = ref_subject;
+      if (ref_scene) webhookPayload.ref_scene = ref_scene;
+      if (ref_style) webhookPayload.ref_style = ref_style;
+      if (my_images?.length) webhookPayload.my_images = my_images;
 
-    for (let i = 0; i < generateCount; i++) {
-      try {
-        // Create task
-        const taskBody: Record<string, unknown> = {
-          model: 'google/nano-banana-pro',
-          input: {
-            prompt: prompt.trim(),
-            ...(aspect_ratio ? { aspect_ratio } : {}),
-            ...(ref_subject ? { subject_image_url: ref_subject } : {}),
-            ...(ref_scene ? { scene_image_url: ref_scene } : {}),
-            ...(ref_style ? { style_image_url: ref_style } : {}),
-          },
-        };
+      logger.info({ webhookPayload }, 'Triggering ao-generate-image webhook');
 
-        const createRes = await fetch(`${config.kieai.baseUrl}/jobs/createTask`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${config.kieai.apiKey}`,
-          },
-          body: JSON.stringify(taskBody),
-        });
+      const result = await n8nClient.triggerWebhook('ao-generate-image', webhookPayload);
+      const images = (result as any)?.images || (result as any)?.data?.images || [];
 
-        if (!createRes.ok) {
-          const errText = await createRes.text().catch(() => '');
-          logger.error({ status: createRes.status, body: errText }, 'kie.ai createTask failed');
-          continue;
-        }
-
-        const createData = await createRes.json() as { data?: { taskId?: string } };
-        const taskId = createData.data?.taskId;
-        if (!taskId) {
-          logger.error({ createData }, 'kie.ai no taskId returned');
-          continue;
-        }
-
-        // Poll for result (max 60s, 3s interval)
-        let imageUrl: string | null = null;
-        for (let attempt = 0; attempt < 20; attempt++) {
-          await new Promise(r => setTimeout(r, 3000));
-
-          const pollRes = await fetch(
-            `${config.kieai.baseUrl}/jobs/recordInfo?taskId=${taskId}`,
-            { headers: { Authorization: `Bearer ${config.kieai.apiKey}` } }
-          );
-
-          if (!pollRes.ok) continue;
-
-          const pollData = await pollRes.json() as {
-            data?: { status?: string; output?: { image_url?: string } };
-          };
-
-          if (pollData.data?.status === 'completed' && pollData.data.output?.image_url) {
-            imageUrl = pollData.data.output.image_url;
-            break;
-          }
-          if (pollData.data?.status === 'failed') {
-            logger.error({ taskId, pollData }, 'kie.ai task failed');
-            break;
-          }
-        }
-
-        if (imageUrl) {
-          results.push(imageUrl);
-          logger.info({ taskId, imageUrl }, 'kie.ai image generated');
-        }
-      } catch (err) {
-        logger.error({ error: err }, 'kie.ai generation error');
+      if (images.length === 0) {
+        logger.warn({ result }, 'ao-generate-image returned no images');
       }
-    }
 
-    return { success: true, data: { images: results } };
+      return { success: true, data: { images } };
+    } catch (err) {
+      logger.error({ error: err }, 'ao-generate-image webhook failed');
+      return reply.status(502).send({ success: false, message: 'Image generation failed' });
+    }
   });
 
   // Save external image to MinIO (download → re-upload)

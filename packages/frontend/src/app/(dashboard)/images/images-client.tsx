@@ -15,6 +15,9 @@ import {
   Download,
   RefreshCw,
   Film,
+  ChevronDown,
+  ChevronUp,
+  Plus,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -35,6 +38,26 @@ type GeneratedImage = {
   saving: boolean;
   saved: boolean;
 };
+
+type MyPhoto = {
+  id: string;
+  file: File | null;
+  preview: string | null;
+  url: string | null;
+  analysis: string | null;
+  analyzing: boolean;
+  useMode: 'direct' | 'generate' | 'analysis_only';
+  autoPrompt: string | null;
+};
+
+function emptyMyPhoto(): MyPhoto {
+  return {
+    id: Math.random().toString(36).slice(2),
+    file: null, preview: null, url: null,
+    analysis: null, analyzing: false,
+    useMode: 'direct', autoPrompt: null,
+  };
+}
 
 function emptySlot(): SlotData {
   return { file: null, preview: null, url: null, analysis: null, analyzing: false, use: true };
@@ -85,6 +108,10 @@ export default function ImagesClient() {
   const [scene, setScene] = useState<SlotData>(emptySlot());
   const [style, setStyle] = useState<SlotData>(emptySlot());
 
+  // My Photos
+  const [myPhotos, setMyPhotos] = useState<MyPhoto[]>([emptyMyPhoto()]);
+  const [showMyPhotos, setShowMyPhotos] = useState(false);
+
   // Prompt + count
   const [prompt, setPrompt] = useState('');
   const [count, setCount] = useState<1 | 2 | 3>(1);
@@ -118,9 +145,28 @@ export default function ImagesClient() {
     setter(emptySlot());
   };
 
+  // My photo handlers
+  const handleMyPhotoUpload = async (id: string, file: File) => {
+    if (!file.type.startsWith('image/')) return;
+    const preview = URL.createObjectURL(file);
+    setMyPhotos(prev => prev.map(p =>
+      p.id === id ? { ...p, file, preview, url: null, analysis: null, analyzing: true } : p
+    ));
+    try {
+      const url = await uploadToMinIO(file);
+      setMyPhotos(prev => prev.map(p => p.id === id ? { ...p, url } : p));
+      const analysis = await analyzeImage(url);
+      setMyPhotos(prev => prev.map(p =>
+        p.id === id ? { ...p, analysis, analyzing: false, autoPrompt: analysis } : p
+      ));
+    } catch {
+      setMyPhotos(prev => prev.map(p => p.id === id ? { ...p, analyzing: false } : p));
+    }
+  };
+
   // Active slot count
   const activeSlots = [subject, scene, style].filter(s => s.url && s.use);
-  const canGenerate = prompt.trim().length > 0 && activeSlots.length > 0 && !generating;
+  const canGenerate = prompt.trim().length > 0 && !generating;
 
   // Generate images
   const handleGenerate = async () => {
@@ -138,6 +184,16 @@ export default function ImagesClient() {
       if (subject.url && subject.use) body.ref_subject = subject.url;
       if (scene.url && scene.use) body.ref_scene = scene.url;
       if (style.url && style.use) body.ref_style = style.url;
+
+      const myImagesPayload = myPhotos
+        .filter(p => p.url)
+        .map(p => ({
+          url: p.url!,
+          use_mode: p.useMode,
+          analysis: p.analysis || '',
+          auto_prompt: p.autoPrompt || '',
+        }));
+      if (myImagesPayload.length > 0) body.my_images = myImagesPayload;
 
       const res = await fetch(`${API_BASE}/api/media/generate-image`, {
         method: 'POST',
@@ -266,6 +322,58 @@ export default function ImagesClient() {
                   onToggleUse={() => setStyle(prev => ({ ...prev, use: !prev.use }))}
                 />
               </div>
+            </div>
+
+            {/* 2.5 내 사진으로 만들기 */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowMyPhotos(!showMyPhotos)}
+                className="flex items-center gap-2 text-sm font-medium w-full text-left"
+              >
+                {showMyPhotos ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                내 사진으로 만들기
+                <span className="text-xs text-muted-foreground font-normal">(선택사항)</span>
+              </button>
+
+              {showMyPhotos && (
+                <div className="mt-3 space-y-3">
+                  <p className="text-xs text-muted-foreground">
+                    내 사진을 업로드하면 AI가 분석하여 이미지 생성에 반영합니다.
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+                    {myPhotos.map(photo => (
+                      <MyPhotoCard
+                        key={photo.id}
+                        photo={photo}
+                        onUpload={(file) => handleMyPhotoUpload(photo.id, file)}
+                        onRemove={() => {
+                          if (photo.preview) URL.revokeObjectURL(photo.preview);
+                          setMyPhotos(prev =>
+                            prev.length <= 1 ? [emptyMyPhoto()] : prev.filter(p => p.id !== photo.id)
+                          );
+                        }}
+                        onUpdate={(updates) =>
+                          setMyPhotos(prev => prev.map(p =>
+                            p.id === photo.id ? { ...p, ...updates } : p
+                          ))
+                        }
+                      />
+                    ))}
+                  </div>
+                  {myPhotos.length < 10 && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setMyPhotos(prev => [...prev, emptyMyPhoto()])}
+                    >
+                      <Plus className="h-3.5 w-3.5 mr-1" />
+                      추가
+                    </Button>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* 3. Prompt */}
@@ -459,6 +567,96 @@ function WhiskSlot({
               {slot.analysis}
             </div>
           )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════
+// My Photo Card Component
+// ══════════════════════════════════════════════
+function MyPhotoCard({
+  photo,
+  onUpload,
+  onRemove,
+  onUpdate,
+}: {
+  photo: MyPhoto;
+  onUpload: (file: File) => void;
+  onRemove: () => void;
+  onUpdate: (updates: Partial<MyPhoto>) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="border rounded-lg overflow-hidden relative group">
+      <button
+        type="button"
+        onClick={onRemove}
+        className="absolute top-1 right-1 z-10 bg-red-500 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <X className="h-3 w-3" />
+      </button>
+
+      {!photo.preview ? (
+        <>
+          <div
+            onDragOver={e => e.preventDefault()}
+            onDrop={e => { e.preventDefault(); if (e.dataTransfer.files[0]) onUpload(e.dataTransfer.files[0]); }}
+            onClick={() => inputRef.current?.click()}
+            className="border-2 border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center h-32 cursor-pointer hover:border-primary/40 transition-colors m-2"
+          >
+            <Upload className="h-5 w-5 text-muted-foreground/40 mb-1" />
+            <p className="text-xs text-muted-foreground">이미지 업로드</p>
+          </div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={e => { if (e.target.files?.[0]) onUpload(e.target.files[0]); e.target.value = ''; }}
+          />
+        </>
+      ) : (
+        <div className="space-y-2">
+          <div className="relative aspect-square bg-muted/30">
+            <img src={photo.preview} alt="내 사진" className="w-full h-full object-cover" />
+            {photo.analyzing && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                <Loader2 className="h-5 w-5 text-white animate-spin" />
+              </div>
+            )}
+          </div>
+          {photo.analysis && (
+            <p className="px-2 text-xs text-muted-foreground line-clamp-2">{photo.analysis}</p>
+          )}
+
+          <div className="px-2 pb-2 space-y-1">
+            {(['direct', 'generate', 'analysis_only'] as const).map(mode => (
+              <label key={mode} className="flex items-center gap-1.5 text-xs cursor-pointer">
+                <input
+                  type="radio"
+                  name={`photo-mode-${photo.id}`}
+                  checked={photo.useMode === mode}
+                  onChange={() => onUpdate({ useMode: mode })}
+                  className="h-3 w-3"
+                />
+                {mode === 'direct' && '직접 사용'}
+                {mode === 'generate' && '새 이미지 생성'}
+                {mode === 'analysis_only' && '분석만 반영'}
+              </label>
+            ))}
+            {photo.useMode === 'analysis_only' && (
+              <textarea
+                value={photo.autoPrompt || ''}
+                onChange={e => onUpdate({ autoPrompt: e.target.value })}
+                placeholder="자동 생성된 프롬프트 (수정 가능)"
+                rows={2}
+                className="w-full mt-1 rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+              />
+            )}
+          </div>
         </div>
       )}
     </div>

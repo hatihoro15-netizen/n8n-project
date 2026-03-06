@@ -82,6 +82,10 @@ export const n8nClient = {
       headers: { 'Content-Type': 'application/json' },
       body: data ? JSON.stringify(data) : undefined,
     });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      throw new Error(`Webhook ${webhookPath} failed (${res.status}): ${body}`);
+    }
     return res.json();
   },
 };

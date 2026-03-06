@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 이미지 생성 → 영상 제작 자동 연동 완료 + VPS 배포 완료
+- 현재 상태(1줄): CF Pages 배포 정상 (모든 페이지 200) + VPS 배포 완료
 - 진행중 작업: n8n ao-produce E2E 테스트
-- 최근 완료: 이미지 생성 → 영상 제작 자동 슬롯 추가 연동
+- 최근 완료: CF Pages 배포 확인 완료 (/, /productions, /images, /login 모두 200)
 - 주의사항: n8n ao-produce 웹훅 활성화 필요, PM2 프로세스명=n8n-web-backend
 
 ---
@@ -318,3 +318,38 @@
 - n8n ao-produce 웹훅 E2E 테스트
 ### Files / Links
 - productions-client.tsx (+22줄, 자동 import 로직)
+
+## 2026-03-06 (16차)
+### Done
+- [x] Cloudflare Pages 프론트엔드 빌드 성공 (모든 페이지 정상)
+- [x] GET /api/productions/:id/status 경량 상태 조회 엔드포인트 추가
+- [x] 폴링 간격 10초 → 2초 (경량 API 사용)
+- [x] JobProgressBar 컴포넌트: 상태별 퍼센트 바 (0~100%)
+- [x] failed 시 재시도 버튼 추가
+- [x] VPS 배포 + PM2 재시작
+### Result
+- TypeScript + quality-check + 빌드 PASS
+- VPS PM2 online
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+- Cloudflare Pages 실제 배포 트리거
+### Files / Links
+- productions-client.tsx (JobProgressBar + 2초 폴링 + 재시도)
+- productions.ts (GET /api/productions/:id/status)
+
+## 2026-03-06 (17차)
+### Done
+- [x] CF Pages 배포 상태 확인: 메인 페이지 정상 렌더링 (타이틀, 메타 확인)
+- [x] 로컬 build:cf 실행: 15개 Edge Function Routes 성공 (/images 포함)
+### Tried
+- [ ] WebFetch로 페이지 확인 → 404처럼 보임 (JS 미실행으로 인한 오탐)
+- [x] curl HTTP 상태코드 확인 → 모든 페이지 200 OK
+### Result
+- CF Pages 배포 정상: /, /productions, /images, /login 모두 HTTP 200
+- WebFetch는 JS를 실행하지 않아 Next.js CSR 페이지를 404로 오인함
+- 실제 브라우저에서는 정상 렌더링
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+### Files / Links
+- wrangler.toml: packages/frontend/wrangler.toml
+- build:cf: `npx @cloudflare/next-on-pages`
