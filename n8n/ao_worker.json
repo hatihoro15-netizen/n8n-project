@@ -353,7 +353,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// YouTube 업로드 — 일시 비활성화 (나중에 활성화)\nconst job = $input.first().json;\nreturn [{\n  json: {\n    ...job,\n    youtube_video_id: 'skip-' + Date.now(),\n    youtube_url: job.rendered_video_url || ''\n  }\n}];"
+        "jsCode": "// YouTube 업로드 — 일시 비활성화\nconst job = $input.first().json;\nreturn [{\n  json: {\n    ...job,\n    youtube_video_id: 'skip-' + Date.now(),\n    youtube_url: job.rendered_video_url || ''\n  }\n}];"
       },
       "id": "upload-youtube",
       "name": "YouTube 업로드",
@@ -1039,7 +1039,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// YouTube 업로드 — 일시 비활성화 (나중에 활성화)\nconst job = $input.first().json;\nreturn [{\n  json: {\n    ...job,\n    youtube_video_id: 'skip-' + Date.now(),\n    youtube_url: job.rendered_video_url || ''\n  }\n}];"
+          "jsCode": "// YouTube 업로드 — 일시 비활성화\nconst job = $input.first().json;\nreturn [{\n  json: {\n    ...job,\n    youtube_video_id: 'skip-' + Date.now(),\n    youtube_url: job.rendered_video_url || ''\n  }\n}];"
         },
         "id": "upload-youtube",
         "name": "YouTube 업로드",
