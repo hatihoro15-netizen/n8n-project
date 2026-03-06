@@ -392,9 +392,8 @@ function WhiskProductionForm() {
   const [generatedImages, setGeneratedImages] = useState<{ url: string; selected: boolean }[]>([]);
   const [generatedAccepted, setGeneratedAccepted] = useState(false);
 
-  // Slots
-  const [imageSlots, setImageSlots] = useState<(UploadedFile | null)[]>([null]);
-  const [videoSlots, setVideoSlots] = useState<(UploadedFile | null)[]>([]);
+  // Slots (통합: 이미지+영상 혼합)
+  const [mediaSlots, setMediaSlots] = useState<(UploadedFile | null)[]>([null]);
 
   // Prompt
   const [promptP1, setPromptP1] = useState('');
@@ -438,14 +437,13 @@ function WhiskProductionForm() {
         analyzing: false,
         url,
       }));
-      setImageSlots(slots);
+      setMediaSlots(slots);
       setHasImages('yes');
     } catch { /* ignore */ }
   });
 
-  const maxImageSlots = 20;
-  const filledImageCount = imageSlots.filter(s => s !== null).length;
-  const filledVideoCount = videoSlots.filter(s => s !== null).length;
+  const maxMediaSlots = 20;
+  const filledMediaCount = mediaSlots.filter(s => s !== null).length;
   const showSlots = hasImages === 'yes' || generatedAccepted;
 
   // ── sessionStorage: 작업 내용 자동 저장/복원 ──
@@ -486,28 +484,22 @@ function WhiskProductionForm() {
   const clearDraft = () => sessionStorage.removeItem(DRAFT_KEY);
 
   // ── Slot handlers ──
-  const addSlot = (target: 'image' | 'video') => {
-    if (target === 'image') {
-      setImageSlots(prev => prev.length < maxImageSlots ? [...prev, null] : prev);
-    } else {
-      setVideoSlots(prev => prev.length < 5 ? [...prev, null] : prev);
-    }
+  const addSlot = () => {
+    setMediaSlots(prev => prev.length < maxMediaSlots ? [...prev, null] : prev);
   };
 
-  const removeSlot = (target: 'image' | 'video', index: number) => {
-    const setter = target === 'image' ? setImageSlots : setVideoSlots;
-    setter(prev => {
+  const removeSlot = (index: number) => {
+    setMediaSlots(prev => {
       const slot = prev[index];
       if (slot) URL.revokeObjectURL(slot.preview);
       return prev.filter((_, i) => i !== index);
     });
   };
 
-  const uploadToSlot = (target: 'image' | 'video', index: number, file: File) => {
+  const uploadToSlot = (index: number, file: File) => {
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
-    if (target === 'image' && !isImage && !isVideo) return;
-    if (target === 'video' && !isVideo) return;
+    if (!isImage && !isVideo) return;
 
     const preview = URL.createObjectURL(file);
     const uf: UploadedFile = {
@@ -517,17 +509,15 @@ function WhiskProductionForm() {
       analysis: null, analyzing: false, url: null,
     };
 
-    const setter = target === 'image' ? setImageSlots : setVideoSlots;
-    setter(prev => prev.map((s, i) => i === index ? uf : s));
+    setMediaSlots(prev => prev.map((s, i) => i === index ? uf : s));
 
     if (isImage) {
-      analyzeSlotFile(uf.id, uf.file, target);
+      analyzeSlotFile(uf.id, uf.file, 'image');
     }
   };
 
-  const changeUseMode = (target: 'image' | 'video', index: number, mode: 'direct' | 'generate' | 'analysis_only') => {
-    const setter = target === 'image' ? setImageSlots : setVideoSlots;
-    setter(prev => prev.map((s, i) => {
+  const changeUseMode = (index: number, mode: 'direct' | 'generate' | 'analysis_only') => {
+    setMediaSlots(prev => prev.map((s, i) => {
       if (i !== index || !s) return s;
       return {
         ...s,
@@ -540,18 +530,16 @@ function WhiskProductionForm() {
     }
   };
 
-  const changeAutoPrompt = (target: 'image' | 'video', index: number, prompt: string) => {
-    const setter = target === 'image' ? setImageSlots : setVideoSlots;
-    setter(prev => prev.map((s, i) =>
+  const changeAutoPrompt = (index: number, prompt: string) => {
+    setMediaSlots(prev => prev.map((s, i) =>
       i === index && s ? { ...s, autoPrompt: prompt } : s
     ));
   };
 
   // ── Claude Vision analysis ──
-  const analyzeSlotFile = async (fileId: string, file: File, target: 'image' | 'video') => {
-    const setter = target === 'image' ? setImageSlots : setVideoSlots;
+  const analyzeSlotFile = async (fileId: string, file: File, _target: 'image' | 'video') => {
     const updateFile = (updater: (f: UploadedFile) => UploadedFile) => {
-      setter(prev => prev.map(s => s?.id === fileId ? updater(s) : s));
+      setMediaSlots(prev => prev.map(s => s?.id === fileId ? updater(s) : s));
     };
 
     updateFile(f => ({ ...f, analyzing: true }));
@@ -629,7 +617,7 @@ function WhiskProductionForm() {
       analyzing: false,
       url: img.url,
     }));
-    setImageSlots(newSlots);
+    setMediaSlots(newSlots);
     setGeneratedAccepted(true);
   };
 
@@ -685,12 +673,12 @@ function WhiskProductionForm() {
     const isSlideshow = productionMode === 'slideshow';
 
 
-    const filledImages = imageSlots.filter((s): s is UploadedFile => s !== null);
-    if (filledImages.length === 0 && hasImages === 'yes') {
-      setFormError('이미지를 1개 이상 추가해주세요.');
+    const filledMedia = mediaSlots.filter((s): s is UploadedFile => s !== null);
+    if (filledMedia.length === 0 && hasImages === 'yes') {
+      setFormError('미디어를 1개 이상 추가해주세요.');
       return;
     }
-    if (filledImages.length === 0 && generatedAccepted) {
+    if (filledMedia.length === 0 && generatedAccepted) {
       setFormError('생성된 이미지가 없습니다.');
       return;
     }
@@ -729,9 +717,8 @@ function WhiskProductionForm() {
         return result;
       };
 
-      const filledVideos = videoSlots.filter((s): s is UploadedFile => s !== null);
-      const allFiles = [...filledImages, ...filledVideos];
-      const files = await prepareFiles(allFiles);
+      // mediaSlots 순서 그대로 payload에 포함
+      const files = await prepareFiles(filledMedia);
 
       const payload: Record<string, unknown> = {
         workflowId: selectedWorkflowId,
@@ -838,8 +825,7 @@ function WhiskProductionForm() {
                 setHasImages(null);
                 setGeneratedAccepted(false);
                 setGeneratedImages([]);
-                setImageSlots([null]);
-                setVideoSlots([]);
+                setMediaSlots([null]);
               }}
               className={`flex flex-col items-start gap-1 p-4 rounded-lg border-2 transition-colors text-left ${
                 productionMode === 'ai_video'
@@ -860,8 +846,7 @@ function WhiskProductionForm() {
                 setHasImages(null);
                 setGeneratedAccepted(false);
                 setGeneratedImages([]);
-                setImageSlots([null]);
-                setVideoSlots([]);
+                setMediaSlots([null]);
               }}
               className={`flex flex-col items-start gap-1 p-4 rounded-lg border-2 transition-colors text-left ${
                 productionMode === 'slideshow'
@@ -888,7 +873,7 @@ function WhiskProductionForm() {
                 setHasImages('yes');
                 setGeneratedAccepted(false);
                 setGeneratedImages([]);
-                setImageSlots([null]);
+                setMediaSlots([null]);
               }}
               className={`flex flex-col items-center gap-1 p-4 rounded-lg border-2 transition-colors ${
                 hasImages === 'yes'
@@ -906,7 +891,7 @@ function WhiskProductionForm() {
                 setHasImages('no');
                 setGeneratedAccepted(false);
                 setGeneratedImages([]);
-                setImageSlots([]);
+                setMediaSlots([]);
               }}
               className={`flex flex-col items-center gap-1 p-4 rounded-lg border-2 transition-colors ${
                 hasImages === 'no'
@@ -1025,81 +1010,41 @@ function WhiskProductionForm() {
           </div>
         )}
 
-        {/* 4b. Image slots (hasImages === 'yes' OR generated+accepted) */}
+        {/* 4b. Media slots (hasImages === 'yes' OR generated+accepted) */}
         {showSlots && (
           <div>
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-medium flex items-center gap-1.5">
-                <ImageIcon className="h-4 w-4" />
-                미디어 ({filledImageCount}/{imageSlots.length}칸, 최대 {maxImageSlots}개)
+                <Film className="h-4 w-4" />
+                미디어 ({filledMediaCount}/{mediaSlots.length}칸, 최대 {maxMediaSlots}개)
               </h4>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-              {imageSlots.map((slot, i) => (
+              {mediaSlots.map((slot, i) => (
                 <SlotCard
-                  key={slot?.id || `img_empty_${i}`}
+                  key={slot?.id || `media_empty_${i}`}
                   index={i}
                   slot={slot}
                   slotType="image"
-                  onRemove={() => removeSlot('image', i)}
-                  onUpload={(file) => uploadToSlot('image', i, file)}
-                  onChangeUseMode={(mode) => changeUseMode('image', i, mode)}
-                  onChangeAutoPrompt={(prompt) => changeAutoPrompt('image', i, prompt)}
+                  onRemove={() => removeSlot(i)}
+                  onUpload={(file) => uploadToSlot(i, file)}
+                  onChangeUseMode={(mode) => changeUseMode(i, mode)}
+                  onChangeAutoPrompt={(prompt) => changeAutoPrompt(i, prompt)}
                 />
               ))}
             </div>
 
-            {imageSlots.length < maxImageSlots && (
+            {mediaSlots.length < maxMediaSlots && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => addSlot('image')}
+                onClick={() => addSlot()}
                 className="mt-3"
               >
                 <Plus className="h-3.5 w-3.5 mr-1" />
-                추가 ({imageSlots.length}/{maxImageSlots})
-              </Button>
-            )}
-          </div>
-        )}
-
-        {/* 5. Video slots (ai_video only) */}
-        {productionMode === 'ai_video' && showSlots && (
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h4 className="text-sm font-medium flex items-center gap-1.5">
-                <Video className="h-4 w-4" />
-                영상 ({filledVideoCount}/{videoSlots.length}칸, 최대 5개)
-              </h4>
-            </div>
-
-            {videoSlots.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                {videoSlots.map((slot, i) => (
-                  <SlotCard
-                    key={slot?.id || `vid_empty_${i}`}
-                    index={i}
-                    slot={slot}
-                    slotType="video"
-                    onRemove={() => removeSlot('video', i)}
-                    onUpload={(file) => uploadToSlot('video', i, file)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {videoSlots.length < 5 && (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => addSlot('video')}
-                className={videoSlots.length > 0 ? 'mt-3' : ''}
-              >
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                영상 추가 ({videoSlots.length}/5)
+                추가 ({mediaSlots.length}/{maxMediaSlots})
               </Button>
             )}
           </div>
@@ -1216,7 +1161,7 @@ function WhiskProductionForm() {
             {hasImages === null
               ? '이미지 유무를 선택해주세요'
               : showSlots
-                ? `이미지 ${filledImageCount}장${filledVideoCount > 0 ? ` + 영상 ${filledVideoCount}개` : ''} → ${productionMode === 'slideshow' ? '슬라이드쇼' : '영상'} 제작`
+                ? `미디어 ${filledMediaCount}개 → ${productionMode === 'slideshow' ? '슬라이드쇼' : '영상'} 제작`
                 : '이미지를 생성해주세요'}
           </span>
         </div>
