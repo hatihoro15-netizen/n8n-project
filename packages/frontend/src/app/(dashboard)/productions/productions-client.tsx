@@ -1366,11 +1366,35 @@ function SlotCard({
   onChangeAutoPrompt?: (prompt: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
   const acceptType = slotType === 'image' ? 'image/*,video/*' : 'video/*';
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (!file) return;
+    const isImage = file.type.startsWith('image/');
+    const isVideo = file.type.startsWith('video/');
+    if (slotType === 'image' && !isImage && !isVideo) return;
+    if (slotType === 'video' && !isVideo) return;
+    onUpload(file);
+  };
+
+  const dragProps = {
+    onDragOver: (e: React.DragEvent) => { e.preventDefault(); setDragging(true); },
+    onDragLeave: () => setDragging(false),
+    onDrop: handleDrop,
+  };
 
   if (!slot) {
     return (
-      <div className="relative border-2 border-dashed border-muted-foreground/20 rounded-lg flex flex-col items-center justify-center min-h-[140px] hover:border-primary/40 transition-colors">
+      <div
+        {...dragProps}
+        className={`relative border-2 border-dashed rounded-lg flex flex-col items-center justify-center min-h-[140px] transition-colors ${
+          dragging ? 'border-primary bg-primary/5' : 'border-muted-foreground/20 hover:border-primary/40'
+        }`}
+      >
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
@@ -1403,7 +1427,7 @@ function SlotCard({
   const isImage = slot.type === 'image';
 
   return (
-    <div className="relative border rounded-lg overflow-hidden bg-white group">
+    <div {...dragProps} className={`relative border rounded-lg overflow-hidden bg-white group ${dragging ? 'ring-2 ring-primary' : ''}`}>
       {/* Preview */}
       <div className="relative aspect-video bg-muted/30">
         {isImage ? (

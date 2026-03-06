@@ -209,6 +209,12 @@ export async function mediaRoutes(app: FastifyInstance) {
       return reply.status(400).send({ success: false, message: 'imageUrl is required' });
     }
 
+    // HTTP MinIO URL → HTTPS 프록시 URL 변환 (Claude API는 HTTPS만 허용)
+    const BACKEND_URL = process.env.BACKEND_URL || 'https://api-n8n.xn--9g4bn4fm2bl2mb9f.com';
+    const visionUrl = imageUrl.startsWith('http://')
+      ? `${BACKEND_URL}/api/media/proxy?url=${encodeURIComponent(imageUrl)}`
+      : imageUrl;
+
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -225,7 +231,7 @@ export async function mediaRoutes(app: FastifyInstance) {
             content: [
               {
                 type: 'image',
-                source: { type: 'url', url: imageUrl },
+                source: { type: 'url', url: visionUrl },
               },
               {
                 type: 'text',
