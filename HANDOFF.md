@@ -11,9 +11,13 @@
 - use_mode 분기: direct / generate / analysis_only
 - aspect_ratio 분기: 9:16 (세로/숏폼) / 16:9 (가로/롱폼)
 - 나레이션 자동생성 ✅ (Claude API, narration_script 우선)
-- 중간 콜백 3개 ✅ (processing / rendering / generated)
+- 중간 콜백 4개 ✅ (processing / rendering / generated / uploaded)
+- 콜백 videoUrl 필드 ✅ (generated + uploaded 콜백에 videoUrl/renderedVideoUrl 포함)
 - 번역 노드 JSON 이스케이프 버그 수정 ✅ (httpRequest → Code 노드)
 - YouTube 업로드 일시 비활성화 (나중에 별도 작업)
+- Worker 영상 품질 개선 ✅ (이미지 비율/제목바/자막줄바꿈/TTS실측길이/BGM·SFX 조건부)
+- BGM/SFX 기본 OFF ✅ (enable_bgm/enable_sfx 플래그, bgm_url 지원)
+- Producer SQL 이스케이프 ✅ (esc() 헬퍼로 single quote 방어)
 
 ## Goal
 프론트 웹앱 연동
@@ -26,10 +30,10 @@
 
 ## Last Run
 커맨드: VPS 배포 (Worker import → DB sync → restart)
-결과: 번역 노드 JSON 이스케이프 버그 수정 — httpRequest → Code 노드 교체
+결과: Worker 영상 품질 개선 7항목 + videoUrl 콜백 추가
 위치: VPS (76.13.182.180)
-테스트: 특수문자(+|, ", 줄바꿈) 포함 프롬프트 → 번역 정상 → 전체 파이프라인 uploaded ✅
-Last Commit: fix: 번역 노드 JSON 이스케이프 버그 수정
+테스트: job 0322a73c 재시도 중 (kie.ai TTS 일시 오류로 이전 시도 실패)
+Last Commit: (pending)
 
 ## Blockers
 - YouTube 업로드: require('https'), fetch(), httpRequest PUT(EPIPE) 모두 실패
@@ -39,6 +43,7 @@ Last Commit: fix: 번역 노드 JSON 이스케이프 버그 수정
 - NCA 한글 자막: fonts-nanum 컨테이너 재시작 시 사라짐
   - 임시: docker exec -u root nca-toolkit apt-get install -y fonts-nanum
   - 영구: Dockerfile 또는 docker run 시 볼륨 마운트 필요
+- kie.ai TTS: 간헐적 internal error 발생 (일시적, 재시도로 해결)
 
 ## n8n 워크플로우 ID
 - AO Producer: XV5shW265ht59MTD (active)
@@ -98,6 +103,9 @@ Last Commit: fix: 번역 노드 JSON 이스케이프 버그 수정
   "aspect_ratio": "9:16 | 16:9",
   "clip_duration": 8,
   "narration_script": "(optional) 직접 입력 나레이션",
+  "enable_bgm": false,
+  "enable_sfx": false,
+  "bgm_url": "(optional) 커스텀 BGM URL",
   "files": [
     { "type": "image", "url": "MinIO URL", "vision_analysis": "분석결과",
       "use_mode": "direct | generate | analysis_only", "auto_prompt": "..." }
@@ -105,6 +113,12 @@ Last Commit: fix: 번역 노드 JSON 이스케이프 버그 수정
   "generated_images": ["이미지 URL 배열"]
 }
 ```
+
+## 콜백 필드 (웹앱으로 전송)
+- processing: `{ productionId, status, jobId }`
+- rendering: `{ productionId, status, jobId }`
+- generated: `{ productionId, status, jobId, videoUrl, renderedVideoUrl }`
+- uploaded: `{ productionId, status, jobId, youtubeVideoId, youtubeUrl, renderedVideoUrl, videoUrl }`
 
 ## aspect_ratio별 해상도
 - 9:16 → 1080x1920 (세로/숏폼)
@@ -128,3 +142,12 @@ Last Commit: fix: 번역 노드 JSON 이스케이프 버그 수정
 ## Kling AI 3.0 (kie.ai) 스펙
 - 모델: kling-3.0/video, duration: 3~15초, image_urls: 최대 2장
 - aspect_ratio: 9:16 / 16:9, mode: std / pro
+
+## Worker 영상 품질 개선 상세 (7항목)
+1. 이미지 비율: 정사각 크롭 + 블랙 패딩 (온카 방식)
+2. 상단 제목바: topic 표시 (drawbox + drawtext, wrapTitle 2줄 분리)
+3. 자막 줄바꿈: 공백 없는 한글 강제 줄바꿈 (max 12자)
+4. 자막 타이밍: TTS 실측 길이 기반 (ffprobe)
+5. 영상 끝: TTS 실측 duration 사용 (ffprobe fallback)
+6. BGM URL: bgm_url 필드로 동적 BGM 지원
+7. BGM/SFX 기본 OFF: enable_bgm/enable_sfx 플래그
