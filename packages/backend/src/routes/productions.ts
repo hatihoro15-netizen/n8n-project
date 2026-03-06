@@ -482,6 +482,7 @@ export async function productionRoutes(app: FastifyInstance) {
       title,
       assets,
       videoUrl,
+      renderedVideoUrl,
       thumbnailUrl,
       script,
       youtubeVideoId,
@@ -494,6 +495,7 @@ export async function productionRoutes(app: FastifyInstance) {
       title?: string;
       assets?: Record<string, unknown>;
       videoUrl?: string;
+      renderedVideoUrl?: string;
       thumbnailUrl?: string;
       script?: string;
       youtubeVideoId?: string;
@@ -539,7 +541,8 @@ export async function productionRoutes(app: FastifyInstance) {
       ...((existingProd.assets as Record<string, unknown>) || {}),
       ...(assets || {}),
     };
-    if (videoUrl) mergedAssets.videoUrl = videoUrl;
+    const finalVideoUrl = videoUrl || renderedVideoUrl;
+    if (finalVideoUrl) mergedAssets.videoUrl = finalVideoUrl;
     if (thumbnailUrl) mergedAssets.thumbnailUrl = thumbnailUrl;
     if (script) mergedAssets.script = script;
 
