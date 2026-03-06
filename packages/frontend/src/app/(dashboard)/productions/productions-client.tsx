@@ -414,6 +414,32 @@ function WhiskProductionForm() {
   const [jobVideoUrl, setJobVideoUrl] = useState<string | null>(null);
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
+  // Auto-import images from /images page via localStorage
+  useState(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = localStorage.getItem('pending_production_images');
+      if (!raw) return;
+      localStorage.removeItem('pending_production_images');
+      const urls: string[] = JSON.parse(raw);
+      if (!urls.length) return;
+      const slots: (UploadedFile | null)[] = urls.map(url => ({
+        id: nextFileId(),
+        file: new File([], 'imported.png'),
+        preview: url,
+        type: 'image' as const,
+        useDirectly: true,
+        useMode: 'direct' as const,
+        autoPrompt: null,
+        analysis: null,
+        analyzing: false,
+        url,
+      }));
+      setImageSlots(slots);
+      setHasImages('yes');
+    } catch { /* ignore */ }
+  });
+
   const maxImageSlots = productionMode === 'slideshow' ? 20 : 5;
   const filledImageCount = imageSlots.filter(s => s !== null).length;
   const filledVideoCount = videoSlots.filter(s => s !== null).length;

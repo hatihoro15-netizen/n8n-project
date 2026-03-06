@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 숏폼/롱폼 선택 UI 추가 완료 + VPS 배포 완료
+- 현재 상태(1줄): 이미지 생성 페이지 추가 완료 (Whisk 방식) + VPS 배포 완료
 - 진행중 작업: n8n ao-produce E2E 테스트
-- 최근 완료: 숏폼/롱폼 선택 UI + aspect_ratio 웹훅 payload
+- 최근 완료: /images 이미지 생성 페이지 (3슬롯 Whisk + kie.ai)
 - 주의사항: n8n ao-produce 웹훅 활성화 필요, PM2 프로세스명=n8n-web-backend
 
 ---
@@ -280,3 +280,27 @@
 ### Files / Links
 - productions-client.tsx (aspectRatio 상태 + UI)
 - productions.ts (aspect_ratio 타입 + payload)
+
+## 2026-03-06 (14차)
+### Done
+- [x] /images 이미지 생성 페이지 신규 추가 (Whisk 방식)
+- [x] 3슬롯 UI: 피사체(Subject) / 장면(Scene) / 스타일(Style)
+- [x] 각 슬롯: 이미지 업로드 + Claude Vision 자동 분석 + 유/무 토글
+- [x] 숏폼/롱폼 선택 + 프롬프트 (필수) + 생성 개수 (1/2/3)
+- [x] kie.ai generate-image에 aspect_ratio 파라미터 추가
+- [x] /api/media/save-external 엔드포인트 신규 (외부 이미지 → MinIO 저장)
+- [x] 결과 그리드: 저장 / 재생성 / 영상 제작으로 보내기
+- [x] 사이드바 "이미지 생성" 메뉴 추가 (Wand2 아이콘)
+- [x] VPS 배포 + PM2 재시작
+### Result
+- TypeScript + quality-check PASS
+- VPS PM2 online
+- "영상 제작으로 보내기": localStorage 저장 + 페이지 이동까지 (자동 슬롯 추가는 별도)
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+- 이미지 생성 E2E 테스트
+### Files / Links
+- packages/frontend/src/app/(dashboard)/images/page.tsx (신규)
+- packages/frontend/src/app/(dashboard)/images/images-client.tsx (신규)
+- packages/frontend/src/components/layout/sidebar.tsx (메뉴 추가)
+- packages/backend/src/routes/media.ts (aspect_ratio + save-external)

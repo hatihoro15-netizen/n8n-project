@@ -7,7 +7,7 @@
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: 숏폼/롱폼 선택 UI 추가 완료 + VPS 배포 완료
+- **Current Status**: 이미지 생성 페이지 추가 완료 (Whisk 방식) + VPS 배포 완료
 - **Goal**: n8n ao-produce 웹훅 E2E 테스트
 
 ## B) 환경/의존성
@@ -24,27 +24,33 @@
   ```
 - **Result**: PASS - PM2 online, tsc 통과
 - **실행 위치**: VPS (SSH)
-- **Last Commit**: `a79b484 feat: 숏폼/롱폼 선택 UI 추가`
+- **Last Commit**: `a6b4344 feat: 이미지 생성 페이지 추가 (Whisk 방식)`
 
 ## D) 완료/미완료
 
 ### Done
-- [x] 숏폼/롱폼 선택 UI (워크플로우 아래, 제작 방식 위)
-- [x] aspect_ratio 웹훅 payload 추가 (프론트+백엔드)
+- [x] /images 이미지 생성 페이지 신규 (Whisk 3슬롯: Subject/Scene/Style)
+- [x] 사이드바 "이미지 생성" 메뉴 추가
+- [x] 숏폼/롱폼 선택 + 프롬프트 + 생성 개수
+- [x] kie.ai generate-image에 aspect_ratio 파라미터 추가
+- [x] /api/media/save-external 엔드포인트 추가 (외부 이미지 → MinIO)
+- [x] 결과 그리드: 저장/재생성/영상제작으로보내기
 - [x] VPS 배포 + PM2 재시작
 
 ### Next Actions
 1. [ ] n8n ao-produce 웹훅 워크플로우 활성화 + E2E 테스트
-2. [ ] 영상 제작 완료 후 미리보기 확인
+2. [ ] 이미지 생성 E2E 테스트 (kie.ai API 키 필요)
 3. [ ] Cloudflare Pages 프론트엔드 빌드 확인
 
 ## E) Blockers / Issues
 - **Blockers**: n8n ao-produce 웹훅 워크플로우 활성화 필요
-- **Known Issues**: 없음
+- **Known Issues**: "영상 제작으로 보내기" → localStorage에 URL 저장 + /productions 이동까지만 구현 (자동 슬롯 추가는 productions 페이지 수정 필요)
 
 ## F) 변경 파일
-- productions-client.tsx (aspectRatio 상태 + 숏폼/롱폼 버튼 UI + payload)
-- productions.ts (aspect_ratio body 타입 + 웹훅 전달)
+- packages/frontend/src/app/(dashboard)/images/page.tsx (신규)
+- packages/frontend/src/app/(dashboard)/images/images-client.tsx (신규)
+- packages/frontend/src/components/layout/sidebar.tsx (메뉴 추가)
+- packages/backend/src/routes/media.ts (aspect_ratio + save-external)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> 숏폼/롱폼 선택 UI + VPS 배포 완료. n8n ao-produce 웹훅 E2E 테스트 필요.
+> 이미지 생성 페이지 (Whisk 방식) + VPS 배포 완료. n8n 웹훅 E2E 테스트 필요.
