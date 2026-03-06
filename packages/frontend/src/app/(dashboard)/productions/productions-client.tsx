@@ -38,6 +38,8 @@ import {
   Wand2,
   RefreshCw,
   Download,
+  Music,
+  Volume2,
 } from 'lucide-react';
 import Link from 'next/link';
 import { proxyMediaUrl, downloadViaProxy } from '@/lib/media';
@@ -403,6 +405,11 @@ function WhiskProductionForm() {
   const [clipDuration, setClipDuration] = useState<5 | 8>(5);
   const [narrationMode, setNarrationMode] = useState<'auto' | 'manual'>('auto');
   const [narrationText, setNarrationText] = useState('');
+  const [bgmUrl, setBgmUrl] = useState('');
+  const [bgmFileName, setBgmFileName] = useState('');
+  const [bgmUploading, setBgmUploading] = useState(false);
+  const [enableBgm, setEnableBgm] = useState(false);
+  const [enableSfx, setEnableSfx] = useState(false);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState('');
 
   // Form state
@@ -466,6 +473,9 @@ function WhiskProductionForm() {
       if (draft.narrationText) setNarrationText(draft.narrationText);
       if (draft.hasImages) setHasImages(draft.hasImages);
       if (draft.selectedWorkflowId) setSelectedWorkflowId(draft.selectedWorkflowId);
+      if (draft.bgmUrl) { setBgmUrl(draft.bgmUrl); setBgmFileName(draft.bgmFileName || ''); }
+      if (draft.enableBgm !== undefined) setEnableBgm(draft.enableBgm);
+      if (draft.enableSfx !== undefined) setEnableSfx(draft.enableSfx);
     } catch { /* ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -477,9 +487,10 @@ function WhiskProductionForm() {
       promptP1, formTopic, keywords, category,
       aspectRatio, productionMode, narrationMode, narrationText,
       hasImages, selectedWorkflowId,
+      bgmUrl, bgmFileName, enableBgm, enableSfx,
     };
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, narrationMode, narrationText, hasImages, selectedWorkflowId]);
+  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, narrationMode, narrationText, hasImages, selectedWorkflowId, bgmUrl, bgmFileName, enableBgm, enableSfx]);
 
   const clearDraft = () => sessionStorage.removeItem(DRAFT_KEY);
 
@@ -732,6 +743,9 @@ function WhiskProductionForm() {
         ...(narrationMode === 'manual' && narrationText.trim() ? { narration_text: narrationText.trim() } : {}),
         has_images: hasImages === 'yes',
         files,
+        enable_bgm: enableBgm,
+        enable_sfx: enableSfx,
+        ...(bgmUrl ? { bgm_url: bgmUrl } : {}),
       };
 
       if (hasImages === 'no' && generatedImages.length > 0) {
@@ -1126,6 +1140,64 @@ function WhiskProductionForm() {
               rows={4}
               className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
             />
+          )}
+        </div>
+
+        {/* 7. BGM / 효과음 */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium">오디오 설정</h4>
+          <div className="flex flex-wrap items-center gap-4">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={enableBgm} onChange={e => setEnableBgm(e.target.checked)} className="rounded" />
+              <Music className="h-4 w-4" />BGM 사용
+            </label>
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input type="checkbox" checked={enableSfx} onChange={e => setEnableSfx(e.target.checked)} className="rounded" />
+              <Volume2 className="h-4 w-4" />효과음 사용
+            </label>
+          </div>
+          {enableBgm && (
+            <div className="flex items-center gap-3">
+              {bgmUrl ? (
+                <div className="flex items-center gap-2 text-sm bg-muted/50 border rounded-md px-3 py-2">
+                  <Music className="h-4 w-4 text-emerald-600" />
+                  <span className="truncate max-w-[200px]">{bgmFileName || 'BGM 업로드됨'}</span>
+                  <button onClick={() => { setBgmUrl(''); setBgmFileName(''); }} className="text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 text-sm border border-dashed rounded-md px-4 py-2 cursor-pointer hover:bg-muted/30 transition-colors">
+                  {bgmUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {bgmUploading ? '업로드 중...' : 'BGM 파일 선택 (mp3/wav)'}
+                  <input
+                    type="file"
+                    accept="audio/mpeg,audio/wav,.mp3,.wav"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setBgmUploading(true);
+                      try {
+                        const token = api.getToken();
+                        const fd = new FormData();
+                        fd.append('file', file);
+                        const res = await fetch(`${API_BASE}/api/media/upload`, {
+                          method: 'POST',
+                          headers: token ? { Authorization: `Bearer ${token}` } : {},
+                          body: fd,
+                        });
+                        const data = await res.json();
+                        if (data.data?.urls?.[0]) {
+                          setBgmUrl(data.data.urls[0]);
+                          setBgmFileName(file.name);
+                        }
+                      } catch { /* ignore */ }
+                      setBgmUploading(false);
+                    }}
+                  />
+                </label>
+              )}
+              <span className="text-xs text-muted-foreground">직접 BGM을 업로드하면 해당 BGM이 사용됩니다</span>
+            </div>
           )}
         </div>
 

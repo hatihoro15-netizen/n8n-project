@@ -83,6 +83,7 @@ export async function mediaRoutes(app: FastifyInstance) {
     const ALLOWED_TYPES = [
       'image/jpeg', 'image/png', 'image/webp', 'image/gif',
       'video/mp4', 'video/quicktime', 'video/webm',
+      'audio/mpeg', 'audio/wav',
     ];
     const MAX_FILES = 4;
 

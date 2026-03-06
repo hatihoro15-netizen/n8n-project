@@ -207,6 +207,9 @@ export async function productionRoutes(app: FastifyInstance) {
       }[];
       narration_mode?: 'auto' | 'manual';
       narration_text?: string;
+      bgm_url?: string;
+      enable_bgm?: boolean;
+      enable_sfx?: boolean;
     };
 
     if (!body.workflowId) {
@@ -256,6 +259,9 @@ export async function productionRoutes(app: FastifyInstance) {
         clips: body.clips,
         narration_mode: body.narration_mode,
         narration_text: body.narration_text,
+        bgm_url: body.bgm_url,
+        enable_bgm: body.enable_bgm,
+        enable_sfx: body.enable_sfx,
       });
 
       await prisma.production.update({
