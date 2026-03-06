@@ -5,7 +5,7 @@
 
 ## Current Status
 - 번역(Claude) ✅ / TTS(kie.ai ElevenLabs) ✅ / NCA FFmpeg 합성 ✅ / YouTube 업로드 ⏸️
-- 이미지 생성 웹훅 ✅ (Whisk 방식 subject/scene/style 슬롯)
+- 이미지 생성 웹훅 ✅ (Whisk 방식, kie.ai URL 직접 반환)
 - Kling AI 3.0 ✅ / 슬라이드쇼 ✅ / 영상화 ✅
 - production_mode 분기: ai_video / slideshow
 - use_mode 분기: direct / generate / analysis_only
@@ -17,17 +17,15 @@
 
 ## Next Actions
 1. [ ] 프론트 웹앱 연동
-2. [ ] YouTube 업로드 활성화 (별도 작업 예정)
-3. [ ] use_mode generate/analysis_only E2E 테스트
+2. [ ] 이미지 생성 웹훅 MinIO 바이너리 저장 (별도 작업 예정)
+3. [ ] YouTube 업로드 활성화 (별도 작업 예정)
 
 ## Last Run
-커맨드: VPS 배포 (Producer + Worker import → DB aspect_ratio 컬럼 추가 → sync → restart)
-결과: aspect_ratio 분기 E2E ✅ (9:16 + 16:9 슬라이드쇼 모두 uploaded)
+커맨드: VPS 배포 (Image Generator import → sync → restart)
+결과: 이미지 생성 웹훅 MinIO 저장 제거 → kie.ai URL 직접 반환
 위치: VPS (76.13.182.180)
-테스트:
-- 9:16 Job 8c75155b → uploaded ✅
-- 16:9 Job ca5f3cbe → uploaded ✅
-Last Commit: feat: aspect_ratio 분기 처리 추가
+테스트: /webhook/ao-generate-image → kie.ai URL 직접 반환 ✅
+Last Commit: fix: 이미지 생성 웹훅 MinIO 저장 제거 → kie.ai URL 직접 반환
 
 ## Blockers
 - YouTube 업로드: require('https'), fetch(), httpRequest PUT(EPIPE) 모두 실패
@@ -72,9 +70,9 @@ Last Commit: feat: aspect_ratio 분기 처리 추가
   }
 }
 ```
-- 응답: `{ success, count, images: [MinIO URLs], prompt, aspect_ratio, slots_used }`
-- MinIO 저장 경로: arubto/generated/{timestamp}_{index}.jpg
-- MinIO generated/ 경로: 인증 없이 PUT 가능 (anonymous upload 정책)
+- 응답: `{ success, count, images: [kie.ai URLs], prompt, aspect_ratio, slots_used }`
+- 이미지 URL: kie.ai 임시 URL (tempfile.aiquickdraw.com) — 만료 가능
+- MinIO 바이너리 저장은 별도 작업 예정 (n8n httpRequest Buffer JSON 직렬화 버그)
 
 ## 영상 제작 웹훅 (/webhook/ao-produce) Payload
 ```json

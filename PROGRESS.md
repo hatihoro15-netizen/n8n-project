@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): aspect_ratio 분기 추가 완료 (9:16/16:9 E2E 성공), YouTube 비활성화
+- 현재 상태(1줄): 이미지 생성 웹훅 kie.ai URL 직접 반환, aspect_ratio 분기 완료, YouTube 비활성화
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: aspect_ratio 분기 처리, 이미지 생성 웹훅, 파이프라인 개편
+- 최근 완료: 이미지 웹훅 kie.ai URL 직접 반환, aspect_ratio 분기, 파이프라인 개편
 - 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, NCA URL 확장자 필수
 
 ---
@@ -406,3 +406,19 @@
 ### Files / Links
 - n8n/ao_producer.json (aspect_ratio 필드/INSERT)
 - n8n/ao_worker.json (assemble-prompt + process-clips + render-video)
+
+## 2026-03-06 (이미지 웹훅 MinIO 버그 수정)
+### Done
+- [x] MinIO 저장 제거 → kie.ai URL 직접 반환으로 변경
+- [x] VPS 배포 + 테스트 성공
+### Tried
+- n8n httpRequest PUT에 Buffer body → JSON 직렬화 (`{"type":"Buffer","data":[...]}`)
+- encoding: 'arraybuffer', Uint8Array 변환 등 시도 → 모두 실패
+- NCA code execute API → 404 (해당 엔드포인트 미지원)
+### Result
+- kie.ai URL 직접 반환으로 변경 (MinIO 저장은 별도 작업 예정)
+- n8n Task Runner에서 httpRequest PUT binary body 전송 불가 확인
+### Next (방향만)
+- MinIO 바이너리 저장 (별도 작업)
+### Files / Links
+- n8n/ao_image_generator.json (MinIO 저장 제거)
