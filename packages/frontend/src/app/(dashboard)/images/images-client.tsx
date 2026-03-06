@@ -5,6 +5,7 @@ import { Header } from '@/components/layout/header';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
+import { downloadViaProxy } from '@/lib/media';
 import {
   Upload,
   X,
@@ -261,16 +262,14 @@ export default function ImagesClient() {
   };
 
   // Download image
+  const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
   const handleDownload = async (url: string, index: number) => {
     try {
-      const res = await fetch(url);
-      const blob = await res.blob();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `generated-image-${index + 1}.${blob.type.includes('png') ? 'png' : 'jpg'}`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    } catch { /* ignore */ }
+      setDownloadingIdx(index);
+      await downloadViaProxy(url, `generated-image-${index + 1}.jpg`);
+    } catch { /* ignore */ } finally {
+      setDownloadingIdx(null);
+    }
   };
 
   return (
@@ -489,8 +488,9 @@ export default function ImagesClient() {
                         size="sm"
                         variant="outline"
                         onClick={() => handleDownload(img.url, i)}
+                        disabled={downloadingIdx === i}
                       >
-                        <Download className="h-3.5 w-3.5 mr-1" />
+                        {downloadingIdx === i ? <Loader2 className="h-3.5 w-3.5 mr-1 animate-spin" /> : <Download className="h-3.5 w-3.5 mr-1" />}
                         다운로드
                       </Button>
                     </div>

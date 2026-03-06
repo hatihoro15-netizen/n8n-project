@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { Header } from '@/components/layout/header';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,7 +40,7 @@ import {
   Download,
 } from 'lucide-react';
 import Link from 'next/link';
-import { proxyMediaUrl } from '@/lib/media';
+import { proxyMediaUrl, downloadViaProxy } from '@/lib/media';
 
 const WEBHOOK_URL = 'https://n8n.srv1345711.hstgr.cloud/webhook/ao-produce';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -393,7 +393,7 @@ function WhiskProductionForm() {
   const [generatedAccepted, setGeneratedAccepted] = useState(false);
 
   // Slots
-  const [imageSlots, setImageSlots] = useState<(UploadedFile | null)[]>([null, null, null]);
+  const [imageSlots, setImageSlots] = useState<(UploadedFile | null)[]>([null]);
   const [videoSlots, setVideoSlots] = useState<(UploadedFile | null)[]>([]);
 
   // Prompt
@@ -443,10 +443,47 @@ function WhiskProductionForm() {
     } catch { /* ignore */ }
   });
 
-  const maxImageSlots = productionMode === 'slideshow' ? 20 : 5;
+  const maxImageSlots = 20;
   const filledImageCount = imageSlots.filter(s => s !== null).length;
   const filledVideoCount = videoSlots.filter(s => s !== null).length;
   const showSlots = hasImages === 'yes' || generatedAccepted;
+
+  // ── sessionStorage: 작업 내용 자동 저장/복원 ──
+  const DRAFT_KEY = 'ao_production_draft';
+
+  // 복원 (마운트 시 1회)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try {
+      const raw = sessionStorage.getItem(DRAFT_KEY);
+      if (!raw) return;
+      const draft = JSON.parse(raw);
+      if (draft.promptP1) setPromptP1(draft.promptP1);
+      if (draft.formTopic) setFormTopic(draft.formTopic);
+      if (draft.keywords) setKeywords(draft.keywords);
+      if (draft.category) setCategory(draft.category);
+      if (draft.aspectRatio) setAspectRatio(draft.aspectRatio);
+      if (draft.productionMode) setProductionMode(draft.productionMode);
+      if (draft.narrationMode) setNarrationMode(draft.narrationMode);
+      if (draft.narrationText) setNarrationText(draft.narrationText);
+      if (draft.hasImages) setHasImages(draft.hasImages);
+      if (draft.selectedWorkflowId) setSelectedWorkflowId(draft.selectedWorkflowId);
+    } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // 저장 (입력값 변경 시)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const draft = {
+      promptP1, formTopic, keywords, category,
+      aspectRatio, productionMode, narrationMode, narrationText,
+      hasImages, selectedWorkflowId,
+    };
+    sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, narrationMode, narrationText, hasImages, selectedWorkflowId]);
+
+  const clearDraft = () => sessionStorage.removeItem(DRAFT_KEY);
 
   // ── Slot handlers ──
   const addSlot = (target: 'image' | 'video') => {
@@ -597,16 +634,14 @@ function WhiskProductionForm() {
   };
 
   // Download image
+  const [downloadingIdx, setDownloadingIdx] = useState<number | null>(null);
   const handleImageDownload = async (url: string, index: number) => {
     try {
-      const res = await fetch(url);
-      const blob = await res.blob();
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `generated-image-${index + 1}.${blob.type.includes('png') ? 'png' : 'jpg'}`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    } catch { /* ignore */ }
+      setDownloadingIdx(index);
+      await downloadViaProxy(url, `generated-image-${index + 1}.jpg`);
+    } catch { /* ignore */ } finally {
+      setDownloadingIdx(null);
+    }
   };
 
   // ── Polling: track job status (2s lightweight) ──
@@ -725,6 +760,7 @@ function WhiskProductionForm() {
 
       if (production?.id) {
         setFormSuccess('영상 제작이 시작되었습니다!');
+        clearDraft();
         startPolling(production.id);
         queryClient.invalidateQueries({ queryKey: ['productions'] });
       } else {
@@ -802,7 +838,7 @@ function WhiskProductionForm() {
                 setHasImages(null);
                 setGeneratedAccepted(false);
                 setGeneratedImages([]);
-                setImageSlots([null, null, null]);
+                setImageSlots([null]);
                 setVideoSlots([]);
               }}
               className={`flex flex-col items-start gap-1 p-4 rounded-lg border-2 transition-colors text-left ${
@@ -824,7 +860,7 @@ function WhiskProductionForm() {
                 setHasImages(null);
                 setGeneratedAccepted(false);
                 setGeneratedImages([]);
-                setImageSlots([null, null, null]);
+                setImageSlots([null]);
                 setVideoSlots([]);
               }}
               className={`flex flex-col items-start gap-1 p-4 rounded-lg border-2 transition-colors text-left ${
@@ -852,7 +888,7 @@ function WhiskProductionForm() {
                 setHasImages('yes');
                 setGeneratedAccepted(false);
                 setGeneratedImages([]);
-                setImageSlots([null, null, null]);
+                setImageSlots([null]);
               }}
               className={`flex flex-col items-center gap-1 p-4 rounded-lg border-2 transition-colors ${
                 hasImages === 'yes'
@@ -954,10 +990,11 @@ function WhiskProductionForm() {
                       <button
                         type="button"
                         onClick={() => handleImageDownload(img.url, i)}
-                        className="absolute top-1.5 right-1.5 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors"
+                        disabled={downloadingIdx === i}
+                        className="absolute top-1.5 right-1.5 bg-black/50 text-white rounded-full p-1 hover:bg-black/70 transition-colors disabled:opacity-50"
                         title="다운로드"
                       >
-                        <Download className="h-3 w-3" />
+                        {downloadingIdx === i ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
                       </button>
                     </div>
                   ))}
@@ -994,7 +1031,7 @@ function WhiskProductionForm() {
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-sm font-medium flex items-center gap-1.5">
                 <ImageIcon className="h-4 w-4" />
-                이미지 ({filledImageCount}/{imageSlots.length}칸, 최대 {maxImageSlots}장)
+                미디어 ({filledImageCount}/{imageSlots.length}칸, 최대 {maxImageSlots}개)
               </h4>
             </div>
 
