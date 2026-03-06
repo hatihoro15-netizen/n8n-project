@@ -649,10 +649,6 @@ function WhiskProductionForm() {
 
     const isSlideshow = productionMode === 'slideshow';
 
-    if (isSlideshow && !promptP1.trim()) {
-      setFormError('슬라이드쇼 모드에서는 프롬프트가 필수입니다.');
-      return;
-    }
 
     const filledImages = imageSlots.filter((s): s is UploadedFile => s !== null);
     if (filledImages.length === 0 && hasImages === 'yes') {
@@ -1096,16 +1092,13 @@ function WhiskProductionForm() {
         {/* 7. Prompt fields */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="prompt_p1">
-            {productionMode === 'slideshow' ? '프롬프트 (나레이션 방향)' : '메인 프롬프트'}
-            {productionMode === 'slideshow' && <span className="text-red-500 ml-1">*</span>}
+            프롬프트 (선택사항)
           </label>
           <textarea
             id="prompt_p1"
             value={promptP1}
             onChange={e => setPromptP1(e.target.value)}
-            placeholder={productionMode === 'slideshow'
-              ? '나레이션 내용과 방향을 입력하세요 (필수)'
-              : '영상 제작 프롬프트를 입력하세요 (P1)'}
+            placeholder="영상 방향, 나레이션 힌트 등을 자유롭게 입력하세요"
             rows={3}
             className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
           />
