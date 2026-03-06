@@ -588,7 +588,7 @@ function WhiskProductionForm() {
     setGeneratedAccepted(true);
   };
 
-  // ── Polling: track job status ──
+  // ── Polling: track job status (2s lightweight) ──
   const startPolling = (productionId: string) => {
     if (pollingRef.current) clearInterval(pollingRef.current);
     setJobId(productionId);
@@ -597,15 +597,14 @@ function WhiskProductionForm() {
 
     pollingRef.current = setInterval(async () => {
       try {
-        const res = await api.get(`/api/productions/${productionId}`) as { data: any };
-        const prod = res.data;
-        setJobStatus(prod.status);
+        const res = await api.get(`/api/productions/${productionId}/status`) as { data: any };
+        const d = res.data;
+        setJobStatus(d.status);
 
-        const assets = prod.assets as Record<string, string> | null;
-        const videoUrl = assets?.videoUrl || assets?.video_url || assets?.rendered_video_url || null;
+        const videoUrl = d.videoUrl || d.video_url || null;
         if (videoUrl) setJobVideoUrl(proxyMediaUrl(videoUrl));
 
-        if (['completed', 'failed', 'paused'].includes(prod.status)) {
+        if (['completed', 'failed', 'paused'].includes(d.status)) {
           if (pollingRef.current) clearInterval(pollingRef.current);
           pollingRef.current = null;
           queryClient.invalidateQueries({ queryKey: ['productions'] });
@@ -613,7 +612,7 @@ function WhiskProductionForm() {
       } catch {
         // polling failure, keep trying
       }
-    }, 10000);
+    }, 2000);
   };
 
   // ── Submit ──
@@ -1108,6 +1107,10 @@ function WhiskProductionForm() {
               <h4 className="text-sm font-medium">제작 상태</h4>
               <JobStatusBadge status={jobStatus} />
             </div>
+
+            {/* Progress bar */}
+            <JobProgressBar status={jobStatus} />
+
             {jobVideoUrl && (
               <div>
                 <p className="text-xs text-muted-foreground mb-2">영상 미리보기</p>
@@ -1119,15 +1122,35 @@ function WhiskProductionForm() {
                 />
               </div>
             )}
-            {jobStatus === 'completed' && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => { setJobId(null); setJobStatus(null); setJobVideoUrl(null); }}
-              >
-                새 제작 시작
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              {jobStatus === 'completed' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setJobId(null); setJobStatus(null); setJobVideoUrl(null); }}
+                >
+                  새 제작 시작
+                </Button>
+              )}
+              {jobStatus === 'failed' && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    try {
+                      await api.post(`/api/productions/${jobId}/retry`);
+                      setJobStatus('started');
+                      startPolling(jobId);
+                    } catch (err: any) {
+                      setFormError(err.message || '재시도 실패');
+                    }
+                  }}
+                >
+                  <RefreshCw className="h-3.5 w-3.5 mr-1" />
+                  재시도
+                </Button>
+              )}
+            </div>
           </div>
         )}
       </CardContent>
@@ -1161,6 +1184,43 @@ function JobStatusBadge({ status }: { status: string | null }) {
       {isActive && <Loader2 className="h-3 w-3 animate-spin" />}
       {info.label}
     </span>
+  );
+}
+
+// ══════════════════════════════════════════════
+// Job Progress Bar
+// ══════════════════════════════════════════════
+const STATUS_PERCENT: Record<string, number> = {
+  pending: 0,
+  started: 10,
+  script_ready: 25,
+  tts_ready: 40,
+  images_ready: 55,
+  videos_ready: 70,
+  rendering: 85,
+  uploading: 95,
+  completed: 100,
+  failed: 0,
+  paused: 0,
+};
+
+function JobProgressBar({ status }: { status: string | null }) {
+  if (!status || status === 'failed' || status === 'paused') return null;
+  const pct = STATUS_PERCENT[status] ?? 0;
+  const isComplete = status === 'completed';
+
+  return (
+    <div className="space-y-1">
+      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full transition-all duration-500 ${
+            isComplete ? 'bg-emerald-500' : 'bg-primary'
+          }`}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <p className="text-xs text-muted-foreground">{pct}%</p>
+    </div>
   );
 }
 

@@ -75,6 +75,30 @@ export async function productionRoutes(app: FastifyInstance) {
     return { success: true, data: production };
   });
 
+  // Lightweight status poll (for real-time progress bar)
+  app.get('/api/productions/:id/status', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const production = await prisma.production.findUnique({
+      where: { id },
+      select: { status: true, errorMessage: true, assets: true },
+    });
+    if (!production) {
+      return reply.status(404).send({ success: false, message: 'Not found' });
+    }
+    const assets = (production.assets || {}) as Record<string, unknown>;
+    return {
+      success: true,
+      data: {
+        status: production.status,
+        errorMessage: production.errorMessage,
+        videoUrl: assets.videoUrl || assets.video_url || null,
+        thumbnailUrl: assets.thumbnailUrl || assets.thumbnail_url || null,
+      },
+    };
+  });
+
   // Trigger new production
   app.post('/api/productions', {
     preHandler: [app.authenticate],

@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 이미지 생성 페이지 추가 완료 (Whisk 방식) + VPS 배포 완료
+- 현재 상태(1줄): 이미지 생성 → 영상 제작 자동 연동 완료 + VPS 배포 완료
 - 진행중 작업: n8n ao-produce E2E 테스트
-- 최근 완료: /images 이미지 생성 페이지 (3슬롯 Whisk + kie.ai)
+- 최근 완료: 이미지 생성 → 영상 제작 자동 슬롯 추가 연동
 - 주의사항: n8n ao-produce 웹훅 활성화 필요, PM2 프로세스명=n8n-web-backend
 
 ---
@@ -304,3 +304,17 @@
 - packages/frontend/src/app/(dashboard)/images/images-client.tsx (신규)
 - packages/frontend/src/components/layout/sidebar.tsx (메뉴 추가)
 - packages/backend/src/routes/media.ts (aspect_ratio + save-external)
+
+## 2026-03-06 (15차)
+### Done
+- [x] 이미지 생성 → 영상 제작 자동 연동
+- [x] WhiskProductionForm 마운트 시 localStorage 확인 → imageSlots 자동 추가
+- [x] hasImages='yes' 자동 설정
+- [x] VPS 배포 + PM2 재시작
+### Result
+- TypeScript + quality-check PASS
+- VPS PM2 online
+### Next (방향만)
+- n8n ao-produce 웹훅 E2E 테스트
+### Files / Links
+- productions-client.tsx (+22줄, 자동 import 로직)
