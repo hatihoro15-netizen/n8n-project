@@ -599,7 +599,7 @@ function WhiskProductionForm() {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ prompt: genPrompt, count: genCount }),
+        body: JSON.stringify({ prompt: genPrompt, count: genCount, aspect_ratio: aspectRatio }),
       });
       const data = await res.json();
       if (data.data?.images?.length) {
