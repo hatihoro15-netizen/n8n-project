@@ -124,13 +124,11 @@ export async function mediaRoutes(app: FastifyInstance) {
   app.post('/api/media/generate-image', {
     preHandler: [app.authenticate],
   }, async (request, reply) => {
-    const { prompt, count = 1, aspect_ratio, ref_subject, ref_scene, ref_style, my_images } = request.body as {
+    const { prompt, count = 1, aspect_ratio, slots, my_images } = request.body as {
       prompt: string;
       count?: number;
       aspect_ratio?: '9:16' | '16:9';
-      ref_subject?: string;
-      ref_scene?: string;
-      ref_style?: string;
+      slots?: Record<string, { use: boolean; url: string; vision_analysis: string }>;
       my_images?: { url: string; use_mode: string; analysis?: string; auto_prompt?: string }[];
     };
 
@@ -144,9 +142,7 @@ export async function mediaRoutes(app: FastifyInstance) {
         count: Math.min(Math.max(count, 1), 3),
         aspect_ratio: aspect_ratio || '9:16',
       };
-      if (ref_subject) webhookPayload.ref_subject = ref_subject;
-      if (ref_scene) webhookPayload.ref_scene = ref_scene;
-      if (ref_style) webhookPayload.ref_style = ref_style;
+      if (slots && Object.keys(slots).length > 0) webhookPayload.slots = slots;
       if (my_images?.length) webhookPayload.my_images = my_images;
 
       logger.info({ webhookPayload }, 'Triggering ao-generate-image webhook');

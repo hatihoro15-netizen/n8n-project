@@ -182,9 +182,11 @@ export default function ImagesClient() {
         count,
         aspect_ratio: aspectRatio,
       };
-      if (subject.url && subject.use) body.ref_subject = subject.url;
-      if (scene.url && scene.use) body.ref_scene = scene.url;
-      if (style.url && style.use) body.ref_style = style.url;
+      const slots: Record<string, { use: boolean; url: string; vision_analysis: string }> = {};
+      if (subject.url && subject.use) slots.subject = { use: true, url: subject.url, vision_analysis: subject.analysis || '' };
+      if (scene.url && scene.use) slots.scene = { use: true, url: scene.url, vision_analysis: scene.analysis || '' };
+      if (style.url && style.use) slots.style = { use: true, url: style.url, vision_analysis: style.analysis || '' };
+      if (Object.keys(slots).length > 0) body.slots = slots;
 
       const myImagesPayload = myPhotos
         .filter(p => p.url)
