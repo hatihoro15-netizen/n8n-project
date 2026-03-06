@@ -205,6 +205,8 @@ export async function productionRoutes(app: FastifyInstance) {
         scene_prompt?: string;
         include_audio?: boolean;
       }[];
+      narration_mode?: 'auto' | 'manual';
+      narration_text?: string;
     };
 
     if (!body.workflowId) {
@@ -252,6 +254,8 @@ export async function productionRoutes(app: FastifyInstance) {
         files: body.files,
         ref_files: body.ref_files,
         clips: body.clips,
+        narration_mode: body.narration_mode,
+        narration_text: body.narration_text,
       });
 
       await prisma.production.update({
