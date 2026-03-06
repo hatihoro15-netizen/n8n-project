@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 이미지 생성 웹훅 kie.ai URL 직접 반환, aspect_ratio 분기 완료, YouTube 비활성화
+- 현재 상태(1줄): 번역 노드 JSON 이스케이프 버그 수정, 나레이션 자동생성, 중간 콜백 3개 추가 완료
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: 이미지 웹훅 kie.ai URL 직접 반환, aspect_ratio 분기, 파이프라인 개편
-- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, NCA URL 확장자 필수
+- 최근 완료: 번역 노드 Code 노드 교체, 나레이션 생성(Claude), 콜백 노드 3개, NCA 한글 폰트, productionMode 우선순위 수정
+- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, NCA 한글 폰트 재시작 시 사라짐
 
 ---
 
@@ -422,3 +422,51 @@
 - MinIO 바이너리 저장 (별도 작업)
 ### Files / Links
 - n8n/ao_image_generator.json (MinIO 저장 제거)
+
+### ✅ Producer 에러 핸들링 수정 (500→400)
+- 증상: ao-produce 웹훅 검증 실패 시 HTTP 500 반환
+- 원인: Code 노드 throw → n8n 전체 실행 실패 → 500. "에러 핸들러" 노드는 고립(미연결)
+- 수정:
+  - 입력값 검증 Code: try-catch 래핑 → 에러 시 `{ error: true, message }` 반환
+  - IF 노드 "검증 결과 분기" 추가: error=true → 400 응답 / false → Job 생성
+  - 불필요한 stopAndError "에러 핸들러" 노드 제거
+- 테스트: 검증 실패 → 400 + 에러 메시지, 정상 요청 → 200 + job_id
+### Files / Links
+- n8n/ao_producer.json (에러 핸들링 수정)
+
+## 2026-03-06 (Worker 대규모 개선)
+### ✅ Done
+- [x] 나레이션 자동생성 추가 (Claude API)
+  - 우선순위: narration_script(직접입력) > prompt_p1(Claude생성) > topic(Claude생성)
+  - 슬라이드쇼/ai_video 모두 적용
+  - topic+keywords+category 전부 합쳐서 컨텍스트 제공
+- [x] productionMode 우선순위 수정
+  - job.production_mode 명시적 설정 우선 (hasDirect가 override하던 버그 수정)
+- [x] 중간 콜백 노드 3개 추가 (웹앱 5분 타임아웃 방지)
+  - cb-processing: 작업 시작 시
+  - cb-rendering: 렌더링 시작 시
+  - cb-generated: 렌더링 완료 시
+- [x] NCA 한글 자막 폰트 설치 (fonts-nanum)
+  - 증상: 한글 자막 □□□ 깨짐
+  - 수정: docker exec -u root nca-toolkit apt-get install -y fonts-nanum
+  - 주의: 컨테이너 재시작 시 사라짐 (영구화 필요)
+- [x] 번역 노드 JSON 이스케이프 버그 수정
+  - 증상: prompt에 +|, ", 줄바꿸 포함 시 "JSON parameter needs to be valid JSON" 에러
+  - 원인: httpRequest 노드 jsonBody 템플릿이 특수문자 미이스케이프
+  - 수정: httpRequest → Code 노드로 교체 (JS 객체 body로 안전 전달)
+  - 테스트: 특수문자 포함 프롬프트 → 전체 파이프라인 uploaded ✅
+- [x] CLAUDE_API_KEY 환경변수 추가 (docker-compose.yml, n8n + worker)
+  - docker compose up -d로 재생성 필요 (restart는 env 미적용)
+- [x] Producer: narration_script 컬럼 INSERT 추가
+### 🔁 Tried
+- kie.ai TTS 402 (크레딧 부족) + 간헐적 internal error → 크레딧 충전 + 재시도로 해결
+- docker compose restart vs up -d → restart는 환경변수 미적용 확인
+### 📌 Result
+- Worker 전체 파이프라인 안정화 (번역→나레이션→TTS→이미지→비디오→렌더링→콜백)
+- 특수문자 프롬프트 E2E 성공: Job 65ae2666 → uploaded ✅
+### ➡️ Next (방향만)
+- 프론트 웹앱 연동
+- NCA 한글 폰트 영구화
+### 📁 Files / Links
+- n8n/ao_worker.json (나레이션+콜백+번역 노드 수정)
+- n8n/ao_producer.json (narration_script INSERT)

@@ -4,12 +4,15 @@
 > (여기엔 최신 상태/Next/LastRun/Blockers만 유지)
 
 ## Current Status
-- 번역(Claude) ✅ / TTS(kie.ai ElevenLabs) ✅ / NCA FFmpeg 합성 ✅ / YouTube 업로드 ⏸️
+- 번역(Claude Code 노드) ✅ / TTS(kie.ai ElevenLabs) ✅ / NCA FFmpeg 합성 ✅ / YouTube 업로드 ⏸️
 - 이미지 생성 웹훅 ✅ (Whisk 방식, kie.ai URL 직접 반환)
 - Kling AI 3.0 ✅ / 슬라이드쇼 ✅ / 영상화 ✅
 - production_mode 분기: ai_video / slideshow
 - use_mode 분기: direct / generate / analysis_only
 - aspect_ratio 분기: 9:16 (세로/숏폼) / 16:9 (가로/롱폼)
+- 나레이션 자동생성 ✅ (Claude API, narration_script 우선)
+- 중간 콜백 3개 ✅ (processing / rendering / generated)
+- 번역 노드 JSON 이스케이프 버그 수정 ✅ (httpRequest → Code 노드)
 - YouTube 업로드 일시 비활성화 (나중에 별도 작업)
 
 ## Goal
@@ -17,21 +20,25 @@
 
 ## Next Actions
 1. [ ] 프론트 웹앱 연동
-2. [ ] 이미지 생성 웹훅 MinIO 바이너리 저장 (별도 작업 예정)
-3. [ ] YouTube 업로드 활성화 (별도 작업 예정)
+2. [ ] NCA 한글 자막 폰트 영구화 (컨테이너 재시작 시 사라짐)
+3. [ ] 이미지 생성 웹훅 MinIO 바이너리 저장 (별도 작업 예정)
+4. [ ] YouTube 업로드 활성화 (별도 작업 예정)
 
 ## Last Run
-커맨드: VPS 배포 (Image Generator import → sync → restart)
-결과: 이미지 생성 웹훅 MinIO 저장 제거 → kie.ai URL 직접 반환
+커맨드: VPS 배포 (Worker import → DB sync → restart)
+결과: 번역 노드 JSON 이스케이프 버그 수정 — httpRequest → Code 노드 교체
 위치: VPS (76.13.182.180)
-테스트: /webhook/ao-generate-image → kie.ai URL 직접 반환 ✅
-Last Commit: fix: 이미지 생성 웹훅 MinIO 저장 제거 → kie.ai URL 직접 반환
+테스트: 특수문자(+|, ", 줄바꿈) 포함 프롬프트 → 번역 정상 → 전체 파이프라인 uploaded ✅
+Last Commit: fix: 번역 노드 JSON 이스케이프 버그 수정
 
 ## Blockers
 - YouTube 업로드: require('https'), fetch(), httpRequest PUT(EPIPE) 모두 실패
   - Code v1(vm2) 시도 중이었으나 사용자 요청으로 중단, 나중에 별도 작업
 - NCA toolkit: GUNICORN_TIMEOUT 미설정 시 기본 30초로 worker kill됨
   - docker run 시 -e GUNICORN_TIMEOUT=600 필수
+- NCA 한글 자막: fonts-nanum 컨테이너 재시작 시 사라짐
+  - 임시: docker exec -u root nca-toolkit apt-get install -y fonts-nanum
+  - 영구: Dockerfile 또는 docker run 시 볼륨 마운트 필요
 
 ## n8n 워크플로우 ID
 - AO Producer: XV5shW265ht59MTD (active)
@@ -47,12 +54,18 @@ Last Commit: fix: 이미지 생성 웹훅 MinIO 저장 제거 → kie.ai URL 직
 
 ## VPS 환경변수
 - KIEAI_API_KEY, CREATOMATE_API_KEY, YT_CLIENT_ID, YT_CLIENT_SECRET, YT_REFRESH_TOKEN
+- CLAUDE_API_KEY (번역 + 나레이션 생성용)
 - WEBAPP_CALLBACK_URL=https://api-n8n.xn--9g4bn4fm2bl2mb9f.com
 - N8N_BLOCK_ENV_ACCESS_IN_NODE=false
 - MINIO_BUCKET=arubto, MINIO_BASE_URL=http://76.13.182.180:9000
 
 ## VPS docker-compose 경로
 - /docker/n8n/docker-compose.yml
+
+## n8n 컨테이너 이름 (중요)
+- n8n 메인: n8n-n8n-1
+- n8n worker: n8n-n8n-worker-1
+- postgres: n8n-postgres
 
 ## NCA toolkit 실행 (중요)
 - `docker run -d --name nca-toolkit --restart always -p 8080:8080 -e API_KEY=nca-sagong-2026 -e S3_ENDPOINT_URL=http://76.13.182.180:9000 -e S3_ACCESS_KEY=admin -e S3_SECRET_KEY=NcaMin10S3cure! -e S3_BUCKET_NAME=nca-toolkit -e S3_REGION=us-east-1 -e GUNICORN_TIMEOUT=600 stephengpope/no-code-architects-toolkit:latest`
@@ -84,6 +97,7 @@ Last Commit: fix: 이미지 생성 웹훅 MinIO 저장 제거 → kie.ai URL 직
   "production_mode": "ai_video | slideshow",
   "aspect_ratio": "9:16 | 16:9",
   "clip_duration": 8,
+  "narration_script": "(optional) 직접 입력 나레이션",
   "files": [
     { "type": "image", "url": "MinIO URL", "vision_analysis": "분석결과",
       "use_mode": "direct | generate | analysis_only", "auto_prompt": "..." }
@@ -101,11 +115,13 @@ Last Commit: fix: 이미지 생성 웹훅 MinIO 저장 제거 → kie.ai URL 직
 - 배포 순서: import → DB activeVersionId 동기화 → active=true → restart
 - import 실행 시 자동 deactivate됨
 - workflow_history 테이블 PK 컬럼명: versionId (id 아님)
+- 환경변수 변경 시: docker compose up -d (restart는 env 미적용)
 
 ## n8n Task Runner 제한사항
 - require('https'), require('http') 등 Node.js 내장 모듈 사용 불가
 - URL 클래스, fetch() 사용 불가
 - this.helpers.httpRequest PUT 바이너리 → EPIPE 에러
+- httpRequest 노드 jsonBody 템플릿: 특수문자 이스케이프 안됨 → Code 노드 사용
 - NCA FFmpeg -shortest: argument 비워두면 오류 → -t 사용
 - NCA FFmpeg URL: 파일 확장자 필수 (ensureExtension 자동 보정)
 
