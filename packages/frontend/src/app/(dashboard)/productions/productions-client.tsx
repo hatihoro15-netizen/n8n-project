@@ -469,7 +469,7 @@ function WhiskProductionForm() {
   const uploadToSlot = (target: 'image' | 'video', index: number, file: File) => {
     const isImage = file.type.startsWith('image/');
     const isVideo = file.type.startsWith('video/');
-    if (target === 'image' && !isImage) return;
+    if (target === 'image' && !isImage && !isVideo) return;
     if (target === 'video' && !isVideo) return;
 
     const preview = URL.createObjectURL(file);
@@ -1329,7 +1329,7 @@ function SlotCard({
   onChangeAutoPrompt?: (prompt: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
-  const acceptType = slotType === 'image' ? 'image/*' : 'video/*';
+  const acceptType = slotType === 'image' ? 'image/*,video/*' : 'video/*';
 
   if (!slot) {
     return (
@@ -1372,10 +1372,10 @@ function SlotCard({
         {isImage ? (
           <img src={slot.preview} alt={`${slotType} ${index + 1}`} className="w-full h-full object-cover" />
         ) : (
-          <video src={slot.preview} className="w-full h-full object-cover" muted preload="metadata" />
+          <video src={slot.preview} className="w-full h-full object-cover" autoPlay muted loop playsInline />
         )}
         <div className="absolute top-0 left-0 bg-black/50 text-white text-xs px-1.5 py-0.5 rounded-br flex items-center gap-1">
-          {isImage ? <ImageIcon className="h-3 w-3" /> : <Video className="h-3 w-3" />}
+          {isImage ? <ImageIcon className="h-3 w-3" /> : <><span>🎬</span><Video className="h-3 w-3" /></>}
           {index + 1}
         </div>
         <button
