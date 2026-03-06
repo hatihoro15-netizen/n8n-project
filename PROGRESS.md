@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 전체 파이프라인 개편 완료 — 슬라이드쇼+영상화 E2E 성공 (YouTube 업로드 일시 비활성화)
-- 진행중 작업: YouTube 업로드 활성화, 프론트 웹앱 연동
-- 최근 완료: 파이프라인 개편 (use_mode 분기, NCA FFmpeg 통합, kie.ai TTS)
-- 주의사항: YouTube 업로드 일시 비활성화 (require('https') 차단), NCA URL 확장자 필수
+- 현재 상태(1줄): 이미지 생성 웹훅 E2E 성공 + 파이프라인 개편 완료 (YouTube 비활성화)
+- 진행중 작업: 프론트 웹앱 연동
+- 최근 완료: 이미지 생성 웹훅 (Whisk 방식), 파이프라인 개편 (NCA FFmpeg 통합)
+- 주의사항: YouTube 업로드 비활성화 (별도 작업 예정), NCA URL 확장자 필수
 
 ---
 
@@ -364,3 +364,24 @@
 ### 📁 Files / Links
 - CLAUDE.md, HANDOFF.md, PROGRESS.md (형식 병합)
 - docs/01~07 (신규/업데이트)
+
+## 2026-03-06 (이미지 생성 웹훅)
+### Done
+- [x] AO Image Generator 워크플로우 신규 생성 (ID: d5b35fb7f1724e448)
+- [x] 웹훅 엔드포인트: POST /webhook/ao-generate-image
+- [x] Whisk 방식 3슬롯 구조 (subject/scene/style)
+  - 각 슬롯: url, vision_analysis, use (true/false)
+  - 슬롯별 프롬프트 자동 합성
+- [x] kie.ai nano-banana-pro 이미지 생성 (1~3장)
+- [x] MinIO 저장: arubto/generated/{timestamp}_{index}.jpg
+- [x] MinIO anonymous upload 정책 설정 (generated/ prefix)
+- [x] VPS 배포 완료 + E2E 테스트 성공
+### Result
+- 테스트: /webhook/ao-generate-image → 3장 생성 → MinIO arubto/generated/ 저장 확인
+- 응답: { success, count, images: [MinIO URLs], prompt, aspect_ratio, slots_used }
+- 워크플로우 구조: Webhook → Code(이미지 생성) → respondToWebhook
+### Next (방향만)
+- 프론트 웹앱에서 이미지 생성 웹훅 연동
+- generated_images를 영상 제작 파이프라인에 전달 E2E
+### Files / Links
+- n8n/ao_image_generator.json (신규)
