@@ -272,7 +272,8 @@ export async function productionRoutes(app: FastifyInstance) {
           errorMessage: error instanceof Error ? error.message : 'Webhook trigger failed',
         },
       });
-      logger.error({ productionId: production.id, error }, 'AO webhook trigger failed');
+      const errMsg = error instanceof Error ? error.message : String(error);
+      logger.error({ productionId: production.id, error: errMsg }, 'AO webhook trigger failed');
     }
 
     const updated = await prisma.production.findUnique({
