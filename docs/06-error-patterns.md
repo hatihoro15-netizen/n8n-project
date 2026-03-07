@@ -61,3 +61,15 @@
 - 잘못된 접근: 리다이렉트 URL 그대로 전달
 - 올바른 접근: 직접 .jpg/.png URL만 전달, 실패 시 이미지 없이 재시도
 - 재발 방지: process-clips에 이미지 URL 실패 시 텍스트 전용 fallback 로직
+
+### [2026-03-07] Length Gate 초과 (LENGTH_GATE_BLOCKED)
+- 증상: strict_mode=true에서 영상 길이가 target_duration+1초 초과 시 실패
+- 잘못된 접근: 길이 무시하고 그대로 렌더링
+- 올바른 접근: clip_count 재계산으로 동적 보정 (strict_mode=false) / 에러 반환 (strict_mode=true)
+- 재발 방지: Length Gate 로직이 process-clips에서 자동 적용
+
+### [2026-03-07] Prompt Lock 불일치
+- 증상: Worker 시작 시 prompt_hash가 현재 prompt_p1 해시와 불일치
+- 잘못된 접근: 이전 계획 그대로 진행
+- 올바른 접근: prompt_lock_valid=false 시 기존 계획 폐기, 현재 prompt_p1로 재생성
+- 재발 방지: assemble-prompt 노드에서 자동 감지

@@ -7,11 +7,11 @@
 ---
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
-- 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 번역 노드 JSON 이스케이프 버그 수정, 나레이션 자동생성, 중간 콜백 3개 추가 완료
+- 마지막 업데이트: 2026-03-07
+- 현재 상태(1줄): P0 뼈대 구현 완료 (Prompt Lock + Last-Edit Priority + Length Gate + verify_mode)
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: 번역 노드 Code 노드 교체, 나레이션 생성(Claude), 콜백 노드 3개, NCA 한글 폰트, productionMode 우선순위 수정
-- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, NCA 한글 폰트 재시작 시 사라짐
+- 최근 완료: P0 뼈대 — prompt_hash DB 저장, Last-Edit Priority, Length Gate clip_count 재계산, verify_mode output_hash 기록
+- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, crypto 미지원으로 FNV-1a 해시 사용
 
 ---
 
@@ -470,3 +470,38 @@
 ### 📁 Files / Links
 - n8n/ao_worker.json (나레이션+콜백+번역 노드 수정)
 - n8n/ao_producer.json (narration_script INSERT)
+
+## 2026-03-07
+### ✅ Done
+- [x] DB: jobs 테이블에 prompt_hash/duration/strict_mode/verify_mode 컬럼 추가 (ALTER TABLE)
+- [x] Producer: prompt_p1 필수화, topic/keywords/category 선택으로 변경 (저장/표시 전용)
+- [x] Producer: duration 허용값 검증 (30/40/50/60/90/120/150/180)
+- [x] Producer: prompt_hash(FNV-1a) 생성 + DB 저장
+- [x] Producer: strict_mode/verify_mode 파라미터 추가
+- [x] Worker: Last-Edit Priority — prompt_p1 단일 소스, 슬롯 치환({TOPIC} 등) 제거
+- [x] Worker: Prompt Lock — prompt_hash 비교, 불일치 시 prompt_lock_valid=false
+- [x] Worker: Length Gate — target_duration+1초 버퍼, clip_count 재계산, strict_mode 분기
+- [x] Worker: verify_mode — output_hash를 mark-generated에서 job_logs에 INSERT
+- [x] docs/05-input-schema.md — Prompt Lock/Last-Edit Priority/Length Gate/verify_mode 문서화
+- [x] docs/06-error-patterns.md — LENGTH_GATE_BLOCKED/Prompt Lock 불일치 패턴 추가
+- [x] supabase/ao_supabase_init.sql — CREATE TABLE + ALTER TABLE 양쪽 반영
+- [x] 미사용 레거시 파일 57개 일괄 정리 (63,877줄 삭제)
+### 🧪 Test
+- 30초 케이스 (job 874989a6): duration=30, strict_mode=false → length_gate_status=corrected, total_duration=19.1s → uploaded ✅
+- 60초 케이스 (job c0a3dde4): duration=60, strict_mode=true → length_gate_status=pass, total_duration=39.8s → uploaded ✅
+- 잘못된 duration(45) → 400 에러 반환 ✅
+- prompt_p1 누락 → 400 에러 반환 ✅
+- prompt_hash DB 저장 확인 ✅
+- verify_mode output_hash job_logs 기록 확인 ✅
+### 📌 Result
+- P0 뼈대 3개 기능 모두 구현 완료
+- Producer 입력 계약 확정: prompt_p1 필수, topic/keywords/category 선택
+- n8n Code 노드에서 crypto 모듈 미지원 → FNV-1a 해시 대체
+### ➡️ Next (방향만)
+- 프론트 웹앱 연동
+- Prompt Lock 불일치 시 실제 재생성 플로우 구현 (현재는 감지만)
+### 📁 Files / Links
+- n8n/ao_producer.json, n8n/ao_worker.json
+- supabase/ao_supabase_init.sql
+- docs/05-input-schema.md, docs/06-error-patterns.md
+- HANDOFF.md, PROGRESS.md

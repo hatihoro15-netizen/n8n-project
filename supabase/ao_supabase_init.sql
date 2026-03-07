@@ -28,6 +28,11 @@ CREATE TABLE IF NOT EXISTS jobs (
   render_id           TEXT,
   youtube_video_id    TEXT,
   youtube_url         TEXT,
+  -- P0: Prompt Lock / Length Gate / Verify
+  prompt_hash         TEXT,                          -- SHA-256(prompt_p1), Prompt Lock용
+  duration            INT,                           -- 목표 길이(초): 30/40/50/60/90/120/150/180
+  strict_mode         BOOLEAN NOT NULL DEFAULT FALSE,-- Length Gate 하드 차단 여부
+  verify_mode         BOOLEAN NOT NULL DEFAULT FALSE,-- 검증 모드 (output_hash 기록)
   -- 상태 관리
   status              TEXT NOT NULL DEFAULT 'queued',
   -- queued / processing / generated / uploading / uploaded / failed / retrying
@@ -182,6 +187,14 @@ CREATE TRIGGER set_templates_updated_at
 CREATE TRIGGER set_api_connections_updated_at
   BEFORE UPDATE ON api_connections
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+-- ========================================
+-- 9. P0 스키마 확장 (ALTER — 기존 테이블에 컬럼 추가)
+-- ========================================
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS prompt_hash TEXT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS duration INT;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS strict_mode BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS verify_mode BOOLEAN NOT NULL DEFAULT FALSE;
 
 -- ========================================
 -- 완료 확인 쿼리

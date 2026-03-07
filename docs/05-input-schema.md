@@ -4,16 +4,19 @@
 
 | 필드 | 필수 | 타입 | 설명 |
 |------|------|------|------|
-| prompt_p1 | Y | string | 원문 지침 (절대 변경 금지) |
+| prompt_p1 | Y | string | 원문 지침 (절대 변경 금지, 단일 소스) |
 | translate_mode | N | string | 한글→영문 처리. auto(기본)/on/off |
-| topic | Y | string | 주제 (1줄 정의) |
-| keywords | Y | string | 키워드 (쉼표 구분) |
-| category | Y | string | 카테고리 |
+| topic | N | string | 주제 (저장/표시 전용, 생성 영향 금지) |
+| keywords | N | string | 키워드 (저장/표시 전용, 생성 영향 금지) |
+| category | N | string | 카테고리 (저장/표시 전용, 생성 영향 금지) |
+| duration | N | int | 목표 길이(초). 허용값: 30/40/50/60/90/120/150/180 |
+| strict_mode | N | boolean | Length Gate 하드 차단. false(기본)=보정 우선, true=초과 시 실패 |
+| verify_mode | N | boolean | 검증 모드. true 시 output_hash를 job_logs에 기록 |
 | images[1..4] | N | string[] | 이미지 URL 1~4개. 슬롯 자동 매핑 |
 | ref_video | N | string | 레퍼런스 영상 URL |
-| use_media | Y | string | auto / forced / off |
-| template_id | N | string | 영상 템플릿 선택 (뉴스/광고/스토리 등) |
-| upload_target | Y | string | YouTube |
+| use_media | N | string | auto / forced(기본) / off |
+| template_id | N | string | 영상 템플릿 선택 |
+| upload_target | N | string | YouTube (기본) |
 | metadata.title | N | string | 영상 제목 |
 | metadata.description | N | string | 영상 설명 |
 | metadata.tags | N | string | 태그 (쉼표 구분) |
@@ -24,6 +27,32 @@
 | prompt_lang_detected | 언어 감지 결과 (ko/en/...) |
 | prompt_en | 영문 복사용 프롬프트 |
 | prompt_to_engine | 실제 엔진에 전달된 최종 프롬프트 |
+| prompt_hash | prompt_p1의 FNV-1a 해시 (Prompt Lock용) |
+
+## Prompt Lock
+- Producer: prompt_p1의 해시를 prompt_hash 컬럼에 저장
+- Worker: 생성 시작 시 현재 prompt_p1 해시와 ao_jobs.prompt_hash 비교
+- 불일치 시 기존 계획 폐기 후 재생성
+- 해시 알고리즘: FNV-1a (n8n Code 노드 crypto 미지원으로 인한 선택)
+
+## Last-Edit Priority
+- 생성 직전 마지막 prompt_p1을 단일 소스로 사용
+- topic/keywords/category로 프롬프트 재조합 금지
+- topic/keywords/category는 DB 저장 + UI 표시 전용
+
+## Length Gate
+- duration 필드로 목표 길이 지정 (허용값: 30/40/50/60/90/120/150/180초)
+- 허용 초과: target_duration + 1초 (예: 30초 → 최대 31초)
+- strict_mode=false (기본): 초과 시 clip_count 재계산으로 동적 보정
+- strict_mode=true: 허용 초과 시 LENGTH_GATE_BLOCKED 에러로 실패 처리
+- length_gate_status 값: no_gate / pass / corrected / over_soft / blocked
+
+## Verify Mode
+- payload에 verify_mode=true 추가 시 활성화
+- 단일 실행 결과의 output_hash를 DB ao_job_logs(detail.output_hash)에 기록
+- 10회 반복은 외부 호출자가 동일 payload로 10회 호출하는 구조
+- 비교 기준: ao_job_logs에서 동일 prompt_hash의 output_hash 값 일치 여부 확인
+- output_hash 생성 입력: prompt_to_engine + production_mode + clip_duration + aspect_ratio + target_duration + tts_text + total_duration
 
 ## use_media 모드
 - **auto**: 이미지/영상 있으면 활용, 없으면 프롬프트만으로 생성
@@ -45,10 +74,7 @@ images[3] → {IMG_4}
 
 ## 검증 규칙
 - prompt_p1: 비어있으면 400 에러
-- topic: 비어있으면 400 에러
-- keywords: 비어있으면 400 에러
-- category: 비어있으면 400 에러
-- use_media: auto/forced/off 중 하나가 아니면 400 에러
-- upload_target: 비어있으면 400 에러
+- duration: 허용값(30/40/50/60/90/120/150/180) 외 400 에러
 - images: 최대 4개, 각 URL 형식 검증
 - use_media=forced인데 images/ref_video 없으면 400 에러
+- topic/keywords/category: 선택 (누락 시 빈 문자열 저장)

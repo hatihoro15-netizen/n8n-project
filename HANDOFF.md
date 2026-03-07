@@ -13,11 +13,16 @@
 - 나레이션 자동생성 ✅ (Claude API, narration_script 우선)
 - 중간 콜백 4개 ✅ (processing / rendering / generated / uploaded)
 - 콜백 videoUrl 필드 ✅ (generated + uploaded 콜백에 videoUrl/renderedVideoUrl 포함)
-- 번역 노드 JSON 이스케이프 버그 수정 ✅ (httpRequest → Code 노드)
 - YouTube 업로드 일시 비활성화 (나중에 별도 작업)
-- Worker 영상 품질 개선 ✅ (이미지 비율/제목바/자막줄바꿈/TTS실측길이/BGM·SFX 조건부)
-- BGM/SFX 기본 OFF ✅ (enable_bgm/enable_sfx 플래그, bgm_url 지원)
-- Producer SQL 이스케이프 ✅ (esc() 헬퍼로 single quote 방어)
+- Worker 영상 품질 개선 ✅
+- BGM/SFX 기본 OFF ✅
+- Producer SQL 이스케이프 ✅
+- **P0 뼈대 구현 ✅**: Prompt Lock + Last-Edit Priority + Length Gate
+  - prompt_hash: DB 저장 + Worker 비교 ✅
+  - Last-Edit Priority: prompt_p1 단일 소스, topic/keywords/category 재조합 금지 ✅
+  - Length Gate: duration 허용값 검증 + clip_count 재계산 + strict_mode 분기 ✅
+  - verify_mode: output_hash를 ao_job_logs에 기록 ✅
+  - topic/keywords/category: 필수→선택 변경 ✅
 
 ## Goal
 프론트 웹앱 연동
@@ -29,20 +34,20 @@
 4. [ ] YouTube 업로드 활성화 (별도 작업 예정)
 
 ## Last Run
-커맨드: VPS 배포 (Worker import → DB sync → restart)
-결과: Worker 영상 품질 개선 7항목 + videoUrl 콜백 추가
-위치: VPS (76.13.182.180)
-테스트: job 0322a73c 재시도 중 (kie.ai TTS 일시 오류로 이전 시도 실패)
+커맨드: P0 뼈대 구현 — Prompt Lock + Last-Edit Priority + Length Gate
+결과:
+- DB: jobs 테이블에 prompt_hash/duration/strict_mode/verify_mode 컬럼 추가
+- Producer: prompt_p1 필수, topic/keywords/category 선택, duration 허용값 검증, prompt_hash 생성
+- Worker: Last-Edit Priority (슬롯 치환 제거), Prompt Lock (해시 비교), Length Gate (clip_count 재계산)
+- verify_mode: output_hash를 job_logs에 기록
+- 테스트: 30초(corrected)/60초(pass) 케이스 모두 통과, output_hash 정상 기록
+위치: Local + VPS (76.13.182.180)
 Last Commit: (pending)
 
 ## Blockers
-- YouTube 업로드: require('https'), fetch(), httpRequest PUT(EPIPE) 모두 실패
-  - Code v1(vm2) 시도 중이었으나 사용자 요청으로 중단, 나중에 별도 작업
+- YouTube 업로드: Code v1(vm2) 시도 중이었으나 사용자 요청으로 중단
 - NCA toolkit: GUNICORN_TIMEOUT 미설정 시 기본 30초로 worker kill됨
-  - docker run 시 -e GUNICORN_TIMEOUT=600 필수
 - NCA 한글 자막: fonts-nanum 컨테이너 재시작 시 사라짐
-  - 임시: docker exec -u root nca-toolkit apt-get install -y fonts-nanum
-  - 영구: Dockerfile 또는 docker run 시 볼륨 마운트 필요
 - kie.ai TTS: 간헐적 internal error 발생 (일시적, 재시도로 해결)
 
 ## n8n 워크플로우 ID
@@ -88,17 +93,17 @@ Last Commit: (pending)
   }
 }
 ```
-- 응답: `{ success, count, images: [kie.ai URLs], prompt, aspect_ratio, slots_used }`
-- 이미지 URL: kie.ai 임시 URL (tempfile.aiquickdraw.com) — 만료 가능
-- MinIO 바이너리 저장은 별도 작업 예정 (n8n httpRequest Buffer JSON 직렬화 버그)
 
 ## 영상 제작 웹훅 (/webhook/ao-produce) Payload
 ```json
 {
-  "prompt_p1": "(optional) 메인 프롬프트/나레이션",
-  "topic": "주제",
-  "keywords": "키워드",
-  "category": "카테고리",
+  "prompt_p1": "(필수) 메인 프롬프트/나레이션",
+  "topic": "(선택) 주제 — 저장/표시 전용",
+  "keywords": "(선택) 키워드 — 저장/표시 전용",
+  "category": "(선택) 카테고리 — 저장/표시 전용",
+  "duration": 30,
+  "strict_mode": false,
+  "verify_mode": false,
   "production_mode": "ai_video | slideshow",
   "aspect_ratio": "9:16 | 16:9",
   "clip_duration": 8,
@@ -117,8 +122,27 @@ Last Commit: (pending)
 ## 콜백 필드 (웹앱으로 전송)
 - processing: `{ productionId, status, jobId }`
 - rendering: `{ productionId, status, jobId }`
-- generated: `{ productionId, status, jobId, videoUrl, renderedVideoUrl }`
+- generated: `{ productionId, status, jobId, videoUrl, renderedVideoUrl, output_hash, length_gate_status }`
 - uploaded: `{ productionId, status, jobId, youtubeVideoId, youtubeUrl, renderedVideoUrl, videoUrl }`
+
+## P0 입력 계약
+- prompt_p1: 필수 (단일 소스, 절대 변경 금지)
+- topic/keywords/category: 선택 (저장/표시 전용, 생성 영향 금지)
+- duration: 선택 (30/40/50/60/90/120/150/180만 허용)
+- strict_mode: 선택 (기본 false, true=Length Gate 하드 차단)
+- verify_mode: 선택 (기본 false, true=output_hash 기록)
+- prompt_hash: 자동 생성 (FNV-1a)
+
+## Length Gate 스펙
+- target_duration + 1초 버퍼가 max_duration
+- strict_mode=false: clip_count 재계산으로 동적 보정
+- strict_mode=true: 초과 시 LENGTH_GATE_BLOCKED 에러
+- length_gate_status: no_gate / pass / corrected / over_soft / blocked
+
+## Verify Mode 스펙
+- output_hash 기록 위치: ao_job_logs(detail.output_hash)
+- 10회 반복: 외부 호출자가 동일 payload로 10회 호출
+- 비교 기준: job_logs에서 동일 prompt_hash의 output_hash 일치 여부
 
 ## aspect_ratio별 해상도
 - 9:16 → 1080x1920 (세로/숏폼)
@@ -138,6 +162,7 @@ Last Commit: (pending)
 - httpRequest 노드 jsonBody 템플릿: 특수문자 이스케이프 안됨 → Code 노드 사용
 - NCA FFmpeg -shortest: argument 비워두면 오류 → -t 사용
 - NCA FFmpeg URL: 파일 확장자 필수 (ensureExtension 자동 보정)
+- crypto 모듈 사용 불가 → FNV-1a 해시 사용
 
 ## Kling AI 3.0 (kie.ai) 스펙
 - 모델: kling-3.0/video, duration: 3~15초, image_urls: 최대 2장
