@@ -1103,7 +1103,7 @@ function WhiskProductionForm() {
         {/* 6. Video duration (ai_video only) */}
         {productionMode === 'ai_video' && (
           <div>
-            <h4 className="text-sm font-medium mb-2">영상 길이 (클립)</h4>
+            <h4 className="text-sm font-medium mb-2">영상 길이</h4>
             <select
               value={videoDurationSec}
               onChange={e => {
