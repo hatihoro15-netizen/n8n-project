@@ -42,8 +42,16 @@ async function buildServer() {
   });
 
   // CORS
+  const corsOrigins = config.corsOrigin.split(',').map((o) => {
+    const trimmed = o.trim();
+    if (trimmed.includes('*')) {
+      const pattern = trimmed.replace(/\./g, '\\.').replace(/\*/g, '[^.]+');
+      return new RegExp(`^${pattern}$`);
+    }
+    return trimmed;
+  });
   await app.register(cors, {
-    origin: config.corsOrigin.split(','),
+    origin: corsOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   });
