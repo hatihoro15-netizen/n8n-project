@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-07
-- 현재 상태(1줄): 미디어 선택 옵션 정리 완료 (generate 제거 + analysis_only 고도화)
-- 진행중 작업: VPS 배포 + E2E 테스트
-- 최근 완료: "새 이미지 생성" 옵션 제거, "분석만 반영" 프롬프트 수정 UI 개선
-- 주의사항: kie.ai 크레딧 부족(402), PM2 프로세스명=n8n-web-backend
+- 현재 상태(1줄): CF Pages + VPS 재배포 완료 (8a0a609). E2E 테스트 대기
+- 진행중 작업: E2E 영상 제작 테스트
+- 최근 완료: CF Pages + VPS 재배포 (8a0a609)
+- 주의사항: PM2 프로세스명=n8n-web-backend, slideshow 코드 수정 금지
 
 ---
 
@@ -523,3 +523,223 @@
 - E2E 영상 제작 테스트
 ### Files / Links
 - productions-client.tsx (useMode generate 제거 + analysis_only UI 개선)
+
+## 2026-03-07 (3차)
+### Done
+- [x] kie.ai 크레딧 충전 확인
+- [x] VPS 배포 (git pull + npm install + tsc + PM2 restart) — PM2 online
+- [x] CF Pages async_hooks 500 에러 수정 (wrangler.toml compatibility_date 2024-01-01 → 2024-09-23)
+- [x] CF Pages 프론트엔드 빌드+배포 (NEXT_PUBLIC_API_URL 주입)
+- [x] CORS 와일드카드 지원 (server.ts: `*` 패턴 → RegExp 변환, @fastify/cors 호환)
+- [x] VPS .env CORS_ORIGIN에 `https://*.n8n-project-9lj.pages.dev` 추가
+- [x] CF Pages 프로덕션 배포 (--branch=main)
+- [x] 클립 길이 UI 변경: 5초/8초 고정 버튼 → 드롭다운 (자동/10~60초)
+- [x] 나레이션 길이 자동 계산 (NARRATION_CHARS_PER_SEC = 4 상수 분리)
+- [x] payload 변경: clip_duration → duration_sec (0/null=자동, 그 외 초 값)
+- [x] CF Pages + VPS 재배포 (a5c891c)
+### Tried
+- [x] wrangler login 백그라운드 실행 → 타임아웃 (터미널에서 직접 인증 필요)
+### Result
+- CF Pages 프로덕션 + VPS 모두 200 OK
+- async_hooks 에러 원인: Next.js 14.2.35가 async_hooks 사용, 구 compatibility_date에서 미지원
+- CORS 에러 원인: CORS_ORIGIN에 프리뷰 서브도메인 미포함
+- 커밋: 151f3ca (compatibility_date) → 394fe99 (CORS) → a5c891c (클립 길이 드롭다운)
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- packages/frontend/wrangler.toml (compatibility_date)
+- packages/backend/src/server.ts (CORS 와일드카드)
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (클립 길이 드롭다운)
+- VPS .env (CORS_ORIGIN 업데이트)
+
+## 2026-03-07 (4차)
+### Done
+- [x] B-2 버그 수정: images-client.tsx analysis_only Vision 자동 분석 미동작
+  - 원인: useMode를 analysis_only로 전환 시 autoPrompt가 기존 analysis 값으로 자동 채워지지 않음
+  - 수정: onUpdate 콜백에서 useMode === 'analysis_only' && !autoPrompt && analysis 조건 시 autoPrompt = analysis 자동 세팅
+  - direct 모드 영향: 없음 (analysis_only 조건만 적용)
+### Result
+- next build PASS
+- 커밋 31e306b pushed to feature/web-app
+### Next (방향만)
+- CF Pages + VPS 재배포
+- E2E 영상 제작 테스트
+### Files / Links
+- packages/frontend/src/app/(dashboard)/images/images-client.tsx (onUpdate 콜백 수정)
+
+## 2026-03-07 (5차)
+### Done
+- [x] CF Pages 프로덕션 배포 (31e306b, --branch=main)
+- [x] VPS git pull (프론트엔드만 변경, 백엔드 빌드/PM2 재시작 불필요)
+- [x] 양쪽 200 OK 확인 (/login, /images)
+### Result
+- CF Pages: https://n8n-project-9lj.pages.dev — 200 OK
+- VPS: git pull fast-forward 완료
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- 변경 파일 없음 (배포만)
+
+## 2026-03-07 (6차)
+### Done
+- [x] 클립 길이 5초/8초 버튼 제거 확인 (a5c891c에서 이미 제거됨)
+- [x] 드롭다운 라벨 "영상 길이 (클립)" → "영상 길이" 정리
+- [x] 영상 길이 드롭다운(자동/10~60초) 변경 없음 확인
+### Result
+- next build PASS
+- 커밋 be48855 pushed to feature/web-app
+- 변경: 1파일 1행 (라벨 텍스트만)
+### Next (방향만)
+- CF Pages + VPS 재배포
+- E2E 영상 제작 테스트
+### Files / Links
+- productions-client.tsx (line 1106 라벨 변경)
+
+## 2026-03-07 (7차)
+### Done
+- [x] CF Pages 프로덕션 배포 (be48855, --branch=main, @cloudflare/next-on-pages)
+- [x] VPS 배포 (git pull + npm install + tsc + PM2 restart) — PM2 online
+### Result
+- CF Pages: https://n8n-project-9lj.pages.dev — 배포 완료 (alias: main.n8n-project-9lj.pages.dev)
+- VPS: fast-forward be48855, PM2 online
+- 프로젝트명: n8n-project (n8n-project-9lj 아님 — wrangler deploy 시 주의)
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- 변경 파일 없음 (배포만 수행)
+
+## 2026-03-07 (8차)
+### Done
+- [x] clip_duration 백엔드 잔존 코드 완전 제거
+  - productions.ts:181 — body 타입에서 `clip_duration?: number` 제거
+  - productions.ts:281 — webhook payload에서 `clip_duration: body.clip_duration` 제거
+- [x] 프론트엔드 확인: clipDuration/clip_duration/5초/8초/클립길이 — 0건 (a5c891c+be48855에서 이미 제거)
+- [x] tsc + next build PASS
+### Result
+- 커밋 2ec1db8 pushed to feature/web-app
+- clip_duration 관련 코드 프론트+백엔드 전수 조사 완료, 소스코드 0건
+- .wrangler/tmp 빌드 캐시에 구 버전 잔존 (빌드 산출물, 무시 가능)
+### Next (방향만)
+- CF Pages + VPS 재배포 (2ec1db8)
+- E2E 영상 제작 테스트
+### Files / Links
+- packages/backend/src/routes/productions.ts (clip_duration 2행 제거)
+
+## 2026-03-07 (9차)
+### Done
+- [x] CF Pages 프로덕션 배포 (2ec1db8, --branch=main, @cloudflare/next-on-pages)
+- [x] VPS 배포 (git pull + npm install + tsc + PM2 restart) — PM2 online
+- [x] 200 OK 확인: CF Pages /login + Backend /api/health
+### Result
+- CF Pages: https://n8n-project-9lj.pages.dev — 200 OK
+- VPS: fast-forward 2ec1db8, PM2 online (pid 833983)
+- Backend API: https://api-n8n.xn--9g4bn4fm2bl2mb9f.com/api/health — 200 OK
+- 주의: --branch=main은 Preview 환경이었음 (Production 아님)
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- 변경 파일 없음 (배포만 수행)
+
+## 2026-03-07 (10차)
+### Done
+- [x] CF Pages Production 배포 브랜치 문제 발견 및 수정
+  - 원인: `--branch=main`은 Preview 환경으로만 배포됨
+  - Production branch는 `feature/web-app` (GitHub 연동 설정)
+  - GitHub 자동빌드는 전부 Failure → 구 버전(클립 길이 포함)이 계속 서빙됨
+- [x] `.next` + `.vercel` 캐시 삭제 후 클린빌드
+- [x] `--branch=feature/web-app`으로 Production 배포 성공
+- [x] 배포된 JS에서 "클립 길이" 텍스트 완전 제거 확인
+### Result
+- Production URL 200 OK, "클립 길이" / "5초" / "8초" 완전 제거 확인
+- CF Pages 배포 규칙: `--branch=feature/web-app` 필수 (--branch=main은 Preview만)
+- 빌드 캐시 주의: `.next`/`.vercel` 삭제 없이 빌드하면 구 코드가 번들에 포함될 수 있음
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- 변경 파일 없음 (배포+진단만 수행)
+
+## 2026-03-08
+### Done
+- [x] 영상 길이 드롭다운 중복 제거
+  - 구버전 (30/60/90/120초, duration state): UI에서 제거
+  - 새것 (자동/10~60초, videoDurationSec state): 구버전 위치(grid)로 이동
+  - 첫 옵션 텍스트: "자동 (나레이션 기반)" → "자동 (AI 판단)"
+- [x] next build PASS
+### Result
+- 커밋 e219277 pushed to feature/web-app
+- "영상 길이" 드롭다운 1개만 남음 (자동/10~60초)
+- duration state (30/60/90/120)는 payload에서 여전히 사용 (UI 미노출, 기본값 30)
+### Next (방향만)
+- CF Pages + VPS 재배포 (e219277)
+- E2E 영상 제작 테스트
+### Files / Links
+- productions-client.tsx (30행 삭제, 13행 추가)
+
+## 2026-03-08 (2차)
+### Done
+- [x] 구 duration state(30/60/90/120) 프론트+백엔드 완전 제거
+  - 프론트: duration state, sessionStorage draft, payload에서 제거
+  - 백엔드: body 타입, ALLOWED_DURATIONS 검증, webhook payload에서 제거
+- [x] payload는 duration_sec(videoDurationSec)만 남음 (0=자동, 10~60초)
+- [x] tsc + next build PASS
+### Result
+- 커밋 779e7e8 pushed to feature/web-app
+- duration 관련 코드: 프론트 CSS transition duration만 남음 (무관)
+- 백엔드: duration 0건
+### Next (방향만)
+- CF Pages + VPS 재배포 (779e7e8)
+- E2E 영상 제작 테스트
+### Files / Links
+- productions-client.tsx (duration state/draft/payload 제거)
+- productions.ts (duration 타입/검증/webhook payload 제거)
+
+## 2026-03-08 (3차)
+### Done
+- [x] CF Pages Production 배포 (779e7e8, --branch=feature/web-app, 클린빌드)
+- [x] VPS 배포 (git pull + npm install + tsc + PM2 restart) — PM2 online
+- [x] 200 OK 확인: CF Pages /login + Backend /api/health
+### Result
+- CF Pages Production: 784f5886, 779e7e8 커밋, 200 OK
+- VPS: fast-forward 779e7e8, PM2 online (pid 836685)
+- Backend API: 200 OK
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- 변경 파일 없음 (배포만 수행)
+
+## 2026-03-08 (4차)
+### Done
+- [x] 이미지 없이 영상 제작 시작 허용
+  - handleSubmit에서 이미지 관련 검증 3개 제거 (hasImages null/yes/no 체크)
+  - 프롬프트 필수 조건은 유지 (!promptP1.trim())
+  - 안내 텍스트: 미디어 있으면 개수 표시, 없으면 "프롬프트 기반으로 영상 제작"
+- [x] next build PASS
+### Result
+- 커밋 8a0a609 pushed to feature/web-app
+- 이미지 없어도 워크플로우 + 프롬프트만 있으면 제작 시작 가능
+- n8n(아럽토)이 이미지 자동 생성 처리
+### Next (방향만)
+- CF Pages + VPS 재배포 (8a0a609)
+- E2E 영상 제작 테스트
+### Files / Links
+- productions-client.tsx (23행 삭제, 3행 추가)
+
+## 2026-03-08 (5차)
+### Done
+- [x] CF Pages Production 배포 (8a0a609, --branch=feature/web-app, 클린빌드)
+- [x] VPS 배포 (git pull + PM2 restart) — PM2 online
+- [x] 200 OK 확인: CF Pages /login + Backend /api/health
+### Result
+- CF Pages Production: 8950acd2, 8a0a609 커밋, 200 OK
+- VPS: fast-forward 8a0a609, PM2 online (pid 837531)
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- 변경 파일 없음 (배포만 수행)

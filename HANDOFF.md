@@ -7,50 +7,54 @@
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: Phase 2 완료 + 미디어 옵션 정리 + ao_producer.json 삭제 (아럽토 단일 관리)
-- **Goal**: VPS 배포 + E2E 테스트
+- **Current Status**: CF Pages + VPS 재배포 완료 (8a0a609). E2E 테스트 대기
+- **Goal**: E2E 영상 제작 테스트
 
 ## B) 환경/의존성
 - **서버**: VPS 76.13.182.180
 - **환경**: Local + Prod
 - **Required Secrets**: packages/backend/.env (VPS: /root/n8n-web/packages/backend/.env)
-- **VPS_HOST**: 76.13.182.180 (.env에 추가됨)
 - **PM2 프로세스명**: n8n-web-backend
 - **CF Pages URL**: https://n8n-project-9lj.pages.dev
+- **CF Pages 프로젝트명**: n8n-project
+- **CF Pages Production Branch**: feature/web-app (--branch=feature/web-app 필수!)
 - **Backend URL**: https://api-n8n.xn--9g4bn4fm2bl2mb9f.com
 - **n8n ao-produce workflow ID**: XV5shW265ht59MTD
 - **n8n AO Worker workflow ID**: FHYohZccExR24Uha
 - **n8n ao-generate-image workflow ID**: d5b35fb7f1724e448
 
 ## C) 마지막 실행 기록
-- **Last Run Command**: git rm + commit
-- **Result**: PASS
-- **실행 위치**: Local
-- **Last Commit**: a583931 chore: remove ao_producer.json from web workspace
+- **Last Run Command**: CF Pages wrangler deploy --branch=feature/web-app + VPS ssh deploy
+- **Result**: PASS — CF Pages 200 OK + VPS PM2 online + Backend API 200 OK
+- **실행 위치**: Local → Remote
+- **Last Commit**: 8a0a609 fix: allow production start without images
 
 ## D) 완료/미완료
 
 ### Done
 - [x] Phase 2: 입력 필드 정리 + payload 계약 맞추기
-- [x] narration_style/narration_tone 한글 통일 (설명형/차분하게)
-- [x] VPS 배포 + PM2 restart
-- [x] 미디어 선택 옵션 정리 (generate 제거, analysis_only 고도화)
-- [x] ao_producer.json 삭제 (아럽토 워크스페이스 단일 관리)
+- [x] 클립 길이 + 구 duration 완전 제거 (프론트+백엔드)
+- [x] 영상 길이 드롭다운 1개로 통합 (자동(AI 판단)/10~60초)
+- [x] CF Pages Production 브랜치 문제 수정
+- [x] B-2: analysis_only Vision 자동 분석 미동작 수정
+- [x] 이미지 없이 영상 제작 시작 허용
+- [x] CF Pages + VPS 재배포 (8a0a609 반영)
 
 ### Next Actions
-1. [ ] 미커밋 변경 커밋 + VPS 배포
-2. [ ] E2E 영상 제작 테스트
-3. [ ] n8n Worker 새 필드 활용 (아럽토 워크스페이스 담당)
+1. [ ] E2E 영상 제작 테스트 (kie.ai 크레딧 충전 완료)
+2. [ ] main 머지
+3. [ ] 프로덕션 안정화
 
 ## E) Blockers / Issues
-- **Blockers**: kie.ai 크레딧 부족 (402) → 충전 필요
-- **Known Issues**: n8n Worker 새 필드(duration/engine_type/strict_mode 등) 활용은 아럽토 워크스페이스 담당
-- **규칙**: n8n Producer/Worker 파일은 이 워크스페이스에서 수정하지 않음 (아럽토 단일 관리)
+- **Blockers**: 없음
+- **규칙**: slideshow 모드 코드 수정 금지
+- **규칙**: n8n Producer/Worker 파일은 이 워크스페이스에서 수정하지 않음
+- **CF Pages 배포**: `--branch=feature/web-app` 필수 + `.next`/`.vercel` 캐시 삭제 후 빌드
+- **payload**: duration_sec만 사용 (0=자동, 그 외 초 값)
+- **상수**: NARRATION_CHARS_PER_SEC = 4
 
 ## F) 변경 파일
-- productions-client.tsx (Phase 2 UI + generate 제거 + analysis_only 개선)
-- productions.ts (body 타입 + 검증 + webhook payload)
-- n8n-workflows/ 삭제 (아럽토 단일 관리)
+- 없음 (배포만 수행)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> Phase 2 + 미디어 옵션 정리 완료. ao_producer.json 삭제 (아럽토 단일 관리). 미커밋 변경 커밋 + VPS 배포 필요.
+> CF Pages + VPS 재배포 완료 (8a0a609). E2E 영상 제작 테스트 진행 필요.
