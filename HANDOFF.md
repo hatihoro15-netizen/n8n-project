@@ -58,6 +58,10 @@
   - 출력: { scene_duration, subtitle_timings: [{text, start, duration}] } ✅
   - fallback: Claude 실패 시 기존 글자수 비율 배분 유지 ✅
   - 호출부: slideshow + ai_video 양쪽 수정 ✅
+- **F-8 영상/나레이션 길이 일체화 ✅**:
+  - auto 모드: totalDuration = Math.max(tts.duration, scene_duration) — 긴 쪽 기준 ✅
+  - fixed 모드: 기존 로직 유지 (변경 없음) ✅
+  - 출력 추가: scene_duration, total_duration_source (tts/scene) ✅
 
 ## Goal
 프론트 웹앱 연동
@@ -71,11 +75,11 @@
 6. [ ] sfx_url 필드 추가 (SFX 직접 URL 전달, enable_sfx와 연동)
 
 ## Last Run
-커맨드: F-7 자막 타이밍 배치 — Claude API 기반 buildSubtitleTimings
+커맨드: F-8 영상/나레이션 길이 일체화
 결과:
-- Worker process-clips: buildSubtitleSegments → buildSubtitleTimings 교체
-- Claude API로 나레이션 타이밍 배정 (호흡 간격 + 강조 반영)
-- fallback: Claude 실패 시 글자수 비율 배분 유지
+- auto 모드: totalDuration = max(tts.duration, scene_duration)
+- fixed 모드: 기존 유지
+- 출력: scene_duration + total_duration_source 추가
 - top-level + activeVersion 양쪽 수정
 - VPS 업로드 + DB 동기화 + activate + restart 완료
 위치: Local + VPS (76.13.182.180)
