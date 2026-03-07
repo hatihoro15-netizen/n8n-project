@@ -16,6 +16,10 @@
 - YouTube 업로드 일시 비활성화 (나중에 별도 작업)
 - Worker 영상 품질 개선
 - BGM/SFX 기본 OFF
+- **bgm_mode/sfx_mode/sfx_file_url DB 컬럼 + Producer 파싱**:
+  - DB: bgm_mode(none/ai_auto/uploaded), sfx_mode(none/ai_auto/uploaded/combined), sfx_file_url
+  - Producer: bgm_mode/sfx_mode 검증 + enable_bgm/enable_sfx 하위호환 fallback
+  - INSERT SQL에 3개 컬럼 반영
 - Producer SQL 이스케이프
 - **P0 뼈대 구현**: Prompt Lock + Last-Edit Priority + Length Gate
   - prompt_hash: DB 저장 + Worker 비교
@@ -48,6 +52,10 @@
   - Worker: clipCount = ceil(targetLen/15), perClipSec = ceil(targetLen/clipCount), 3-15초 clamp
   - Kling 다중 호출: clipCount개 클립 순차 생성 -> FFmpeg concat으로 최종 합성
   - 단일 클립(<=15초): 기존 동작 유지
+- **씬별 프롬프트 분배 (scenes[])**:
+  - Producer: scenes[] 검증 (duration_sec 3~15, prompt 필수, 합계 vs duration +-3초)
+  - Worker: scenes 있으면 clipCount=scenes.length, 클립별 scenes[i].prompt/duration_sec 사용
+  - scenes 없으면 기존 동작 유지 (하위 호환)
 
 ## Goal
 프론트 웹앱 연동
@@ -60,13 +68,13 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: fix: normalize duration and enable multi-clip ai_video rendering for target length
+커맨드: fix(producer): add bgm/sfx mode columns and backward-compatible parsing
 결과:
-- Producer: clip_duration_mode auto/fixed 자동 결정
-- Worker: 멀티클립 Kling 생성 (clipCount * perClipSec) + FFmpeg concat
-- Worker: assemble-prompt에 clip_duration_mode 재계산 추가
-- Worker: Length Gate clipCount → gateClipCount 변수 충돌 해결
-- Producer + Worker VPS 업로드 + DB 동기화 + activate + restart 완료
+- DB ALTER TABLE: bgm_mode, sfx_mode, sfx_file_url 컬럼 추가
+- Producer validate-input: bgm_mode/sfx_mode 파싱 + 허용값 검증 + enable_bgm/sfx 하위호환
+- Producer create-job INSERT: 3개 컬럼 반영
+- SQL init 파일 업데이트
+- VPS 배포 + 스모크 테스트 통과
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers
@@ -142,6 +150,9 @@
   "bgm_url": "(optional) 커스텀 BGM URL (uploaded 모드용)",
   "sfx_file_url": "(optional) 사용자 SFX 파일 URL (uploaded/combined 모드용)",
   "image_order": "sequential | auto",
+  "scenes": [
+    { "prompt": "씬별 프롬프트", "duration_sec": 5 }
+  ],
   "files": [
     { "type": "image", "url": "MinIO URL", "vision_analysis": "분석결과",
       "use_mode": "direct | analysis_only", "auto_prompt": "..." }

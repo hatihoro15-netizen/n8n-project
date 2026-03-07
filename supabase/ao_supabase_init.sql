@@ -201,6 +201,9 @@ ALTER TABLE jobs ADD COLUMN IF NOT EXISTS verify_mode BOOLEAN NOT NULL DEFAULT F
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS engine_type TEXT DEFAULT 'core_message';
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS narration_style TEXT DEFAULT '설명형';
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS narration_tone TEXT DEFAULT '차분하게';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS bgm_mode VARCHAR(20) DEFAULT 'none';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS sfx_mode VARCHAR(20) DEFAULT 'none';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS sfx_file_url TEXT DEFAULT '';
 
 -- ========================================
 -- 완료 확인 쿼리
