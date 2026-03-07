@@ -26,7 +26,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// 필수값 검사 — P0: prompt_p1 필수, topic/keywords/category 선택(저장 전용)\ntry {\nconst body = $input.first().json.body || $input.first().json;\n\n// prompt_p1 필수\nif (!body.prompt_p1 || !body.prompt_p1.trim()) {\n  throw new Error('필수값 누락: prompt_p1');\n}\n\n// duration 허용값 검증\nconst ALLOWED_DURATIONS = [30, 40, 50, 60, 90, 120, 150, 180];\nconst rawDuration = body.duration ? parseInt(body.duration) : null;\nif (rawDuration !== null && !ALLOWED_DURATIONS.includes(rawDuration)) {\n  throw new Error(`duration 오류: ${rawDuration} (허용값: ${ALLOWED_DURATIONS.join('/')})`);\n}\nconst duration = rawDuration;\n\n// files 검증 (최대 10개)\nconst files = body.files || [];\nif (files.length > 10) throw new Error(`files 최대 10개 (현재: ${files.length})`);\n\n// generated_images 검증\nconst generatedImages = body.generated_images || [];\n\n// production_mode: ai_video (기본) / slideshow\nconst productionMode = body.production_mode || 'ai_video';\nif (!['ai_video', 'slideshow'].includes(productionMode)) {\n  throw new Error(`production_mode 오류: ${productionMode} (ai_video/slideshow 중 하나)`);\n}\n\n// slideshow 모드: 이미지 최소 1개 필요\nif (productionMode === 'slideshow' && files.length === 0 && generatedImages.length === 0) {\n  throw new Error('slideshow 모드는 이미지가 최소 1장 필요합니다.');\n}\n\n// ai_video 모드: 프롬프트 or 이미지 중 최소 1개\nif (productionMode === 'ai_video' && files.length === 0 && generatedImages.length === 0 && !body.prompt_p1) {\n  throw new Error('파일, 생성 이미지, 프롬프트 중 최소 1개는 필요합니다.');\n}\n\nconst hasImages = files.length > 0 || generatedImages.length > 0;\n\n// clip_duration: ai_video=3~15초(Kling), slideshow=무관\nconst rawDur = parseInt(body.clip_duration) || 8;\nconst clipDuration = productionMode === 'ai_video' ? Math.max(3, Math.min(15, rawDur)) : rawDur;\n\nconst slideDuration = parseInt(body.slide_duration) || 3;\n\n// aspect_ratio\nconst aspectRatio = body.aspect_ratio || '9:16';\nif (!['9:16', '16:9'].includes(aspectRatio)) {\n  throw new Error(`aspect_ratio 오류: ${aspectRatio} (9:16/16:9 중 하나)`);\n}\n\nconst useMedia = body.use_media || 'forced';\nconst uploadTarget = body.upload_target || 'youtube';\n\n// BGM/SFX 옵션\nconst enableBgm = body.enable_bgm === true;\nconst enableSfx = body.enable_sfx === true;\nconst bgmUrl = body.bgm_url || '';\n\n// strict_mode / verify_mode\nconst strictMode = body.strict_mode === true;\nconst verifyMode = body.verify_mode === true;\n\n// files 정규화\nconst finalFiles = files.map(f => ({\n  type: f.type || 'image',\n  url: f.url || '',\n  vision_analysis: f.vision_analysis || '',\n  video_analysis: f.video_analysis || '',\n  use_mode: f.use_mode || 'direct',\n  auto_prompt: f.auto_prompt || '',\n  skip_kling: f.skip_kling === true\n}));\n\n// 언어 감지\nconst isKorean = /[\\uAC00-\\uD7A3]/.test((body.prompt_p1 || '') + (body.topic || ''));\nconst translateMode = body.translate_mode || 'auto';\nconst needsTranslation = translateMode === 'on' || (translateMode === 'auto' && isKorean);\n\n// Prompt Lock: SHA-256 해시 생성\nconst promptText = body.prompt_p1.trim();\nlet promptHash = '';\nconst hashChars = [];\nfor (let i = 0; i < promptText.length; i++) {\n  hashChars.push(promptText.charCodeAt(i).toString(16));\n}\n// 간이 해시 (n8n Code 노드에서 crypto 사용 불가하므로 FNV-1a 방식)\nlet h = 0x811c9dc5;\nfor (let i = 0; i < promptText.length; i++) {\n  h ^= promptText.charCodeAt(i);\n  h = Math.imul(h, 0x01000193);\n}\npromptHash = (h >>> 0).toString(16).padStart(8, '0');\n// 추가 엔트로피: 길이 + 처음/끝 4자\npromptHash += '-' + promptText.length + '-' + promptText.substring(0, 4).split('').map(c => c.charCodeAt(0).toString(16)).join('');\n\n// SQL 싱글쿼트 이스케이프\nconst esc = (s) => typeof s === 'string' ? s.replace(/'/g, \"''\") : s;\n\nreturn [{\n  json: {\n    error: false,\n    ...body,\n    prompt_p1: esc(body.prompt_p1 || ''),\n    topic: esc(body.topic || ''),\n    keywords: esc(body.keywords || ''),\n    category: esc(body.category || ''),\n    narration_script: esc(body.narration_script || ''),\n    narration_text: esc(body.narration_text || ''),\n    production_id: body.productionId || body.production_id || null,\n    production_mode: productionMode,\n    has_images: hasImages,\n    clips: esc(JSON.stringify(finalFiles)),\n    generated_images: esc(JSON.stringify(generatedImages)),\n    aspect_ratio: aspectRatio,\n    clip_duration: clipDuration,\n    slide_duration: slideDuration,\n    use_media: useMedia,\n    upload_target: uploadTarget,\n    prompt_lang_detected: isKorean ? 'ko' : 'en',\n    needs_translation: needsTranslation,\n    enable_bgm: enableBgm,\n    enable_sfx: enableSfx,\n    bgm_url: esc(bgmUrl),\n    duration: duration,\n    strict_mode: strictMode,\n    verify_mode: verifyMode,\n    prompt_hash: promptHash,\n    validated_at: new Date().toISOString()\n  }\n}];\n} catch (e) {\n  return [{ json: { error: true, message: e.message } }];\n}"
+        "jsCode": "// 필수값 검사 — P0: prompt_p1 필수, topic/keywords/category 선택(저장 전용)\ntry {\nconst body = $input.first().json.body || $input.first().json;\n\n// prompt_p1 필수\nif (!body.prompt_p1 || !body.prompt_p1.trim()) {\n  throw new Error('필수값 누락: prompt_p1');\n}\n\n// duration 허용값 검증\nconst ALLOWED_DURATIONS = [30, 40, 50, 60, 90, 120, 150, 180];\nconst rawDuration = body.duration ? parseInt(body.duration) : null;\nif (rawDuration !== null && !ALLOWED_DURATIONS.includes(rawDuration)) {\n  throw new Error(`duration 오류: ${rawDuration} (허용값: ${ALLOWED_DURATIONS.join('/')})`);\n}\nconst duration = rawDuration;\n\n// files 검증 (최대 10개)\nconst files = body.files || [];\nif (files.length > 10) throw new Error(`files 최대 10개 (현재: ${files.length})`);\n\n// generated_images 검증\nconst generatedImages = body.generated_images || [];\n\n// production_mode: ai_video (기본) / slideshow\nconst productionMode = body.production_mode || 'ai_video';\nif (!['ai_video', 'slideshow'].includes(productionMode)) {\n  throw new Error(`production_mode 오류: ${productionMode} (ai_video/slideshow 중 하나)`);\n}\n\n// slideshow 모드: 이미지 최소 1개 필요\nif (productionMode === 'slideshow' && files.length === 0 && generatedImages.length === 0) {\n  throw new Error('slideshow 모드는 이미지가 최소 1장 필요합니다.');\n}\n\n// ai_video 모드: 프롬프트 or 이미지 중 최소 1개\nif (productionMode === 'ai_video' && files.length === 0 && generatedImages.length === 0 && !body.prompt_p1) {\n  throw new Error('파일, 생성 이미지, 프롬프트 중 최소 1개는 필요합니다.');\n}\n\nconst hasImages = files.length > 0 || generatedImages.length > 0;\n\n// clip_duration: ai_video=3~15초(Kling), slideshow=무관\nconst rawDur = parseInt(body.clip_duration) || 8;\nconst clipDuration = productionMode === 'ai_video' ? Math.max(3, Math.min(15, rawDur)) : rawDur;\n\nconst slideDuration = parseInt(body.slide_duration) || 3;\n\n// aspect_ratio\nconst aspectRatio = body.aspect_ratio || '9:16';\nif (!['9:16', '16:9'].includes(aspectRatio)) {\n  throw new Error(`aspect_ratio 오류: ${aspectRatio} (9:16/16:9 중 하나)`);\n}\n\nconst useMedia = body.use_media || 'forced';\nconst uploadTarget = body.upload_target || 'youtube';\n\n// BGM/SFX 옵션\nconst enableBgm = body.enable_bgm === true;\nconst enableSfx = body.enable_sfx === true;\nconst bgmUrl = body.bgm_url || '';\n\n// strict_mode / verify_mode\nconst strictMode = body.strict_mode === true;\nconst verifyMode = body.verify_mode === true;\n\n// engine_type 검증\nconst ALLOWED_ENGINES = ['character_story', 'core_message', 'live_promo', 'meme', 'action_sports'];\nconst engineType = body.engine_type || 'core_message';\nif (!ALLOWED_ENGINES.includes(engineType)) {\n  throw new Error(`engine_type 오류: ${engineType} (허용값: ${ALLOWED_ENGINES.join('/')})`);\n}\n\n// files 정규화\nconst finalFiles = files.map(f => ({\n  type: f.type || 'image',\n  url: f.url || '',\n  vision_analysis: f.vision_analysis || '',\n  video_analysis: f.video_analysis || '',\n  use_mode: f.use_mode || 'direct',\n  auto_prompt: f.auto_prompt || '',\n  skip_kling: f.skip_kling === true\n}));\n\n// 언어 감지\nconst isKorean = /[\\uAC00-\\uD7A3]/.test((body.prompt_p1 || '') + (body.topic || ''));\nconst translateMode = body.translate_mode || 'auto';\nconst needsTranslation = translateMode === 'on' || (translateMode === 'auto' && isKorean);\n\n// Prompt Lock: SHA-256 해시 생성\nconst promptText = body.prompt_p1.trim();\nlet promptHash = '';\nconst hashChars = [];\nfor (let i = 0; i < promptText.length; i++) {\n  hashChars.push(promptText.charCodeAt(i).toString(16));\n}\n// 간이 해시 (n8n Code 노드에서 crypto 사용 불가하므로 FNV-1a 방식)\nlet h = 0x811c9dc5;\nfor (let i = 0; i < promptText.length; i++) {\n  h ^= promptText.charCodeAt(i);\n  h = Math.imul(h, 0x01000193);\n}\npromptHash = (h >>> 0).toString(16).padStart(8, '0');\n// 추가 엔트로피: 길이 + 처음/끝 4자\npromptHash += '-' + promptText.length + '-' + promptText.substring(0, 4).split('').map(c => c.charCodeAt(0).toString(16)).join('');\n\n// SQL 싱글쿼트 이스케이프\nconst esc = (s) => typeof s === 'string' ? s.replace(/'/g, \"''\") : s;\n\nreturn [{\n  json: {\n    error: false,\n    ...body,\n    prompt_p1: esc(body.prompt_p1 || ''),\n    topic: esc(body.topic || ''),\n    keywords: esc(body.keywords || ''),\n    category: esc(body.category || ''),\n    narration_script: esc(body.narration_script || ''),\n    narration_text: esc(body.narration_text || ''),\n    production_id: body.productionId || body.production_id || null,\n    production_mode: productionMode,\n    has_images: hasImages,\n    clips: esc(JSON.stringify(finalFiles)),\n    generated_images: esc(JSON.stringify(generatedImages)),\n    aspect_ratio: aspectRatio,\n    clip_duration: clipDuration,\n    slide_duration: slideDuration,\n    use_media: useMedia,\n    upload_target: uploadTarget,\n    prompt_lang_detected: isKorean ? 'ko' : 'en',\n    needs_translation: needsTranslation,\n    enable_bgm: enableBgm,\n    enable_sfx: enableSfx,\n    bgm_url: esc(bgmUrl),\n    duration: duration,\n    strict_mode: strictMode,\n    verify_mode: verifyMode,\n    engine_type: engineType,\n    prompt_hash: promptHash,\n    validated_at: new Date().toISOString()\n  }\n}];\n} catch (e) {\n  return [{ json: { error: true, message: e.message } }];\n}"
       },
       "id": "validate-input",
       "name": "입력값 검증",
@@ -40,7 +40,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "INSERT INTO jobs (\n  prompt_p1, topic, keywords, category,\n  use_media, upload_target, template_id,\n  clips, clip_duration, slide_duration,\n  aspect_ratio, production_mode, generated_images,\n  metadata, prompt_lang_detected, needs_translation,\n  production_id, narration_script,\n  enable_bgm, enable_sfx, bgm_url,\n  prompt_hash, duration, strict_mode, verify_mode,\n  status, retry_count, created_at, updated_at\n) VALUES (\n  '{{ $json.prompt_p1 }}',\n  '{{ $json.topic }}',\n  '{{ $json.keywords }}',\n  '{{ $json.category }}',\n  '{{ $json.use_media }}',\n  '{{ $json.upload_target }}',\n  {{ $json.template_id ? `'${$json.template_id}'` : 'NULL' }},\n  '{{ JSON.stringify($json.clips) }}'::jsonb,\n  {{ $json.clip_duration }},\n  {{ $json.slide_duration }},\n  '{{ $json.aspect_ratio }}',\n  '{{ $json.production_mode }}',\n  '{{ $json.generated_images || '[]' }}'::jsonb,\n  {{ $json.metadata ? `'${JSON.stringify($json.metadata)}'::jsonb` : 'NULL' }},\n  '{{ $json.prompt_lang_detected }}',\n  {{ $json.needs_translation }},\n  {{ $json.production_id ? `'${$json.production_id}'` : 'NULL' }},\n  {{ ($json.narration_script || $json.narration_text) ? `'${$json.narration_script || $json.narration_text}'` : 'NULL' }},\n  {{ $json.enable_bgm }},\n  {{ $json.enable_sfx }},\n  {{ $json.bgm_url ? `'${$json.bgm_url}'` : 'NULL' }},\n  {{ $json.prompt_hash ? `'${$json.prompt_hash}'` : 'NULL' }},\n  {{ $json.duration !== null && $json.duration !== undefined ? $json.duration : 'NULL' }},\n  {{ $json.strict_mode }},\n  {{ $json.verify_mode }},\n  'queued', 0, NOW(), NOW()\n) RETURNING id, status, created_at, production_id;",
+        "query": "INSERT INTO jobs (\n  prompt_p1, topic, keywords, category,\n  use_media, upload_target, template_id,\n  clips, clip_duration, slide_duration,\n  aspect_ratio, production_mode, generated_images,\n  metadata, prompt_lang_detected, needs_translation,\n  production_id, narration_script,\n  enable_bgm, enable_sfx, bgm_url,\n  prompt_hash, duration, strict_mode, verify_mode, engine_type,\n  status, retry_count, created_at, updated_at\n) VALUES (\n  '{{ $json.prompt_p1 }}',\n  '{{ $json.topic }}',\n  '{{ $json.keywords }}',\n  '{{ $json.category }}',\n  '{{ $json.use_media }}',\n  '{{ $json.upload_target }}',\n  {{ $json.template_id ? `'${$json.template_id}'` : 'NULL' }},\n  '{{ JSON.stringify($json.clips) }}'::jsonb,\n  {{ $json.clip_duration }},\n  {{ $json.slide_duration }},\n  '{{ $json.aspect_ratio }}',\n  '{{ $json.production_mode }}',\n  '{{ $json.generated_images || '[]' }}'::jsonb,\n  {{ $json.metadata ? `'${JSON.stringify($json.metadata)}'::jsonb` : 'NULL' }},\n  '{{ $json.prompt_lang_detected }}',\n  {{ $json.needs_translation }},\n  {{ $json.production_id ? `'${$json.production_id}'` : 'NULL' }},\n  {{ ($json.narration_script || $json.narration_text) ? `'${$json.narration_script || $json.narration_text}'` : 'NULL' }},\n  {{ $json.enable_bgm }},\n  {{ $json.enable_sfx }},\n  {{ $json.bgm_url ? `'${$json.bgm_url}'` : 'NULL' }},\n  {{ $json.prompt_hash ? `'${$json.prompt_hash}'` : 'NULL' }},\n  {{ $json.duration !== null && $json.duration !== undefined ? $json.duration : 'NULL' }},\n  {{ $json.strict_mode }},\n  {{ $json.verify_mode }},\n  '{{ $json.engine_type }}',\n  'queued', 0, NOW(), NOW()\n) RETURNING id, status, created_at, production_id;",
         "options": {}
       },
       "id": "create-job",
@@ -67,7 +67,7 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        912,
+        1112,
         304
       ]
     },
@@ -84,7 +84,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1120,
+        1320,
         304
       ]
     },
@@ -101,7 +101,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1120,
+        1320,
         480
       ]
     },
@@ -146,6 +146,135 @@
       ],
       "id": "5160caee-1747-4855-9bed-ee01c7e6ab84",
       "name": "수동 실행"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": ""
+                },
+                "conditions": [
+                  {
+                    "id": "eng-1",
+                    "leftValue": "={{ $json.engine_type }}",
+                    "rightValue": "character_story",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "character_story"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": ""
+                },
+                "conditions": [
+                  {
+                    "id": "eng-2",
+                    "leftValue": "={{ $json.engine_type }}",
+                    "rightValue": "core_message",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "core_message"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": ""
+                },
+                "conditions": [
+                  {
+                    "id": "eng-3",
+                    "leftValue": "={{ $json.engine_type }}",
+                    "rightValue": "live_promo",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "live_promo"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": ""
+                },
+                "conditions": [
+                  {
+                    "id": "eng-4",
+                    "leftValue": "={{ $json.engine_type }}",
+                    "rightValue": "meme",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "meme"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": ""
+                },
+                "conditions": [
+                  {
+                    "id": "eng-5",
+                    "leftValue": "={{ $json.engine_type }}",
+                    "rightValue": "action_sports",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "action_sports"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "engine-switch",
+      "name": "엔진 분기 (골격)",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        800,
+        304
+      ]
     }
   ],
   "connections": {
@@ -193,7 +322,7 @@
       "main": [
         [
           {
-            "node": "응답 포맷",
+            "node": "엔진 분기 (골격)",
             "type": "main",
             "index": 0
           }
@@ -216,6 +345,52 @@
         [
           {
             "node": "입력값 검증",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "엔진 분기 (골격)": {
+      "main": [
+        [
+          {
+            "node": "응답 포맷",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "응답 포맷",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "응답 포맷",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "응답 포맷",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "응답 포맷",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "응답 포맷",
             "type": "main",
             "index": 0
           }
@@ -317,7 +492,7 @@
       },
       {
         "parameters": {
-          "jsCode": "// 필수값 검사 — P0: prompt_p1 필수, topic/keywords/category 선택(저장 전용)\ntry {\nconst body = $input.first().json.body || $input.first().json;\n\n// prompt_p1 필수\nif (!body.prompt_p1 || !body.prompt_p1.trim()) {\n  throw new Error('필수값 누락: prompt_p1');\n}\n\n// duration 허용값 검증\nconst ALLOWED_DURATIONS = [30, 40, 50, 60, 90, 120, 150, 180];\nconst rawDuration = body.duration ? parseInt(body.duration) : null;\nif (rawDuration !== null && !ALLOWED_DURATIONS.includes(rawDuration)) {\n  throw new Error(`duration 오류: ${rawDuration} (허용값: ${ALLOWED_DURATIONS.join('/')})`);\n}\nconst duration = rawDuration;\n\n// files 검증 (최대 10개)\nconst files = body.files || [];\nif (files.length > 10) throw new Error(`files 최대 10개 (현재: ${files.length})`);\n\n// generated_images 검증\nconst generatedImages = body.generated_images || [];\n\n// production_mode: ai_video (기본) / slideshow\nconst productionMode = body.production_mode || 'ai_video';\nif (!['ai_video', 'slideshow'].includes(productionMode)) {\n  throw new Error(`production_mode 오류: ${productionMode} (ai_video/slideshow 중 하나)`);\n}\n\n// slideshow 모드: 이미지 최소 1개 필요\nif (productionMode === 'slideshow' && files.length === 0 && generatedImages.length === 0) {\n  throw new Error('slideshow 모드는 이미지가 최소 1장 필요합니다.');\n}\n\n// ai_video 모드: 프롬프트 or 이미지 중 최소 1개\nif (productionMode === 'ai_video' && files.length === 0 && generatedImages.length === 0 && !body.prompt_p1) {\n  throw new Error('파일, 생성 이미지, 프롬프트 중 최소 1개는 필요합니다.');\n}\n\nconst hasImages = files.length > 0 || generatedImages.length > 0;\n\n// clip_duration: ai_video=3~15초(Kling), slideshow=무관\nconst rawDur = parseInt(body.clip_duration) || 8;\nconst clipDuration = productionMode === 'ai_video' ? Math.max(3, Math.min(15, rawDur)) : rawDur;\n\nconst slideDuration = parseInt(body.slide_duration) || 3;\n\n// aspect_ratio\nconst aspectRatio = body.aspect_ratio || '9:16';\nif (!['9:16', '16:9'].includes(aspectRatio)) {\n  throw new Error(`aspect_ratio 오류: ${aspectRatio} (9:16/16:9 중 하나)`);\n}\n\nconst useMedia = body.use_media || 'forced';\nconst uploadTarget = body.upload_target || 'youtube';\n\n// BGM/SFX 옵션\nconst enableBgm = body.enable_bgm === true;\nconst enableSfx = body.enable_sfx === true;\nconst bgmUrl = body.bgm_url || '';\n\n// strict_mode / verify_mode\nconst strictMode = body.strict_mode === true;\nconst verifyMode = body.verify_mode === true;\n\n// files 정규화\nconst finalFiles = files.map(f => ({\n  type: f.type || 'image',\n  url: f.url || '',\n  vision_analysis: f.vision_analysis || '',\n  video_analysis: f.video_analysis || '',\n  use_mode: f.use_mode || 'direct',\n  auto_prompt: f.auto_prompt || '',\n  skip_kling: f.skip_kling === true\n}));\n\n// 언어 감지\nconst isKorean = /[\\uAC00-\\uD7A3]/.test((body.prompt_p1 || '') + (body.topic || ''));\nconst translateMode = body.translate_mode || 'auto';\nconst needsTranslation = translateMode === 'on' || (translateMode === 'auto' && isKorean);\n\n// Prompt Lock: SHA-256 해시 생성\nconst promptText = body.prompt_p1.trim();\nlet promptHash = '';\nconst hashChars = [];\nfor (let i = 0; i < promptText.length; i++) {\n  hashChars.push(promptText.charCodeAt(i).toString(16));\n}\n// 간이 해시 (n8n Code 노드에서 crypto 사용 불가하므로 FNV-1a 방식)\nlet h = 0x811c9dc5;\nfor (let i = 0; i < promptText.length; i++) {\n  h ^= promptText.charCodeAt(i);\n  h = Math.imul(h, 0x01000193);\n}\npromptHash = (h >>> 0).toString(16).padStart(8, '0');\n// 추가 엔트로피: 길이 + 처음/끝 4자\npromptHash += '-' + promptText.length + '-' + promptText.substring(0, 4).split('').map(c => c.charCodeAt(0).toString(16)).join('');\n\n// SQL 싱글쿼트 이스케이프\nconst esc = (s) => typeof s === 'string' ? s.replace(/'/g, \"''\") : s;\n\nreturn [{\n  json: {\n    error: false,\n    ...body,\n    prompt_p1: esc(body.prompt_p1 || ''),\n    topic: esc(body.topic || ''),\n    keywords: esc(body.keywords || ''),\n    category: esc(body.category || ''),\n    narration_script: esc(body.narration_script || ''),\n    narration_text: esc(body.narration_text || ''),\n    production_id: body.productionId || body.production_id || null,\n    production_mode: productionMode,\n    has_images: hasImages,\n    clips: esc(JSON.stringify(finalFiles)),\n    generated_images: esc(JSON.stringify(generatedImages)),\n    aspect_ratio: aspectRatio,\n    clip_duration: clipDuration,\n    slide_duration: slideDuration,\n    use_media: useMedia,\n    upload_target: uploadTarget,\n    prompt_lang_detected: isKorean ? 'ko' : 'en',\n    needs_translation: needsTranslation,\n    enable_bgm: enableBgm,\n    enable_sfx: enableSfx,\n    bgm_url: esc(bgmUrl),\n    duration: duration,\n    strict_mode: strictMode,\n    verify_mode: verifyMode,\n    prompt_hash: promptHash,\n    validated_at: new Date().toISOString()\n  }\n}];\n} catch (e) {\n  return [{ json: { error: true, message: e.message } }];\n}"
+          "jsCode": "// 필수값 검사 — P0: prompt_p1 필수, topic/keywords/category 선택(저장 전용)\ntry {\nconst body = $input.first().json.body || $input.first().json;\n\n// prompt_p1 필수\nif (!body.prompt_p1 || !body.prompt_p1.trim()) {\n  throw new Error('필수값 누락: prompt_p1');\n}\n\n// duration 허용값 검증\nconst ALLOWED_DURATIONS = [30, 40, 50, 60, 90, 120, 150, 180];\nconst rawDuration = body.duration ? parseInt(body.duration) : null;\nif (rawDuration !== null && !ALLOWED_DURATIONS.includes(rawDuration)) {\n  throw new Error(`duration 오류: ${rawDuration} (허용값: ${ALLOWED_DURATIONS.join('/')})`);\n}\nconst duration = rawDuration;\n\n// files 검증 (최대 10개)\nconst files = body.files || [];\nif (files.length > 10) throw new Error(`files 최대 10개 (현재: ${files.length})`);\n\n// generated_images 검증\nconst generatedImages = body.generated_images || [];\n\n// production_mode: ai_video (기본) / slideshow\nconst productionMode = body.production_mode || 'ai_video';\nif (!['ai_video', 'slideshow'].includes(productionMode)) {\n  throw new Error(`production_mode 오류: ${productionMode} (ai_video/slideshow 중 하나)`);\n}\n\n// slideshow 모드: 이미지 최소 1개 필요\nif (productionMode === 'slideshow' && files.length === 0 && generatedImages.length === 0) {\n  throw new Error('slideshow 모드는 이미지가 최소 1장 필요합니다.');\n}\n\n// ai_video 모드: 프롬프트 or 이미지 중 최소 1개\nif (productionMode === 'ai_video' && files.length === 0 && generatedImages.length === 0 && !body.prompt_p1) {\n  throw new Error('파일, 생성 이미지, 프롬프트 중 최소 1개는 필요합니다.');\n}\n\nconst hasImages = files.length > 0 || generatedImages.length > 0;\n\n// clip_duration: ai_video=3~15초(Kling), slideshow=무관\nconst rawDur = parseInt(body.clip_duration) || 8;\nconst clipDuration = productionMode === 'ai_video' ? Math.max(3, Math.min(15, rawDur)) : rawDur;\n\nconst slideDuration = parseInt(body.slide_duration) || 3;\n\n// aspect_ratio\nconst aspectRatio = body.aspect_ratio || '9:16';\nif (!['9:16', '16:9'].includes(aspectRatio)) {\n  throw new Error(`aspect_ratio 오류: ${aspectRatio} (9:16/16:9 중 하나)`);\n}\n\nconst useMedia = body.use_media || 'forced';\nconst uploadTarget = body.upload_target || 'youtube';\n\n// BGM/SFX 옵션\nconst enableBgm = body.enable_bgm === true;\nconst enableSfx = body.enable_sfx === true;\nconst bgmUrl = body.bgm_url || '';\n\n// strict_mode / verify_mode\nconst strictMode = body.strict_mode === true;\nconst verifyMode = body.verify_mode === true;\n\n// engine_type 검증\nconst ALLOWED_ENGINES = ['character_story', 'core_message', 'live_promo', 'meme', 'action_sports'];\nconst engineType = body.engine_type || 'core_message';\nif (!ALLOWED_ENGINES.includes(engineType)) {\n  throw new Error(`engine_type 오류: ${engineType} (허용값: ${ALLOWED_ENGINES.join('/')})`);\n}\n\n// files 정규화\nconst finalFiles = files.map(f => ({\n  type: f.type || 'image',\n  url: f.url || '',\n  vision_analysis: f.vision_analysis || '',\n  video_analysis: f.video_analysis || '',\n  use_mode: f.use_mode || 'direct',\n  auto_prompt: f.auto_prompt || '',\n  skip_kling: f.skip_kling === true\n}));\n\n// 언어 감지\nconst isKorean = /[\\uAC00-\\uD7A3]/.test((body.prompt_p1 || '') + (body.topic || ''));\nconst translateMode = body.translate_mode || 'auto';\nconst needsTranslation = translateMode === 'on' || (translateMode === 'auto' && isKorean);\n\n// Prompt Lock: SHA-256 해시 생성\nconst promptText = body.prompt_p1.trim();\nlet promptHash = '';\nconst hashChars = [];\nfor (let i = 0; i < promptText.length; i++) {\n  hashChars.push(promptText.charCodeAt(i).toString(16));\n}\n// 간이 해시 (n8n Code 노드에서 crypto 사용 불가하므로 FNV-1a 방식)\nlet h = 0x811c9dc5;\nfor (let i = 0; i < promptText.length; i++) {\n  h ^= promptText.charCodeAt(i);\n  h = Math.imul(h, 0x01000193);\n}\npromptHash = (h >>> 0).toString(16).padStart(8, '0');\n// 추가 엔트로피: 길이 + 처음/끝 4자\npromptHash += '-' + promptText.length + '-' + promptText.substring(0, 4).split('').map(c => c.charCodeAt(0).toString(16)).join('');\n\n// SQL 싱글쿼트 이스케이프\nconst esc = (s) => typeof s === 'string' ? s.replace(/'/g, \"''\") : s;\n\nreturn [{\n  json: {\n    error: false,\n    ...body,\n    prompt_p1: esc(body.prompt_p1 || ''),\n    topic: esc(body.topic || ''),\n    keywords: esc(body.keywords || ''),\n    category: esc(body.category || ''),\n    narration_script: esc(body.narration_script || ''),\n    narration_text: esc(body.narration_text || ''),\n    production_id: body.productionId || body.production_id || null,\n    production_mode: productionMode,\n    has_images: hasImages,\n    clips: esc(JSON.stringify(finalFiles)),\n    generated_images: esc(JSON.stringify(generatedImages)),\n    aspect_ratio: aspectRatio,\n    clip_duration: clipDuration,\n    slide_duration: slideDuration,\n    use_media: useMedia,\n    upload_target: uploadTarget,\n    prompt_lang_detected: isKorean ? 'ko' : 'en',\n    needs_translation: needsTranslation,\n    enable_bgm: enableBgm,\n    enable_sfx: enableSfx,\n    bgm_url: esc(bgmUrl),\n    duration: duration,\n    strict_mode: strictMode,\n    verify_mode: verifyMode,\n    engine_type: engineType,\n    prompt_hash: promptHash,\n    validated_at: new Date().toISOString()\n  }\n}];\n} catch (e) {\n  return [{ json: { error: true, message: e.message } }];\n}"
         },
         "id": "validate-input",
         "name": "입력값 검증",
@@ -331,7 +506,7 @@
       {
         "parameters": {
           "operation": "executeQuery",
-          "query": "INSERT INTO jobs (\n  prompt_p1, topic, keywords, category,\n  use_media, upload_target, template_id,\n  clips, clip_duration, slide_duration,\n  aspect_ratio, production_mode, generated_images,\n  metadata, prompt_lang_detected, needs_translation,\n  production_id, narration_script,\n  enable_bgm, enable_sfx, bgm_url,\n  prompt_hash, duration, strict_mode, verify_mode,\n  status, retry_count, created_at, updated_at\n) VALUES (\n  '{{ $json.prompt_p1 }}',\n  '{{ $json.topic }}',\n  '{{ $json.keywords }}',\n  '{{ $json.category }}',\n  '{{ $json.use_media }}',\n  '{{ $json.upload_target }}',\n  {{ $json.template_id ? `'${$json.template_id}'` : 'NULL' }},\n  '{{ JSON.stringify($json.clips) }}'::jsonb,\n  {{ $json.clip_duration }},\n  {{ $json.slide_duration }},\n  '{{ $json.aspect_ratio }}',\n  '{{ $json.production_mode }}',\n  '{{ $json.generated_images || '[]' }}'::jsonb,\n  {{ $json.metadata ? `'${JSON.stringify($json.metadata)}'::jsonb` : 'NULL' }},\n  '{{ $json.prompt_lang_detected }}',\n  {{ $json.needs_translation }},\n  {{ $json.production_id ? `'${$json.production_id}'` : 'NULL' }},\n  {{ ($json.narration_script || $json.narration_text) ? `'${$json.narration_script || $json.narration_text}'` : 'NULL' }},\n  {{ $json.enable_bgm }},\n  {{ $json.enable_sfx }},\n  {{ $json.bgm_url ? `'${$json.bgm_url}'` : 'NULL' }},\n  {{ $json.prompt_hash ? `'${$json.prompt_hash}'` : 'NULL' }},\n  {{ $json.duration !== null && $json.duration !== undefined ? $json.duration : 'NULL' }},\n  {{ $json.strict_mode }},\n  {{ $json.verify_mode }},\n  'queued', 0, NOW(), NOW()\n) RETURNING id, status, created_at, production_id;",
+          "query": "INSERT INTO jobs (\n  prompt_p1, topic, keywords, category,\n  use_media, upload_target, template_id,\n  clips, clip_duration, slide_duration,\n  aspect_ratio, production_mode, generated_images,\n  metadata, prompt_lang_detected, needs_translation,\n  production_id, narration_script,\n  enable_bgm, enable_sfx, bgm_url,\n  prompt_hash, duration, strict_mode, verify_mode, engine_type,\n  status, retry_count, created_at, updated_at\n) VALUES (\n  '{{ $json.prompt_p1 }}',\n  '{{ $json.topic }}',\n  '{{ $json.keywords }}',\n  '{{ $json.category }}',\n  '{{ $json.use_media }}',\n  '{{ $json.upload_target }}',\n  {{ $json.template_id ? `'${$json.template_id}'` : 'NULL' }},\n  '{{ JSON.stringify($json.clips) }}'::jsonb,\n  {{ $json.clip_duration }},\n  {{ $json.slide_duration }},\n  '{{ $json.aspect_ratio }}',\n  '{{ $json.production_mode }}',\n  '{{ $json.generated_images || '[]' }}'::jsonb,\n  {{ $json.metadata ? `'${JSON.stringify($json.metadata)}'::jsonb` : 'NULL' }},\n  '{{ $json.prompt_lang_detected }}',\n  {{ $json.needs_translation }},\n  {{ $json.production_id ? `'${$json.production_id}'` : 'NULL' }},\n  {{ ($json.narration_script || $json.narration_text) ? `'${$json.narration_script || $json.narration_text}'` : 'NULL' }},\n  {{ $json.enable_bgm }},\n  {{ $json.enable_sfx }},\n  {{ $json.bgm_url ? `'${$json.bgm_url}'` : 'NULL' }},\n  {{ $json.prompt_hash ? `'${$json.prompt_hash}'` : 'NULL' }},\n  {{ $json.duration !== null && $json.duration !== undefined ? $json.duration : 'NULL' }},\n  {{ $json.strict_mode }},\n  {{ $json.verify_mode }},\n  '{{ $json.engine_type }}',\n  'queued', 0, NOW(), NOW()\n) RETURNING id, status, created_at, production_id;",
           "options": {}
         },
         "id": "create-job",
@@ -358,7 +533,7 @@
         "type": "n8n-nodes-base.code",
         "typeVersion": 2,
         "position": [
-          912,
+          1112,
           304
         ]
       },
@@ -375,7 +550,7 @@
         "type": "n8n-nodes-base.respondToWebhook",
         "typeVersion": 1,
         "position": [
-          1120,
+          1320,
           304
         ]
       },
@@ -392,7 +567,7 @@
         "type": "n8n-nodes-base.respondToWebhook",
         "typeVersion": 1,
         "position": [
-          1120,
+          1320,
           480
         ]
       },
@@ -419,6 +594,135 @@
         ],
         "id": "5160caee-1747-4855-9bed-ee01c7e6ab84",
         "name": "수동 실행"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": ""
+                  },
+                  "conditions": [
+                    {
+                      "id": "eng-1",
+                      "leftValue": "={{ $json.engine_type }}",
+                      "rightValue": "character_story",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "character_story"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": ""
+                  },
+                  "conditions": [
+                    {
+                      "id": "eng-2",
+                      "leftValue": "={{ $json.engine_type }}",
+                      "rightValue": "core_message",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "core_message"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": ""
+                  },
+                  "conditions": [
+                    {
+                      "id": "eng-3",
+                      "leftValue": "={{ $json.engine_type }}",
+                      "rightValue": "live_promo",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "live_promo"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": ""
+                  },
+                  "conditions": [
+                    {
+                      "id": "eng-4",
+                      "leftValue": "={{ $json.engine_type }}",
+                      "rightValue": "meme",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "meme"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": ""
+                  },
+                  "conditions": [
+                    {
+                      "id": "eng-5",
+                      "leftValue": "={{ $json.engine_type }}",
+                      "rightValue": "action_sports",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "action_sports"
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra"
+          }
+        },
+        "id": "engine-switch",
+        "name": "엔진 분기 (골격)",
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          800,
+          304
+        ]
       }
     ],
     "connections": {
@@ -448,7 +752,7 @@
         "main": [
           [
             {
-              "node": "응답 포맷",
+              "node": "엔진 분기 (골격)",
               "type": "main",
               "index": 0
             }
@@ -482,6 +786,52 @@
           [
             {
               "node": "입력값 검증",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "엔진 분기 (골격)": {
+        "main": [
+          [
+            {
+              "node": "응답 포맷",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "응답 포맷",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "응답 포맷",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "응답 포맷",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "응답 포맷",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "응답 포맷",
               "type": "main",
               "index": 0
             }

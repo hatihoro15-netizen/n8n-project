@@ -31,6 +31,11 @@
   - Length Gate 통과 기준: strict=target±1초, soft=target-3초~target+1초 ✅
   - clip_count 보정: 짧으면 클립 반복, 길면 분할 ✅
   - 30초 케이스: 19.1초 → 31.3초 (목표 근처 도달) ✅
+- **engine_type 분기 골격 ✅**:
+  - Producer: engine_type 수신/검증 (기본 core_message, 5종 허용)
+  - Producer: Switch 노드 골격 추가 (현재 모든 경로 공통 합류, Phase 4에서 분기)
+  - DB: engine_type 컬럼 추가
+  - Worker: engine_type 값 전달받아 실행 (변경 없음)
 
 ## Goal
 프론트 웹앱 연동
