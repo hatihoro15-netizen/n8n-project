@@ -1100,30 +1100,6 @@ function WhiskProductionForm() {
           </div>
         )}
 
-        {/* 6. Video duration (ai_video only) */}
-        {productionMode === 'ai_video' && (
-          <div>
-            <h4 className="text-sm font-medium mb-2">영상 길이</h4>
-            <select
-              value={videoDurationSec}
-              onChange={e => {
-                setVideoDurationSec(Number(e.target.value) as VideoDurationSec);
-                setVideoDurationManual(true);
-              }}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              {VIDEO_DURATION_OPTIONS.map(v => (
-                <option key={v} value={v}>{v === 0 ? '자동 (나레이션 기반)' : `${v}초`}</option>
-              ))}
-            </select>
-            {narrationText.trim() && !videoDurationManual && (
-              <p className="text-xs text-muted-foreground mt-1">
-                나레이션 {narrationText.trim().length}자 → 약 {Math.ceil(narrationText.trim().length / NARRATION_CHARS_PER_SEC)}초 추정
-              </p>
-            )}
-          </div>
-        )}
-
         {/* 7. Prompt fields */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="prompt_p1">
@@ -1144,15 +1120,22 @@ function WhiskProductionForm() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium">영상 길이</label>
             <select
-              value={duration}
-              onChange={e => setDuration(Number(e.target.value) as 30 | 60 | 90 | 120)}
+              value={videoDurationSec}
+              onChange={e => {
+                setVideoDurationSec(Number(e.target.value) as VideoDurationSec);
+                setVideoDurationManual(true);
+              }}
               className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             >
-              <option value={30}>30초</option>
-              <option value={60}>60초</option>
-              <option value={90}>90초</option>
-              <option value={120}>120초</option>
+              {VIDEO_DURATION_OPTIONS.map(v => (
+                <option key={v} value={v}>{v === 0 ? '자동 (AI 판단)' : `${v}초`}</option>
+              ))}
             </select>
+            {narrationText.trim() && !videoDurationManual && (
+              <p className="text-xs text-muted-foreground mt-1">
+                나레이션 {narrationText.trim().length}자 → 약 {Math.ceil(narrationText.trim().length / NARRATION_CHARS_PER_SEC)}초 추정
+              </p>
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">엔진 타입</label>
