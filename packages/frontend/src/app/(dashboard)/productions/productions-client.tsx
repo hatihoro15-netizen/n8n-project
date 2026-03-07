@@ -54,7 +54,7 @@ type UploadedFile = {
   preview: string;
   type: 'image' | 'video';
   useDirectly: boolean;
-  useMode: 'direct' | 'generate' | 'analysis_only';
+  useMode: 'direct' | 'analysis_only';
   autoPrompt: string | null;
   analysis: string | null;
   analyzing: boolean;
@@ -536,7 +536,7 @@ function WhiskProductionForm() {
     }
   };
 
-  const changeUseMode = (index: number, mode: 'direct' | 'generate' | 'analysis_only') => {
+  const changeUseMode = (index: number, mode: 'direct' | 'analysis_only') => {
     setMediaSlots(prev => prev.map((s, i) => {
       if (i !== index || !s) return s;
       return {
@@ -1479,7 +1479,7 @@ function SlotCard({
   slotType: 'image' | 'video';
   onRemove: () => void;
   onUpload: (file: File) => void;
-  onChangeUseMode?: (mode: 'direct' | 'generate' | 'analysis_only') => void;
+  onChangeUseMode?: (mode: 'direct' | 'analysis_only') => void;
   onChangeAutoPrompt?: (prompt: string) => void;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -1575,7 +1575,6 @@ function SlotCard({
         <div className="p-2 space-y-1 text-xs">
           {([
             { value: 'direct' as const, label: '직접 사용', icon: Eye },
-            { value: 'generate' as const, label: '새 이미지 생성', icon: Wand2 },
             { value: 'analysis_only' as const, label: '분석만 반영', icon: FileText },
           ]).map(opt => (
             <label
@@ -1596,20 +1595,23 @@ function SlotCard({
             </label>
           ))}
 
-          {/* Analysis result preview (for direct / generate) */}
-          {slot.analysis && slot.useMode !== 'analysis_only' && (
+          {/* Analysis result preview (direct mode) */}
+          {slot.analysis && slot.useMode === 'direct' && (
             <p className="text-[10px] text-muted-foreground line-clamp-2 mt-1 px-1">{slot.analysis}</p>
           )}
 
-          {/* Auto prompt textarea (for analysis_only) */}
+          {/* Auto prompt (analysis_only mode): Vision 분석 기반 프롬프트 자동 생성 → 수정 가능 */}
           {slot.useMode === 'analysis_only' && onChangeAutoPrompt && (
-            <textarea
-              value={slot.autoPrompt || ''}
-              onChange={e => onChangeAutoPrompt(e.target.value)}
-              placeholder={slot.analyzing ? '분석 중...' : '분석 완료 후 자동 입력됩니다'}
-              rows={2}
-              className="w-full mt-1 rounded border border-input bg-transparent px-2 py-1 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
-            />
+            <div className="mt-1 space-y-1">
+              <p className="text-[10px] text-muted-foreground px-1">Vision 분석 기반 프롬프트 (수정 가능)</p>
+              <textarea
+                value={slot.autoPrompt || ''}
+                onChange={e => onChangeAutoPrompt(e.target.value)}
+                placeholder={slot.analyzing ? '분석 중...' : '분석 완료 후 자동 입력됩니다'}
+                rows={3}
+                className="w-full rounded border border-input bg-transparent px-2 py-1 text-xs shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+              />
+            </div>
           )}
         </div>
       )}

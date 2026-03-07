@@ -7,7 +7,7 @@
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: Phase 2 완료 — 입력 필드 정리 + payload 계약 맞추기
+- **Current Status**: Phase 2 완료 + 미디어 옵션 정리 + ao_producer.json 삭제 (아럽토 단일 관리)
 - **Goal**: VPS 배포 + E2E 테스트
 
 ## B) 환경/의존성
@@ -23,40 +23,34 @@
 - **n8n ao-generate-image workflow ID**: d5b35fb7f1724e448
 
 ## C) 마지막 실행 기록
-- **Last Run Command**: TypeScript check + quality-check.sh
+- **Last Run Command**: git rm + commit
 - **Result**: PASS
 - **실행 위치**: Local
-- **Last Commit**: (pending)
+- **Last Commit**: a583931 chore: remove ao_producer.json from web workspace
 
 ## D) 완료/미완료
 
 ### Done
 - [x] Phase 2: 입력 필드 정리 + payload 계약 맞추기
-  - prompt_p1 필수 (UI `*` 표시 + 백엔드 400 검증)
-  - duration 드롭다운 (30/60/90/120초, 기본 30)
-  - engine_type 선택 (5개: character_story/core_message/live_promo/meme/action_sports)
-  - strict_mode 체크박스 (기본 false)
-  - narration 3분리: narration_text(텍스트) + narration_style(스타일) + narration_tone(톤)
-  - narration_mode 제거 (auto/manual → 비워두면 AI 자동)
-  - BGM/SFX: 체크박스 → 파일 업로드 방식 (업로드 없으면 무음)
-  - SFX 업로드 칸 신규 추가 (sfx_url)
-  - topic/keywords/category: 접기 가능한 메타데이터 섹션으로 이동
-  - n8n Producer 입력값 검증: topic/keywords/category 필수→선택, 새 필드 추가
-  - sessionStorage draft 저장/복원 업데이트
+- [x] narration_style/narration_tone 한글 통일 (설명형/차분하게)
+- [x] VPS 배포 + PM2 restart
+- [x] 미디어 선택 옵션 정리 (generate 제거, analysis_only 고도화)
+- [x] ao_producer.json 삭제 (아럽토 워크스페이스 단일 관리)
 
 ### Next Actions
-1. [ ] VPS 배포 (git pull + tsc + pm2 restart)
-2. [ ] n8n Producer 워크플로우 업로드 (ao_producer.json → n8n API PUT)
-3. [ ] E2E 영상 제작 테스트
+1. [ ] 미커밋 변경 커밋 + VPS 배포
+2. [ ] E2E 영상 제작 테스트
+3. [ ] n8n Worker 새 필드 활용 (아럽토 워크스페이스 담당)
 
 ## E) Blockers / Issues
 - **Blockers**: kie.ai 크레딧 부족 (402) → 충전 필요
-- **Known Issues**: n8n Worker가 새 필드(duration/engine_type/strict_mode/narration_style/narration_tone/sfx_url) 사용하려면 Worker 업데이트 필요
+- **Known Issues**: n8n Worker 새 필드(duration/engine_type/strict_mode 등) 활용은 아럽토 워크스페이스 담당
+- **규칙**: n8n Producer/Worker 파일은 이 워크스페이스에서 수정하지 않음 (아럽토 단일 관리)
 
 ## F) 변경 파일
-- productions-client.tsx (Phase 2 UI: duration/engine_type/strict_mode/narration 3분리/BGM·SFX 업로드/메타데이터 접기)
-- productions.ts (body 타입 + prompt_p1·duration 검증 + webhook payload 신규 필드)
-- ao_producer.json (입력값 검증 Code 노드: topic/keywords/category 선택, 신규 필드 추가)
+- productions-client.tsx (Phase 2 UI + generate 제거 + analysis_only 개선)
+- productions.ts (body 타입 + 검증 + webhook payload)
+- n8n-workflows/ 삭제 (아럽토 단일 관리)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> Phase 2 완료: 입력 필드 정리 + payload 계약 맞추기. TypeScript + quality-check PASS. VPS 배포 + n8n 워크플로우 업로드 + E2E 테스트 필요.
+> Phase 2 + 미디어 옵션 정리 완료. ao_producer.json 삭제 (아럽토 단일 관리). 미커밋 변경 커밋 + VPS 배포 필요.

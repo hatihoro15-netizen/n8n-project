@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-07
-- 현재 상태(1줄): Phase 2 완료 — 입력 필드 정리 + payload 계약 맞추기 (VPS 배포 대기)
-- 진행중 작업: VPS 배포 + n8n 워크플로우 업로드 + E2E 테스트
-- 최근 완료: Phase 2 (duration/engine_type/strict_mode/narration 3분리/BGM·SFX 업로드/메타데이터 접기)
+- 현재 상태(1줄): 미디어 선택 옵션 정리 완료 (generate 제거 + analysis_only 고도화)
+- 진행중 작업: VPS 배포 + E2E 테스트
+- 최근 완료: "새 이미지 생성" 옵션 제거, "분석만 반영" 프롬프트 수정 UI 개선
 - 주의사항: kie.ai 크레딧 부족(402), PM2 프로세스명=n8n-web-backend
 
 ---
@@ -506,3 +506,20 @@
 - productions-client.tsx (Phase 2 UI 전면 수정)
 - productions.ts (body 타입 + 검증 + webhook payload)
 - ao_producer.json (입력값 검증 Code 노드)
+
+## 2026-03-07 (2차)
+### Done
+- [x] 미디어 선택 옵션 정리: "새 이미지 생성"(generate) 옵션 UI에서 완전 제거
+- [x] useMode 타입: 'direct' | 'generate' | 'analysis_only' → 'direct' | 'analysis_only'
+- [x] SlotCard 라디오: 3개 → 2개 (직접 사용 / 분석만 반영)
+- [x] "분석만 반영" 선택 시 Vision 분석 기반 프롬프트 자동 생성 + 수정 가능 입력칸 + 라벨 추가
+- [x] 백엔드 body 타입은 하위호환 유지 (generate 허용)
+- [x] TypeScript + quality-check PASS
+### Result
+- 프론트엔드만 변경 (백엔드/n8n 변경 없음)
+- useMode에서 generate 완전 제거
+### Next (방향만)
+- VPS 배포 (프론트엔드만)
+- E2E 영상 제작 테스트
+### Files / Links
+- productions-client.tsx (useMode generate 제거 + analysis_only UI 개선)
