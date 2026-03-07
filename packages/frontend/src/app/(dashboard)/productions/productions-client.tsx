@@ -1252,7 +1252,7 @@ function WhiskProductionForm() {
         </div>
 
         {/* 7-scene. Multi-clip (Scenes) */}
-        {sceneClips.length > 0 && (
+        {(sceneClips.length > 0 || showSceneClips) && (
           <div className="space-y-3">
             <button
               type="button"
@@ -1265,6 +1265,9 @@ function WhiskProductionForm() {
             </button>
             {showSceneClips && (
               <div className="space-y-2 p-3 rounded-lg border bg-slate-50/50">
+                {sceneClips.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-3">씬이 없습니다. 씬을 추가해주세요.</p>
+                )}
                 {sceneClips.map((clip, idx) => {
                   const startSec = sceneClips.slice(0, idx).reduce((s, c) => s + c.durationSec, 0);
                   return (
@@ -1317,7 +1320,6 @@ function WhiskProductionForm() {
                         onClick={() => {
                           const updated = sceneClips.filter((_, i) => i !== idx);
                           setSceneClips(updated);
-                          if (updated.length === 0) setShowSceneClips(false);
                         }}
                         className="flex-shrink-0 p-1 text-red-400 hover:text-red-600"
                       >
@@ -1336,16 +1338,18 @@ function WhiskProductionForm() {
                     <Plus className="h-3.5 w-3.5 mr-1" />
                     씬 추가
                   </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => { setSceneClips([]); setShowSceneClips(false); setSceneDurationWarning(''); }}
-                    className="text-red-500 hover:text-red-700"
-                  >
-                    <Trash2 className="h-3.5 w-3.5 mr-1" />
-                    전체 삭제
-                  </Button>
+                  {sceneClips.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => { setSceneClips([]); setSceneDurationWarning(''); }}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="h-3.5 w-3.5 mr-1" />
+                      전체 삭제
+                    </Button>
+                  )}
                 </div>
                 {sceneDurationWarning && (
                   <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">{sceneDurationWarning}</p>
