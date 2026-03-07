@@ -49,8 +49,13 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 // 나레이션 길이 추정 계수 (한국어 기준, 초당 글자 수)
 const NARRATION_CHARS_PER_SEC = 4;
-const VIDEO_DURATION_OPTIONS = [0, 10, 20, 30, 40, 50, 60] as const;
-type VideoDurationSec = typeof VIDEO_DURATION_OPTIONS[number];
+// 영상 길이: 0=자동, 3~180=직접입력 (슬라이더+숫자)
+const clampDuration = (v: number): number => {
+  if (v <= 0) return 0;
+  if (v < 3) return 3;
+  if (v > 180) return 180;
+  return Math.round(v);
+};
 
 // ── Types ──
 type UploadedFile = {
@@ -411,7 +416,7 @@ function WhiskProductionForm() {
   const [formTopic, setFormTopic] = useState('');
   const [keywords, setKeywords] = useState('');
   const [category, setCategory] = useState('');
-  const [videoDurationSec, setVideoDurationSec] = useState<VideoDurationSec>(0);
+  const [videoDurationSec, setVideoDurationSec] = useState<number>(0);
   const [videoDurationManual, setVideoDurationManual] = useState(false);
   const [engineType, setEngineType] = useState<'character_story' | 'core_message' | 'live_promo' | 'meme' | 'action_sports'>('core_message');
   const [strictMode, setStrictMode] = useState(false);
@@ -433,7 +438,6 @@ function WhiskProductionForm() {
   type SceneClip = { prompt: string; durationSec: number };
   const [sceneClips, setSceneClips] = useState<SceneClip[]>([]);
   const [showSceneClips, setShowSceneClips] = useState(false);
-  const [sceneDurationWarning, setSceneDurationWarning] = useState('');
 
   // Form state
   const [submitting, setSubmitting] = useState(false);
@@ -530,8 +534,7 @@ function WhiskProductionForm() {
       return;
     }
     const estimatedSec = Math.ceil(narrationText.trim().length / NARRATION_CHARS_PER_SEC);
-    const nearest = [...VIDEO_DURATION_OPTIONS].reverse().find(v => v <= estimatedSec) ?? 0;
-    setVideoDurationSec(nearest as VideoDurationSec);
+    setVideoDurationSec(clampDuration(estimatedSec));
   }, [narrationText, videoDurationManual]);
 
   const clearDraft = () => sessionStorage.removeItem(DRAFT_KEY);
@@ -1168,15 +1171,9 @@ function WhiskProductionForm() {
                     });
                     setSceneClips(parsed);
                     setShowSceneClips(true);
-                    // Auto-set duration if sum matches an option
+                    // Auto-set duration to scene total
                     const totalSec = parsed.reduce((sum, c) => sum + c.durationSec, 0);
-                    const match = VIDEO_DURATION_OPTIONS.find(v => v === totalSec);
-                    if (match !== undefined) {
-                      setVideoDurationSec(match);
-                      setSceneDurationWarning('');
-                    } else {
-                      setSceneDurationWarning(`씬 총합 ${totalSec}초가 허용 옵션과 일치하지 않습니다. 영상 길이를 직접 선택하세요.`);
-                    }
+                    setVideoDurationSec(clampDuration(totalSec));
                   }
                 } else {
                   setAiPromptKo(`오류: ${data.message || 'API 호출 실패'}`);
@@ -1299,17 +1296,9 @@ function WhiskProductionForm() {
                             const updated = [...sceneClips];
                             updated[idx] = { ...updated[idx], durationSec: val };
                             setSceneClips(updated);
-                            // Check sum vs selected duration
+                            // Auto-set duration to scene total
                             const totalSec = updated.reduce((s, c) => s + c.durationSec, 0);
-                            const match = VIDEO_DURATION_OPTIONS.find(v => v === totalSec);
-                            if (match !== undefined) {
-                              setVideoDurationSec(match);
-                              setSceneDurationWarning('');
-                            } else if (videoDurationSec > 0) {
-                              setSceneDurationWarning(`씬 총합 ${totalSec}초 != 선택 길이 ${videoDurationSec}초`);
-                            } else {
-                              setSceneDurationWarning(`씬 총합 ${totalSec}초가 허용 옵션과 일치하지 않습니다.`);
-                            }
+                            setVideoDurationSec(clampDuration(totalSec));
                           }}
                           className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                         />
@@ -1343,7 +1332,7 @@ function WhiskProductionForm() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      onClick={() => { setSceneClips([]); setSceneDurationWarning(''); }}
+                      onClick={() => { setSceneClips([]); }}
                       className="text-red-500 hover:text-red-700"
                     >
                       <Trash2 className="h-3.5 w-3.5 mr-1" />
@@ -1351,9 +1340,6 @@ function WhiskProductionForm() {
                     </Button>
                   )}
                 </div>
-                {sceneDurationWarning && (
-                  <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">{sceneDurationWarning}</p>
-                )}
               </div>
             )}
           </div>
@@ -1362,19 +1348,48 @@ function WhiskProductionForm() {
         {/* 7-0. Duration + Engine Type + Strict Mode */}
         <div className={`grid grid-cols-1 ${productionMode === 'ai_video' ? 'sm:grid-cols-3' : ''} gap-4`}>
           <div className="space-y-1.5">
-            <label className="text-sm font-medium">영상 길이</label>
-            <select
-              value={videoDurationSec}
-              onChange={e => {
-                setVideoDurationSec(Number(e.target.value) as VideoDurationSec);
-                setVideoDurationManual(true);
-              }}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              {VIDEO_DURATION_OPTIONS.map(v => (
-                <option key={v} value={v}>{v === 0 ? '자동 (AI 판단)' : `${v}초`}</option>
-              ))}
-            </select>
+            <label className="text-sm font-medium">
+              영상 길이 {videoDurationSec === 0 ? <span className="text-muted-foreground font-normal">— 자동 (AI 판단)</span> : <span className="text-muted-foreground font-normal">— {videoDurationSec}초</span>}
+            </label>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={0}
+                max={180}
+                step={1}
+                value={videoDurationSec}
+                onChange={e => {
+                  const v = clampDuration(Number(e.target.value));
+                  setVideoDurationSec(v);
+                  setVideoDurationManual(true);
+                }}
+                className="flex-1 h-2 accent-violet-600"
+              />
+              <input
+                type="number"
+                min={0}
+                max={180}
+                value={videoDurationSec}
+                onChange={e => {
+                  const raw = Number(e.target.value);
+                  if (!isNaN(raw)) setVideoDurationSec(raw);
+                }}
+                onBlur={e => {
+                  const v = clampDuration(Number(e.target.value) || 0);
+                  setVideoDurationSec(v);
+                  setVideoDurationManual(true);
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    const v = clampDuration(Number((e.target as HTMLInputElement).value) || 0);
+                    setVideoDurationSec(v);
+                    setVideoDurationManual(true);
+                  }
+                }}
+                className="w-16 rounded-md border border-input bg-transparent px-2 py-1.5 text-sm text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              />
+              <span className="text-xs text-muted-foreground w-4">초</span>
+            </div>
             {narrationText.trim() && !videoDurationManual && (
               <p className="text-xs text-muted-foreground mt-1">
                 나레이션 {narrationText.trim().length}자 → 약 {Math.ceil(narrationText.trim().length / NARRATION_CHARS_PER_SEC)}초 추정
