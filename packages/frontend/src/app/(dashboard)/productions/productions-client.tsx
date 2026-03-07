@@ -407,8 +407,8 @@ function WhiskProductionForm() {
   const [engineType, setEngineType] = useState<'character_story' | 'core_message' | 'live_promo' | 'meme' | 'action_sports'>('core_message');
   const [strictMode, setStrictMode] = useState(false);
   const [narrationText, setNarrationText] = useState('');
-  const [narrationStyle, setNarrationStyle] = useState('explanatory');
-  const [narrationTone, setNarrationTone] = useState('calm');
+  const [narrationStyle, setNarrationStyle] = useState('설명형');
+  const [narrationTone, setNarrationTone] = useState('차분하게');
   const [bgmUrl, setBgmUrl] = useState('');
   const [bgmFileName, setBgmFileName] = useState('');
   const [bgmUploading, setBgmUploading] = useState(false);
@@ -1177,12 +1177,12 @@ function WhiskProductionForm() {
                 onChange={e => setNarrationStyle(e.target.value)}
                 className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                <option value="explanatory">설명형</option>
-                <option value="documentary">다큐멘터리</option>
-                <option value="storytelling">스토리텔링</option>
-                <option value="news">뉴스</option>
-                <option value="casual">일상 대화</option>
-                <option value="dramatic">드라마틱</option>
+                <option value="설명형">설명형</option>
+                <option value="다큐멘터리">다큐멘터리</option>
+                <option value="스토리텔링">스토리텔링</option>
+                <option value="뉴스">뉴스</option>
+                <option value="일상대화">일상 대화</option>
+                <option value="드라마틱">드라마틱</option>
               </select>
             </div>
             <div className="space-y-1.5">
@@ -1192,11 +1192,11 @@ function WhiskProductionForm() {
                 onChange={e => setNarrationTone(e.target.value)}
                 className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
-                <option value="calm">차분하게</option>
-                <option value="serious">진지하게</option>
-                <option value="humorous">유머러스하게</option>
-                <option value="warm">따뜻하게</option>
-                <option value="energetic">에너지틱하게</option>
+                <option value="차분하게">차분하게</option>
+                <option value="진지하게">진지하게</option>
+                <option value="유머러스하게">유머러스하게</option>
+                <option value="따뜻하게">따뜻하게</option>
+                <option value="에너지틱하게">에너지틱하게</option>
               </select>
             </div>
           </div>

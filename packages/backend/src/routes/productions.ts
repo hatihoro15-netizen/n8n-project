@@ -231,11 +231,11 @@ export async function productionRoutes(app: FastifyInstance) {
     if (body.engine_type && !ALLOWED_ENGINES.includes(body.engine_type)) {
       return reply.status(400).send({ success: false, message: `engine_type must be one of: ${ALLOWED_ENGINES.join(', ')}` });
     }
-    const ALLOWED_NARRATION_STYLES = ['explanatory', 'documentary', 'storytelling', 'news', 'casual', 'dramatic'];
+    const ALLOWED_NARRATION_STYLES = ['설명형', '다큐멘터리', '스토리텔링', '뉴스', '일상대화', '드라마틱'];
     if (body.narration_style && !ALLOWED_NARRATION_STYLES.includes(body.narration_style)) {
       return reply.status(400).send({ success: false, message: `narration_style must be one of: ${ALLOWED_NARRATION_STYLES.join(', ')}` });
     }
-    const ALLOWED_NARRATION_TONES = ['calm', 'serious', 'humorous', 'warm', 'energetic'];
+    const ALLOWED_NARRATION_TONES = ['차분하게', '진지하게', '유머러스하게', '따뜻하게', '에너지틱하게'];
     if (body.narration_tone && !ALLOWED_NARRATION_TONES.includes(body.narration_tone)) {
       return reply.status(400).send({ success: false, message: `narration_tone must be one of: ${ALLOWED_NARRATION_TONES.join(', ')}` });
     }
@@ -285,8 +285,8 @@ export async function productionRoutes(app: FastifyInstance) {
         ref_files: body.ref_files,
         clips: body.clips,
         narration_text: body.narration_text,
-        narration_style: body.narration_style || 'explanatory',
-        narration_tone: body.narration_tone || 'calm',
+        narration_style: body.narration_style || '설명형',
+        narration_tone: body.narration_tone || '차분하게',
         bgm_url: body.bgm_url,
         sfx_url: body.sfx_url,
         enable_bgm: body.enable_bgm,
