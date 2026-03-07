@@ -146,6 +146,10 @@ export default function ProductionDetailClient() {
     ? (production.assets as Record<string, string>).script
     : null;
 
+  const assetsObj = production?.assets as Record<string, unknown> | null | undefined;
+  const productionParams: Record<string, string | number | boolean | null | undefined> | null =
+    assetsObj?.params ? (assetsObj.params as Record<string, string | number | boolean | null | undefined>) : null;
+
   if (isLoading) {
     return (
       <>
@@ -199,7 +203,229 @@ export default function ProductionDetailClient() {
         </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Left: Video Player or Status */}
+          {/* Left: Details */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Info Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">제작 정보</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <span className="text-muted-foreground">채널</span>
+                    <div className="mt-0.5">
+                      <Badge variant="outline">{production.channel?.name}</Badge>
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">워크플로우</span>
+                    <p className="mt-0.5 font-medium">{production.workflow?.name}</p>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">상태</span>
+                    <div className="mt-0.5">
+                      <StatusBadge status={production.status} />
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-muted-foreground">주제</span>
+                    <p className="mt-0.5 font-medium">{production.topic || '-'}</p>
+                  </div>
+                </div>
+
+                {/* Production Params */}
+                {productionParams != null && (
+                  <div className="border-t pt-3">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">비율</span>
+                        <p className="mt-0.5 font-medium">{String(productionParams.aspect_ratio || '-')}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">제작 방식</span>
+                        <p className="mt-0.5 font-medium">
+                          {productionParams.production_mode === 'ai_video' ? '영상화 (Kling AI)' :
+                           productionParams.production_mode === 'slideshow' ? '슬라이드쇼' :
+                           String(productionParams.production_mode || '-')}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">엔진</span>
+                        <p className="mt-0.5 font-medium">{String(productionParams.engine_type || '-')}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">영상 길이</span>
+                        <p className="mt-0.5 font-medium">
+                          {productionParams.duration_sec === 0 ? '자동 (AI 판단)' :
+                           `${productionParams.duration_sec}초`}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">이미지 순서</span>
+                        <p className="mt-0.5 font-medium">
+                          {productionParams.image_order === 'sequential' ? '순서대로' : '자동'}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">이미지 포함</span>
+                        <p className="mt-0.5 font-medium">{productionParams.has_images ? '예' : '아니오'}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">엄격 모드</span>
+                        <p className="mt-0.5 font-medium">{productionParams.strict_mode ? 'ON' : 'OFF'}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">나레이션 스타일</span>
+                        <p className="mt-0.5 font-medium">{String(productionParams.narration_style || '-')}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">나레이션 톤</span>
+                        <p className="mt-0.5 font-medium">{String(productionParams.narration_tone || '-')}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">BGM</span>
+                        <p className="mt-0.5 font-medium">
+                          {productionParams.bgm_mode === 'ai_auto' ? 'AI 자동' :
+                           productionParams.bgm_mode === 'uploaded' ? '업로드' :
+                           productionParams.bgm_mode === 'none' ? '없음' :
+                           String(productionParams.bgm_mode || '-')}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">효과음</span>
+                        <p className="mt-0.5 font-medium">
+                          {productionParams.sfx_mode === 'ai_auto' ? 'AI 자동' :
+                           productionParams.sfx_mode === 'uploaded' ? '업로드' :
+                           productionParams.sfx_mode === 'combined' ? '합쳐서' :
+                           productionParams.sfx_mode === 'none' ? '없음' :
+                           String(productionParams.sfx_mode || '-')}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Narration Text */}
+                {productionParams?.narration_text && (
+                  <div className="border-t pt-3">
+                    <span className="text-muted-foreground text-sm">나레이션 텍스트</span>
+                    <p className="mt-1 text-sm bg-muted p-2 rounded whitespace-pre-wrap">
+                      {String(productionParams.narration_text)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Prompt */}
+                {productionParams?.prompt_p1 && (
+                  <div className="border-t pt-3">
+                    <span className="text-muted-foreground text-sm">프롬프트</span>
+                    <p className="mt-1 text-sm bg-muted p-2 rounded whitespace-pre-wrap">
+                      {String(productionParams.prompt_p1)}
+                    </p>
+                  </div>
+                )}
+
+                {/* Timestamps */}
+                <div className="border-t pt-3 space-y-2">
+                  <div className="flex items-center gap-2 text-sm">
+                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                    <span className="text-muted-foreground">생성:</span>
+                    <span>{new Date(production.createdAt).toLocaleString('ko-KR')}</span>
+                  </div>
+                  {production.startedAt && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground">시작:</span>
+                      <span>{new Date(production.startedAt).toLocaleString('ko-KR')}</span>
+                    </div>
+                  )}
+                  {production.completedAt && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-muted-foreground">완료:</span>
+                      <span>{new Date(production.completedAt).toLocaleString('ko-KR')}</span>
+                    </div>
+                  )}
+                  {production.startedAt && production.completedAt && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-3.5 w-3.5 text-emerald-500" />
+                      <span className="text-muted-foreground">소요:</span>
+                      <span className="font-medium text-emerald-600">
+                        {Math.round(
+                          (new Date(production.completedAt).getTime() -
+                            new Date(production.startedAt).getTime()) /
+                            1000
+                        )}
+                        초
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* YouTube Link */}
+                {production.youtubeUrl && (
+                  <div className="border-t pt-3">
+                    <a
+                      href={production.youtubeUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      <ExternalLink className="h-4 w-4" />
+                      YouTube에서 보기
+                    </a>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Script Card (if available) */}
+            {scriptContent && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">스크립트</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <pre className="text-xs bg-muted p-3 rounded-lg overflow-auto max-h-64 whitespace-pre-wrap">
+                    {scriptContent}
+                  </pre>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Error Card */}
+            {production.errorMessage && (
+              production.errorMessage.includes('타임아웃') ? (
+                <Card className="border-amber-200">
+                  <CardHeader>
+                    <CardTitle className="text-base text-amber-700 flex items-center gap-2">
+                      <Clock className="h-4 w-4" />
+                      응답 시간 초과
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="text-xs bg-amber-50 text-amber-800 p-3 rounded-lg overflow-auto max-h-40 whitespace-pre-wrap">
+                      {production.errorMessage}
+                    </pre>
+                  </CardContent>
+                </Card>
+              ) : (
+                <Card className="border-red-200">
+                  <CardHeader>
+                    <CardTitle className="text-base text-red-700">에러 로그</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <pre className="text-xs bg-red-50 text-red-800 p-3 rounded-lg overflow-auto max-h-40 whitespace-pre-wrap">
+                      {production.errorMessage}
+                    </pre>
+                  </CardContent>
+                </Card>
+              )
+            )}
+          </div>
+
+          {/* Right: Video Player or Status */}
           <div className="lg:col-span-1">
             {production.status === 'completed' && videoUrl ? (
               <div className="space-y-3">
@@ -310,136 +536,6 @@ export default function ProductionDetailClient() {
                   </div>
                 </CardContent>
               </Card>
-            )}
-          </div>
-
-          {/* Right: Details */}
-          <div className="lg:col-span-2 space-y-4">
-            {/* Info Card */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">제작 정보</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                  <div>
-                    <span className="text-muted-foreground">채널</span>
-                    <div className="mt-0.5">
-                      <Badge variant="outline">{production.channel?.name}</Badge>
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">워크플로우</span>
-                    <p className="mt-0.5 font-medium">{production.workflow?.name}</p>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">상태</span>
-                    <div className="mt-0.5">
-                      <StatusBadge status={production.status} />
-                    </div>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">주제</span>
-                    <p className="mt-0.5 font-medium">{production.topic || '-'}</p>
-                  </div>
-                </div>
-
-                {/* Timestamps */}
-                <div className="border-t pt-3 space-y-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-muted-foreground">생성:</span>
-                    <span>{new Date(production.createdAt).toLocaleString('ko-KR')}</span>
-                  </div>
-                  {production.startedAt && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-muted-foreground">시작:</span>
-                      <span>{new Date(production.startedAt).toLocaleString('ko-KR')}</span>
-                    </div>
-                  )}
-                  {production.completedAt && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                      <span className="text-muted-foreground">완료:</span>
-                      <span>{new Date(production.completedAt).toLocaleString('ko-KR')}</span>
-                    </div>
-                  )}
-                  {production.startedAt && production.completedAt && (
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-3.5 w-3.5 text-emerald-500" />
-                      <span className="text-muted-foreground">소요:</span>
-                      <span className="font-medium text-emerald-600">
-                        {Math.round(
-                          (new Date(production.completedAt).getTime() -
-                            new Date(production.startedAt).getTime()) /
-                            1000
-                        )}
-                        초
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* YouTube Link */}
-                {production.youtubeUrl && (
-                  <div className="border-t pt-3">
-                    <a
-                      href={production.youtubeUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
-                    >
-                      <ExternalLink className="h-4 w-4" />
-                      YouTube에서 보기
-                    </a>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Script Card (if available) */}
-            {scriptContent && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">스크립트</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <pre className="text-xs bg-muted p-3 rounded-lg overflow-auto max-h-64 whitespace-pre-wrap">
-                    {scriptContent}
-                  </pre>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Error Card */}
-            {production.errorMessage && (
-              production.errorMessage.includes('타임아웃') ? (
-                <Card className="border-amber-200">
-                  <CardHeader>
-                    <CardTitle className="text-base text-amber-700 flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      응답 시간 초과
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <pre className="text-xs bg-amber-50 text-amber-800 p-3 rounded-lg overflow-auto max-h-40 whitespace-pre-wrap">
-                      {production.errorMessage}
-                    </pre>
-                  </CardContent>
-                </Card>
-              ) : (
-                <Card className="border-red-200">
-                  <CardHeader>
-                    <CardTitle className="text-base text-red-700">에러 로그</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <pre className="text-xs bg-red-50 text-red-800 p-3 rounded-lg overflow-auto max-h-40 whitespace-pre-wrap">
-                      {production.errorMessage}
-                    </pre>
-                  </CardContent>
-                </Card>
-              )
             )}
           </div>
         </div>

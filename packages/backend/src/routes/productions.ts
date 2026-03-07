@@ -258,13 +258,30 @@ export async function productionRoutes(app: FastifyInstance) {
       return reply.status(400).send({ success: false, message: '웹훅 경로가 설정되지 않은 워크플로우입니다.' });
     }
 
-    // Create production record
+    // Create production record with params snapshot
     const production = await prisma.production.create({
       data: {
         workflowId: workflow.id,
         channelId: workflow.channelId,
         topic: body.topic || body.prompt_p1?.slice(0, 100) || 'AO Production',
         status: 'pending',
+        assets: {
+          params: {
+            prompt_p1: body.prompt_p1,
+            aspect_ratio: body.aspect_ratio || '9:16',
+            production_mode: body.production_mode || 'ai_video',
+            engine_type: body.engine_type || 'core_message',
+            strict_mode: body.strict_mode ?? false,
+            duration_sec: body.duration_sec ?? 0,
+            image_order: body.image_order || 'auto',
+            has_images: body.has_images ?? false,
+            narration_text: body.narration_text,
+            narration_style: body.narration_style || '설명형',
+            narration_tone: body.narration_tone || '차분하게',
+            bgm_mode: body.bgm_mode || 'ai_auto',
+            sfx_mode: body.sfx_mode || 'ai_auto',
+          },
+        },
       },
       include: { workflow: true, channel: true },
     });
@@ -570,11 +587,16 @@ export async function productionRoutes(app: FastifyInstance) {
       return { success: true, skipped: true, message: `Current status (${existingProd.status}) is already ahead of ${status}` };
     }
 
-    // Build assets object, merging with existing
+    // Build assets object, merging with existing (preserve params from creation)
+    const existingAssets = (existingProd.assets as Record<string, unknown>) || {};
     const mergedAssets: Record<string, unknown> = {
-      ...((existingProd.assets as Record<string, unknown>) || {}),
+      ...existingAssets,
       ...(assets || {}),
     };
+    // Ensure params saved at creation are never overwritten by callback
+    if (existingAssets.params) {
+      mergedAssets.params = existingAssets.params;
+    }
     const finalVideoUrl = videoUrl || renderedVideoUrl;
     if (finalVideoUrl) mergedAssets.videoUrl = finalVideoUrl;
     if (thumbnailUrl) mergedAssets.thumbnailUrl = thumbnailUrl;
