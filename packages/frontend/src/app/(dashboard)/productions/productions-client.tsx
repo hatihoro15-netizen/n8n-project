@@ -35,6 +35,7 @@ import {
   Image as ImageIcon,
   Video,
   Wand2,
+  Sparkles,
   RefreshCw,
   Download,
   Music,
@@ -403,6 +404,10 @@ function WhiskProductionForm() {
 
   // Prompt
   const [promptP1, setPromptP1] = useState('');
+  const [showAiPrompt, setShowAiPrompt] = useState(false);
+  const [aiPromptLoading, setAiPromptLoading] = useState(false);
+  const [aiPromptKo, setAiPromptKo] = useState('');
+  const [aiPromptEn, setAiPromptEn] = useState('');
   const [formTopic, setFormTopic] = useState('');
   const [keywords, setKeywords] = useState('');
   const [category, setCategory] = useState('');
@@ -1115,6 +1120,83 @@ function WhiskProductionForm() {
             rows={3}
             className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
           />
+          {/* AI 추천 프롬프트 생성 버튼 */}
+          <button
+            type="button"
+            onClick={() => {
+              if (showAiPrompt) { setShowAiPrompt(false); return; }
+              setShowAiPrompt(true);
+              setAiPromptLoading(true);
+              // TODO: 실제 Claude API 연동 (현재 stub)
+              setTimeout(() => {
+                setAiPromptKo('(AI 추천 프롬프트가 여기에 표시됩니다)');
+                setAiPromptEn('(AI recommended prompt will appear here)');
+                setAiPromptLoading(false);
+              }, 1500);
+            }}
+            className="flex items-center gap-1.5 text-sm text-violet-600 hover:text-violet-700 transition-colors mt-1"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            {showAiPrompt ? 'AI 추천 닫기' : 'AI 추천 프롬프트 생성'}
+          </button>
+          {/* AI 추천 결과 영역 */}
+          {showAiPrompt && (
+            <div className="space-y-3 p-4 rounded-lg border border-violet-200 bg-violet-50/50 mt-2">
+              <h4 className="text-sm font-medium flex items-center gap-1.5">
+                <Sparkles className="h-4 w-4 text-violet-600" />
+                AI 추천 프롬프트
+              </h4>
+              {aiPromptLoading ? (
+                <div className="flex items-center gap-2 py-4 justify-center text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  프롬프트 생성 중...
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-muted-foreground">한글판</label>
+                      <textarea
+                        value={aiPromptKo}
+                        onChange={e => setAiPromptKo(e.target.value)}
+                        rows={4}
+                        className="flex w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-xs text-muted-foreground">영문판</label>
+                      <textarea
+                        value={aiPromptEn}
+                        onChange={e => setAiPromptEn(e.target.value)}
+                        rows={4}
+                        className="flex w-full rounded-md border border-input bg-white px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => { setPromptP1(aiPromptKo); setShowAiPrompt(false); }}
+                      disabled={!aiPromptKo.trim()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-violet-600 text-white text-sm hover:bg-violet-700 disabled:opacity-50 transition-colors"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      한글판으로 확정
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPromptP1(aiPromptEn); setShowAiPrompt(false); }}
+                      disabled={!aiPromptEn.trim()}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-violet-300 text-violet-700 text-sm hover:bg-violet-100 disabled:opacity-50 transition-colors"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      영문판으로 확정
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
         </div>
 
         {/* 7-0. Duration + Engine Type + Strict Mode */}
