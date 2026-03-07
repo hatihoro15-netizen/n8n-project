@@ -7,11 +7,11 @@
 ---
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
-- 마지막 업데이트: 2026-03-07
-- 현재 상태(1줄): Phase 2 완료 — clip_duration auto + B-1 direct 이미지 수정 완료
-- 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: clip_duration auto 모드, B-1 direct 모드 이미지 Kling 전달 수정
-- 주의사항: YouTube 비활성화, bgm_file_url/sfx_file_url 미구현, NCA GUNICORN_TIMEOUT=600 필수
+- 마지막 업데이트: 2026-03-08
+- 현재 상태(1줄): F-7/F-8/F-9 완료 — 자막 타이밍 + 길이 일체화 + SFX 동적 배치
+- 진행중 작업: VPS 업로드 + 프론트 웹앱 연동
+- 최근 완료: F-9 효과음 AI 타이밍 + 동적 배치
+- 주의사항: YouTube 비활성화, bgm_file_url/sfx_file_url 미구현, NCA GUNICORN_TIMEOUT=600 필수, SFX 파일 AI 생성 보류
 
 ---
 
@@ -579,4 +579,25 @@
 - MinIO 이미지 URL 공개 접근 확인 (direct 모드 Kling 접근 필요)
 ### 📁 Files / Links
 - n8n/ao_worker.json (assemble-prompt, process-clips 수정)
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-08 (F-7/F-8/F-9)
+### Done
+- [x] F-7: buildSubtitleSegments -> buildSubtitleTimings (Claude API 자연 타이밍)
+- [x] F-8: auto 모드 totalDuration = max(tts.duration, scene_duration)
+- [x] F-9: 효과음 AI 타이밍 + 동적 배치
+  - generateSfxTimings 함수: Claude API로 나레이션 구간 분석 -> 최대 5개 SFX 배치 시점 결정
+  - process-clips: sfx_timings 출력 추가
+  - render-video: hardcoded sfxIdx -> 동적 sfxIndices 배열 (다중 SFX adelay)
+  - render-video fallback: sfx_timings 없으면 기존 500ms 단일 SFX
+  - mark-generated: job_logs에 tts_duration/scene_duration/total_duration_source/sfx_count 추가
+### Scope Limitation
+- SFX 파일 AI 생성 보류: kie.ai/fal.ai에 SFX 생성 모델 없음
+- 현재: 기존 sfx_ppook.wav를 AI가 결정한 타이밍에 배치
+- 향후: SFX 생성 API 확보 시 generateSfxTimings 결과의 description으로 음원 생성 가능
+### Next
+- VPS 업로드 (ao_worker.json)
+- 프론트 웹앱 연동
+### Files
+- n8n/ao_worker.json (process-clips, render-video, mark-generated 수정)
 - HANDOFF.md, PROGRESS.md
