@@ -41,6 +41,11 @@
   - Producer: create-job SQL에 narration_style/narration_tone 포함 ✅
   - Worker: generateNarration에서 style/tone 반영 + topic/keywords/category 참조 제거 (SPEC 4조) ✅
   - DB: narration_style/narration_tone 컬럼 추가 ✅
+- **clip_duration auto 모드 ✅**:
+  - assemble-prompt: clip_duration 0/'0'/'auto' → 'auto' 보존 ✅
+  - process-clips: TTS→Kling 순서 재배치 (auto시 TTS 실측 길이를 Kling duration으로 사용) ✅
+  - 출력: clip_duration_mode (auto/fixed) + actual_clip_duration 추가 ✅
+  - 고정 모드(기존): 동작 변화 없음 ✅
 
 ## Goal
 프론트 웹앱 연동
@@ -54,12 +59,15 @@
 6. [ ] sfx_url 필드 추가 (SFX 직접 URL 전달, enable_sfx와 연동)
 
 ## Last Run
-커맨드: Image Generator VPS→로컬 동기화
+커맨드: clip_duration auto 모드 구현 + VPS 업로드
 결과:
-- Image Generator (d5b35fb7f1724e448): VPS→로컬 다운로드 (3노드, versionCounter 44→46)
-- 노드 로직 변경 없음, 메타데이터만 업데이트
+- Worker (FHYohZccExR24Uha): assemble-prompt + process-clips 수정
+- clip_duration=0/'auto' → TTS 실측 길이(ffprobe) 기반 Kling duration 자동 결정
+- AI_VIDEO 섹션 실행 순서 변경: 나레이션→TTS→Kling (기존: Kling→나레이션→TTS)
+- top-level + activeVersion 양쪽 수정
+- n8n API PUT으로 업로드, active=true 유지
+- versionId: f87fc535-1ba4-4499-befe-39fe938455ba
 위치: Local + VPS (76.13.182.180)
-Last Commit: sync: download image generator from VPS
 
 ## Blockers
 - YouTube 업로드: Code v1(vm2) 시도 중이었으나 사용자 요청으로 중단
@@ -126,7 +134,7 @@ Last Commit: sync: download image generator from VPS
   "narration_tone": "차분하게",
   "production_mode": "ai_video | slideshow",
   "aspect_ratio": "9:16 | 16:9",
-  "clip_duration": 8,
+  "clip_duration": "8 | 0 | 'auto'",
   "narration_script": "(optional) 직접 입력 나레이션",
   "enable_bgm": false,
   "enable_sfx": false,
@@ -154,6 +162,7 @@ Last Commit: sync: download image generator from VPS
 - engine_type: 선택 (기본 core_message, 5종 허용)
 - narration_style: 선택 (기본 설명형, 4종 허용)
 - narration_tone: 선택 (기본 차분하게, 4종 허용)
+- clip_duration: 선택 (기본 8, 0/'auto'=TTS 실측 기반 자동)
 - prompt_hash: 자동 생성 (FNV-1a)
 
 ## Length Gate 스펙
@@ -168,6 +177,14 @@ Last Commit: sync: download image generator from VPS
 - 10회 반복: 외부 호출자가 동일 payload로 10회 호출
 - 비교 기준: job_logs에서 동일 prompt_hash의 output_hash 일치 여부
 
+## clip_duration auto 모드 스펙
+- 입력: clip_duration=0 / '0' / 'auto' → 내부적으로 'auto'로 정규화
+- 동작: TTS 실측 길이(ffprobe)를 Kling 영상 duration으로 사용 (3-15초 clamp)
+- 실행 순서: 나레이션 생성 → TTS + ffprobe → clipDur 결정 → Kling 영상 생성
+- totalDuration: auto시 TTS duration, fixed시 max(clipDur, TTS)
+- 출력 추가: clip_duration_mode (auto/fixed), actual_clip_duration
+- 기존 고정 모드(clip_duration=8 등): 동작 변화 없음
+
 ## aspect_ratio별 해상도
 - 9:16 → 1080x1920 (세로/숏폼)
 - 16:9 → 1920x1080 (가로/롱폼)
@@ -178,6 +195,7 @@ Last Commit: sync: download image generator from VPS
 - import 실행 시 자동 deactivate됨
 - workflow_history 테이블 PK 컬럼명: versionId (id 아님)
 - 환경변수 변경 시: docker compose up -d (restart는 env 미적용)
+- n8n API PUT: 추가 속성 거부 → name/nodes/connections/settings만 전송
 
 ## n8n Task Runner 제한사항
 - require('https'), require('http') 등 Node.js 내장 모듈 사용 불가
