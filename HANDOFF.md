@@ -8,7 +8,7 @@
 - 이미지 생성 웹훅 ✅ (Whisk 방식, kie.ai URL 직접 반환)
 - Kling AI 3.0 ✅ / 슬라이드쇼 ✅ / 영상화 ✅
 - production_mode 분기: ai_video / slideshow
-- use_mode 분기: direct / generate / analysis_only
+- use_mode 분기: direct / analysis_only (generate 제거)
 - aspect_ratio 분기: 9:16 (세로/숏폼) / 16:9 (가로/롱폼)
 - 나레이션 자동생성 ✅ (Claude API, narration_script 우선)
 - 중간 콜백 4개 ✅ (processing / rendering / generated / uploaded)
@@ -135,7 +135,7 @@ Last Commit: Phase 2 완료
   "bgm_url": "(optional) 커스텀 BGM URL",
   "files": [
     { "type": "image", "url": "MinIO URL", "vision_analysis": "분석결과",
-      "use_mode": "direct | generate | analysis_only", "auto_prompt": "..." }
+      "use_mode": "direct | analysis_only", "auto_prompt": "..." }
   ],
   "generated_images": ["이미지 URL 배열"]
 }
