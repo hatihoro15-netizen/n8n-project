@@ -51,6 +51,13 @@
   - Kling API 실패 시: direct 이미지 포함이면 에러 throw (silent fallback 금지) ✅
   - generated/analysis_only 이미지만 fallback 허용 ✅
   - 출력: direct_image_urls 추가 (디버깅용) ✅
+- **F-7 자막 타이밍 배치 (Claude API) ✅**:
+  - buildSubtitleSegments → buildSubtitleTimings 교체 ✅
+  - Claude API: 나레이션을 자연스러운 구간으로 분리 + 타이밍 배정 (호흡 간격, 강조 구간 반영) ✅
+  - 입력: prompt_p1 + narration_text + target_duration ✅
+  - 출력: { scene_duration, subtitle_timings: [{text, start, duration}] } ✅
+  - fallback: Claude 실패 시 기존 글자수 비율 배분 유지 ✅
+  - 호출부: slideshow + ai_video 양쪽 수정 ✅
 
 ## Goal
 프론트 웹앱 연동
@@ -64,15 +71,13 @@
 6. [ ] sfx_url 필드 추가 (SFX 직접 URL 전달, enable_sfx와 연동)
 
 ## Last Run
-커맨드: B-1 버그 수정 — direct 모드 원본 이미지 Kling AI 전달
+커맨드: F-7 자막 타이밍 배치 — Claude API 기반 buildSubtitleTimings
 결과:
-- Worker (FHYohZccExR24Uha): process-clips 수정
-- direct 이미지 별도 추적 + Kling 실패 시 silent fallback 금지
-- generated/analysis_only 이미지만 fallback 허용
-- direct_image_urls 출력 추가
+- Worker process-clips: buildSubtitleSegments → buildSubtitleTimings 교체
+- Claude API로 나레이션 타이밍 배정 (호흡 간격 + 강조 반영)
+- fallback: Claude 실패 시 글자수 비율 배분 유지
 - top-level + activeVersion 양쪽 수정
-- n8n API PUT 업로드, active=true 유지
-- versionId: 501f4c89-7666-423a-b17c-3a60fb43d850
+- VPS 업로드 + DB 동기화 + activate + restart 완료
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers
