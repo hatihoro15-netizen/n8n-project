@@ -573,15 +573,33 @@
       },
       {
         "parameters": {
-          "errorMessage": "={{ $json.message }}"
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": ""
+            },
+            "conditions": [
+              {
+                "id": "val-err-check",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          }
         },
-        "id": "error-handler",
-        "name": "에러 핸들러",
-        "type": "n8n-nodes-base.stopAndError",
-        "typeVersion": 1,
+        "id": "if-validation",
+        "name": "검증 결과 분기",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2,
         "position": [
-          912,
-          480
+          576,
+          304
         ]
       },
       {
@@ -741,6 +759,24 @@
         "main": [
           [
             {
+              "node": "검증 결과 분기",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "검증 결과 분기": {
+        "main": [
+          [
+            {
+              "node": "응답 반환 (400)",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
               "node": "Job 생성 (Supabase)",
               "type": "main",
               "index": 0
@@ -764,17 +800,6 @@
           [
             {
               "node": "응답 반환 (200)",
-              "type": "main",
-              "index": 0
-            }
-          ]
-        ]
-      },
-      "에러 핸들러": {
-        "main": [
-          [
-            {
-              "node": "응답 반환 (400)",
               "type": "main",
               "index": 0
             }

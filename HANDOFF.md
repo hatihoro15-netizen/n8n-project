@@ -54,14 +54,14 @@
 6. [ ] sfx_url 필드 추가 (SFX 직접 URL 전달, enable_sfx와 연동)
 
 ## Last Run
-커맨드: Phase 2 완료 — E2E 테스트 통과
+커맨드: ao_producer.json top-level/activeVersion 불일치 수정 + VPS 재업로드
 결과:
-- E2E 테스트 성공: queued → processing → uploaded (Job f17e0059)
-- narration_style/narration_tone DB 저장 + Worker 반영 확인
-- engine_type DB 저장 + Producer Switch 골격 확인
-- bgm_file_url / sfx_file_url: 미구현 확인 → Next Actions에 기록
+- 불일치: top-level에 if-validation, activeVersion에 error-handler (구버전)
+- 수정: activeVersion을 top-level 기준으로 동기화
+- VPS 업로드 + DB activeVersionId 갱신 + activate + restart 완료
+- VPS 확인: 9노드, narration_style/tone/engine_type 정상
 위치: Local + VPS (76.13.182.180)
-Last Commit: Phase 2 완료
+Last Commit: fix: sync producer top-level and activeVersion nodes
 
 ## Blockers
 - YouTube 업로드: Code v1(vm2) 시도 중이었으나 사용자 요청으로 중단
