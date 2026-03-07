@@ -33,6 +33,10 @@
 - **clip_duration auto 모드**: TTS 실측 기반 Kling duration 자동 결정
 - **B-1 direct 모드 이미지**: Kling 전달 수정 (silent fallback 금지)
 - **F-7 자막 타이밍 배치 (Claude API)**: buildSubtitleTimings 교체
+- **narration_start_sec 처리**:
+  - Producer: narration_start_sec 파싱 + metadata JSONB 저장
+  - Worker: metadata에서 추출 → adelay로 TTS 시작 오프셋 + 자막 타이밍 동기화
+  - 우선순위: 명시값 > scenes[0].duration_sec 기반 자동 > 0초 fallback
 - **F-8 영상/나레이션 길이 일체화**: auto 모드 max(tts, scene_duration)
 - **F-9 효과음 AI 타이밍 + 동적 배치**:
   - generateSfxTimings: Claude API로 나레이션 타이밍 분석 -> 최대 5개 SFX 배치 시점 결정
@@ -68,13 +72,15 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: fix(worker): remove black padding from slideshow and video render
+커맨드: fix(worker): apply narration_start_sec and scene-based narration timing
 결과:
-- render-video 4곳: pad+black 제거
-- 슬라이드쇼 9:16: 1080x1080 정사각형 유지 (패딩 없음)
-- 슬라이드쇼 16:9: 풀프레임 확대 crop
-- 영상화: single/multi-clip 모두 확대 crop (검정 패딩 제거)
-- VPS 배포 + 코드 검증: pad+black 잔존 없음 확인
+- Producer: narration_start_sec 파싱 + metadata JSONB 저장
+- Worker assemble-prompt: metadata.narration_start_sec 추출
+- Worker render-video: TTS adelay 적용 (slideshow + ai_video) + 자막 타이밍 동기화
+- Case A: narration_start_sec=10 → adelay=10000ms
+- Case B: scenes 있고 narration_start_sec=null → scenes[0].duration_sec * 1000ms
+- Case C: 둘 다 없으면 → 0ms (기존 동작)
+- VPS 배포 + 코드 검증 통과
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers
