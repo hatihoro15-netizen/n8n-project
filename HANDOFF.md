@@ -55,11 +55,12 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: bgm_mode/sfx_mode 대응 + F-10 AI 장면-이미지 자동 매칭
+커맨드: 긴급 버그 2개 수정 (duration_sec + productionMode)
 결과:
-- process-clips: bgm_mode/sfx_mode fallback + matchImageToScene 함수 추가
-- render-video: bgmMode/sfxMode 기반 분기 + SFX_ACTIVE_URL 도입
-- VPS 업로드 + DB 동기화 + activate + restart 완료
+- Bug 1: Producer가 `body.duration_sec` 미인식 → `body.duration || body.duration_sec` fallback 추가
+- Bug 2: Producer가 camelCase `body.productionMode` 미인식 → `body.production_mode || body.productionMode` fallback 추가
+- ao_producer.json VPS 업로드 + DB 동기화 + activate + restart 완료
+- 참고: Producer import 시 activeVersion/shared/tags 키가 FK violation 유발 → 제거 후 import 성공
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers
