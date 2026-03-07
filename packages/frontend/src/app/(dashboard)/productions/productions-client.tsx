@@ -413,6 +413,7 @@ function WhiskProductionForm() {
   const [narrationText, setNarrationText] = useState('');
   const [narrationStyle, setNarrationStyle] = useState('설명형');
   const [narrationTone, setNarrationTone] = useState('차분하게');
+  const [imageOrder, setImageOrder] = useState<'auto' | 'sequential'>('auto');
   const [bgmUrl, setBgmUrl] = useState('');
   const [bgmFileName, setBgmFileName] = useState('');
   const [bgmUploading, setBgmUploading] = useState(false);
@@ -484,6 +485,7 @@ function WhiskProductionForm() {
       if (draft.narrationText) setNarrationText(draft.narrationText);
       if (draft.narrationStyle) setNarrationStyle(draft.narrationStyle);
       if (draft.narrationTone) setNarrationTone(draft.narrationTone);
+      if (draft.imageOrder) setImageOrder(draft.imageOrder);
       if (draft.hasImages) setHasImages(draft.hasImages);
       if (draft.selectedWorkflowId) setSelectedWorkflowId(draft.selectedWorkflowId);
       if (draft.bgmUrl) { setBgmUrl(draft.bgmUrl); setBgmFileName(draft.bgmFileName || ''); }
@@ -498,12 +500,12 @@ function WhiskProductionForm() {
     const draft = {
       promptP1, formTopic, keywords, category,
       aspectRatio, productionMode, engineType, strictMode, videoDurationSec,
-      narrationText, narrationStyle, narrationTone,
+      narrationText, narrationStyle, narrationTone, imageOrder,
       hasImages, selectedWorkflowId,
       bgmUrl, bgmFileName, sfxUrl, sfxFileName,
     };
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, hasImages, selectedWorkflowId, bgmUrl, bgmFileName, sfxUrl, sfxFileName]);
+  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, imageOrder, hasImages, selectedWorkflowId, bgmUrl, bgmFileName, sfxUrl, sfxFileName]);
 
   // 나레이션 텍스트 변경 시 → videoDurationSec 자동 계산 (수동 변경 전까지)
   useEffect(() => {
@@ -755,6 +757,7 @@ function WhiskProductionForm() {
         ...(narrationText.trim() ? { narration_text: narrationText.trim() } : {}),
         narration_style: narrationStyle,
         narration_tone: narrationTone,
+        image_order: imageOrder,
         has_images: hasImages === 'yes',
         files,
         enable_bgm: !!bgmUrl,
@@ -935,6 +938,22 @@ function WhiskProductionForm() {
           </div>
         </div>
 
+        {/* 3-1. Image Order (이미지가 있을 때만 표시) */}
+        {hasImages === 'yes' && (
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">이미지 순서</label>
+            <select
+              value={imageOrder}
+              onChange={e => setImageOrder(e.target.value as 'auto' | 'sequential')}
+              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="auto">자동 (AI가 최적 순서 결정)</option>
+              <option value="sequential">순차 (업로드 순서대로)</option>
+            </select>
+            <p className="text-xs text-muted-foreground">자동: AI가 스토리에 맞게 순서를 재배치합니다. 순차: 업로드한 순서 그대로 사용합니다.</p>
+          </div>
+        )}
+
         {/* 4a. AI Image Generation (hasImages === 'no' && not yet accepted) */}
         {hasImages === 'no' && !generatedAccepted && (
           <div className="space-y-3 p-4 rounded-lg border border-amber-200 bg-amber-50/50">
@@ -1095,7 +1114,7 @@ function WhiskProductionForm() {
         </div>
 
         {/* 7-0. Duration + Engine Type + Strict Mode */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className={`grid grid-cols-1 ${productionMode === 'ai_video' ? 'sm:grid-cols-3' : ''} gap-4`}>
           <div className="space-y-1.5">
             <label className="text-sm font-medium">영상 길이</label>
             <select
@@ -1116,27 +1135,31 @@ function WhiskProductionForm() {
               </p>
             )}
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">엔진 타입</label>
-            <select
-              value={engineType}
-              onChange={e => setEngineType(e.target.value as typeof engineType)}
-              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            >
-              <option value="character_story">캐릭터 스토리</option>
-              <option value="core_message">핵심 메시지</option>
-              <option value="live_promo">라이브 프로모</option>
-              <option value="meme">밈</option>
-              <option value="action_sports">액션/스포츠</option>
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium">길이 엄격 모드</label>
-            <label className="flex items-center gap-2 cursor-pointer h-9 px-3">
-              <input type="checkbox" checked={strictMode} onChange={e => setStrictMode(e.target.checked)} className="rounded" />
-              <span className="text-sm text-muted-foreground">strict (목표 길이 ±1초)</span>
-            </label>
-          </div>
+          {productionMode === 'ai_video' && (
+            <>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">엔진 타입</label>
+                <select
+                  value={engineType}
+                  onChange={e => setEngineType(e.target.value as typeof engineType)}
+                  className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                  <option value="character_story">캐릭터 스토리</option>
+                  <option value="core_message">핵심 메시지</option>
+                  <option value="live_promo">라이브 프로모</option>
+                  <option value="meme">밈</option>
+                  <option value="action_sports">액션/스포츠</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium">길이 엄격 모드</label>
+                <label className="flex items-center gap-2 cursor-pointer h-9 px-3">
+                  <input type="checkbox" checked={strictMode} onChange={e => setStrictMode(e.target.checked)} className="rounded" />
+                  <span className="text-sm text-muted-foreground">strict (목표 길이 ±1초)</span>
+                </label>
+              </div>
+            </>
+          )}
         </div>
 
         {/* 7-1. Narration */}
@@ -1161,11 +1184,9 @@ function WhiskProductionForm() {
                 className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 <option value="설명형">설명형</option>
-                <option value="다큐멘터리">다큐멘터리</option>
-                <option value="스토리텔링">스토리텔링</option>
-                <option value="뉴스">뉴스</option>
-                <option value="일상대화">일상 대화</option>
-                <option value="드라마틱">드라마틱</option>
+                <option value="스토리형">스토리형</option>
+                <option value="광고형">광고형</option>
+                <option value="감성형">감성형</option>
               </select>
             </div>
             <div className="space-y-1.5">
@@ -1176,10 +1197,9 @@ function WhiskProductionForm() {
                 className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 <option value="차분하게">차분하게</option>
-                <option value="진지하게">진지하게</option>
+                <option value="흥분되게">흥분되게</option>
                 <option value="유머러스하게">유머러스하게</option>
-                <option value="따뜻하게">따뜻하게</option>
-                <option value="에너지틱하게">에너지틱하게</option>
+                <option value="긴박하게">긴박하게</option>
               </select>
             </div>
           </div>
