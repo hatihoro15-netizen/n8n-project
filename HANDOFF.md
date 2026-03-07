@@ -43,6 +43,11 @@
   - matchImageToScene: Claude API로 vision_analysis + 프롬프트/나레이션 분석 -> 이미지 순서 재배치
   - image_order=auto && 이미지 2장 이상일 때만 동작
   - image_order=sequential(기본): 기존 순서 유지
+- **멀티클립 ai_video 렌더링**:
+  - Producer: clip_duration_mode auto/fixed 자동 결정 (duration>15 && clip_duration 미지정 -> auto)
+  - Worker: clipCount = ceil(targetLen/15), perClipSec = ceil(targetLen/clipCount), 3-15초 clamp
+  - Kling 다중 호출: clipCount개 클립 순차 생성 -> FFmpeg concat으로 최종 합성
+  - 단일 클립(<=15초): 기존 동작 유지
 
 ## Goal
 프론트 웹앱 연동
@@ -55,12 +60,13 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: 긴급 버그 2개 수정 (duration_sec + productionMode)
+커맨드: fix: normalize duration and enable multi-clip ai_video rendering for target length
 결과:
-- Bug 1: Producer가 `body.duration_sec` 미인식 → `body.duration || body.duration_sec` fallback 추가
-- Bug 2: Producer가 camelCase `body.productionMode` 미인식 → `body.production_mode || body.productionMode` fallback 추가
-- ao_producer.json VPS 업로드 + DB 동기화 + activate + restart 완료
-- 참고: Producer import 시 activeVersion/shared/tags 키가 FK violation 유발 → 제거 후 import 성공
+- Producer: clip_duration_mode auto/fixed 자동 결정
+- Worker: 멀티클립 Kling 생성 (clipCount * perClipSec) + FFmpeg concat
+- Worker: assemble-prompt에 clip_duration_mode 재계산 추가
+- Worker: Length Gate clipCount → gateClipCount 변수 충돌 해결
+- Producer + Worker VPS 업로드 + DB 동기화 + activate + restart 완료
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers
