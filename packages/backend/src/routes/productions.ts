@@ -216,6 +216,7 @@ export async function productionRoutes(app: FastifyInstance) {
       sfx_mode?: 'ai_auto' | 'uploaded' | 'combined' | 'none';
       bgm_url?: string;
       sfx_url?: string;
+      scenes?: { prompt: string; duration_sec: number }[];
     };
 
     if (!body.workflowId) {
@@ -280,6 +281,7 @@ export async function productionRoutes(app: FastifyInstance) {
             narration_tone: body.narration_tone || '차분하게',
             bgm_mode: body.bgm_mode || 'ai_auto',
             sfx_mode: body.sfx_mode || 'ai_auto',
+            scenes: body.scenes,
           },
         },
       },
@@ -313,6 +315,7 @@ export async function productionRoutes(app: FastifyInstance) {
         sfx_mode: body.sfx_mode || 'ai_auto',
         bgm_url: body.bgm_url,
         sfx_url: body.sfx_url,
+        scenes: body.scenes,
       });
 
       await prisma.production.update({
@@ -746,13 +749,14 @@ export async function productionRoutes(app: FastifyInstance) {
     const durationHint = duration_sec && duration_sec > 0 ? `영상 길이: ${duration_sec}초` : '영상 길이: AI 자동 판단';
     const narrationHint = narration_text?.trim() ? `나레이션 스크립트:\n${narration_text.trim()}` : '';
 
-    const systemPrompt = `당신은 숏폼 영상 제작 전문가입니다. 사용자의 영상 기획 의도를 바탕으로 두 가지를 생성합니다:
+    const systemPrompt = `당신은 숏폼 영상 제작 전문가입니다. 사용자의 영상 기획 의도를 바탕으로 세 가지를 생성합니다:
 
 1. **한글 연출 스크립트**: 장면 구성, 카메라 워크, 분위기, 전환 효과 등을 포함한 상세 연출 지시서 (제작팀용)
 2. **영문 Kling 프롬프트**: Kling AI 영상 생성 모델에 최적화된 영문 프롬프트 (cinematic, camera movement, lighting 등 키워드 포함)
+3. **씬별 타임라인 (scenes)**: 영상을 구성하는 개별 씬 배열. 각 씬은 start(시작초), end(끝초), prompt(영문 Kling 프롬프트)를 포함. 각 씬 길이는 3~15초 사이여야 합니다. 씬 총합이 요청된 영상 길이와 일치해야 합니다.
 
 반드시 아래 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
-{"korean": "한글 연출 스크립트", "english": "English Kling prompt"}`;
+{"korean": "한글 연출 스크립트", "english": "English Kling prompt", "scenes": [{"start": 0, "end": 5, "prompt": "scene prompt in English"}, ...]}`;
 
     const userMessage = [
       `영상 기획 의도: ${prompt_p1.trim()}`,
@@ -789,11 +793,11 @@ export async function productionRoutes(app: FastifyInstance) {
       const cleaned = text.replace(/```(?:json)?\s*/g, '').replace(/```\s*$/g, '').trim();
       try {
         const parsed = JSON.parse(cleaned);
-        return { success: true, data: { korean: parsed.korean || '', english: parsed.english || '' } };
+        return { success: true, data: { korean: parsed.korean || '', english: parsed.english || '', scenes: Array.isArray(parsed.scenes) ? parsed.scenes : [] } };
       } catch {
         // JSON 파싱 실패 시 전체 텍스트를 korean으로 반환
         logger.warn({ text }, 'suggest-prompt: Claude response not valid JSON');
-        return { success: true, data: { korean: text, english: '' } };
+        return { success: true, data: { korean: text, english: '', scenes: [] } };
       }
     } catch (error) {
       logger.error({ error }, 'suggest-prompt failed');

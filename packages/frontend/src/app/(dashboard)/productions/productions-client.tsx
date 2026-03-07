@@ -429,6 +429,12 @@ function WhiskProductionForm() {
   const [sfxUploading, setSfxUploading] = useState(false);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState('');
 
+  // Scene clips (from F-6 AI or manual)
+  type SceneClip = { prompt: string; durationSec: number };
+  const [sceneClips, setSceneClips] = useState<SceneClip[]>([]);
+  const [showSceneClips, setShowSceneClips] = useState(false);
+  const [sceneDurationWarning, setSceneDurationWarning] = useState('');
+
   // Form state
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState('');
@@ -774,6 +780,7 @@ function WhiskProductionForm() {
         sfx_mode: sfxMode,
         ...(bgmUrl ? { bgm_url: bgmUrl } : {}),
         ...(sfxUrl ? { sfx_url: sfxUrl } : {}),
+        ...(sceneClips.length > 0 ? { scenes: sceneClips.map(c => ({ prompt: c.prompt, duration_sec: c.durationSec })) } : {}),
       };
 
       if (hasImages === 'no' && generatedImages.length > 0) {
@@ -1148,6 +1155,29 @@ function WhiskProductionForm() {
                 if (data.success && data.data) {
                   setAiPromptKo(data.data.korean || '');
                   setAiPromptEn(data.data.english || '');
+                  // Parse scenes from AI response
+                  if (Array.isArray(data.data.scenes) && data.data.scenes.length > 0) {
+                    const parsed: SceneClip[] = data.data.scenes.map((s: { start?: number; end?: number; prompt?: string; duration_sec?: number }) => {
+                      const start = typeof s.start === 'number' ? Math.floor(s.start) : 0;
+                      const end = typeof s.end === 'number' ? Math.floor(s.end) : start + 5;
+                      const raw = end > start ? end - start : 5;
+                      return {
+                        prompt: s.prompt || '',
+                        durationSec: Math.max(3, Math.min(15, raw)),
+                      };
+                    });
+                    setSceneClips(parsed);
+                    setShowSceneClips(true);
+                    // Auto-set duration if sum matches an option
+                    const totalSec = parsed.reduce((sum, c) => sum + c.durationSec, 0);
+                    const match = VIDEO_DURATION_OPTIONS.find(v => v === totalSec);
+                    if (match !== undefined) {
+                      setVideoDurationSec(match);
+                      setSceneDurationWarning('');
+                    } else {
+                      setSceneDurationWarning(`씬 총합 ${totalSec}초가 허용 옵션과 일치하지 않습니다. 영상 길이를 직접 선택하세요.`);
+                    }
+                  }
                 } else {
                   setAiPromptKo(`오류: ${data.message || 'API 호출 실패'}`);
                 }
@@ -1220,6 +1250,110 @@ function WhiskProductionForm() {
             </div>
           )}
         </div>
+
+        {/* 7-scene. Multi-clip (Scenes) */}
+        {sceneClips.length > 0 && (
+          <div className="space-y-3">
+            <button
+              type="button"
+              onClick={() => setShowSceneClips(!showSceneClips)}
+              className="flex items-center gap-1.5 text-sm font-medium"
+            >
+              <Film className="h-4 w-4" />
+              멀티클립 씬 ({sceneClips.length}개, 총 {sceneClips.reduce((s, c) => s + c.durationSec, 0)}초)
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showSceneClips ? 'rotate-180' : ''}`} />
+            </button>
+            {showSceneClips && (
+              <div className="space-y-2 p-3 rounded-lg border bg-slate-50/50">
+                {sceneClips.map((clip, idx) => {
+                  const startSec = sceneClips.slice(0, idx).reduce((s, c) => s + c.durationSec, 0);
+                  return (
+                    <div key={idx} className="flex items-start gap-2 p-2 rounded border bg-white">
+                      <div className="flex-shrink-0 pt-1">
+                        <span className="text-xs font-mono text-muted-foreground whitespace-nowrap">
+                          #{idx + 1} [{startSec}-{startSec + clip.durationSec}s]
+                        </span>
+                      </div>
+                      <textarea
+                        value={clip.prompt}
+                        onChange={e => {
+                          const updated = [...sceneClips];
+                          updated[idx] = { ...updated[idx], prompt: e.target.value };
+                          setSceneClips(updated);
+                        }}
+                        rows={2}
+                        className="flex-1 min-w-0 rounded-md border border-input bg-transparent px-2 py-1 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
+                        placeholder="씬 프롬프트"
+                      />
+                      <div className="flex-shrink-0 w-16">
+                        <input
+                          type="number"
+                          min={3}
+                          max={15}
+                          value={clip.durationSec}
+                          onChange={e => {
+                            const val = Math.max(3, Math.min(15, Number(e.target.value) || 3));
+                            const updated = [...sceneClips];
+                            updated[idx] = { ...updated[idx], durationSec: val };
+                            setSceneClips(updated);
+                            // Check sum vs selected duration
+                            const totalSec = updated.reduce((s, c) => s + c.durationSec, 0);
+                            const match = VIDEO_DURATION_OPTIONS.find(v => v === totalSec);
+                            if (match !== undefined) {
+                              setVideoDurationSec(match);
+                              setSceneDurationWarning('');
+                            } else if (videoDurationSec > 0) {
+                              setSceneDurationWarning(`씬 총합 ${totalSec}초 != 선택 길이 ${videoDurationSec}초`);
+                            } else {
+                              setSceneDurationWarning(`씬 총합 ${totalSec}초가 허용 옵션과 일치하지 않습니다.`);
+                            }
+                          }}
+                          className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                        />
+                        <span className="text-[10px] text-muted-foreground text-center block">초</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = sceneClips.filter((_, i) => i !== idx);
+                          setSceneClips(updated);
+                          if (updated.length === 0) setShowSceneClips(false);
+                        }}
+                        className="flex-shrink-0 p-1 text-red-400 hover:text-red-600"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  );
+                })}
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setSceneClips(prev => [...prev, { prompt: '', durationSec: 5 }])}
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" />
+                    씬 추가
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setSceneClips([]); setShowSceneClips(false); setSceneDurationWarning(''); }}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    <Trash2 className="h-3.5 w-3.5 mr-1" />
+                    전체 삭제
+                  </Button>
+                </div>
+                {sceneDurationWarning && (
+                  <p className="text-xs text-amber-600 bg-amber-50 p-2 rounded">{sceneDurationWarning}</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* 7-0. Duration + Engine Type + Strict Mode */}
         <div className={`grid grid-cols-1 ${productionMode === 'ai_video' ? 'sm:grid-cols-3' : ''} gap-4`}>
