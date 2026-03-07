@@ -705,27 +705,9 @@ function WhiskProductionForm() {
       setFormError('프롬프트를 입력해주세요.');
       return;
     }
-    if (hasImages === null) {
-      setFormError('이미지 유무를 선택해주세요.');
-      return;
-    }
-
     const isSlideshow = productionMode === 'slideshow';
 
-
     const filledMedia = mediaSlots.filter((s): s is UploadedFile => s !== null);
-    if (filledMedia.length === 0 && hasImages === 'yes') {
-      setFormError('미디어를 1개 이상 추가해주세요.');
-      return;
-    }
-    if (filledMedia.length === 0 && generatedAccepted) {
-      setFormError('생성된 이미지가 없습니다.');
-      return;
-    }
-    if (hasImages === 'no' && !generatedAccepted) {
-      setFormError('이미지를 먼저 생성해주세요.');
-      return;
-    }
 
     setSubmitting(true);
     setFormError('');
@@ -1331,11 +1313,9 @@ function WhiskProductionForm() {
             )}
           </Button>
           <span className="text-xs text-muted-foreground">
-            {hasImages === null
-              ? '이미지 유무를 선택해주세요'
-              : showSlots
-                ? `미디어 ${filledMediaCount}개 → ${productionMode === 'slideshow' ? '슬라이드쇼' : '영상'} 제작`
-                : '이미지를 생성해주세요'}
+            {showSlots && filledMediaCount > 0
+              ? `미디어 ${filledMediaCount}개 → ${productionMode === 'slideshow' ? '슬라이드쇼' : '영상'} 제작`
+              : '프롬프트 기반으로 영상 제작'}
           </span>
         </div>
 
