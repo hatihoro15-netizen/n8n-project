@@ -54,14 +54,13 @@
 6. [ ] sfx_url 필드 추가 (SFX 직접 URL 전달, enable_sfx와 연동)
 
 ## Last Run
-커맨드: ao_producer.json top-level/activeVersion 불일치 수정 + VPS 재업로드
+커맨드: Worker VPS 업로드 + Image Generator VPS→로컬 동기화
 결과:
-- 불일치: top-level에 if-validation, activeVersion에 error-handler (구버전)
-- 수정: activeVersion을 top-level 기준으로 동기화
-- VPS 업로드 + DB activeVersionId 갱신 + activate + restart 완료
-- VPS 확인: 9노드, narration_style/tone/engine_type 정상
+- Worker (FHYohZccExR24Uha): 로컬→VPS 업로드 완료 (28노드, use_mode direct/analysis_only)
+- Image Generator (d5b35fb7f1724e448): VPS→로컬 다운로드 완료 (3노드)
+- VPS DB activeVersionId 동기화 + activate + restart 완료
 위치: Local + VPS (76.13.182.180)
-Last Commit: fix: sync producer top-level and activeVersion nodes
+Last Commit: sync: worker upload + image generator download
 
 ## Blockers
 - YouTube 업로드: Code v1(vm2) 시도 중이었으나 사용자 요청으로 중단
