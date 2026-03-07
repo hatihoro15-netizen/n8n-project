@@ -370,9 +370,14 @@ export default function ImagesClient() {
                           );
                         }}
                         onUpdate={(updates) =>
-                          setMyPhotos(prev => prev.map(p =>
-                            p.id === photo.id ? { ...p, ...updates } : p
-                          ))
+                          setMyPhotos(prev => prev.map(p => {
+                            if (p.id !== photo.id) return p;
+                            const next = { ...p, ...updates };
+                            if (updates.useMode === 'analysis_only' && !next.autoPrompt && next.analysis) {
+                              next.autoPrompt = next.analysis;
+                            }
+                            return next;
+                          }))
                         }
                       />
                     ))}
