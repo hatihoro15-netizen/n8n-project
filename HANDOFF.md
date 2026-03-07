@@ -70,8 +70,9 @@
 ## Last Run
 커맨드: fix(worker): remove black padding from slideshow and video render
 결과:
-- render-video 4곳: pad+black → force_original_aspect_ratio=increase + crop (풀프레임)
-- 슬라이드쇼: 이미지 확대 crop (검정 패딩 제거)
+- render-video 4곳: pad+black 제거
+- 슬라이드쇼 9:16: 1080x1080 정사각형 유지 (패딩 없음)
+- 슬라이드쇼 16:9: 풀프레임 확대 crop
 - 영상화: single/multi-clip 모두 확대 crop (검정 패딩 제거)
 - VPS 배포 + 코드 검증: pad+black 잔존 없음 확인
 위치: Local + VPS (76.13.182.180)
