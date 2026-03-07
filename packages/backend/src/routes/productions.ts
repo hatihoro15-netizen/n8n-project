@@ -3,6 +3,7 @@ import { ProductionStatus } from '@prisma/client';
 import { prisma } from '../utils/prisma';
 import { n8nClient } from '../utils/n8n-client';
 import { logger } from '../utils/logger';
+import { config } from '../config';
 
 export async function productionRoutes(app: FastifyInstance) {
   // List productions with filters
@@ -696,6 +697,84 @@ export async function productionRoutes(app: FastifyInstance) {
       return reply.status(500).send({
         success: false,
         message: error instanceof Error ? error.message : 'n8n 재시도 실패',
+      });
+    }
+  });
+
+  // AI Suggest Prompt (Claude API)
+  app.post('/api/productions/suggest-prompt', {
+    preHandler: [app.authenticate],
+  }, async (request, reply) => {
+    if (!config.claude.apiKey) {
+      return reply.status(501).send({ success: false, message: 'CLAUDE_API_KEY not configured' });
+    }
+
+    const { prompt_p1, narration_text, duration_sec } = request.body as {
+      prompt_p1: string;
+      narration_text?: string;
+      duration_sec?: number;
+    };
+
+    if (!prompt_p1?.trim()) {
+      return reply.status(400).send({ success: false, message: 'prompt_p1 is required' });
+    }
+
+    const durationHint = duration_sec && duration_sec > 0 ? `영상 길이: ${duration_sec}초` : '영상 길이: AI 자동 판단';
+    const narrationHint = narration_text?.trim() ? `나레이션 스크립트:\n${narration_text.trim()}` : '';
+
+    const systemPrompt = `당신은 숏폼 영상 제작 전문가입니다. 사용자의 영상 기획 의도를 바탕으로 두 가지를 생성합니다:
+
+1. **한글 연출 스크립트**: 장면 구성, 카메라 워크, 분위기, 전환 효과 등을 포함한 상세 연출 지시서 (제작팀용)
+2. **영문 Kling 프롬프트**: Kling AI 영상 생성 모델에 최적화된 영문 프롬프트 (cinematic, camera movement, lighting 등 키워드 포함)
+
+반드시 아래 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
+{"korean": "한글 연출 스크립트", "english": "English Kling prompt"}`;
+
+    const userMessage = [
+      `영상 기획 의도: ${prompt_p1.trim()}`,
+      durationHint,
+      narrationHint,
+    ].filter(Boolean).join('\n\n');
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': config.claude.apiKey,
+          'anthropic-version': '2023-06-01',
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1500,
+          system: systemPrompt,
+          messages: [{ role: 'user', content: userMessage }],
+        }),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text().catch(() => '');
+        logger.error({ status: res.status, body: errText }, 'Claude suggest-prompt API failed');
+        return reply.status(502).send({ success: false, message: 'Claude API failed' });
+      }
+
+      const data = await res.json() as { content: { type: string; text: string }[] };
+      const text = data.content?.[0]?.text || '';
+
+      // JSON 파싱 시도
+      try {
+        const parsed = JSON.parse(text);
+        return { success: true, data: { korean: parsed.korean || '', english: parsed.english || '' } };
+      } catch {
+        // JSON 파싱 실패 시 전체 텍스트를 korean으로 반환
+        logger.warn({ text }, 'suggest-prompt: Claude response not valid JSON');
+        return { success: true, data: { korean: text, english: '' } };
+      }
+    } catch (error) {
+      logger.error({ error }, 'suggest-prompt failed');
+      return reply.status(500).send({
+        success: false,
+        message: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   });

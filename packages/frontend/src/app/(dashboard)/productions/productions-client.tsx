@@ -1123,16 +1123,37 @@ function WhiskProductionForm() {
           {/* AI 추천 프롬프트 생성 버튼 */}
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               if (showAiPrompt) { setShowAiPrompt(false); return; }
               setShowAiPrompt(true);
               setAiPromptLoading(true);
-              // TODO: 실제 Claude API 연동 (현재 stub)
-              setTimeout(() => {
-                setAiPromptKo('(AI 추천 프롬프트가 여기에 표시됩니다)');
-                setAiPromptEn('(AI recommended prompt will appear here)');
-                setAiPromptLoading(false);
-              }, 1500);
+              setAiPromptKo('');
+              setAiPromptEn('');
+              try {
+                const token = api.getToken();
+                const res = await fetch(`${API_BASE}/api/productions/suggest-prompt`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+                  },
+                  body: JSON.stringify({
+                    prompt_p1: promptP1.trim(),
+                    narration_text: narrationText.trim() || undefined,
+                    duration_sec: videoDurationSec || undefined,
+                  }),
+                });
+                const data = await res.json();
+                if (data.success && data.data) {
+                  setAiPromptKo(data.data.korean || '');
+                  setAiPromptEn(data.data.english || '');
+                } else {
+                  setAiPromptKo(`오류: ${data.message || 'API 호출 실패'}`);
+                }
+              } catch (err) {
+                setAiPromptKo(`오류: ${err instanceof Error ? err.message : '네트워크 오류'}`);
+              }
+              setAiPromptLoading(false);
             }}
             className="flex items-center gap-1.5 text-sm text-violet-600 hover:text-violet-700 transition-colors mt-1"
           >
@@ -1176,21 +1197,21 @@ function WhiskProductionForm() {
                   <div className="flex gap-2">
                     <button
                       type="button"
-                      onClick={() => { setPromptP1(aiPromptKo); setShowAiPrompt(false); }}
-                      disabled={!aiPromptKo.trim()}
+                      onClick={() => { setPromptP1(aiPromptEn); setShowAiPrompt(false); }}
+                      disabled={!aiPromptEn.trim()}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-violet-600 text-white text-sm hover:bg-violet-700 disabled:opacity-50 transition-colors"
                     >
                       <Check className="h-3.5 w-3.5" />
-                      한글판으로 확정
+                      영문 프롬프트로 확정
                     </button>
                     <button
                       type="button"
-                      onClick={() => { setPromptP1(aiPromptEn); setShowAiPrompt(false); }}
-                      disabled={!aiPromptEn.trim()}
+                      onClick={() => { setPromptP1(aiPromptKo); setShowAiPrompt(false); }}
+                      disabled={!aiPromptKo.trim()}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-violet-300 text-violet-700 text-sm hover:bg-violet-100 disabled:opacity-50 transition-colors"
                     >
                       <Check className="h-3.5 w-3.5" />
-                      영문판으로 확정
+                      한글판으로 확정
                     </button>
                   </div>
                 </>
