@@ -204,7 +204,6 @@ export async function productionRoutes(app: FastifyInstance) {
         scene_prompt?: string;
         include_audio?: boolean;
       }[];
-      duration?: number;
       engine_type?: string;
       strict_mode?: boolean;
       narration_text?: string;
@@ -221,10 +220,6 @@ export async function productionRoutes(app: FastifyInstance) {
     }
     if (!body.prompt_p1?.trim()) {
       return reply.status(400).send({ success: false, message: 'prompt_p1 is required' });
-    }
-    const ALLOWED_DURATIONS = [30, 60, 90, 120];
-    if (body.duration && !ALLOWED_DURATIONS.includes(body.duration)) {
-      return reply.status(400).send({ success: false, message: `duration must be one of: ${ALLOWED_DURATIONS.join(', ')}` });
     }
     const ALLOWED_ENGINES = ['character_story', 'core_message', 'live_promo', 'meme', 'action_sports'];
     if (body.engine_type && !ALLOWED_ENGINES.includes(body.engine_type)) {
@@ -273,7 +268,6 @@ export async function productionRoutes(app: FastifyInstance) {
         category: body.category,
         aspect_ratio: body.aspect_ratio || '9:16',
         production_mode: body.production_mode || 'ai_video',
-        duration: body.duration || 30,
         engine_type: body.engine_type || 'core_message',
         strict_mode: body.strict_mode || false,
         has_images: body.has_images,

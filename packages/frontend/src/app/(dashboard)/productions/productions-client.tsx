@@ -408,7 +408,6 @@ function WhiskProductionForm() {
   const [category, setCategory] = useState('');
   const [videoDurationSec, setVideoDurationSec] = useState<VideoDurationSec>(0);
   const [videoDurationManual, setVideoDurationManual] = useState(false);
-  const [duration, setDuration] = useState<30 | 60 | 90 | 120>(30);
   const [engineType, setEngineType] = useState<'character_story' | 'core_message' | 'live_promo' | 'meme' | 'action_sports'>('core_message');
   const [strictMode, setStrictMode] = useState(false);
   const [narrationText, setNarrationText] = useState('');
@@ -479,7 +478,6 @@ function WhiskProductionForm() {
       if (draft.category) setCategory(draft.category);
       if (draft.aspectRatio) setAspectRatio(draft.aspectRatio);
       if (draft.productionMode) setProductionMode(draft.productionMode);
-      if (draft.duration) setDuration(draft.duration);
       if (draft.engineType) setEngineType(draft.engineType);
       if (draft.strictMode !== undefined) setStrictMode(draft.strictMode);
       if (draft.videoDurationSec !== undefined) setVideoDurationSec(draft.videoDurationSec);
@@ -499,13 +497,13 @@ function WhiskProductionForm() {
     if (typeof window === 'undefined') return;
     const draft = {
       promptP1, formTopic, keywords, category,
-      aspectRatio, productionMode, duration, engineType, strictMode, videoDurationSec,
+      aspectRatio, productionMode, engineType, strictMode, videoDurationSec,
       narrationText, narrationStyle, narrationTone,
       hasImages, selectedWorkflowId,
       bgmUrl, bgmFileName, sfxUrl, sfxFileName,
     };
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, duration, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, hasImages, selectedWorkflowId, bgmUrl, bgmFileName, sfxUrl, sfxFileName]);
+  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, hasImages, selectedWorkflowId, bgmUrl, bgmFileName, sfxUrl, sfxFileName]);
 
   // 나레이션 텍스트 변경 시 → videoDurationSec 자동 계산 (수동 변경 전까지)
   useEffect(() => {
@@ -770,7 +768,6 @@ function WhiskProductionForm() {
         category: category.trim(),
         aspect_ratio: aspectRatio,
         production_mode: productionMode,
-        duration,
         engine_type: engineType,
         strict_mode: strictMode,
         ...(narrationText.trim() ? { narration_text: narrationText.trim() } : {}),
