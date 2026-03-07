@@ -46,6 +46,11 @@
   - process-clips: TTS→Kling 순서 재배치 (auto시 TTS 실측 길이를 Kling duration으로 사용) ✅
   - 출력: clip_duration_mode (auto/fixed) + actual_clip_duration 추가 ✅
   - 고정 모드(기존): 동작 변화 없음 ✅
+- **B-1 direct 모드 이미지 Kling 전달 수정 ✅**:
+  - direct 이미지 별도 추적 (directImages 배열) ✅
+  - Kling API 실패 시: direct 이미지 포함이면 에러 throw (silent fallback 금지) ✅
+  - generated/analysis_only 이미지만 fallback 허용 ✅
+  - 출력: direct_image_urls 추가 (디버깅용) ✅
 
 ## Goal
 프론트 웹앱 연동
@@ -59,14 +64,15 @@
 6. [ ] sfx_url 필드 추가 (SFX 직접 URL 전달, enable_sfx와 연동)
 
 ## Last Run
-커맨드: clip_duration auto 모드 구현 + VPS 업로드
+커맨드: B-1 버그 수정 — direct 모드 원본 이미지 Kling AI 전달
 결과:
-- Worker (FHYohZccExR24Uha): assemble-prompt + process-clips 수정
-- clip_duration=0/'auto' → TTS 실측 길이(ffprobe) 기반 Kling duration 자동 결정
-- AI_VIDEO 섹션 실행 순서 변경: 나레이션→TTS→Kling (기존: Kling→나레이션→TTS)
+- Worker (FHYohZccExR24Uha): process-clips 수정
+- direct 이미지 별도 추적 + Kling 실패 시 silent fallback 금지
+- generated/analysis_only 이미지만 fallback 허용
+- direct_image_urls 출력 추가
 - top-level + activeVersion 양쪽 수정
-- n8n API PUT으로 업로드, active=true 유지
-- versionId: f87fc535-1ba4-4499-befe-39fe938455ba
+- n8n API PUT 업로드, active=true 유지
+- versionId: 501f4c89-7666-423a-b17c-3a60fb43d850
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers

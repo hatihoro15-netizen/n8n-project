@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-07
-- 현재 상태(1줄): Phase 2 완료 — E2E 테스트 통과, engine_type/narration_style/narration_tone 구현 완료
+- 현재 상태(1줄): Phase 2 완료 — clip_duration auto + B-1 direct 이미지 수정 완료
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: engine_type Switch 골격, narration_style/tone 검증+반영, SPEC 4조 적용, E2E 성공
+- 최근 완료: clip_duration auto 모드, B-1 direct 모드 이미지 Kling 전달 수정
 - 주의사항: YouTube 비활성화, bgm_file_url/sfx_file_url 미구현, NCA GUNICORN_TIMEOUT=600 필수
 
 ---
@@ -560,4 +560,23 @@
 - n8n/ao_producer.json (validate-input, create-job, Switch 골격)
 - n8n/ao_worker.json (generateNarration 수정)
 - supabase/ao_supabase_init.sql (3컬럼 추가)
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-07
+### ✅ Done
+- [x] clip_duration auto 모드 구현 (TTS 실측 기반 Kling duration)
+- [x] B-1 버그 수정 — direct 모드 원본 이미지 Kling AI 전달
+### 🔁 Tried
+- B-1: 코드 흐름 분석 — processFilesByUseMode→allImages→klingInput.image_urls 정상
+- B-1: 근본 원인 — Kling API 실패 시 image_urls를 silent fallback으로 삭제하는 retry 로직
+### 📌 Result
+- clip_duration=0/'auto' → assemble-prompt에서 'auto'로 정규화, TTS→Kling 순서 재배치
+- B-1: direct 이미지 별도 추적(directImages), Kling 실패 시 direct 이미지 포함이면 에러 throw
+- generated/analysis_only 이미지만 fallback 허용 (기존 동작 유지)
+- 출력 추가: clip_duration_mode, actual_clip_duration, direct_image_urls
+### ➡️ Next (방향만)
+- 프론트 웹앱 연동
+- MinIO 이미지 URL 공개 접근 확인 (direct 모드 Kling 접근 필요)
+### 📁 Files / Links
+- n8n/ao_worker.json (assemble-prompt, process-clips 수정)
 - HANDOFF.md, PROGRESS.md
