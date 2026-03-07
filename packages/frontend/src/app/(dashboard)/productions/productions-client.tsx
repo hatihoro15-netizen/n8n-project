@@ -423,6 +423,8 @@ function WhiskProductionForm() {
   const [narrationText, setNarrationText] = useState('');
   const [narrationStyle, setNarrationStyle] = useState('설명형');
   const [narrationTone, setNarrationTone] = useState('차분하게');
+  const [narrationStartMode, setNarrationStartMode] = useState<'auto' | 'manual'>('auto');
+  const [narrationStartSec, setNarrationStartSec] = useState(0);
   const [imageOrder, setImageOrder] = useState<'auto' | 'sequential'>('auto');
   const [bgmMode, setBgmMode] = useState<'ai_auto' | 'uploaded' | 'none'>('ai_auto');
   const [bgmUrl, setBgmUrl] = useState('');
@@ -502,6 +504,8 @@ function WhiskProductionForm() {
       if (draft.narrationText) setNarrationText(draft.narrationText);
       if (draft.narrationStyle) setNarrationStyle(draft.narrationStyle);
       if (draft.narrationTone) setNarrationTone(draft.narrationTone);
+      if (draft.narrationStartMode) setNarrationStartMode(draft.narrationStartMode);
+      if (draft.narrationStartSec !== undefined) setNarrationStartSec(draft.narrationStartSec);
       if (draft.imageOrder) setImageOrder(draft.imageOrder);
       if (draft.hasImages) setHasImages(draft.hasImages);
       if (draft.selectedWorkflowId) setSelectedWorkflowId(draft.selectedWorkflowId);
@@ -522,9 +526,10 @@ function WhiskProductionForm() {
       narrationText, narrationStyle, narrationTone, imageOrder,
       hasImages, selectedWorkflowId,
       bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName,
+      narrationStartMode, narrationStartSec,
     };
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, imageOrder, hasImages, selectedWorkflowId, bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName]);
+  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, imageOrder, hasImages, selectedWorkflowId, bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName, narrationStartMode, narrationStartSec]);
 
   // 나레이션 텍스트 변경 시 → videoDurationSec 자동 계산 (수동 변경 전까지)
   useEffect(() => {
@@ -776,6 +781,7 @@ function WhiskProductionForm() {
         ...(narrationText.trim() ? { narration_text: narrationText.trim() } : {}),
         narration_style: narrationStyle,
         narration_tone: narrationTone,
+        ...(narrationStartMode === 'manual' ? { narration_start_sec: narrationStartSec } : {}),
         image_order: imageOrder,
         has_images: hasImages === 'yes',
         files,
@@ -1464,6 +1470,44 @@ function WhiskProductionForm() {
               </select>
             </div>
           </div>
+          {/* 나레이션 타이밍 */}
+          <div className={`space-y-2 ${!narrationText.trim() ? 'opacity-50 pointer-events-none' : ''}`}>
+            <label className="text-xs text-muted-foreground">나레이션 시작 시점</label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input
+                  type="radio"
+                  name="narrationStartMode"
+                  checked={narrationStartMode === 'auto'}
+                  onChange={() => setNarrationStartMode('auto')}
+                  className="accent-violet-600"
+                />
+                AI 자동 배치
+              </label>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input
+                  type="radio"
+                  name="narrationStartMode"
+                  checked={narrationStartMode === 'manual'}
+                  onChange={() => setNarrationStartMode('manual')}
+                  className="accent-violet-600"
+                />
+                직접 지정
+              </label>
+              {narrationStartMode === 'manual' && (
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min={0}
+                    value={narrationStartSec}
+                    onChange={e => setNarrationStartSec(Math.max(0, Math.round(Number(e.target.value) || 0)))}
+                    className="w-16 rounded-md border border-input bg-transparent px-2 py-1 text-sm text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                  />
+                  <span className="text-xs text-muted-foreground">초부터</span>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* 7-2. BGM / 효과음 모드 선택 + 업로드 */}
@@ -1703,6 +1747,8 @@ function WhiskProductionForm() {
                   <span className="truncate max-w-[200px]" title={narrationText}>{narrationText || 'AI 자동 생성'}</span>
                   <span className="text-muted-foreground">스타일 / 톤</span>
                   <span>{narrationStyle} / {narrationTone}</span>
+                  <span className="text-muted-foreground">나레이션 시작</span>
+                  <span>{narrationStartMode === 'auto' ? 'AI 자동 배치' : `${narrationStartSec}초부터`}</span>
                   <span className="text-muted-foreground">BGM</span>
                   <span>{bgmMode === 'ai_auto' ? 'AI 자동 추천' : bgmMode === 'uploaded' ? bgmFileName || '업로드됨' : '사용 안함'}</span>
                   <span className="text-muted-foreground">효과음</span>
