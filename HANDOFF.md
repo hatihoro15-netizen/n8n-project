@@ -68,13 +68,12 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: fix(worker): map metadata.scenes to job.scenes for per-clip prompt
+커맨드: fix(worker): remove black padding from slideshow and video render
 결과:
-- 버그: Producer가 scenes를 metadata JSONB에 저장, Worker가 job.scenes를 읽어 undefined → 항상 prompt_p1 사용
-- 수정: assemble-prompt에서 metadata.scenes 추출 → job.scenes로 매핑
-- Case A: metadata.scenes 있으면 씬별 프롬프트로 Kling 생성
-- Case B: metadata.scenes 없으면 prompt_p1 fallback (기존 동작)
-- VPS 배포 + 코드 검증 통과
+- render-video 4곳: pad+black → force_original_aspect_ratio=increase + crop (풀프레임)
+- 슬라이드쇼: 이미지 확대 crop (검정 패딩 제거)
+- 영상화: single/multi-clip 모두 확대 crop (검정 패딩 제거)
+- VPS 배포 + 코드 검증: pad+black 잔존 없음 확인
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers
