@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-07
-- 현재 상태(1줄): P0-2 완료 — Prompt Lock 재생성 연결 + 30초 길이 보정 (19.1초→31.3초)
+- 현재 상태(1줄): Phase 2 완료 — E2E 테스트 통과, engine_type/narration_style/narration_tone 구현 완료
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: Prompt Lock IF 분기 + 재생성 노드, 렌더 전 2차 확인, 나레이션 분량 지시, Length Gate 통과 기준 개선
-- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, crypto 미지원으로 FNV-1a 해시 사용
+- 최근 완료: engine_type Switch 골격, narration_style/tone 검증+반영, SPEC 4조 적용, E2E 성공
+- 주의사항: YouTube 비활성화, bgm_file_url/sfx_file_url 미구현, NCA GUNICORN_TIMEOUT=600 필수
 
 ---
 
@@ -531,4 +531,33 @@
 ### 📁 Files / Links
 - n8n/ao_worker.json (4개 노드 추가, 2개 노드 수정)
 - docs/05-input-schema.md, docs/06-error-patterns.md
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-07 (Phase 2 완료)
+### 🎯 Goal
+- engine_type 분기 골격 + narration_style/narration_tone 검증 + SPEC 4조 적용 + E2E 테스트
+### ✅ Done
+- [x] engine_type 검증: Producer validate-input에 5종 허용값 검증 추가
+- [x] engine_type Switch 골격: Producer에 Switch 노드 추가 (5경로+fallback, 모두 공통 합류)
+- [x] narration_style 검증: 설명형/스토리형/광고형/감성형 (허용값 외 400 에러)
+- [x] narration_tone 검증: 차분하게/흥분되게/유머러스하게/긴박하게 (허용값 외 400 에러)
+- [x] Worker generateNarration: narration_style/tone Claude 프롬프트 반영
+- [x] Worker generateNarration: topic/keywords/category 참조 제거 (SPEC 4조)
+- [x] DB 스키마: engine_type/narration_style/narration_tone 컬럼 추가 (CREATE TABLE + ALTER TABLE)
+- [x] E2E 테스트 성공: Job f17e0059 queued → processing → uploaded
+- [x] bgm_file_url / sfx_file_url 미구현 확인 → Next Actions에 기록
+### 🧪 Test
+- E2E: prompt_p1 + duration=30 + narration_style=설명형 + narration_tone=차분하게 → uploaded 성공
+- DB 검증: narration_style/narration_tone/engine_type 정상 저장
+- 입력 검증: invalid style → 400, invalid tone → 400
+### 📌 Result
+- Phase 2 기능 구현 완료, E2E 통과
+- bgm_file_url / sfx_file_url은 추후 작업으로 분리
+### ➡️ Next (방향만)
+- 프론트 웹앱 연동
+- bgm_file_url / sfx_file_url 필드 추가
+### 📁 Files / Links
+- n8n/ao_producer.json (validate-input, create-job, Switch 골격)
+- n8n/ao_worker.json (generateNarration 수정)
+- supabase/ao_supabase_init.sql (3컬럼 추가)
 - HANDOFF.md, PROGRESS.md

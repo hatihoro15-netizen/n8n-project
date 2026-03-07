@@ -34,6 +34,8 @@ CREATE TABLE IF NOT EXISTS jobs (
   strict_mode         BOOLEAN NOT NULL DEFAULT FALSE,-- Length Gate 하드 차단 여부
   verify_mode         BOOLEAN NOT NULL DEFAULT FALSE,-- 검증 모드 (output_hash 기록)
   engine_type         TEXT DEFAULT 'core_message',   -- character_story/core_message/live_promo/meme/action_sports
+  narration_style     TEXT DEFAULT '설명형',          -- 설명형/스토리형/광고형/감성형
+  narration_tone      TEXT DEFAULT '차분하게',        -- 차분하게/흥분되게/유머러스하게/긴박하게
   -- 상태 관리
   status              TEXT NOT NULL DEFAULT 'queued',
   -- queued / processing / generated / uploading / uploaded / failed / retrying
@@ -197,6 +199,8 @@ ALTER TABLE jobs ADD COLUMN IF NOT EXISTS duration INT;
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS strict_mode BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS verify_mode BOOLEAN NOT NULL DEFAULT FALSE;
 ALTER TABLE jobs ADD COLUMN IF NOT EXISTS engine_type TEXT DEFAULT 'core_message';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS narration_style TEXT DEFAULT '설명형';
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS narration_tone TEXT DEFAULT '차분하게';
 
 -- ========================================
 -- 완료 확인 쿼리

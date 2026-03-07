@@ -36,6 +36,11 @@
   - Producer: Switch 노드 골격 추가 (현재 모든 경로 공통 합류, Phase 4에서 분기)
   - DB: engine_type 컬럼 추가
   - Worker: engine_type 값 전달받아 실행 (변경 없음)
+- **narration_style/narration_tone ✅**:
+  - Producer: narration_style (설명형/스토리형/광고형/감성형) + narration_tone (차분하게/흥분되게/유머러스하게/긴박하게) 검증 ✅
+  - Producer: create-job SQL에 narration_style/narration_tone 포함 ✅
+  - Worker: generateNarration에서 style/tone 반영 + topic/keywords/category 참조 제거 (SPEC 4조) ✅
+  - DB: narration_style/narration_tone 컬럼 추가 ✅
 
 ## Goal
 프론트 웹앱 연동
@@ -45,17 +50,18 @@
 2. [ ] NCA 한글 자막 폰트 영구화 (컨테이너 재시작 시 사라짐)
 3. [ ] 이미지 생성 웹훅 MinIO 바이너리 저장 (별도 작업 예정)
 4. [ ] YouTube 업로드 활성화 (별도 작업 예정)
+5. [ ] bgm_file_url / sfx_file_url 필드 추가 (웹앱 파일 업로드 URL → n8n 전달, 현재 bgm_url 직접 입력만 지원)
+6. [ ] sfx_url 필드 추가 (SFX 직접 URL 전달, enable_sfx와 연동)
 
 ## Last Run
-커맨드: P0-2 — Prompt Lock 재생성 연결 + 30초 길이 이슈 수정
+커맨드: Phase 2 완료 — E2E 테스트 통과
 결과:
-- Prompt Lock: IF 분기 + 재생성 노드 + 렌더 전 2차 확인 추가
-- 나레이션: target_duration 기반 글자수 지시 + TTS 짧으면 재생성 1회
-- Length Gate: strict=target±1초, soft=target-3초 이상 통과 기준
-- clip_count: 짧으면 클립 반복, 길면 분할 보정
-- 30초 테스트: 19.1초 → 31.3초 (over_soft, 목표 근처 도달)
+- E2E 테스트 성공: queued → processing → uploaded (Job f17e0059)
+- narration_style/narration_tone DB 저장 + Worker 반영 확인
+- engine_type DB 저장 + Producer Switch 골격 확인
+- bgm_file_url / sfx_file_url: 미구현 확인 → Next Actions에 기록
 위치: Local + VPS (76.13.182.180)
-Last Commit: (pending)
+Last Commit: Phase 2 완료
 
 ## Blockers
 - YouTube 업로드: Code v1(vm2) 시도 중이었으나 사용자 요청으로 중단
@@ -117,6 +123,9 @@ Last Commit: (pending)
   "duration": 30,
   "strict_mode": false,
   "verify_mode": false,
+  "engine_type": "core_message",
+  "narration_style": "설명형",
+  "narration_tone": "차분하게",
   "production_mode": "ai_video | slideshow",
   "aspect_ratio": "9:16 | 16:9",
   "clip_duration": 8,
@@ -144,6 +153,9 @@ Last Commit: (pending)
 - duration: 선택 (30/40/50/60/90/120/150/180만 허용)
 - strict_mode: 선택 (기본 false, true=Length Gate 하드 차단)
 - verify_mode: 선택 (기본 false, true=output_hash 기록)
+- engine_type: 선택 (기본 core_message, 5종 허용)
+- narration_style: 선택 (기본 설명형, 4종 허용)
+- narration_tone: 선택 (기본 차분하게, 4종 허용)
 - prompt_hash: 자동 생성 (FNV-1a)
 
 ## Length Gate 스펙
