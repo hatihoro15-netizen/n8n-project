@@ -32,33 +32,35 @@
 - **F-8 영상/나레이션 길이 일체화**: auto 모드 max(tts, scene_duration)
 - **F-9 효과음 AI 타이밍 + 동적 배치**:
   - generateSfxTimings: Claude API로 나레이션 타이밍 분석 -> 최대 5개 SFX 배치 시점 결정
-  - process-clips: sfx_timings 출력 추가
   - render-video: 동적 SFX adelay 적용 (hardcoded 500ms -> AI 결정 타이밍)
-  - render-video fallback: sfx_timings 없으면 기존 500ms 단일 SFX 유지
-  - mark-generated: job_logs에 tts_duration/scene_duration/total_duration_source/sfx_count 추가
-  - **범위 제한 사유**: 효과음 파일 AI 생성은 보류 (kie.ai/fal.ai에 SFX 생성 모델 없음). 기존 sfx_ppook.wav 파일을 AI가 결정한 타이밍에 동적 배치하는 방식으로 구현.
+  - **범위 제한 사유**: 효과음 파일 AI 생성 보류 (API 미확보). 기존 sfx_ppook.wav를 AI 타이밍에 배치.
+- **bgm_mode / sfx_mode 대응**:
+  - bgm_mode: ai_auto / uploaded / none (enable_bgm 하위 호환 fallback)
+  - sfx_mode: ai_auto / uploaded / combined / none (enable_sfx 하위 호환 fallback)
+  - sfx_file_url: uploaded/combined 모드에서 사용자 SFX 파일 URL 사용
+  - render-video: SFX_ACTIVE_URL로 모드별 SFX 소스 분기
+- **F-10 AI 장면-이미지 자동 매칭**:
+  - matchImageToScene: Claude API로 vision_analysis + 프롬프트/나레이션 분석 -> 이미지 순서 재배치
+  - image_order=auto && 이미지 2장 이상일 때만 동작
+  - image_order=sequential(기본): 기존 순서 유지
 
 ## Goal
 프론트 웹앱 연동
 
 ## Next Actions
-1. [ ] VPS 업로드 (ao_worker.json F-9 반영)
-2. [ ] 프론트 웹앱 연동
-3. [ ] NCA 한글 자막 폰트 영구화 (컨테이너 재시작 시 사라짐)
-4. [ ] 이미지 생성 웹훅 MinIO 바이너리 저장 (별도 작업 예정)
-5. [ ] YouTube 업로드 활성화 (별도 작업 예정)
-6. [ ] bgm_file_url / sfx_file_url 필드 추가 (웹앱 파일 업로드 URL -> n8n 전달)
-7. [ ] sfx_url 필드 추가 (SFX 직접 URL 전달, enable_sfx와 연동)
-8. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
+1. [ ] 프론트 웹앱 연동
+2. [ ] NCA 한글 자막 폰트 영구화 (컨테이너 재시작 시 사라짐)
+3. [ ] 이미지 생성 웹훅 MinIO 바이너리 저장 (별도 작업 예정)
+4. [ ] YouTube 업로드 활성화 (별도 작업 예정)
+5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: F-9 효과음 AI 자동 타이밍 + 동적 배치
+커맨드: bgm_mode/sfx_mode 대응 + F-10 AI 장면-이미지 자동 매칭
 결과:
-- process-clips: generateSfxTimings 함수 추가 + 호출부 연결 + sfx_timings 출력 추가
-- render-video: 동적 sfxIndices 배열로 SFX 다중 배치 (기존 hardcoded sfxIdx 제거)
-- mark-generated: job_logs에 tts_duration/scene_duration/total_duration_source/sfx_count 추가
-- VPS 업로드: 미완 (로컬 커밋 후 진행 필요)
-위치: Local only
+- process-clips: bgm_mode/sfx_mode fallback + matchImageToScene 함수 추가
+- render-video: bgmMode/sfxMode 기반 분기 + SFX_ACTIVE_URL 도입
+- VPS 업로드 + DB 동기화 + activate + restart 완료
+위치: Local + VPS (76.13.182.180)
 
 ## Blockers
 - YouTube 업로드: Code v1(vm2) 시도 중이었으나 사용자 요청으로 중단
@@ -128,9 +130,11 @@
   "aspect_ratio": "9:16 | 16:9",
   "clip_duration": "8 | 0 | 'auto'",
   "narration_script": "(optional) 직접 입력 나레이션",
-  "enable_bgm": false,
-  "enable_sfx": false,
-  "bgm_url": "(optional) 커스텀 BGM URL",
+  "bgm_mode": "none | ai_auto | uploaded",
+  "sfx_mode": "none | ai_auto | uploaded | combined",
+  "bgm_url": "(optional) 커스텀 BGM URL (uploaded 모드용)",
+  "sfx_file_url": "(optional) 사용자 SFX 파일 URL (uploaded/combined 모드용)",
+  "image_order": "sequential | auto",
   "files": [
     { "type": "image", "url": "MinIO URL", "vision_analysis": "분석결과",
       "use_mode": "direct | analysis_only", "auto_prompt": "..." }

@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-08
-- 현재 상태(1줄): F-7/F-8/F-9 완료 — 자막 타이밍 + 길이 일체화 + SFX 동적 배치
-- 진행중 작업: VPS 업로드 + 프론트 웹앱 연동
-- 최근 완료: F-9 효과음 AI 타이밍 + 동적 배치
-- 주의사항: YouTube 비활성화, bgm_file_url/sfx_file_url 미구현, NCA GUNICORN_TIMEOUT=600 필수, SFX 파일 AI 생성 보류
+- 현재 상태(1줄): bgm_mode/sfx_mode + F-10 이미지 매칭 완료
+- 진행중 작업: 프론트 웹앱 연동
+- 최근 완료: bgm_mode/sfx_mode 대응 + F-10 AI 장면-이미지 자동 매칭
+- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, SFX 파일 AI 생성 보류
 
 ---
 
@@ -600,4 +600,17 @@
 - 프론트 웹앱 연동
 ### Files
 - n8n/ao_worker.json (process-clips, render-video, mark-generated 수정)
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-08 (bgm_mode/sfx_mode + F-10)
+### Done
+- [x] bgm_mode: ai_auto/uploaded/none (enable_bgm 하위 호환)
+- [x] sfx_mode: ai_auto/uploaded/combined/none (enable_sfx 하위 호환)
+- [x] sfx_file_url: uploaded/combined용 사용자 SFX URL
+- [x] render-video: SFX_ACTIVE_URL 분기 (모드별 SFX 소스)
+- [x] F-10: matchImageToScene — Claude API vision_analysis + 프롬프트/나레이션 매칭
+- [x] image_order=auto: 이미지 2장 이상 시 AI 순서 재배치
+- [x] VPS 업로드 + DB 동기화 완료
+### Files
+- n8n/ao_worker.json (process-clips, render-video 수정)
 - HANDOFF.md, PROGRESS.md
