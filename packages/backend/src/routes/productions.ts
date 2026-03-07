@@ -205,6 +205,7 @@ export async function productionRoutes(app: FastifyInstance) {
         scene_prompt?: string;
         include_audio?: boolean;
       }[];
+      duration_sec?: number;
       engine_type?: string;
       strict_mode?: boolean;
       image_order?: 'auto' | 'sequential';
@@ -280,6 +281,7 @@ export async function productionRoutes(app: FastifyInstance) {
         production_mode: body.production_mode || 'ai_video',
         engine_type: body.engine_type || 'core_message',
         strict_mode: body.strict_mode || false,
+        duration_sec: body.duration_sec ?? 0,
         image_order: body.image_order || 'auto',
         has_images: body.has_images,
         slide_duration: body.slide_duration,

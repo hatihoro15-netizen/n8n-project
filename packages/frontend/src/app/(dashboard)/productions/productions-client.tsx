@@ -763,6 +763,7 @@ function WhiskProductionForm() {
         production_mode: productionMode,
         engine_type: engineType,
         strict_mode: strictMode,
+        duration_sec: videoDurationSec,
         ...(narrationText.trim() ? { narration_text: narrationText.trim() } : {}),
         narration_style: narrationStyle,
         narration_tone: narrationTone,
