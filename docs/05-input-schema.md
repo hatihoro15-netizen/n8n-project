@@ -31,8 +31,11 @@
 
 ## Prompt Lock
 - Producer: prompt_p1의 해시를 prompt_hash 컬럼에 저장
-- Worker: 생성 시작 시 현재 prompt_p1 해시와 ao_jobs.prompt_hash 비교
-- 불일치 시 기존 계획 폐기 후 재생성
+- Worker: assemble-prompt 후 IF 노드로 prompt_lock_valid 분기
+  - true: 정상 진행
+  - false: "Prompt Lock 재생성" 노드에서 최신 prompt_p1 기준으로 재조립 후 진행
+- 렌더 직전: DB에서 prompt_hash 재조회하여 2차 확인 (PROMPT_LOCK_CHANGED 에러 시 재시도)
+- prompt_lock_action: none / regenerated
 - 해시 알고리즘: FNV-1a (n8n Code 노드 crypto 미지원으로 인한 선택)
 
 ## Last-Edit Priority
@@ -42,10 +45,14 @@
 
 ## Length Gate
 - duration 필드로 목표 길이 지정 (허용값: 30/40/50/60/90/120/150/180초)
-- 허용 초과: target_duration + 1초 (예: 30초 → 최대 31초)
-- strict_mode=false (기본): 초과 시 clip_count 재계산으로 동적 보정
-- strict_mode=true: 허용 초과 시 LENGTH_GATE_BLOCKED 에러로 실패 처리
-- length_gate_status 값: no_gate / pass / corrected / over_soft / blocked
+- 통과 기준:
+  - strict_mode=true: target ±1초 (예: 30초 → 29~31초)
+  - strict_mode=false: target-3초 ~ target+1초 (예: 30초 → 27~31초)
+- 보정 방식: clip_count 재계산 (짧으면 클립 반복, 길면 분할)
+- 나레이션 생성 시 target_duration에 맞는 분량 지시 (한국어 4.5자/초 기준)
+- TTS 결과가 목표 미만이면 나레이션 재생성 1회 시도, 여전히 짧으면 그대로 진행 + job_logs 기록
+- strict_mode=true에서 범위 밖이면 LENGTH_GATE_BLOCKED 에러
+- length_gate_status: no_gate / pass / corrected_short / corrected_long / under_soft / over_soft / blocked_short / blocked_long
 
 ## Verify Mode
 - payload에 verify_mode=true 추가 시 활성화

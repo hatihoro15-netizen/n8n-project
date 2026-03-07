@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-07
-- 현재 상태(1줄): P0 뼈대 구현 완료 (Prompt Lock + Last-Edit Priority + Length Gate + verify_mode)
+- 현재 상태(1줄): P0-2 완료 — Prompt Lock 재생성 연결 + 30초 길이 보정 (19.1초→31.3초)
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: P0 뼈대 — prompt_hash DB 저장, Last-Edit Priority, Length Gate clip_count 재계산, verify_mode output_hash 기록
+- 최근 완료: Prompt Lock IF 분기 + 재생성 노드, 렌더 전 2차 확인, 나레이션 분량 지시, Length Gate 통과 기준 개선
 - 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, crypto 미지원으로 FNV-1a 해시 사용
 
 ---
@@ -503,5 +503,32 @@
 ### 📁 Files / Links
 - n8n/ao_producer.json, n8n/ao_worker.json
 - supabase/ao_supabase_init.sql
+- docs/05-input-schema.md, docs/06-error-patterns.md
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-07 (2차)
+### ✅ Done
+- [x] Prompt Lock IF 분기: assemble-prompt 후 IF 노드("Prompt Lock 확인") 추가
+- [x] Prompt Lock 재생성 노드: prompt_lock_valid=false 시 최신 prompt_p1로 재조립
+- [x] 렌더 전 2차 확인: "렌더 전 Prompt 확인"(Postgres) + "렌더 Lock 확인"(Code) 노드 추가
+- [x] 나레이션 분량 지시: generateNarration에 target_duration 기반 글자수(4.5자/초) 전달
+- [x] TTS 길이 부족 시 나레이션 재생성 1회 시도 (짧으면 그대로 진행 + job_logs 기록)
+- [x] Length Gate 통과 기준 개선: strict=target±1초, soft=target-3초~target+1초
+- [x] clip_count 보정: 짧으면 클립 반복(corrected_short), 길면 분할(corrected_long)
+- [x] length_gate_status 세분화: corrected_short/corrected_long/under_soft/over_soft/blocked_short/blocked_long
+- [x] mark-generated에 prompt_hash 갱신 + prompt_lock_action/length_gate_log 기록
+### 🧪 Test
+- 30초 케이스 (job 7c1db8f4): duration=30, strict=false → total_duration=31.3초, over_soft → uploaded ✅
+  - 이전(P0): 19.1초 → 이번: 31.3초 (목표 근처 도달)
+- Prompt Lock 재생성: IF 분기 노드 + 재생성 노드 + 렌더 전 재확인 구조 완성
+- 잘못된 duration/prompt_p1 누락: 기존 400 에러 유지 확인
+### 📌 Result
+- 30초 길이 이슈 해결: 나레이션 분량 지시 + 재생성 1회로 목표 근처 도달
+- Prompt Lock: 감지만 → 재생성 플로우 연결 완료
+- Length Gate: 단방향(초과만) → 양방향(부족+초과) 보정
+### ➡️ Next (방향만)
+- 프론트 웹앱 연동
+### 📁 Files / Links
+- n8n/ao_worker.json (4개 노드 추가, 2개 노드 수정)
 - docs/05-input-schema.md, docs/06-error-patterns.md
 - HANDOFF.md, PROGRESS.md

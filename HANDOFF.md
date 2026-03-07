@@ -23,6 +23,14 @@
   - Length Gate: duration 허용값 검증 + clip_count 재계산 + strict_mode 분기 ✅
   - verify_mode: output_hash를 ao_job_logs에 기록 ✅
   - topic/keywords/category: 필수→선택 변경 ✅
+- **P0-2 수정 ✅**: Prompt Lock 재생성 연결 + 30초 길이 이슈 수정
+  - Prompt Lock IF 분기: assemble-prompt 후 IF 노드로 분기 처리 ✅
+  - Prompt Lock 재생성: 불일치 시 최신 prompt_p1로 재조립 후 진행 ✅
+  - 렌더 전 2차 확인: DB에서 prompt_hash 재조회 + 불일치 시 에러 ✅
+  - 나레이션 길이 보정: target_duration 기반 글자수 지시 (4.5자/초) ✅
+  - Length Gate 통과 기준: strict=target±1초, soft=target-3초~target+1초 ✅
+  - clip_count 보정: 짧으면 클립 반복, 길면 분할 ✅
+  - 30초 케이스: 19.1초 → 31.3초 (목표 근처 도달) ✅
 
 ## Goal
 프론트 웹앱 연동
@@ -34,13 +42,13 @@
 4. [ ] YouTube 업로드 활성화 (별도 작업 예정)
 
 ## Last Run
-커맨드: P0 뼈대 구현 — Prompt Lock + Last-Edit Priority + Length Gate
+커맨드: P0-2 — Prompt Lock 재생성 연결 + 30초 길이 이슈 수정
 결과:
-- DB: jobs 테이블에 prompt_hash/duration/strict_mode/verify_mode 컬럼 추가
-- Producer: prompt_p1 필수, topic/keywords/category 선택, duration 허용값 검증, prompt_hash 생성
-- Worker: Last-Edit Priority (슬롯 치환 제거), Prompt Lock (해시 비교), Length Gate (clip_count 재계산)
-- verify_mode: output_hash를 job_logs에 기록
-- 테스트: 30초(corrected)/60초(pass) 케이스 모두 통과, output_hash 정상 기록
+- Prompt Lock: IF 분기 + 재생성 노드 + 렌더 전 2차 확인 추가
+- 나레이션: target_duration 기반 글자수 지시 + TTS 짧으면 재생성 1회
+- Length Gate: strict=target±1초, soft=target-3초 이상 통과 기준
+- clip_count: 짧으면 클립 반복, 길면 분할 보정
+- 30초 테스트: 19.1초 → 31.3초 (over_soft, 목표 근처 도달)
 위치: Local + VPS (76.13.182.180)
 Last Commit: (pending)
 
@@ -134,10 +142,11 @@ Last Commit: (pending)
 - prompt_hash: 자동 생성 (FNV-1a)
 
 ## Length Gate 스펙
-- target_duration + 1초 버퍼가 max_duration
-- strict_mode=false: clip_count 재계산으로 동적 보정
-- strict_mode=true: 초과 시 LENGTH_GATE_BLOCKED 에러
-- length_gate_status: no_gate / pass / corrected / over_soft / blocked
+- 통과 기준: strict=target±1초, soft=target-3초~target+1초
+- 보정: clip_count 재계산 (짧으면 클립 반복, 길면 분할)
+- 나레이션: target_duration 기반 글자수 지시 + 짧으면 재생성 1회
+- strict_mode=true 범위 밖: LENGTH_GATE_BLOCKED 에러
+- length_gate_status: no_gate / pass / corrected_short / corrected_long / under_soft / over_soft / blocked_short / blocked_long
 
 ## Verify Mode 스펙
 - output_hash 기록 위치: ao_job_logs(detail.output_hash)

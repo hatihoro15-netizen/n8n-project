@@ -70,6 +70,14 @@
 
 ### [2026-03-07] Prompt Lock 불일치
 - 증상: Worker 시작 시 prompt_hash가 현재 prompt_p1 해시와 불일치
-- 잘못된 접근: 이전 계획 그대로 진행
-- 올바른 접근: prompt_lock_valid=false 시 기존 계획 폐기, 현재 prompt_p1로 재생성
-- 재발 방지: assemble-prompt 노드에서 자동 감지
+- 잘못된 접근: 감지만 하고 이전 계획 그대로 진행
+- 올바른 접근: IF 노드 분기 → "Prompt Lock 재생성" 노드에서 최신 prompt_p1로 재조립 후 진행
+- 추가 체크: 렌더 직전 DB에서 prompt_hash 재확인 (PROMPT_LOCK_CHANGED 에러 시 재시도)
+- 재발 방지: assemble-prompt 후 IF 분기 + 렌더 전 2차 확인
+
+### [2026-03-07] 나레이션 길이 부족 (target_duration 미달)
+- 증상: 30초 목표인데 TTS가 19초로 생성됨
+- 잘못된 접근: 고정 분량(150~300자) 나레이션 생성
+- 올바른 접근: target_duration 기반 글자수 계산 (4.5자/초) → Claude에 정확한 분량 지시
+- 보정: TTS 결과가 짧으면 나레이션 재생성 1회 시도 + clip_count 보정
+- 재발 방지: generateNarration에 target_duration 전달 필수
