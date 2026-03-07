@@ -210,10 +210,10 @@ export async function productionRoutes(app: FastifyInstance) {
       narration_text?: string;
       narration_style?: string;
       narration_tone?: string;
+      bgm_mode?: 'ai_auto' | 'uploaded' | 'none';
+      sfx_mode?: 'ai_auto' | 'uploaded' | 'combined' | 'none';
       bgm_url?: string;
       sfx_url?: string;
-      enable_bgm?: boolean;
-      enable_sfx?: boolean;
     };
 
     if (!body.workflowId) {
@@ -233,6 +233,14 @@ export async function productionRoutes(app: FastifyInstance) {
     const ALLOWED_NARRATION_TONES = ['차분하게', '흥분되게', '유머러스하게', '긴박하게'];
     if (body.narration_tone && !ALLOWED_NARRATION_TONES.includes(body.narration_tone)) {
       return reply.status(400).send({ success: false, message: `narration_tone must be one of: ${ALLOWED_NARRATION_TONES.join(', ')}` });
+    }
+    const ALLOWED_BGM_MODES = ['ai_auto', 'uploaded', 'none'];
+    if (body.bgm_mode && !ALLOWED_BGM_MODES.includes(body.bgm_mode)) {
+      return reply.status(400).send({ success: false, message: `bgm_mode must be one of: ${ALLOWED_BGM_MODES.join(', ')}` });
+    }
+    const ALLOWED_SFX_MODES = ['ai_auto', 'uploaded', 'combined', 'none'];
+    if (body.sfx_mode && !ALLOWED_SFX_MODES.includes(body.sfx_mode)) {
+      return reply.status(400).send({ success: false, message: `sfx_mode must be one of: ${ALLOWED_SFX_MODES.join(', ')}` });
     }
 
     // Find selected workflow
@@ -281,10 +289,10 @@ export async function productionRoutes(app: FastifyInstance) {
         narration_text: body.narration_text,
         narration_style: body.narration_style || '설명형',
         narration_tone: body.narration_tone || '차분하게',
+        bgm_mode: body.bgm_mode || 'ai_auto',
+        sfx_mode: body.sfx_mode || 'ai_auto',
         bgm_url: body.bgm_url,
         sfx_url: body.sfx_url,
-        enable_bgm: body.enable_bgm,
-        enable_sfx: body.enable_sfx,
       });
 
       await prisma.production.update({

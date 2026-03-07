@@ -414,9 +414,11 @@ function WhiskProductionForm() {
   const [narrationStyle, setNarrationStyle] = useState('설명형');
   const [narrationTone, setNarrationTone] = useState('차분하게');
   const [imageOrder, setImageOrder] = useState<'auto' | 'sequential'>('auto');
+  const [bgmMode, setBgmMode] = useState<'ai_auto' | 'uploaded' | 'none'>('ai_auto');
   const [bgmUrl, setBgmUrl] = useState('');
   const [bgmFileName, setBgmFileName] = useState('');
   const [bgmUploading, setBgmUploading] = useState(false);
+  const [sfxMode, setSfxMode] = useState<'ai_auto' | 'uploaded' | 'combined' | 'none'>('ai_auto');
   const [sfxUrl, setSfxUrl] = useState('');
   const [sfxFileName, setSfxFileName] = useState('');
   const [sfxUploading, setSfxUploading] = useState(false);
@@ -488,7 +490,9 @@ function WhiskProductionForm() {
       if (draft.imageOrder) setImageOrder(draft.imageOrder);
       if (draft.hasImages) setHasImages(draft.hasImages);
       if (draft.selectedWorkflowId) setSelectedWorkflowId(draft.selectedWorkflowId);
+      if (draft.bgmMode) setBgmMode(draft.bgmMode);
       if (draft.bgmUrl) { setBgmUrl(draft.bgmUrl); setBgmFileName(draft.bgmFileName || ''); }
+      if (draft.sfxMode) setSfxMode(draft.sfxMode);
       if (draft.sfxUrl) { setSfxUrl(draft.sfxUrl); setSfxFileName(draft.sfxFileName || ''); }
     } catch { /* ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -502,10 +506,10 @@ function WhiskProductionForm() {
       aspectRatio, productionMode, engineType, strictMode, videoDurationSec,
       narrationText, narrationStyle, narrationTone, imageOrder,
       hasImages, selectedWorkflowId,
-      bgmUrl, bgmFileName, sfxUrl, sfxFileName,
+      bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName,
     };
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, imageOrder, hasImages, selectedWorkflowId, bgmUrl, bgmFileName, sfxUrl, sfxFileName]);
+  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, imageOrder, hasImages, selectedWorkflowId, bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName]);
 
   // 나레이션 텍스트 변경 시 → videoDurationSec 자동 계산 (수동 변경 전까지)
   useEffect(() => {
@@ -760,8 +764,8 @@ function WhiskProductionForm() {
         image_order: imageOrder,
         has_images: hasImages === 'yes',
         files,
-        enable_bgm: !!bgmUrl,
-        enable_sfx: !!sfxUrl,
+        bgm_mode: bgmMode,
+        sfx_mode: sfxMode,
         ...(bgmUrl ? { bgm_url: bgmUrl } : {}),
         ...(sfxUrl ? { sfx_url: sfxUrl } : {}),
       };
@@ -1205,94 +1209,152 @@ function WhiskProductionForm() {
           </div>
         </div>
 
-        {/* 7-2. BGM / 효과음 업로드 */}
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium">오디오 (선택)</h4>
-          <p className="text-xs text-muted-foreground">업로드하지 않으면 해당 오디오는 없이 제작됩니다.</p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* 7-2. BGM / 효과음 모드 선택 + 업로드 */}
+        <div className="space-y-4">
+          <h4 className="text-sm font-medium">오디오</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {/* BGM */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label className="text-xs text-muted-foreground flex items-center gap-1"><Music className="h-3.5 w-3.5" />BGM (배경음악)</label>
-              {bgmUrl ? (
-                <div className="flex items-center gap-2 text-sm bg-muted/50 border rounded-md px-3 py-2">
-                  <Music className="h-4 w-4 text-emerald-600" />
-                  <span className="truncate max-w-[180px]">{bgmFileName || 'BGM 업로드됨'}</span>
-                  <button onClick={() => { setBgmUrl(''); setBgmFileName(''); }} className="ml-auto text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
-                </div>
-              ) : (
-                <label className="flex items-center gap-2 text-sm border border-dashed rounded-md px-4 py-2 cursor-pointer hover:bg-muted/30 transition-colors">
-                  {bgmUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  {bgmUploading ? '업로드 중...' : 'mp3/wav 파일 선택'}
-                  <input
-                    type="file"
-                    accept="audio/mpeg,audio/wav,.mp3,.wav"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setBgmUploading(true);
-                      try {
-                        const token = api.getToken();
-                        const fd = new FormData();
-                        fd.append('file', file);
-                        const res = await fetch(`${API_BASE}/api/media/upload`, {
-                          method: 'POST',
-                          headers: token ? { Authorization: `Bearer ${token}` } : {},
-                          body: fd,
-                        });
-                        const data = await res.json();
-                        if (data.data?.urls?.[0]) {
-                          setBgmUrl(data.data.urls[0]);
-                          setBgmFileName(file.name);
-                        }
-                      } catch { /* ignore */ }
-                      setBgmUploading(false);
-                    }}
-                  />
-                </label>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {(['ai_auto', 'uploaded', 'none'] as const).map(mode => {
+                  const disabled = mode === 'uploaded' && !bgmUrl;
+                  const labels: Record<string, string> = { ai_auto: 'AI 자동 추천', uploaded: '내가 올린 것만', none: '사용 안함' };
+                  const icons: Record<string, string> = { ai_auto: '🤖', uploaded: '📁', none: '❌' };
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => setBgmMode(mode)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-sm transition-colors ${
+                        bgmMode === mode
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                          : disabled
+                            ? 'border-muted-foreground/10 text-muted-foreground/40 cursor-not-allowed'
+                            : 'border-muted-foreground/20 hover:border-emerald-400 cursor-pointer'
+                      }`}
+                    >
+                      <span>{icons[mode]}</span>
+                      <span>{labels[mode]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {/* BGM 파일 업로드 */}
+              <div className="mt-1">
+                {bgmUrl ? (
+                  <div className="flex items-center gap-2 text-sm bg-muted/50 border rounded-md px-3 py-2">
+                    <Music className="h-4 w-4 text-emerald-600" />
+                    <span className="truncate max-w-[180px]">{bgmFileName || 'BGM 업로드됨'}</span>
+                    <button onClick={() => { setBgmUrl(''); setBgmFileName(''); if (bgmMode === 'uploaded') setBgmMode('ai_auto'); }} className="ml-auto text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 text-sm border border-dashed rounded-md px-4 py-2 cursor-pointer hover:bg-muted/30 transition-colors">
+                    {bgmUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {bgmUploading ? '업로드 중...' : 'mp3/wav 파일 선택'}
+                    <input
+                      type="file"
+                      accept="audio/mpeg,audio/wav,.mp3,.wav"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setBgmUploading(true);
+                        try {
+                          const token = api.getToken();
+                          const fd = new FormData();
+                          fd.append('file', file);
+                          const res = await fetch(`${API_BASE}/api/media/upload`, {
+                            method: 'POST',
+                            headers: token ? { Authorization: `Bearer ${token}` } : {},
+                            body: fd,
+                          });
+                          const data = await res.json();
+                          if (data.data?.urls?.[0]) {
+                            setBgmUrl(data.data.urls[0]);
+                            setBgmFileName(file.name);
+                            setBgmMode('uploaded');
+                          }
+                        } catch { /* ignore */ }
+                        setBgmUploading(false);
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
             </div>
             {/* SFX */}
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <label className="text-xs text-muted-foreground flex items-center gap-1"><Volume2 className="h-3.5 w-3.5" />효과음</label>
-              {sfxUrl ? (
-                <div className="flex items-center gap-2 text-sm bg-muted/50 border rounded-md px-3 py-2">
-                  <Volume2 className="h-4 w-4 text-emerald-600" />
-                  <span className="truncate max-w-[180px]">{sfxFileName || '효과음 업로드됨'}</span>
-                  <button onClick={() => { setSfxUrl(''); setSfxFileName(''); }} className="ml-auto text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
-                </div>
-              ) : (
-                <label className="flex items-center gap-2 text-sm border border-dashed rounded-md px-4 py-2 cursor-pointer hover:bg-muted/30 transition-colors">
-                  {sfxUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  {sfxUploading ? '업로드 중...' : 'mp3/wav 파일 선택'}
-                  <input
-                    type="file"
-                    accept="audio/mpeg,audio/wav,.mp3,.wav"
-                    className="hidden"
-                    onChange={async (e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      setSfxUploading(true);
-                      try {
-                        const token = api.getToken();
-                        const fd = new FormData();
-                        fd.append('file', file);
-                        const res = await fetch(`${API_BASE}/api/media/upload`, {
-                          method: 'POST',
-                          headers: token ? { Authorization: `Bearer ${token}` } : {},
-                          body: fd,
-                        });
-                        const data = await res.json();
-                        if (data.data?.urls?.[0]) {
-                          setSfxUrl(data.data.urls[0]);
-                          setSfxFileName(file.name);
-                        }
-                      } catch { /* ignore */ }
-                      setSfxUploading(false);
-                    }}
-                  />
-                </label>
-              )}
+              <div className="flex flex-wrap gap-2">
+                {(['ai_auto', 'uploaded', 'combined', 'none'] as const).map(mode => {
+                  const needsFile = mode === 'uploaded' || mode === 'combined';
+                  const disabled = needsFile && !sfxUrl;
+                  const labels: Record<string, string> = { ai_auto: 'AI 자동 추천', uploaded: '내가 올린 것만', combined: '합쳐서', none: '사용 안함' };
+                  const icons: Record<string, string> = { ai_auto: '🤖', uploaded: '📁', combined: '📁🤖', none: '❌' };
+                  return (
+                    <button
+                      key={mode}
+                      type="button"
+                      disabled={disabled}
+                      onClick={() => setSfxMode(mode)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-sm transition-colors ${
+                        sfxMode === mode
+                          ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                          : disabled
+                            ? 'border-muted-foreground/10 text-muted-foreground/40 cursor-not-allowed'
+                            : 'border-muted-foreground/20 hover:border-emerald-400 cursor-pointer'
+                      }`}
+                    >
+                      <span>{icons[mode]}</span>
+                      <span>{labels[mode]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              {/* SFX 파일 업로드 */}
+              <div className="mt-1">
+                {sfxUrl ? (
+                  <div className="flex items-center gap-2 text-sm bg-muted/50 border rounded-md px-3 py-2">
+                    <Volume2 className="h-4 w-4 text-emerald-600" />
+                    <span className="truncate max-w-[180px]">{sfxFileName || '효과음 업로드됨'}</span>
+                    <button onClick={() => { setSfxUrl(''); setSfxFileName(''); if (sfxMode === 'uploaded' || sfxMode === 'combined') setSfxMode('ai_auto'); }} className="ml-auto text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
+                  </div>
+                ) : (
+                  <label className="flex items-center gap-2 text-sm border border-dashed rounded-md px-4 py-2 cursor-pointer hover:bg-muted/30 transition-colors">
+                    {sfxUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                    {sfxUploading ? '업로드 중...' : 'mp3/wav 파일 선택'}
+                    <input
+                      type="file"
+                      accept="audio/mpeg,audio/wav,.mp3,.wav"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setSfxUploading(true);
+                        try {
+                          const token = api.getToken();
+                          const fd = new FormData();
+                          fd.append('file', file);
+                          const res = await fetch(`${API_BASE}/api/media/upload`, {
+                            method: 'POST',
+                            headers: token ? { Authorization: `Bearer ${token}` } : {},
+                            body: fd,
+                          });
+                          const data = await res.json();
+                          if (data.data?.urls?.[0]) {
+                            setSfxUrl(data.data.urls[0]);
+                            setSfxFileName(file.name);
+                            setSfxMode('uploaded');
+                          }
+                        } catch { /* ignore */ }
+                        setSfxUploading(false);
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
             </div>
           </div>
         </div>
