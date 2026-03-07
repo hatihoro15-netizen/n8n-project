@@ -1526,6 +1526,37 @@ function WhiskProductionForm() {
                 />
               </div>
             )}
+
+            {/* 제작 정보 상세 */}
+            {(jobStatus === 'completed' || jobStatus === 'started' || jobStatus) && (
+              <details className="group" open={jobStatus === 'completed'}>
+                <summary className="text-xs font-medium cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-1.5">
+                  <ChevronRight className="h-3 w-3 group-open:rotate-90 transition-transform" />
+                  제작 정보
+                </summary>
+                <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5 text-xs pl-4">
+                  <span className="text-muted-foreground">워크플로우</span>
+                  <span>{workflows.find((w: any) => w.id === selectedWorkflowId)?.name || selectedWorkflowId}</span>
+                  <span className="text-muted-foreground">영상 비율</span>
+                  <span>{aspectRatio === '9:16' ? '숏폼 (9:16)' : '롱폼 (16:9)'}</span>
+                  <span className="text-muted-foreground">제작 방식</span>
+                  <span>{productionMode === 'slideshow' ? '슬라이드쇼' : '영상화 (Kling AI)'}</span>
+                  <span className="text-muted-foreground">이미지</span>
+                  <span>{hasImages === 'yes' ? '직접 업로드' : hasImages === 'no' ? 'AI 생성' : '없음'}</span>
+                  <span className="text-muted-foreground">프롬프트</span>
+                  <span className="truncate max-w-[200px]" title={promptP1}>{promptP1 || '(없음)'}</span>
+                  <span className="text-muted-foreground">나레이션</span>
+                  <span className="truncate max-w-[200px]" title={narrationText}>{narrationText || 'AI 자동 생성'}</span>
+                  <span className="text-muted-foreground">스타일 / 톤</span>
+                  <span>{narrationStyle} / {narrationTone}</span>
+                  <span className="text-muted-foreground">BGM</span>
+                  <span>{bgmMode === 'ai_auto' ? 'AI 자동 추천' : bgmMode === 'uploaded' ? bgmFileName || '업로드됨' : '사용 안함'}</span>
+                  <span className="text-muted-foreground">효과음</span>
+                  <span>{sfxMode === 'ai_auto' ? 'AI 자동 추천' : sfxMode === 'uploaded' ? sfxFileName || '업로드됨' : sfxMode === 'combined' ? '합쳐서' : '사용 안함'}</span>
+                </div>
+              </details>
+            )}
+
             <div className="flex items-center gap-2">
               {jobStatus === 'completed' && (
                 <Button

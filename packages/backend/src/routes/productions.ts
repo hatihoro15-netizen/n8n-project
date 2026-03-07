@@ -761,9 +761,10 @@ export async function productionRoutes(app: FastifyInstance) {
       const data = await res.json() as { content: { type: string; text: string }[] };
       const text = data.content?.[0]?.text || '';
 
-      // JSON 파싱 시도
+      // 마크다운 코드블록 제거 후 JSON 파싱
+      const cleaned = text.replace(/```(?:json)?\s*/g, '').replace(/```\s*$/g, '').trim();
       try {
-        const parsed = JSON.parse(text);
+        const parsed = JSON.parse(cleaned);
         return { success: true, data: { korean: parsed.korean || '', english: parsed.english || '' } };
       } catch {
         // JSON 파싱 실패 시 전체 텍스트를 korean으로 반환
