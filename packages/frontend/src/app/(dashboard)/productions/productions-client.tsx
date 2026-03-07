@@ -30,7 +30,6 @@ import {
   Send,
   Film,
   Check,
-  Timer,
   Star,
   Eye,
   Image as ImageIcon,
@@ -46,6 +45,11 @@ import { proxyMediaUrl, downloadViaProxy } from '@/lib/media';
 
 const WEBHOOK_URL = 'https://n8n.srv1345711.hstgr.cloud/webhook/ao-produce';
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+
+// 나레이션 길이 추정 계수 (한국어 기준, 초당 글자 수)
+const NARRATION_CHARS_PER_SEC = 4;
+const VIDEO_DURATION_OPTIONS = [0, 10, 20, 30, 40, 50, 60] as const;
+type VideoDurationSec = typeof VIDEO_DURATION_OPTIONS[number];
 
 // ── Types ──
 type UploadedFile = {
@@ -402,7 +406,8 @@ function WhiskProductionForm() {
   const [formTopic, setFormTopic] = useState('');
   const [keywords, setKeywords] = useState('');
   const [category, setCategory] = useState('');
-  const [clipDuration, setClipDuration] = useState<5 | 8>(5);
+  const [videoDurationSec, setVideoDurationSec] = useState<VideoDurationSec>(0);
+  const [videoDurationManual, setVideoDurationManual] = useState(false);
   const [duration, setDuration] = useState<30 | 60 | 90 | 120>(30);
   const [engineType, setEngineType] = useState<'character_story' | 'core_message' | 'live_promo' | 'meme' | 'action_sports'>('core_message');
   const [strictMode, setStrictMode] = useState(false);
@@ -477,6 +482,7 @@ function WhiskProductionForm() {
       if (draft.duration) setDuration(draft.duration);
       if (draft.engineType) setEngineType(draft.engineType);
       if (draft.strictMode !== undefined) setStrictMode(draft.strictMode);
+      if (draft.videoDurationSec !== undefined) setVideoDurationSec(draft.videoDurationSec);
       if (draft.narrationText) setNarrationText(draft.narrationText);
       if (draft.narrationStyle) setNarrationStyle(draft.narrationStyle);
       if (draft.narrationTone) setNarrationTone(draft.narrationTone);
@@ -493,13 +499,25 @@ function WhiskProductionForm() {
     if (typeof window === 'undefined') return;
     const draft = {
       promptP1, formTopic, keywords, category,
-      aspectRatio, productionMode, duration, engineType, strictMode,
+      aspectRatio, productionMode, duration, engineType, strictMode, videoDurationSec,
       narrationText, narrationStyle, narrationTone,
       hasImages, selectedWorkflowId,
       bgmUrl, bgmFileName, sfxUrl, sfxFileName,
     };
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, duration, engineType, strictMode, narrationText, narrationStyle, narrationTone, hasImages, selectedWorkflowId, bgmUrl, bgmFileName, sfxUrl, sfxFileName]);
+  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, duration, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, hasImages, selectedWorkflowId, bgmUrl, bgmFileName, sfxUrl, sfxFileName]);
+
+  // 나레이션 텍스트 변경 시 → videoDurationSec 자동 계산 (수동 변경 전까지)
+  useEffect(() => {
+    if (videoDurationManual) return;
+    if (!narrationText.trim()) {
+      setVideoDurationSec(0);
+      return;
+    }
+    const estimatedSec = Math.ceil(narrationText.trim().length / NARRATION_CHARS_PER_SEC);
+    const nearest = [...VIDEO_DURATION_OPTIONS].reverse().find(v => v <= estimatedSec) ?? 0;
+    setVideoDurationSec(nearest as VideoDurationSec);
+  }, [narrationText, videoDurationManual]);
 
   const clearDraft = () => sessionStorage.removeItem(DRAFT_KEY);
 
@@ -771,7 +789,7 @@ function WhiskProductionForm() {
       }
 
       if (!isSlideshow) {
-        payload.clip_duration = clipDuration;
+        payload.duration_sec = videoDurationSec || null;
       }
 
       const res = await api.post('/api/productions/ao', payload) as { data: any };
@@ -1082,24 +1100,27 @@ function WhiskProductionForm() {
           </div>
         )}
 
-        {/* 6. Clip duration (ai_video only) */}
+        {/* 6. Video duration (ai_video only) */}
         {productionMode === 'ai_video' && (
           <div>
-            <h4 className="text-sm font-medium mb-2">클립 길이</h4>
-            <div className="flex gap-2">
-              {([5, 8] as const).map(d => (
-                <Button
-                  key={d}
-                  type="button"
-                  variant={clipDuration === d ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => setClipDuration(d)}
-                >
-                  <Timer className="h-3.5 w-3.5 mr-1" />
-                  {d}초
-                </Button>
+            <h4 className="text-sm font-medium mb-2">영상 길이 (클립)</h4>
+            <select
+              value={videoDurationSec}
+              onChange={e => {
+                setVideoDurationSec(Number(e.target.value) as VideoDurationSec);
+                setVideoDurationManual(true);
+              }}
+              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              {VIDEO_DURATION_OPTIONS.map(v => (
+                <option key={v} value={v}>{v === 0 ? '자동 (나레이션 기반)' : `${v}초`}</option>
               ))}
-            </div>
+            </select>
+            {narrationText.trim() && !videoDurationManual && (
+              <p className="text-xs text-muted-foreground mt-1">
+                나레이션 {narrationText.trim().length}자 → 약 {Math.ceil(narrationText.trim().length / NARRATION_CHARS_PER_SEC)}초 추정
+              </p>
+            )}
           </div>
         )}
 
