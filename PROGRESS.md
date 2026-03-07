@@ -7,11 +7,11 @@
 ---
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
-- 마지막 업데이트: 2026-03-06
-- 현재 상태(1줄): 이미지 선택 + 다운로드 추가 완료 + VPS 배포
-- 진행중 작업: 브라우저 E2E 테스트
-- 최근 완료: 이미지 체크박스 선택 + 다운로드 + 선택한 이미지만 사용
-- 주의사항: ao-produce 500 (n8n 내부), PM2 프로세스명=n8n-web-backend
+- 마지막 업데이트: 2026-03-07
+- 현재 상태(1줄): Phase 2 완료 — 입력 필드 정리 + payload 계약 맞추기 (VPS 배포 대기)
+- 진행중 작업: VPS 배포 + n8n 워크플로우 업로드 + E2E 테스트
+- 최근 완료: Phase 2 (duration/engine_type/strict_mode/narration 3분리/BGM·SFX 업로드/메타데이터 접기)
+- 주의사항: kie.ai 크레딧 부족(402), PM2 프로세스명=n8n-web-backend
 
 ---
 
@@ -391,3 +391,118 @@
 ### Files / Links
 - images-client.tsx (체크박스 + 다운로드 + 통합 영상제작 버튼)
 - productions-client.tsx (generatedImages 객체 배열 + 체크박스 + 다운로드)
+
+## 2026-03-06 (20차)
+### Done
+- [x] topic/keywords/category 400 에러 수정 (|| undefined 제거 → 빈 문자열 전달)
+- [x] 프론트: ref_subject/ref_scene/ref_style → slots 객체 {use, url, vision_analysis} 형식 전환
+- [x] 백엔드: slots + my_images 타입 정의 + n8n 웹훅 그대로 전달
+- [x] n8n Code 노드 "이미지 생성" 업데이트:
+  - slots.subject/scene/style의 url → kie.ai subject/scene/style_image_url로 전달
+  - slots vision_analysis → 프롬프트 파트로 추가
+  - my_images 배열 처리 (analysis_only → auto_prompt, generate → analysis, direct → subject 폴백)
+- [x] n8n 워크플로우 백업 저장 (/root/n8n-web/backup-ao-generate-image.json)
+- [x] VPS 배포 (git pull + tsc + pm2 restart)
+### Tried
+- [x] slots + my_images 포함 이미지 생성 요청 → n8n 데이터 정상 수신 확인
+- [ ] kie.ai → 402 Credits insufficient (크레딧 부족, 코드 문제 아님)
+### Result
+- 3계층(프론트→백엔드→n8n) 데이터 구조 일치 확인
+- n8n 실행 로그에서 slots/my_images 정상 파싱 확인
+- kie.ai 크레딧 부족으로 실제 이미지 생성 미검증
+### Next (방향만)
+- kie.ai 크레딧 충전 후 E2E 검증
+- ao-produce 500 n8n 워크플로우 디버깅
+### Files / Links
+- images-client.tsx (slots 객체 전송)
+- media.ts (slots + my_images 타입 + 웹훅 전달)
+- productions-client.tsx (|| undefined 제거)
+- n8n workflow d5b35fb7f1724e448 (Code 노드 업데이트)
+
+## 2026-03-06 (21차)
+### Done
+- [x] 나레이션 방식 선택 UI 추가 (AI 자동 생성 / 직접 입력 라디오)
+- [x] AI 자동 생성 선택 시 안내 텍스트 박스 표시
+- [x] 직접 입력 선택 시 textarea 표시
+- [x] payload에 narration_mode, narration_text 추가
+- [x] 직접 사용 선택 시 제작 방식 자동 영상화(Kling AI) 전환
+- [x] VPS 배포 (git pull, 프론트엔드만 변경)
+### Result
+- 커밋 aca66dd
+- VPS 배포 완료 (프론트엔드만 변경, PM2 재시작 불필요)
+### Next (방향만)
+- kie.ai 크레딧 충전 후 E2E 검증
+- ao-produce 500 디버깅
+### Files / Links
+- productions-client.tsx (나레이션 섹션 + 자동 영상화 전환)
+
+## 2026-03-06 (22차)
+### Done
+- [x] n8n Worker 콜백 STATUS_ORDER에 processing(2), generated(6), uploaded(10) 추가
+- [x] uploaded 콜백 → completed로 매핑
+- [x] 프롬프트 필수 조건 완전 제거 (모든 모드에서 선택사항)
+- [x] 이미지 슬롯에서 영상 파일(mp4/mov) 업로드 가능
+- [x] 영상 미리보기: autoPlay muted loop playsInline + 🎬 뱃지
+- [x] VPS 배포 (백엔드 tsc + PM2 restart + 프론트엔드 git pull)
+### Tried
+- [x] 이전 production "농구장의 총잡이" 분석 → n8n Worker 성공(영상 생성됨) but 콜백 status 불일치로 웹앱 타임아웃
+### Result
+- 근본 원인: n8n Worker가 보내는 status(processing/generated/uploaded)가 웹앱 STATUS_ORDER에 없어서 모든 콜백 무시됨
+- n8n Docker 설정 경로: /docker/n8n/docker-compose.yml (신규 발견)
+- WEBAPP_CALLBACK_URL: 이미 설정됨 확인
+### Next (방향만)
+- 영상 제작 E2E 재시도 → completed 정상 확인
+- kie.ai 크레딧 충전 후 이미지 생성 E2E
+### Files / Links
+- productions.ts (STATUS_ORDER + uploaded→completed 매핑)
+- productions-client.tsx (프롬프트 선택사항 + 영상 슬롯 accept + 🎬 뱃지)
+
+## 2026-03-06 (23차)
+### Done
+- [x] 미디어 슬롯 초기 1칸 → [+] 버튼으로 1칸씩 추가 (최대 20개)
+- [x] imageSlots 초기값 [null,null,null] → [null] 변경 (리셋 포함 3곳)
+- [x] maxImageSlots 항상 20 (모드 불문)
+- [x] 이미지 다운로드: downloadViaProxy 백엔드 프록시 경유 (mixed content 해결)
+- [x] 다운로드 중 로딩 스피너 표시 (downloadingIdx 상태)
+- [x] images-client.tsx 다운로드도 프록시 경유로 통일
+- [x] sessionStorage 작업 내용 자동 저장/복원 (DRAFT_KEY: ao_production_draft)
+- [x] 영상 제작 시작 시 clearDraft() 호출
+- [x] VPS 배포 (git pull, 프론트엔드만 변경)
+### Result
+- 커밋 fcf8f96
+- VPS 배포 완료
+- lib/media.ts에 downloadViaProxy 유틸 함수 추가
+### Next (방향만)
+- 영상 제작 E2E 재시도 (콜백 정상 수신 → completed 확인)
+- kie.ai 크레딧 충전 후 이미지 생성 E2E
+### Files / Links
+- productions-client.tsx (슬롯 1칸 + sessionStorage + 다운로드 프록시)
+- images-client.tsx (다운로드 프록시 + 로딩 스피너)
+- lib/media.ts (downloadViaProxy 함수 추가)
+
+## 2026-03-07
+### Done
+- [x] Phase 2: 입력 필드 정리 + payload 계약 맞추기
+  - prompt_p1 필수 (UI `*` + 백엔드 400 검증 + 제작 버튼 비활성화)
+  - duration 드롭다운 (30/60/90/120초)
+  - engine_type 선택 (character_story/core_message/live_promo/meme/action_sports)
+  - strict_mode 토글 (기본 false)
+  - narration 3분리: narration_text + narration_style + narration_tone
+  - narration_mode(auto/manual) 제거 → 텍스트 비우면 AI 자동
+  - BGM/SFX: 체크박스 → 파일 업로드 방식 (업로드 없으면 무음)
+  - SFX 업로드 칸 신규 (sfx_url → n8n payload)
+  - topic/keywords/category: 접기 가능한 메타데이터 섹션
+  - n8n Producer 입력값 검증 노드 업데이트 (top-level + activeVersion)
+  - sessionStorage draft 새 필드 포함
+  - backend duration 허용값 검증 [30,60,90,120]
+- [x] TypeScript + quality-check PASS
+### Result
+- 3계층 (프론트→백엔드→n8n) payload 계약 통일
+- enableBgm/enableSfx: 파일 업로드 여부로 자동 결정 (!!bgmUrl / !!sfxUrl)
+### Next (방향만)
+- VPS 배포 + n8n 워크플로우 업로드
+- E2E 영상 제작 테스트
+### Files / Links
+- productions-client.tsx (Phase 2 UI 전면 수정)
+- productions.ts (body 타입 + 검증 + webhook payload)
+- ao_producer.json (입력값 검증 Code 노드)

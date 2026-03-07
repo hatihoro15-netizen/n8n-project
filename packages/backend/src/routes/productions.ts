@@ -205,15 +205,39 @@ export async function productionRoutes(app: FastifyInstance) {
         scene_prompt?: string;
         include_audio?: boolean;
       }[];
-      narration_mode?: 'auto' | 'manual';
+      duration?: number;
+      engine_type?: string;
+      strict_mode?: boolean;
       narration_text?: string;
+      narration_style?: string;
+      narration_tone?: string;
       bgm_url?: string;
+      sfx_url?: string;
       enable_bgm?: boolean;
       enable_sfx?: boolean;
     };
 
     if (!body.workflowId) {
       return reply.status(400).send({ success: false, message: 'workflowId is required' });
+    }
+    if (!body.prompt_p1?.trim()) {
+      return reply.status(400).send({ success: false, message: 'prompt_p1 is required' });
+    }
+    const ALLOWED_DURATIONS = [30, 60, 90, 120];
+    if (body.duration && !ALLOWED_DURATIONS.includes(body.duration)) {
+      return reply.status(400).send({ success: false, message: `duration must be one of: ${ALLOWED_DURATIONS.join(', ')}` });
+    }
+    const ALLOWED_ENGINES = ['character_story', 'core_message', 'live_promo', 'meme', 'action_sports'];
+    if (body.engine_type && !ALLOWED_ENGINES.includes(body.engine_type)) {
+      return reply.status(400).send({ success: false, message: `engine_type must be one of: ${ALLOWED_ENGINES.join(', ')}` });
+    }
+    const ALLOWED_NARRATION_STYLES = ['explanatory', 'documentary', 'storytelling', 'news', 'casual', 'dramatic'];
+    if (body.narration_style && !ALLOWED_NARRATION_STYLES.includes(body.narration_style)) {
+      return reply.status(400).send({ success: false, message: `narration_style must be one of: ${ALLOWED_NARRATION_STYLES.join(', ')}` });
+    }
+    const ALLOWED_NARRATION_TONES = ['calm', 'serious', 'humorous', 'warm', 'energetic'];
+    if (body.narration_tone && !ALLOWED_NARRATION_TONES.includes(body.narration_tone)) {
+      return reply.status(400).send({ success: false, message: `narration_tone must be one of: ${ALLOWED_NARRATION_TONES.join(', ')}` });
     }
 
     // Find selected workflow
@@ -250,6 +274,9 @@ export async function productionRoutes(app: FastifyInstance) {
         category: body.category,
         aspect_ratio: body.aspect_ratio || '9:16',
         production_mode: body.production_mode || 'ai_video',
+        duration: body.duration || 30,
+        engine_type: body.engine_type || 'core_message',
+        strict_mode: body.strict_mode || false,
         has_images: body.has_images,
         clip_duration: body.clip_duration,
         slide_duration: body.slide_duration,
@@ -257,9 +284,11 @@ export async function productionRoutes(app: FastifyInstance) {
         files: body.files,
         ref_files: body.ref_files,
         clips: body.clips,
-        narration_mode: body.narration_mode,
         narration_text: body.narration_text,
+        narration_style: body.narration_style || 'explanatory',
+        narration_tone: body.narration_tone || 'calm',
         bgm_url: body.bgm_url,
+        sfx_url: body.sfx_url,
         enable_bgm: body.enable_bgm,
         enable_sfx: body.enable_sfx,
       });

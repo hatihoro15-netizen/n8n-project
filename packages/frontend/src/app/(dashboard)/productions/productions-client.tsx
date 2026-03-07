@@ -403,13 +403,18 @@ function WhiskProductionForm() {
   const [keywords, setKeywords] = useState('');
   const [category, setCategory] = useState('');
   const [clipDuration, setClipDuration] = useState<5 | 8>(5);
-  const [narrationMode, setNarrationMode] = useState<'auto' | 'manual'>('auto');
+  const [duration, setDuration] = useState<30 | 60 | 90 | 120>(30);
+  const [engineType, setEngineType] = useState<'character_story' | 'core_message' | 'live_promo' | 'meme' | 'action_sports'>('core_message');
+  const [strictMode, setStrictMode] = useState(false);
   const [narrationText, setNarrationText] = useState('');
+  const [narrationStyle, setNarrationStyle] = useState('explanatory');
+  const [narrationTone, setNarrationTone] = useState('calm');
   const [bgmUrl, setBgmUrl] = useState('');
   const [bgmFileName, setBgmFileName] = useState('');
   const [bgmUploading, setBgmUploading] = useState(false);
-  const [enableBgm, setEnableBgm] = useState(false);
-  const [enableSfx, setEnableSfx] = useState(false);
+  const [sfxUrl, setSfxUrl] = useState('');
+  const [sfxFileName, setSfxFileName] = useState('');
+  const [sfxUploading, setSfxUploading] = useState(false);
   const [selectedWorkflowId, setSelectedWorkflowId] = useState('');
 
   // Form state
@@ -469,13 +474,16 @@ function WhiskProductionForm() {
       if (draft.category) setCategory(draft.category);
       if (draft.aspectRatio) setAspectRatio(draft.aspectRatio);
       if (draft.productionMode) setProductionMode(draft.productionMode);
-      if (draft.narrationMode) setNarrationMode(draft.narrationMode);
+      if (draft.duration) setDuration(draft.duration);
+      if (draft.engineType) setEngineType(draft.engineType);
+      if (draft.strictMode !== undefined) setStrictMode(draft.strictMode);
       if (draft.narrationText) setNarrationText(draft.narrationText);
+      if (draft.narrationStyle) setNarrationStyle(draft.narrationStyle);
+      if (draft.narrationTone) setNarrationTone(draft.narrationTone);
       if (draft.hasImages) setHasImages(draft.hasImages);
       if (draft.selectedWorkflowId) setSelectedWorkflowId(draft.selectedWorkflowId);
       if (draft.bgmUrl) { setBgmUrl(draft.bgmUrl); setBgmFileName(draft.bgmFileName || ''); }
-      if (draft.enableBgm !== undefined) setEnableBgm(draft.enableBgm);
-      if (draft.enableSfx !== undefined) setEnableSfx(draft.enableSfx);
+      if (draft.sfxUrl) { setSfxUrl(draft.sfxUrl); setSfxFileName(draft.sfxFileName || ''); }
     } catch { /* ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -485,12 +493,13 @@ function WhiskProductionForm() {
     if (typeof window === 'undefined') return;
     const draft = {
       promptP1, formTopic, keywords, category,
-      aspectRatio, productionMode, narrationMode, narrationText,
+      aspectRatio, productionMode, duration, engineType, strictMode,
+      narrationText, narrationStyle, narrationTone,
       hasImages, selectedWorkflowId,
-      bgmUrl, bgmFileName, enableBgm, enableSfx,
+      bgmUrl, bgmFileName, sfxUrl, sfxFileName,
     };
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, narrationMode, narrationText, hasImages, selectedWorkflowId, bgmUrl, bgmFileName, enableBgm, enableSfx]);
+  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, duration, engineType, strictMode, narrationText, narrationStyle, narrationTone, hasImages, selectedWorkflowId, bgmUrl, bgmFileName, sfxUrl, sfxFileName]);
 
   const clearDraft = () => sessionStorage.removeItem(DRAFT_KEY);
 
@@ -676,6 +685,10 @@ function WhiskProductionForm() {
       setFormError('워크플로우를 선택해주세요.');
       return;
     }
+    if (!promptP1.trim()) {
+      setFormError('프롬프트를 입력해주세요.');
+      return;
+    }
     if (hasImages === null) {
       setFormError('이미지 유무를 선택해주세요.');
       return;
@@ -739,13 +752,18 @@ function WhiskProductionForm() {
         category: category.trim(),
         aspect_ratio: aspectRatio,
         production_mode: productionMode,
-        narration_mode: narrationMode,
-        ...(narrationMode === 'manual' && narrationText.trim() ? { narration_text: narrationText.trim() } : {}),
+        duration,
+        engine_type: engineType,
+        strict_mode: strictMode,
+        ...(narrationText.trim() ? { narration_text: narrationText.trim() } : {}),
+        narration_style: narrationStyle,
+        narration_tone: narrationTone,
         has_images: hasImages === 'yes',
         files,
-        enable_bgm: enableBgm,
-        enable_sfx: enableSfx,
+        enable_bgm: !!bgmUrl,
+        enable_sfx: !!sfxUrl,
         ...(bgmUrl ? { bgm_url: bgmUrl } : {}),
+        ...(sfxUrl ? { sfx_url: sfxUrl } : {}),
       };
 
       if (hasImages === 'no' && generatedImages.length > 0) {
@@ -1088,86 +1106,120 @@ function WhiskProductionForm() {
         {/* 7. Prompt fields */}
         <div className="space-y-1.5">
           <label className="text-sm font-medium" htmlFor="prompt_p1">
-            프롬프트 (선택사항)
+            프롬프트 <span className="text-red-500">*</span>
           </label>
           <textarea
             id="prompt_p1"
             value={promptP1}
             onChange={e => setPromptP1(e.target.value)}
-            placeholder="영상 방향, 나레이션 힌트 등을 자유롭게 입력하세요"
+            placeholder="영상의 방향, 나레이션 내용, 스토리 등을 입력하세요 (필수)"
             rows={3}
             className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
           />
         </div>
 
-        {/* 7-1. Narration mode */}
-        <div className="space-y-2">
-          <h4 className="text-sm font-medium">나레이션</h4>
-          <div className="flex gap-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="narration_mode"
-                checked={narrationMode === 'auto'}
-                onChange={() => setNarrationMode('auto')}
-                className="accent-primary"
-              />
-              <span className="text-sm">AI 자동 생성</span>
-            </label>
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="radio"
-                name="narration_mode"
-                checked={narrationMode === 'manual'}
-                onChange={() => setNarrationMode('manual')}
-                className="accent-primary"
-              />
-              <span className="text-sm">직접 입력</span>
+        {/* 7-0. Duration + Engine Type + Strict Mode */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">영상 길이</label>
+            <select
+              value={duration}
+              onChange={e => setDuration(Number(e.target.value) as 30 | 60 | 90 | 120)}
+              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value={30}>30초</option>
+              <option value={60}>60초</option>
+              <option value={90}>90초</option>
+              <option value={120}>120초</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">엔진 타입</label>
+            <select
+              value={engineType}
+              onChange={e => setEngineType(e.target.value as typeof engineType)}
+              className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+            >
+              <option value="character_story">캐릭터 스토리</option>
+              <option value="core_message">핵심 메시지</option>
+              <option value="live_promo">라이브 프로모</option>
+              <option value="meme">밈</option>
+              <option value="action_sports">액션/스포츠</option>
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium">길이 엄격 모드</label>
+            <label className="flex items-center gap-2 cursor-pointer h-9 px-3">
+              <input type="checkbox" checked={strictMode} onChange={e => setStrictMode(e.target.checked)} className="rounded" />
+              <span className="text-sm text-muted-foreground">strict (목표 길이 ±1초)</span>
             </label>
           </div>
-          {narrationMode === 'auto' ? (
-            <div className="rounded-md bg-muted/50 border p-3 text-xs text-muted-foreground leading-relaxed">
-              프롬프트 + 주제 + 키워드 + 카테고리를 기반으로<br />
-              Claude가 자동으로 나레이션을 생성합니다.<br />
-              <span className="text-foreground/60">예) 주제: 농구장의 총잡이 →</span><br />
-              <span className="text-foreground/60">&lsquo;농구장에 울려퍼지는 총성, 꽃을 입에 문 총잡이의 등장...&rsquo;</span>
-            </div>
-          ) : (
+        </div>
+
+        {/* 7-1. Narration */}
+        <div className="space-y-3">
+          <h4 className="text-sm font-medium">나레이션</h4>
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">나레이션 텍스트 (선택 — 비워두면 AI가 자동 생성)</label>
             <textarea
               value={narrationText}
               onChange={e => setNarrationText(e.target.value)}
-              placeholder="예) 총이 콩알탄이라면 어떨까요? 총소리는 나지만 아무도 다치지 않는 신기한 세상..."
-              rows={4}
+              placeholder="직접 나레이션을 작성하거나, 비워두면 프롬프트 기반으로 AI가 자동 생성합니다"
+              rows={3}
               className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-y"
             />
-          )}
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">나레이션 스타일</label>
+              <select
+                value={narrationStyle}
+                onChange={e => setNarrationStyle(e.target.value)}
+                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="explanatory">설명형</option>
+                <option value="documentary">다큐멘터리</option>
+                <option value="storytelling">스토리텔링</option>
+                <option value="news">뉴스</option>
+                <option value="casual">일상 대화</option>
+                <option value="dramatic">드라마틱</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground">나레이션 톤</label>
+              <select
+                value={narrationTone}
+                onChange={e => setNarrationTone(e.target.value)}
+                className="flex w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              >
+                <option value="calm">차분하게</option>
+                <option value="serious">진지하게</option>
+                <option value="humorous">유머러스하게</option>
+                <option value="warm">따뜻하게</option>
+                <option value="energetic">에너지틱하게</option>
+              </select>
+            </div>
+          </div>
         </div>
 
-        {/* 7. BGM / 효과음 */}
+        {/* 7-2. BGM / 효과음 업로드 */}
         <div className="space-y-3">
-          <h4 className="text-sm font-medium">오디오 설정</h4>
-          <div className="flex flex-wrap items-center gap-4">
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" checked={enableBgm} onChange={e => setEnableBgm(e.target.checked)} className="rounded" />
-              <Music className="h-4 w-4" />BGM 사용
-            </label>
-            <label className="flex items-center gap-2 text-sm cursor-pointer">
-              <input type="checkbox" checked={enableSfx} onChange={e => setEnableSfx(e.target.checked)} className="rounded" />
-              <Volume2 className="h-4 w-4" />효과음 사용
-            </label>
-          </div>
-          {enableBgm && (
-            <div className="flex items-center gap-3">
+          <h4 className="text-sm font-medium">오디오 (선택)</h4>
+          <p className="text-xs text-muted-foreground">업로드하지 않으면 해당 오디오는 없이 제작됩니다.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {/* BGM */}
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground flex items-center gap-1"><Music className="h-3.5 w-3.5" />BGM (배경음악)</label>
               {bgmUrl ? (
                 <div className="flex items-center gap-2 text-sm bg-muted/50 border rounded-md px-3 py-2">
                   <Music className="h-4 w-4 text-emerald-600" />
-                  <span className="truncate max-w-[200px]">{bgmFileName || 'BGM 업로드됨'}</span>
-                  <button onClick={() => { setBgmUrl(''); setBgmFileName(''); }} className="text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
+                  <span className="truncate max-w-[180px]">{bgmFileName || 'BGM 업로드됨'}</span>
+                  <button onClick={() => { setBgmUrl(''); setBgmFileName(''); }} className="ml-auto text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
                 </div>
               ) : (
                 <label className="flex items-center gap-2 text-sm border border-dashed rounded-md px-4 py-2 cursor-pointer hover:bg-muted/30 transition-colors">
                   {bgmUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  {bgmUploading ? '업로드 중...' : 'BGM 파일 선택 (mp3/wav)'}
+                  {bgmUploading ? '업로드 중...' : 'mp3/wav 파일 선택'}
                   <input
                     type="file"
                     accept="audio/mpeg,audio/wav,.mp3,.wav"
@@ -1196,25 +1248,73 @@ function WhiskProductionForm() {
                   />
                 </label>
               )}
-              <span className="text-xs text-muted-foreground">직접 BGM을 업로드하면 해당 BGM이 사용됩니다</span>
             </div>
-          )}
+            {/* SFX */}
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground flex items-center gap-1"><Volume2 className="h-3.5 w-3.5" />효과음</label>
+              {sfxUrl ? (
+                <div className="flex items-center gap-2 text-sm bg-muted/50 border rounded-md px-3 py-2">
+                  <Volume2 className="h-4 w-4 text-emerald-600" />
+                  <span className="truncate max-w-[180px]">{sfxFileName || '효과음 업로드됨'}</span>
+                  <button onClick={() => { setSfxUrl(''); setSfxFileName(''); }} className="ml-auto text-muted-foreground hover:text-destructive"><X className="h-3 w-3" /></button>
+                </div>
+              ) : (
+                <label className="flex items-center gap-2 text-sm border border-dashed rounded-md px-4 py-2 cursor-pointer hover:bg-muted/30 transition-colors">
+                  {sfxUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                  {sfxUploading ? '업로드 중...' : 'mp3/wav 파일 선택'}
+                  <input
+                    type="file"
+                    accept="audio/mpeg,audio/wav,.mp3,.wav"
+                    className="hidden"
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setSfxUploading(true);
+                      try {
+                        const token = api.getToken();
+                        const fd = new FormData();
+                        fd.append('file', file);
+                        const res = await fetch(`${API_BASE}/api/media/upload`, {
+                          method: 'POST',
+                          headers: token ? { Authorization: `Bearer ${token}` } : {},
+                          body: fd,
+                        });
+                        const data = await res.json();
+                        if (data.data?.urls?.[0]) {
+                          setSfxUrl(data.data.urls[0]);
+                          setSfxFileName(file.name);
+                        }
+                      } catch { /* ignore */ }
+                      setSfxUploading(false);
+                    }}
+                  />
+                </label>
+              )}
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium" htmlFor="form_topic">주제</label>
-            <Input id="form_topic" value={formTopic} onChange={e => setFormTopic(e.target.value)} placeholder="예: 역사 미스터리" />
+        {/* 메타데이터 (접기/펴기) */}
+        <details className="group">
+          <summary className="text-sm font-medium cursor-pointer text-muted-foreground hover:text-foreground flex items-center gap-1.5">
+            <ChevronRight className="h-3.5 w-3.5 group-open:rotate-90 transition-transform" />
+            메타데이터 (표시용 — 영상 생성에 영향 없음)
+          </summary>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2 pl-5">
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground" htmlFor="form_topic">주제</label>
+              <Input id="form_topic" value={formTopic} onChange={e => setFormTopic(e.target.value)} placeholder="예: 역사 미스터리" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground" htmlFor="form_keywords">키워드</label>
+              <Input id="form_keywords" value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="쉼표 구분" />
+            </div>
+            <div className="space-y-1.5">
+              <label className="text-xs text-muted-foreground" htmlFor="form_category">카테고리</label>
+              <Input id="form_category" value={category} onChange={e => setCategory(e.target.value)} placeholder="예: entertainment" />
+            </div>
           </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium" htmlFor="form_keywords">키워드</label>
-            <Input id="form_keywords" value={keywords} onChange={e => setKeywords(e.target.value)} placeholder="쉼표 구분" />
-          </div>
-          <div className="space-y-1.5">
-            <label className="text-sm font-medium" htmlFor="form_category">카테고리</label>
-            <Input id="form_category" value={category} onChange={e => setCategory(e.target.value)} placeholder="예: entertainment" />
-          </div>
-        </div>
+        </details>
 
         {/* Error / Success */}
         {formError && <p className="text-sm text-destructive">{formError}</p>}
@@ -1222,7 +1322,7 @@ function WhiskProductionForm() {
 
         {/* 8. Submit */}
         <div className="flex items-center gap-3">
-          <Button onClick={handleSubmit} disabled={submitting || !selectedWorkflowId || !!jobId}>
+          <Button onClick={handleSubmit} disabled={submitting || !selectedWorkflowId || !promptP1.trim() || !!jobId}>
             {submitting ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" />처리 중...</>
             ) : (
