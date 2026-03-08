@@ -608,8 +608,9 @@ export async function productionRoutes(app: FastifyInstance) {
     // n8n Worker status → Prisma enum 매핑 (스키마 변경 없이 처리)
     // processing → skip (이미 started 상태), generated → videos_ready, uploaded → completed
     if (status === 'processing') {
-      logger.info({ productionId, status }, 'Callback: processing status skipped (already started)');
-      return { success: true, skipped: true, message: 'processing mapped to started (no-op)' };
+      await prisma.production.update({ where: { id: productionId }, data: { updatedAt: new Date() } });
+      logger.info({ productionId, status }, 'Callback: processing — updatedAt refreshed (status unchanged)');
+      return { success: true, message: 'processing: updatedAt refreshed' };
     }
     const STATUS_MAP: Record<string, string> = {
       generated: 'videos_ready',
