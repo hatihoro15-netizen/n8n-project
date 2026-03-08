@@ -1172,7 +1172,7 @@ function WhiskProductionForm() {
                       const raw = end > start ? end - start : 5;
                       return {
                         prompt: s.prompt || '',
-                        durationSec: Math.max(3, Math.min(15, raw)),
+                        durationSec: Math.max(1, raw),
                       };
                     });
                     setSceneClips(parsed);
@@ -1270,7 +1270,7 @@ function WhiskProductionForm() {
               <div className="space-y-2 p-3 rounded-lg border bg-slate-50/50">
                 {/* Kling multi_shots 제약 안내 */}
                 <div className="text-xs text-muted-foreground space-y-0.5 pb-1 border-b">
-                  <p>Kling multi_shots: 최대 5샷, 샷당 1~12초</p>
+                  <p>Kling multi_shots: 최대 5샷, 샷당 1~12초 권장 (실제 처리 모드는 Worker에서 최종 결정)</p>
                   {sceneClips.length > 0 && (() => {
                     const total = sceneClips.reduce((s, c) => s + c.durationSec, 0);
                     return total <= 15
@@ -1308,10 +1308,9 @@ function WhiskProductionForm() {
                         <input
                           type="number"
                           min={1}
-                          max={12}
                           value={clip.durationSec}
                           onChange={e => {
-                            const val = Math.max(1, Math.min(15, Number(e.target.value) || 1));
+                            const val = Math.max(1, Number(e.target.value) || 1);
                             const updated = [...sceneClips];
                             updated[idx] = { ...updated[idx], durationSec: val };
                             setSceneClips(updated);
@@ -1319,10 +1318,10 @@ function WhiskProductionForm() {
                             const totalSec = updated.reduce((s, c) => s + c.durationSec, 0);
                             setVideoDurationSec(clampDuration(totalSec));
                           }}
-                          className={`w-full rounded-md border bg-transparent px-2 py-1 text-xs text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${clip.durationSec > 12 ? 'border-amber-400' : 'border-input'}`}
+                          className={`w-full rounded-md border bg-transparent px-2 py-1 text-xs text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${clip.durationSec >= 13 ? 'border-amber-400' : 'border-input'}`}
                         />
                         <span className="text-[10px] text-muted-foreground text-center block">
-                          {clip.durationSec > 12 ? <span className="text-amber-600">12초 초과</span> : '초'}
+                          {clip.durationSec >= 13 ? <span className="text-amber-600">13초 이상</span> : '초'}
                         </span>
                       </div>
                       <button
