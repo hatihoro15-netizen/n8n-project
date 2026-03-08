@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-08
-- 현재 상태(1줄): Kling 원본 오디오 믹싱 + multi_shots 배포 완료
+- 현재 상태(1줄): multi_shots 그룹핑 + fallback + 오디오 믹싱 배포 완료
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: Kling 원본 오디오를 최종 영상에 믹싱 (TTS+BGM+SFX와 함께)
+- 최근 완료: scenes 그룹핑 multi_shots 호출 + 제약 위반 fallback + Kling 오디오 믹싱
 - 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수
 
 ---
@@ -676,4 +676,18 @@
 - BGM weights 변경: amix weights=1 → volume=0.35 필터에서 직접 적용
 ### Files
 - n8n/ao_worker.json (render-video, process-clips 수정)
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-08 (세션 6)
+### ✅ Done
+- [x] scenes 그룹핑: 15초/5샷 이하 그룹으로 자동 분할 (원래 순서 보존)
+- [x] 그룹별 multi_shots=true 호출 (2샷 이상 그룹)
+- [x] 1샷 그룹: 자동 개별 호출
+- [x] multi_shots 실패 시 해당 그룹만 개별 호출 fallback
+- [x] 402 크레딧 에러: fallback 없이 즉시 throw
+- [x] duration>15s에서도 multi_shots 활용 (기존: 개별 호출만)
+- [x] kling_sound = hasScenes (scenes 있으면 항상 true)
+- [x] VPS 배포 완료
+### Files
+- n8n/ao_worker.json (process-clips: ④ 섹션 전면 교체)
 - HANDOFF.md, PROGRESS.md

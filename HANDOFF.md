@@ -64,11 +64,14 @@
   - scenes 없고 clipCount>1일 때 Claude API로 prompt_p1을 클립별 프롬프트로 자동 분할
   - generateScenePrompts: 각 클립에 다른 시각적 장면 생성
   - API 실패 시 promptBase fallback (기존 동작)
-- **Kling 3.0 multi_shots**:
-  - duration<=15s + scenes 있음(<=5) → multi_shots=true, multi_prompt 배열, sound=true, 1회 호출
-  - duration<=15s + scenes 없음 → 기존 단일 호출 (multi_shots=false)
-  - duration>15s → 기존 멀티클립 개별 호출 유지
-  - 제약: max 5 shots, 각 shot 1~12초, 총 3~15초
+- **Kling 3.0 multi_shots (그룹핑)**:
+  - scenes 있음 → 15초/5샷 이하 그룹으로 자동 분할 → 그룹별 multi_shots=true 호출
+  - duration<=15s: 1그룹 = 1회 호출
+  - duration>15s: N그룹 = N회 호출 → FFmpeg concat
+  - scenes 없음 → 기존 개별 호출 (변경 없음)
+  - 제약 위반 fallback: multi_shots 실패 시 해당 그룹만 개별 호출로 fallback
+  - 1샷 그룹: 개별 호출 (multi_shots 최소 2샷)
+  - 402 크레딧 에러: fallback 없이 즉시 throw
 - **Kling 원본 오디오 믹싱**:
   - multi_shots=true (sound=true) → Kling 원본 오디오를 최종 영상에 포함
   - 오디오 믹스: Kling(vol 0.5) + TTS(1.0) + BGM(vol 0.35) + SFX(0.8)
@@ -100,14 +103,13 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: feat(worker): mix kling original audio into final video
+커맨드: feat(worker): group scenes multi_shots batches, fallback, audio mix
 결과:
-- render-video: Kling 원본 오디오를 TTS/BGM/SFX와 함께 믹싱
-- multi_shots=true or kling_sound=true일 때 활성화
-- 볼륨: Kling 0.5, TTS 1.0, BGM 0.35, SFX 0.8
-- 멀티클립 concat에 a=1 추가 (오디오 보존)
-- 동적 mixParts/mixWeights 배열로 조건부 amix
-- process-clips: kling_sound 플래그 출력 추가
+- scenes를 15초/5샷 이하 그룹으로 자동 분할 → 그룹별 multi_shots 호출
+- duration>15s에서도 multi_shots 활용 (N그룹 × 1회 호출)
+- multi_shots 실패 시 해당 그룹만 개별 호출 fallback
+- 1샷 그룹은 자동으로 개별 호출
+- kling_sound=true (scenes 있으면 항상)
 - VPS 배포 완료
 위치: Local + VPS (76.13.182.180)
 
