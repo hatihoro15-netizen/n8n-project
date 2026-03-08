@@ -1268,6 +1268,19 @@ function WhiskProductionForm() {
             </button>
             {showSceneClips && (
               <div className="space-y-2 p-3 rounded-lg border bg-slate-50/50">
+                {/* Kling multi_shots 제약 안내 */}
+                <div className="text-xs text-muted-foreground space-y-0.5 pb-1 border-b">
+                  <p>Kling multi_shots: 최대 5샷, 샷당 1~12초</p>
+                  {sceneClips.length > 0 && (() => {
+                    const total = sceneClips.reduce((s, c) => s + c.durationSec, 0);
+                    return total <= 15
+                      ? <p className="text-blue-600">총 {total}초 — multi_shots 1회 호출</p>
+                      : <p className="text-amber-600">총 {total}초 — 개별 클립 생성 모드로 자동 전환됩니다</p>;
+                  })()}
+                  {sceneClips.length > 5 && (
+                    <p className="text-amber-600">샷 {sceneClips.length}개: 5개 초과 시 multi_shots 제약을 벗어납니다</p>
+                  )}
+                </div>
                 {sceneClips.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-3">씬이 없습니다. 씬을 추가해주세요.</p>
                 )}
@@ -1294,11 +1307,11 @@ function WhiskProductionForm() {
                       <div className="flex-shrink-0 w-16">
                         <input
                           type="number"
-                          min={3}
-                          max={15}
+                          min={1}
+                          max={12}
                           value={clip.durationSec}
                           onChange={e => {
-                            const val = Math.max(3, Math.min(15, Number(e.target.value) || 3));
+                            const val = Math.max(1, Math.min(15, Number(e.target.value) || 1));
                             const updated = [...sceneClips];
                             updated[idx] = { ...updated[idx], durationSec: val };
                             setSceneClips(updated);
@@ -1306,9 +1319,11 @@ function WhiskProductionForm() {
                             const totalSec = updated.reduce((s, c) => s + c.durationSec, 0);
                             setVideoDurationSec(clampDuration(totalSec));
                           }}
-                          className="w-full rounded-md border border-input bg-transparent px-2 py-1 text-xs text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          className={`w-full rounded-md border bg-transparent px-2 py-1 text-xs text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${clip.durationSec > 12 ? 'border-amber-400' : 'border-input'}`}
                         />
-                        <span className="text-[10px] text-muted-foreground text-center block">초</span>
+                        <span className="text-[10px] text-muted-foreground text-center block">
+                          {clip.durationSec > 12 ? <span className="text-amber-600">12초 초과</span> : '초'}
+                        </span>
                       </div>
                       <button
                         type="button"
