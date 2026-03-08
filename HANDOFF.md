@@ -7,7 +7,7 @@
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: processing callback updatedAt 갱신 + timeout 기본값 20분 상향 완료
+- **Current Status**: 씬 duration 검증 1~12s Kling 제약 통일 완료
 - **Goal**: E2E 영상 제작 테스트
 
 ## B) 환경/의존성
@@ -21,10 +21,10 @@
 - **Backend URL**: https://api-n8n.xn--9g4bn4fm2bl2mb9f.com
 
 ## C) 마지막 실행 기록
-- **Last Run Command**: npx tsc --noEmit (backend)
+- **Last Run Command**: npx next build (frontend)
 - **Result**: PASS
 - **실행 위치**: Local
-- **Last Commit**: fix(backend): update processing callback to refresh updatedAt and raise default timeout to 20min
+- **Last Commit**: fix(web): align scene duration validation to 1~12s kling constraint
 
 ## D) 완료/미완료
 
@@ -33,21 +33,19 @@
 - [x] 2단계 그룹/샷 플래너 UI + voice_provider + payload preview
 - [x] processing callback updatedAt 갱신 (no-op 해제)
 - [x] PRODUCTION_TIMEOUT_MINUTES 기본값 5 → 20분
+- [x] 씬 duration 검증 1~12s 통일 + payload preview 범위 경고
 
 ### Next Actions
-1. [ ] VPS 백엔드 배포 (git pull + pm2 restart)
-2. [ ] CF Pages 배포
-3. [ ] E2E 영상 제작 테스트
+1. [ ] CF Pages 배포
+2. [ ] E2E 영상 제작 테스트
+3. [ ] main 머지
 
 ## E) Blockers / Issues
-- **Blockers**: n8n Producer duration 화이트리스트 (arubto-prompt에서 수정 필요)
 - **규칙**: slideshow 모드 코드 수정 금지
 - **규칙**: n8n Producer/Worker 파일은 이 워크스페이스에서 수정하지 않음
-- **VPS 배포 필요**: 백엔드 코드 변경 반영하려면 VPS에서 git pull + pm2 restart 필요
 
 ## F) 변경 파일
-- packages/backend/src/routes/productions.ts (processing callback updatedAt 갱신)
-- packages/backend/src/config.ts (timeout 기본값 5→20)
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (duration max=12, 경고 >12, payload preview 범위 체크)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> processing callback updatedAt 갱신 + timeout 20분 상향 완료. VPS 배포(git pull + pm2 restart) 필요.
+> 씬 duration 검증 1~12s Kling 제약 통일 완료. CF Pages 배포 후 E2E 테스트 필요.

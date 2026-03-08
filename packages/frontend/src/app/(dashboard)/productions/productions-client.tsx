@@ -1544,6 +1544,7 @@ function WhiskProductionForm() {
                         <input
                           type="number"
                           min={1}
+                          max={12}
                           value={clip.durationSec}
                           onChange={e => {
                             const val = Math.max(1, Number(e.target.value) || 1);
@@ -1554,10 +1555,10 @@ function WhiskProductionForm() {
                             const totalSec = updated.reduce((s, c) => s + c.durationSec, 0);
                             setVideoDurationSec(clampDuration(totalSec));
                           }}
-                          className={`w-full rounded-md border bg-transparent px-2 py-1 text-xs text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${clip.durationSec >= 13 ? 'border-amber-400' : 'border-input'}`}
+                          className={`w-full rounded-md border bg-transparent px-2 py-1 text-xs text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${clip.durationSec > 12 ? 'border-amber-400' : 'border-input'}`}
                         />
                         <span className="text-[10px] text-muted-foreground text-center block">
-                          {clip.durationSec >= 13 ? <span className="text-amber-600">13초 이상</span> : '초'}
+                          {clip.durationSec > 12 ? <span className="text-amber-600">12초 초과</span> : '초'}
                         </span>
                       </div>
                       <button
@@ -1951,11 +1952,19 @@ function WhiskProductionForm() {
         {formSuccess && <p className="text-sm text-emerald-600">{formSuccess}</p>}
 
         {/* Payload preview */}
-        {sceneClips.length > 0 && (
-          <p className="text-[10px] text-muted-foreground font-mono truncate">
-            payload: duration_sec={videoDurationSec} | scenes=[{sceneClips.map(c => `${c.durationSec}s`).join(',')}] | group_targets=[{klingGroupTargets.join(',')}] | voice={voiceProvider}
-          </p>
-        )}
+        {sceneClips.length > 0 && (() => {
+          const outOfRange = sceneClips.filter(c => c.durationSec < 1 || c.durationSec > 12);
+          return (
+            <div className="text-[10px] font-mono space-y-0.5">
+              <p className="text-muted-foreground truncate">
+                payload: duration_sec={videoDurationSec} | scenes=[{sceneClips.map(c => `${c.durationSec}s`).join(',')}] | group_targets=[{klingGroupTargets.join(',')}] | voice={voiceProvider}
+              </p>
+              {outOfRange.length > 0 && (
+                <p className="text-amber-600">scenes duration 범위 벗어남 ({outOfRange.map(c => `${c.durationSec}s`).join(',')}) — Producer가 거부하거나 auto_pack fallback 가능</p>
+              )}
+            </div>
+          );
+        })()}
 
         {/* 8. Submit */}
         <div className="flex items-center gap-3">

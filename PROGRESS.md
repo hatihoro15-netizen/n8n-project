@@ -7,11 +7,11 @@
 ---
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
-- 마지막 업데이트: 2026-03-07
-- 현재 상태(1줄): CF Pages + VPS 재배포 완료 (8a0a609). E2E 테스트 대기
+- 마지막 업데이트: 2026-03-08
+- 현재 상태(1줄): 나레이션 타이밍 선택 UI 추가 + CF Pages 배포 완료 (96a8e64)
 - 진행중 작업: E2E 영상 제작 테스트
-- 최근 완료: CF Pages + VPS 재배포 (8a0a609)
-- 주의사항: PM2 프로세스명=n8n-web-backend, slideshow 코드 수정 금지
+- 최근 완료: 나레이션 시작 시점 선택 UI (AI 자동 배치 / 직접 지정)
+- 주의사항: PM2 프로세스명=n8n-web-backend, scenes는 clips(files)와 별도, 각 scene 3~15초
 
 ---
 
@@ -743,3 +743,229 @@
 - main 머지
 ### Files / Links
 - 변경 파일 없음 (배포만 수행)
+
+## 2026-03-08 (6차)
+### Done
+- [x] 이전 작업 커밋: narration_style/tone + engine_type ai_video 전용 + image_order (ae37336)
+- [x] F-4: BGM 모드 선택 UI (AI 자동 추천/내가 올린 것만/사용 안함)
+- [x] F-4: SFX 모드 선택 UI (AI 자동 추천/내가 올린 것만/합쳐서/사용 안함)
+- [x] 파일 미업로드 시 uploaded/combined 옵션 비활성화
+- [x] 파일 업로드 시 자동 uploaded 모드 전환 + 삭제 시 ai_auto 폴백
+- [x] enable_bgm/enable_sfx → bgm_mode/sfx_mode 대체 (프론트+백엔드)
+- [x] 백엔드 bgm_mode/sfx_mode validation 추가
+- [x] tsc + next build PASS
+### Result
+- 커밋 ae37336 + 56b4322 pushed to feature/web-app
+- payload 변경: enable_bgm/enable_sfx 제거 → bgm_mode/sfx_mode 신규
+### Next (방향만)
+- CF Pages + VPS 배포 (56b4322)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- productions-client.tsx (BGM/SFX 모드 선택 UI)
+- productions.ts (bgm_mode/sfx_mode validation + webhook payload)
+
+## 2026-03-08 (7차)
+### Done
+- [x] VPS 배포 (56b4322 + a933c82): git pull + tsc + PM2 restart — online, 200 OK
+- [x] CF Pages 배포 시도 → wrangler 인증 만료 (npx wrangler login 필요)
+- [x] F-6: AI 추천 프롬프트 생성 UI 뼈대 추가
+  - 프롬프트 입력란 아래 "AI 추천 프롬프트 생성" 버튼
+  - 한글판/영문판 textarea 2개 + 사용자 수정 가능
+  - "한글판으로 확정"/"영문판으로 확정" 버튼 → prompt_p1 반영
+  - 실제 API 연동 없음 (stub setTimeout)
+- [x] tsc + next build PASS
+### Result
+- 커밋 a933c82 pushed to feature/web-app
+- VPS: fast-forward a933c82, PM2 online (pid 849494), Backend API 200 OK
+- CF Pages: wrangler 인증 만료 — 별도 `npx wrangler login` 필요
+### Next (방향만)
+- CF Pages 배포 (wrangler login 후)
+- E2E 영상 제작 테스트
+- F-6 Claude API 실제 연동
+### Files / Links
+- productions-client.tsx (AI 추천 프롬프트 UI 뼈대 +83행)
+
+## 2026-03-08 (8차)
+### Done
+- [x] F-6: POST /api/productions/suggest-prompt 엔드포인트 추가
+  - Claude API (claude-sonnet-4-20250514) 호출
+  - 한글 연출 스크립트 + 영문 Kling 프롬프트 생성
+  - JSON 파싱 + 폴백 처리
+- [x] F-6: 프론트 stub → 실제 API 호출 교체
+  - 영문 프롬프트 확정이 기본 액션 (사용자 지시)
+- [x] tsc + next build PASS
+- [x] VPS 배포: git pull + tsc + PM2 restart — online (pid 853189), 200 OK
+### Result
+- 커밋 1c8c98f pushed to feature/web-app
+- VPS Backend API 200 OK
+- CF Pages 미배포 (wrangler 비대화형 환경 CLOUDFLARE_API_TOKEN 필요)
+### Next (방향만)
+- CF Pages 배포
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- productions.ts (suggest-prompt 엔드포인트 +70행)
+- productions-client.tsx (stub → API 호출 교체)
+
+## 2026-03-08 (9차)
+### Done
+- [x] GitHub Actions 워크플로우 생성: .github/workflows/deploy-cf-pages.yml
+  - feature/web-app push 트리거 → @cloudflare/next-on-pages 빌드 → wrangler deploy
+  - Secrets: CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+  - NEXT_PUBLIC_API_URL 환경변수 주입
+### Result
+- 커밋 636a266 pushed to feature/web-app
+- GitHub Actions 트리거됨 (Secrets 미등록 시 실패 예상)
+### Next (방향만)
+- GitHub Secrets 등록
+- CF Pages 자동 배포 확인 (Re-run)
+- E2E 영상 제작 테스트
+### Files / Links
+- .github/workflows/deploy-cf-pages.yml (신규)
+
+## 2026-03-08 (10차)
+### Done
+- [x] mixed-content 원인 특정: .env.production에 http://76.13.182.180:3001 하드코딩
+- [x] .env.production → https://api-n8n 도메인으로 수정
+- [x] CF Pages 클린빌드 + 재배포 (--branch=feature/web-app)
+- [x] 번들 검증: HTTP IP 0건, HTTPS 도메인 정상 포함
+### Result
+- 커밋 ddb4831 pushed to feature/web-app
+- CF Pages 200 OK (배포 ID: a3545bca)
+### Next (방향만)
+- 로그인 동작 확인
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- packages/frontend/.env.production (HTTPS URL 수정)
+
+## 2026-03-08 (11차)
+### Done
+- [x] Production 생성 시 assets.params에 13개 파라미터 스냅샷 저장
+  - prompt_p1, aspect_ratio, production_mode, engine_type, strict_mode, duration_sec
+  - image_order, has_images, narration_text, narration_style, narration_tone, bgm_mode, sfx_mode
+  - boolean/number는 ?? 연산자 사용 (|| 금지)
+- [x] n8n callback assets merge 보호: 기존 params 키를 덮어쓰지 않도록 보장
+- [x] 상세 페이지 레이아웃 swap: 왼쪽(col-span-2)=제작 정보, 오른쪽(col-span-1)=영상/상태
+- [x] assets.params 읽어서 13개 항목 표시 (한글 라벨 + 값 변환)
+- [x] legacy production (params 없음) null-safe 처리
+- [x] tsc + next build PASS
+- [x] CF Pages Production 배포 + VPS 배포
+### Result
+- 커밋 baf326d pushed to feature/web-app
+- CF Pages: https://fff6709f.n8n-project-9lj.pages.dev 배포 OK
+- VPS: PM2 online (pid 869973)
+- assets merge 동작: spread로 1차원 병합 + params 키 명시적 보존
+### Next (방향만)
+- E2E 영상 제작 테스트 (params 저장/유지/표시 확인)
+- main 머지
+### Files / Links
+- packages/backend/src/routes/productions.ts (assets.params 저장 + callback merge 보호)
+- packages/frontend/src/app/(dashboard)/productions/[id]/production-detail-client.tsx (레이아웃 swap + params 표시)
+
+## 2026-03-08 (12차)
+### Done
+- [x] F-6 suggest-prompt Claude 시스템 프롬프트 확장: scenes 배열 생성 요청 추가
+- [x] suggest-prompt 응답에 scenes 배열 반환
+- [x] 프론트 F-6 버튼: scenes 파싱 → sceneClips 상태 → 멀티클립 UI 자동 표시
+- [x] 멀티클립 UI: 씬별 프롬프트 textarea + duration 입력 + 삭제/추가 버튼
+- [x] 씬 duration 3~15초 clamp 검증
+- [x] 영상 길이 자동 세팅: 씬 총합이 허용 옵션과 일치 시 자동 선택, 불일치 시 경고
+- [x] payload에 scenes: [{ prompt, duration_sec }] 배열 전달 (기존 clips 구조 미변경)
+- [x] 백엔드 body 타입 + webhook payload + assets.params에 scenes 추가
+- [x] tsc + next build PASS
+- [x] CF Pages + VPS 배포
+### Result
+- 커밋 8bacabf pushed to feature/web-app
+- CF Pages: https://f5dbba68.n8n-project-9lj.pages.dev 배포 OK
+- VPS: PM2 online (pid 875819)
+### Next (방향만)
+- E2E 영상 제작 테스트 (F-6 씬 분배 → n8n scenes 전달 확인)
+- main 머지
+### Files / Links
+- packages/backend/src/routes/productions.ts (suggest-prompt scenes + body/webhook/assets.params)
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (멀티클립 UI + scenes 파싱/payload)
+
+## 2026-03-08 (13차)
+### Done
+- [x] 멀티클립 씬 0개일 때 섹션 사라짐 버그 수정
+  - 표시 조건: `sceneClips.length > 0` → `sceneClips.length > 0 || showSceneClips`
+  - 개별/전체 삭제 시 `setShowSceneClips(false)` 제거 (섹션 유지)
+  - 빈 상태: "씬이 없습니다. 씬을 추가해주세요." 메시지 + 씬 추가 버튼
+  - 전체 삭제 버튼: sceneClips.length > 0 조건부 표시
+- [x] next build PASS
+- [x] CF Pages Production 배포 (a2a720f, --branch=feature/web-app)
+- [x] VPS 배포 (git pull + tsc + PM2 restart) — PM2 online
+### Result
+- 커밋 a2a720f pushed to feature/web-app
+- CF Pages: 배포 OK
+- VPS: PM2 online
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (멀티클립 빈 상태 UI)
+
+## 2026-03-08 (14차)
+### Done
+- [x] 영상 길이 드롭다운 → 슬라이더+숫자 직접입력 변경
+  - VIDEO_DURATION_OPTIONS(고정값 [0,10,20,30,40,50,60]) 제거
+  - 슬라이더(0~180) + 숫자입력 양방향 동기화
+  - clampDuration: 0=자동, 1-2→3, >180→180
+  - blur/Enter 시 정규화
+  - sceneDurationWarning 상태 + 경고 UI 완전 제거
+  - 씬 총합 자동 세팅: OPTIONS.find 매칭 → 직접 clampDuration(totalSec)
+  - 나레이션 자동계산: OPTIONS.reverse().find → clampDuration(estimatedSec)
+- [x] next build PASS
+- [x] CF Pages Production 배포 (7a8696f, --branch=feature/web-app)
+### Result
+- 커밋 7a8696f pushed to feature/web-app
+- CF Pages: https://2e99d244.n8n-project-9lj.pages.dev 배포 OK
+- payload duration_sec 규칙 유지: 0=자동, 3~180=직접입력
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (슬라이더+직접입력)
+
+## 2026-03-08 (15차)
+### Done
+- [x] 나레이션 타이밍 선택 UI 추가
+  - AI 자동 배치 (기본값) / 직접 지정 라디오 버튼
+  - 직접 지정 시 숫자 입력란 (0 이상 정수, "초부터")
+  - 나레이션 텍스트 없으면 비활성화 (opacity-50 + pointer-events-none)
+  - payload: narration_start_sec (manual일 때만 포함, auto면 미포함)
+  - sessionStorage draft 저장/복원 포함
+  - 요약 영역에 "나레이션 시작" 표시 추가
+- [x] next build PASS
+- [x] CF Pages Production 배포 (96a8e64, --branch=feature/web-app)
+### Result
+- 커밋 96a8e64 pushed to feature/web-app
+- CF Pages: https://6ebf30c0.n8n-project-9lj.pages.dev 배포 OK
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (나레이션 타이밍 UI)
+
+## 2026-03-08 (16차)
+### Done
+- [x] 씬 UI에 Kling multi_shots 제약 표시
+  - 안내: 최대 5샷, 샷당 1~12초
+  - 총합 <=15초: "multi_shots 1회 호출" (파란색)
+  - 총합 >15초: "개별 클립 생성 모드로 자동 전환" (노란색)
+  - 6개 초과 샷 경고 (non-blocking)
+  - 12초 초과 샷 경고 (border 색상 + 텍스트)
+  - duration input min=1, max=12 변경
+  - payload scenes[] 구조 유지
+- [x] next build PASS
+- [x] CF Pages Production 배포 (9bd5576, --branch=feature/web-app)
+### Result
+- 커밋 9bd5576 pushed to feature/web-app
+- CF Pages: https://d5e72b60.n8n-project-9lj.pages.dev 배포 OK
+### Next (방향만)
+- E2E 영상 제작 테스트
+- main 머지
+### Files / Links
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (Kling 제약 안내 UI)
