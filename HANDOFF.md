@@ -60,6 +60,10 @@
   - Producer: scenes[] 검증 (duration_sec 3~15, prompt 필수, 합계 vs duration +-3초)
   - Worker: scenes 있으면 clipCount=scenes.length, 클립별 scenes[i].prompt/duration_sec 사용
   - scenes 없으면 기존 동작 유지 (하위 호환)
+- **AI 자동 씬 분할**:
+  - scenes 없고 clipCount>1일 때 Claude API로 prompt_p1을 클립별 프롬프트로 자동 분할
+  - generateScenePrompts: 각 클립에 다른 시각적 장면 생성
+  - API 실패 시 promptBase fallback (기존 동작)
 
 ## Goal
 프론트 웹앱 연동
