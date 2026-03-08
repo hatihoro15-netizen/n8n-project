@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-08
-- 현재 상태(1줄): Watchdog 콜백 전송 + stuck production 정리 완료
+- 현재 상태(1줄): Kling 3.0 multi_shots 지원 배포 완료
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: Watchdog 3노드 분리 + 실패 콜백 전송 + stuck 3건 수동 정리
+- 최근 완료: Kling multi_shots (duration<=15s + scenes) → 1회 호출로 멀티씬 생성
 - 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수
 
 ---
@@ -645,4 +645,17 @@
 - [x] VPS 배포 + DB 동기화 + restart 완료
 ### Files
 - n8n/ao_worker.json (watchdog-check, watchdog-callback, watchdog-log 추가, pop-queue 수정, connections 변경)
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-08 (세션 4)
+### ✅ Done
+- [x] Kling 3.0 multi_shots 지원: duration<=15s + scenes(<=5) → 1회 호출
+- [x] multi_prompt 배열: scenes[].prompt + duration → Kling multi_prompt 변환
+- [x] sound=true 자동 설정 (multi_shots 필수 조건)
+- [x] 각 shot duration 1~12초 clamp, 총 3~15초 보장
+- [x] multi_shots_used 플래그 결과 메타데이터에 추가
+- [x] 기존 개별 호출 방식 (duration>15s 또는 scenes 없음) 변경 없음
+- [x] VPS 배포 + DB 검증 통과
+### Files
+- n8n/ao_worker.json (process-clips: multi_shots 분기 추가)
 - HANDOFF.md, PROGRESS.md

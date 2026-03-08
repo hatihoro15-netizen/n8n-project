@@ -64,6 +64,11 @@
   - scenes 없고 clipCount>1일 때 Claude API로 prompt_p1을 클립별 프롬프트로 자동 분할
   - generateScenePrompts: 각 클립에 다른 시각적 장면 생성
   - API 실패 시 promptBase fallback (기존 동작)
+- **Kling 3.0 multi_shots**:
+  - duration<=15s + scenes 있음(<=5) → multi_shots=true, multi_prompt 배열, sound=true, 1회 호출
+  - duration<=15s + scenes 없음 → 기존 단일 호출 (multi_shots=false)
+  - duration>15s → 기존 멀티클립 개별 호출 유지
+  - 제약: max 5 shots, 각 shot 1~12초, 총 3~15초
 - **fail-fast 402 + processing 고착 방지**:
   - process-clips: kie.ai 402 크레딧 부족 시 KIE_CREDIT_INSUFFICIENT 에러 throw
   - process-clips: 전체 try-catch 래퍼 → 에러 시 error JSON 반환
@@ -88,13 +93,11 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: fix(worker): send callback on watchdog failure and sync webapp status
+커맨드: feat(worker): use kling 3.0 multi_shots for duration <= 15s
 결과:
-- Watchdog을 pop-queue SQL에서 분리 → 전용 3노드 파이프라인
-- watchdog-check: processing > 5분 → failed UPDATE + RETURNING
-- watchdog-callback: 웹앱 콜백 POST (3회 재시도, exponential backoff 1s/2s/4s)
-- watchdog-log: 콜백 실패 시 job_logs INSERT
-- stuck production 3건 수동 콜백 전송 (200 OK)
+- process-clips: multi_shots 분기 추가 (④-a: multi_shots=true, ④-b: 기존 개별 호출)
+- duration<=15s + scenes 있음(<=5) → Kling 1회 호출, multi_prompt 배열
+- multi_shots_used 플래그 결과 메타데이터에 추가
 - VPS 배포 완료 + DB 검증 통과
 위치: Local + VPS (76.13.182.180)
 
