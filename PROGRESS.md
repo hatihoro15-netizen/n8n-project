@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-08
-- 현재 상태(1줄): bgm_mode/sfx_mode + F-10 이미지 매칭 완료
+- 현재 상태(1줄): fail-fast 402 + processing 고착 방지 배포 완료
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: bgm_mode/sfx_mode 대응 + F-10 AI 장면-이미지 자동 매칭
-- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, SFX 파일 AI 생성 보류
+- 최근 완료: kie.ai 402 fail-fast + Watchdog 5분 + errorWorkflow 수정
+- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, kie.ai 크레딧 충전 필요
 
 ---
 
@@ -613,4 +613,22 @@
 - [x] VPS 업로드 + DB 동기화 완료
 ### Files
 - n8n/ao_worker.json (process-clips, render-video 수정)
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-08 (세션 2)
+### ✅ Done
+- [x] process-clips: kie.ai 402 크레딧 부족 감지 → KIE_CREDIT_INSUFFICIENT throw
+- [x] process-clips: 전체 처리 로직 try-catch 래퍼 → 에러 시 error JSON 반환
+- [x] render-lock-check: error JSON 감지 → throw → 파이프라인 즉시 중단
+- [x] render-video: error passthrough (_input.error === true → 바로 반환)
+- [x] upload-youtube: error passthrough (job.error === true → 바로 반환)
+- [x] pop-queue: Watchdog SQL 추가 (5분 이상 processing → 자동 failed)
+- [x] settings.errorWorkflow: 깨진 템플릿 문자열 클리어 (빈 문자열)
+- [x] VPS 배포 + DB nodes/activeVersionId 동기화 + restart 완료
+- [x] 수동으로 stuck processing job 2건 정리
+### 🔍 Root Cause
+- processing 고착 원인: errorWorkflow가 `{{ AO Worker 에러 핸들러 워크플로우 ID }}` 템플릿 문자열로 설정됨 → 실제 ID 아님 → 에러 핸들링 미작동
+- kie.ai 402: 크레딧 부족 시 에러를 catch하지 못해 무한 대기
+### Files
+- n8n/ao_worker.json (process-clips, render-lock-check, render-video, upload-youtube, pop-queue, settings)
 - HANDOFF.md, PROGRESS.md

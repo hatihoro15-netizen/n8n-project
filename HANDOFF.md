@@ -64,6 +64,13 @@
   - scenes 없고 clipCount>1일 때 Claude API로 prompt_p1을 클립별 프롬프트로 자동 분할
   - generateScenePrompts: 각 클립에 다른 시각적 장면 생성
   - API 실패 시 promptBase fallback (기존 동작)
+- **fail-fast 402 + processing 고착 방지**:
+  - process-clips: kie.ai 402 크레딧 부족 시 KIE_CREDIT_INSUFFICIENT 에러 throw
+  - process-clips: 전체 try-catch 래퍼 → 에러 시 error JSON 반환
+  - render-lock-check: error JSON 감지 시 즉시 throw → 파이프라인 중단
+  - render-video/upload-youtube: error passthrough 추가
+  - pop-queue: Watchdog SQL (5분 이상 processing → 자동 failed 처리)
+  - settings.errorWorkflow: 깨진 템플릿 문자열 제거 (빈 문자열로)
 
 ## Goal
 프론트 웹앱 연동
@@ -76,18 +83,20 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: fix(worker): remove title bar drawbox from all render modes
+커맨드: fix(worker): fail fast on kie 402 and prevent processing-stuck jobs
 결과:
-- Producer: narration_start_sec 파싱 + metadata JSONB 저장
-- Worker assemble-prompt: metadata.narration_start_sec 추출
-- Worker render-video: TTS adelay 적용 (slideshow + ai_video) + 자막 타이밍 동기화
-- Case A: narration_start_sec=10 → adelay=10000ms
-- Case B: scenes 있고 narration_start_sec=null → scenes[0].duration_sec * 1000ms
-- Case C: 둘 다 없으면 → 0ms (기존 동작)
-- VPS 배포 + 코드 검증 통과
+- process-clips: kie.ai createTask 402 응답 시 KIE_CREDIT_INSUFFICIENT throw
+- process-clips: 전체 처리 로직 try-catch 래퍼 추가 → 에러 시 error JSON 반환
+- render-lock-check: error JSON 감지 시 즉시 throw → 파이프라인 중단
+- render-video: error passthrough (_input.error === true → 바로 반환)
+- upload-youtube: error passthrough (job.error === true → 바로 반환)
+- pop-queue: Watchdog SQL 추가 (5분 이상 processing 상태 → 자동 failed)
+- settings.errorWorkflow: 깨진 템플릿 문자열 `{{ AO Worker 에러 핸들러 워크플로우 ID }}` → "" 클리어
+- VPS 배포 완료 + DB 검증 통과
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers
+- kie.ai 크레딧 부족: 402 에러 발생 중 (충전 필요)
 - YouTube 업로드: Code v1(vm2) 시도 중이었으나 사용자 요청으로 중단
 - NCA toolkit: GUNICORN_TIMEOUT 미설정 시 기본 30초로 worker kill됨
 - NCA 한글 자막: fonts-nanum 컨테이너 재시작 시 사라짐
@@ -236,9 +245,16 @@
 
 ## Worker 영상 품질 개선 상세 (7항목)
 1. 이미지 비율: 정사각 크롭 + 블랙 패딩 (온카 방식)
-2. 상단 제목바: topic 표시 (drawbox + drawtext, wrapTitle 2줄 분리)
+2. 상단 제목바: 제거됨 (drawbox + drawtext 삭제)
 3. 자막 줄바꿈: 공백 없는 한글 강제 줄바꿈 (max 12자)
 4. 자막 타이밍: TTS 실측 길이 기반 (ffprobe)
 5. 영상 끝: TTS 실측 duration 사용 (ffprobe fallback)
 6. BGM URL: bgm_url 필드로 동적 BGM 지원
 7. BGM/SFX 기본 OFF: enable_bgm/enable_sfx 플래그
+
+## fail-fast / processing 고착 방지 스펙
+- process-clips: kie.ai 402 → KIE_CREDIT_INSUFFICIENT throw (try-catch 래퍼)
+- render-lock-check: error JSON 감지 → throw → 파이프라인 중단
+- render-video/upload-youtube: error passthrough
+- pop-queue Watchdog: 5분 이상 processing → 자동 failed
+- errorWorkflow: 빈 문자열 (깨진 템플릿 제거됨)
