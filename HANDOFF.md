@@ -110,6 +110,9 @@
 - multi_shots 실패 시 해당 그룹만 개별 호출 fallback
 - 1샷 그룹은 자동으로 개별 호출
 - kling_sound=true (scenes 있으면 항상)
+- watchdog-callback: stuck job 없을 때 _watchdog_skip 마커 반환
+- watchdog-log: PL/pgSQL DO 블록으로 uuid 캐스팅 에러 방지
+- 테스트 검증: 7 scenes / 27초 → 2그룹 multi_shots → uploaded 성공
 - VPS 배포 완료
 위치: Local + VPS (76.13.182.180)
 

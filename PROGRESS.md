@@ -688,6 +688,9 @@
 - [x] duration>15s에서도 multi_shots 활용 (기존: 개별 호출만)
 - [x] kling_sound = hasScenes (scenes 있으면 항상 true)
 - [x] VPS 배포 완료
+- [x] watchdog-log uuid 캐스팅 버그 수정 (PL/pgSQL DO 블록)
+- [x] watchdog-callback _watchdog_skip 마커 추가 (stuck job 없을 때)
+- [x] 테스트: 7 scenes / 27초 → 2그룹(4샷+3샷) multi_shots → uploaded 성공
 ### Files
-- n8n/ao_worker.json (process-clips: ④ 섹션 전면 교체)
+- n8n/ao_worker.json (process-clips, watchdog-callback, watchdog-log 수정)
 - HANDOFF.md, PROGRESS.md
