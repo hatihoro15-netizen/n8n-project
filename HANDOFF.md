@@ -119,6 +119,10 @@
   - 인접 샷(뒤→앞)에서 차이분 빌림 (donor ≥ 3초 보장)
   - 재분배 불가 시 3초 강제 보정 + groupDur 증가
   - 보정 발생 시 job_logs에 warn 레벨 로그 기록
+- **Producer SQL 이스케이프 보강 (2026-03-08)**:
+  - metadata JSONB: `JSON.stringify(m).replace(/'/g, "''")` 추가
+  - narration_script: `.replace(/'/g, "''")` 추가
+  - 원인: scenes prompt에 `character's` 등 아포스트로피 → SQL syntax error
 
 ## Goal
 프론트 웹앱 연동
@@ -130,12 +134,12 @@
 5. [ ] YouTube 업로드 활성화 (별도 작업 예정)
 
 ## Last Run
-커맨드: fix(producer): align scene duration validation to kling constraints 1~12s + 재분배
+커맨드: fix(producer): SQL escape for metadata/narration + duration 1~12 + redistribution
 결과:
-- Producer scenes duration_sec 검증: 3~15 → 1~12 변경
-- Worker 1~2초 샷 재분배 로직 추가 (인접 샷 빌림 / 불가 시 강제 보정 + job_logs)
-- Worker Kling 호출 규칙: sound=true, slice(0,1), String() 모두 정상
-- VPS 배포 완료 (Producer + Worker 양쪽, DB 검증 OK)
+- Producer metadata/narration_script SQL 싱글쿼트 이스케이프 추가
+- Producer scenes duration_sec 검증: 3~15 → 1~12
+- Worker 1~2초 샷 재분배 로직 추가
+- VPS 배포 완료 (Producer + Worker, DB 검증 OK)
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers
