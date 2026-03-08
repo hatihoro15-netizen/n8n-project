@@ -7,7 +7,7 @@
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: 상세 페이지 제작 정보 확장 + 그룹핑 예시 help box 완료
+- **Current Status**: 2단계 그룹/샷 플래너 UI + voice_provider + payload preview 완료
 - **Goal**: E2E 영상 제작 테스트
 
 ## B) 환경/의존성
@@ -24,7 +24,7 @@
 - **Last Run Command**: npx next build (frontend)
 - **Result**: PASS — 빌드 성공
 - **실행 위치**: Local
-- **Last Commit**: feat(ui): show full generation settings in result detail and grouping examples
+- **Last Commit**: feat(web): add auto group/shot planner UI and editable group-shot timeline
 
 ## D) 완료/미완료
 
@@ -32,15 +32,13 @@
 - [x] F-3~F-6 UI 기능 전체 완료
 - [x] Production params 영속화 (assets.params) + 상세 UI 노출
 - [x] F-6 AI 추천 → scenes 배열 + 멀티클립 UI
-- [x] 상세 페이지: 제작 중 → 스피너만, 완료/실패/정지 → 제작 정보 표시
-- [x] 멀티클립 씬 0개 시 빈 상태 UI 유지
-- [x] 영상 길이: 드롭다운 → 슬라이더+직접입력 (0~180초)
-- [x] 나레이션 타이밍 선택 UI (AI 자동 배치 / 직접 지정)
-- [x] Kling 샷 제약 안내 (multi_shots 모드 전환 안내)
-- [x] 샷 duration 경고 기준 13초 통일, non-blocking, 상한 clamp 제거
-- [x] Kling 그룹핑 모드 선택 (auto_pack/manual) + 수동 그룹 목표 시간 UI
-- [x] 상세 페이지 제작 정보 확장 (나레이션 시작/그룹핑 추가, 프롬프트/나레이션 항상 표시)
-- [x] 그룹핑 예시 help box (auto_pack/manual 각각 예시 문구)
+- [x] Kling 그룹핑 모드 선택 + 수동 그룹 목표 시간 UI
+- [x] 상세 페이지 제작 정보 확장 + 그룹핑 예시 help box
+- [x] 2단계 그룹/샷 플래너 UI (auto-pack 미리보기, 수동 편집, 확인 모달)
+- [x] voice_provider 라디오 (tts/kling) + 기본값 'tts' 보장
+- [x] payload preview 1줄 (duration_sec / scenes / group_targets / voice)
+- [x] kling_group_shots payload 추가 (manual 모드 + groupShotPlan 있을 때)
+- [x] manualEdited 덮어쓰기 방지 (확인 모달)
 
 ### Next Actions
 1. [ ] CF Pages 배포
@@ -54,8 +52,8 @@
 - **CF Pages 배포**: `--branch=feature/web-app` 필수 + `.next`/`.vercel` 캐시 삭제 후 빌드
 
 ## F) 변경 파일
-- packages/frontend/src/app/(dashboard)/productions/[id]/production-detail-client.tsx (제작 정보 확장)
-- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (그룹핑 예시 help box)
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (그룹/샷 플래너, voice_provider, payload preview)
+- packages/frontend/src/app/(dashboard)/productions/[id]/production-detail-client.tsx (voice_provider 표시)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> 상세 페이지 제작 정보 확장 + 그룹핑 예시 help box 완료. CF Pages 배포 + E2E 테스트 필요.
+> 2단계 그룹/샷 플래너 + voice_provider + payload preview 완료. CF Pages 배포 + E2E 테스트 필요.

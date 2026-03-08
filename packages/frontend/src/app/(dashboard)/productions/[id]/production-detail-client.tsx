@@ -352,6 +352,12 @@ export default function ProductionDetailClient() {
                           </p>
                         </div>
                         <div>
+                          <span className="text-muted-foreground">음성</span>
+                          <p className="mt-0.5 font-medium">
+                            {productionParams.voice_provider === 'kling' ? 'Kling 자체 음성' : '내 음성 TTS'}
+                          </p>
+                        </div>
+                        <div>
                           <span className="text-muted-foreground">그룹핑</span>
                           <p className="mt-0.5 font-medium">
                             {productionParams.kling_grouping_mode === 'manual'

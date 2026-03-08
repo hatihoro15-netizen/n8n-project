@@ -442,6 +442,12 @@ function WhiskProductionForm() {
   const [showSceneClips, setShowSceneClips] = useState(false);
   const [klingGroupingMode, setKlingGroupingMode] = useState<'auto_pack' | 'manual'>('auto_pack');
   const [klingGroupTargets, setKlingGroupTargets] = useState<number[]>([15, 7]);
+  // Group/Shot planner
+  type GroupShotPlan = { groupDurationSec: number; shots: { prompt: string; duration: number }[] };
+  const [groupShotPlan, setGroupShotPlan] = useState<GroupShotPlan[]>([]);
+  const [showGroupPlan, setShowGroupPlan] = useState(false);
+  const [manualEdited, setManualEdited] = useState(false);
+  const [voiceProvider, setVoiceProvider] = useState<'tts' | 'kling'>('tts');
 
   // Form state
   const [submitting, setSubmitting] = useState(false);
@@ -517,6 +523,9 @@ function WhiskProductionForm() {
       if (draft.sfxUrl) { setSfxUrl(draft.sfxUrl); setSfxFileName(draft.sfxFileName || ''); }
       if (draft.klingGroupingMode) setKlingGroupingMode(draft.klingGroupingMode);
       if (draft.klingGroupTargets) setKlingGroupTargets(draft.klingGroupTargets);
+      if (draft.voiceProvider === 'tts' || draft.voiceProvider === 'kling') setVoiceProvider(draft.voiceProvider);
+      if (Array.isArray(draft.groupShotPlan) && draft.groupShotPlan.length > 0) { setGroupShotPlan(draft.groupShotPlan); setShowGroupPlan(true); }
+      if (draft.manualEdited) setManualEdited(true);
     } catch { /* ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -532,9 +541,10 @@ function WhiskProductionForm() {
       bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName,
       narrationStartMode, narrationStartSec,
       klingGroupingMode, klingGroupTargets,
+      voiceProvider, groupShotPlan, manualEdited,
     };
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, imageOrder, hasImages, selectedWorkflowId, bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName, narrationStartMode, narrationStartSec, klingGroupingMode, klingGroupTargets]);
+  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, imageOrder, hasImages, selectedWorkflowId, bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName, narrationStartMode, narrationStartSec, klingGroupingMode, klingGroupTargets, voiceProvider, groupShotPlan, manualEdited]);
 
   // 나레이션 텍스트 변경 시 → videoDurationSec 자동 계산 (수동 변경 전까지)
   useEffect(() => {
@@ -799,12 +809,22 @@ function WhiskProductionForm() {
           if (klingGroupingMode === 'manual') {
             const valid = klingGroupTargets.length > 0 && klingGroupTargets.every(v => typeof v === 'number' && v > 0);
             if (valid) {
-              return { kling_grouping_mode: 'manual' as const, kling_group_targets: klingGroupTargets };
+              return {
+                kling_grouping_mode: 'manual' as const,
+                kling_group_targets: klingGroupTargets,
+                ...(groupShotPlan.length > 0 ? {
+                  kling_group_shots: groupShotPlan.map((g, gi) => ({
+                    group_index: gi,
+                    shots: g.shots.map(s => ({ prompt: s.prompt, duration: s.duration })),
+                  })),
+                } : {}),
+              };
             }
             return { kling_grouping_mode: 'auto_pack' as const };
           }
           return { kling_grouping_mode: 'auto_pack' as const };
         })() : {}),
+        voice_provider: voiceProvider || 'tts',
       };
 
       if (hasImages === 'no' && generatedImages.length > 0) {
@@ -1314,6 +1334,143 @@ function WhiskProductionForm() {
                       ? '예) 22초/6샷 → [15+7] 자동 분할 (Worker가 최적 그룹을 결정합니다)'
                       : '예) [15, 7] 또는 [7, 7, 8] — 그룹별 목표 시간을 직접 지정'}
                   </div>
+
+                  {/* AI 자동 그룹/샷 생성 버튼 */}
+                  {sceneClips.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        // Auto-pack: 15초 단위로 그룹 분할
+                        const clips = [...sceneClips];
+                        const groups: GroupShotPlan[] = [];
+                        let currentGroup: { prompt: string; duration: number }[] = [];
+                        let currentSum = 0;
+                        for (const clip of clips) {
+                          if (currentSum + clip.durationSec > 15 && currentGroup.length > 0) {
+                            groups.push({ groupDurationSec: currentSum, shots: currentGroup });
+                            currentGroup = [];
+                            currentSum = 0;
+                          }
+                          currentGroup.push({ prompt: clip.prompt, duration: clip.durationSec });
+                          currentSum += clip.durationSec;
+                        }
+                        if (currentGroup.length > 0) {
+                          groups.push({ groupDurationSec: currentSum, shots: currentGroup });
+                        }
+                        setGroupShotPlan(groups);
+                        setShowGroupPlan(true);
+                        setManualEdited(false);
+                      }}
+                      className="flex items-center gap-1.5 text-xs text-violet-600 hover:text-violet-700 transition-colors"
+                    >
+                      <Sparkles className="h-3.5 w-3.5" />
+                      AI 자동 그룹/샷 생성 (미리보기)
+                    </button>
+                  )}
+
+                  {/* 그룹/샷 타임라인 미리보기 */}
+                  {showGroupPlan && groupShotPlan.length > 0 && (
+                    <div className="space-y-2 p-2 rounded-lg border border-violet-200 bg-violet-50/30">
+                      <p className="text-[10px] font-medium text-violet-700">그룹/샷 플랜 미리보기 {manualEdited && <span className="text-amber-600">(수동 편집됨)</span>}</p>
+                      {groupShotPlan.map((group, gi) => (
+                        <div key={gi} className={`p-1.5 rounded border text-xs ${group.groupDurationSec > 15 ? 'border-amber-300 bg-amber-50/50' : 'border-slate-200 bg-white'}`}>
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span className="font-medium text-[11px]">Group {gi + 1}</span>
+                            <input
+                              type="number"
+                              min={1}
+                              value={group.groupDurationSec}
+                              onChange={e => {
+                                const v = Math.max(1, Number(e.target.value) || 1);
+                                const updated = [...groupShotPlan];
+                                updated[gi] = { ...updated[gi], groupDurationSec: v };
+                                setGroupShotPlan(updated);
+                                setManualEdited(true);
+                              }}
+                              className="w-12 rounded border border-input bg-transparent px-1 py-0.5 text-[10px] text-center"
+                            />
+                            <span className="text-[10px] text-muted-foreground">초</span>
+                            {group.shots.length > 5 && <span className="text-[10px] text-amber-600">샷 {group.shots.length}개 &gt; 5</span>}
+                            {group.groupDurationSec > 15 && <span className="text-[10px] text-amber-600">&gt;15초</span>}
+                            {groupShotPlan.length > 1 && (
+                              <button type="button" onClick={() => { setGroupShotPlan(prev => prev.filter((_, i) => i !== gi)); setManualEdited(true); }} className="ml-auto text-red-400 hover:text-red-600">
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-1">
+                            {group.shots.map((shot, si) => (
+                              <div key={si} className="flex items-center gap-0.5 bg-slate-100 rounded px-1 py-0.5">
+                                <span className="text-[9px] text-muted-foreground">S{si + 1}</span>
+                                <input
+                                  type="number"
+                                  min={1}
+                                  value={shot.duration}
+                                  onChange={e => {
+                                    const v = Math.max(1, Number(e.target.value) || 1);
+                                    const updated = [...groupShotPlan];
+                                    const shots = [...updated[gi].shots];
+                                    shots[si] = { ...shots[si], duration: v };
+                                    updated[gi] = { ...updated[gi], shots, groupDurationSec: shots.reduce((s, sh) => s + sh.duration, 0) };
+                                    setGroupShotPlan(updated);
+                                    setManualEdited(true);
+                                  }}
+                                  className="w-8 rounded border border-input bg-transparent px-0.5 py-0 text-[10px] text-center"
+                                />
+                                <span className="text-[9px] text-muted-foreground">초</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                      {/* 타임라인 경고 */}
+                      {(() => {
+                        const warnings: string[] = [];
+                        groupShotPlan.forEach((g, i) => {
+                          if (g.groupDurationSec > 15) warnings.push(`Group ${i + 1}: ${g.groupDurationSec}초 > 15초`);
+                          if (g.shots.length > 5) warnings.push(`Group ${i + 1}: 샷 ${g.shots.length}개 > 5개`);
+                        });
+                        if (groupShotPlan.length > 12) warnings.push(`전체 ${groupShotPlan.length}그룹 > 12개`);
+                        const planSum = groupShotPlan.reduce((s, g) => s + g.groupDurationSec, 0);
+                        const scenesSum = sceneClips.reduce((s, c) => s + c.durationSec, 0);
+                        if (planSum !== scenesSum) warnings.push(`플랜 합계(${planSum}초) ≠ 씬 합계(${scenesSum}초)`);
+                        return warnings.length > 0 ? (
+                          <div className="text-[10px] space-y-0.5 pt-1">
+                            {warnings.map((w, i) => <p key={i} className="text-amber-600">{w}</p>)}
+                          </div>
+                        ) : null;
+                      })()}
+                      {/* 적용 버튼 */}
+                      <div className="flex gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const applyPlan = () => {
+                              setKlingGroupingMode('manual');
+                              setKlingGroupTargets(groupShotPlan.map(g => g.groupDurationSec));
+                            };
+                            if (manualEdited) {
+                              if (confirm('수동 편집된 그룹/샷 플랜을 적용하시겠습니까?\n기존 그룹핑 설정이 덮어씌워집니다.')) applyPlan();
+                            } else {
+                              applyPlan();
+                            }
+                          }}
+                          className="text-xs text-white bg-violet-600 hover:bg-violet-700 rounded px-2.5 py-1"
+                        >
+                          그룹 설정에 적용
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setShowGroupPlan(false); setGroupShotPlan([]); setManualEdited(false); }}
+                          className="text-xs text-muted-foreground hover:text-foreground rounded px-2 py-1"
+                        >
+                          닫기
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* manual 모드: 기존 그룹 목표 시간 입력 */}
                   {klingGroupingMode === 'manual' && (
                     <div className="space-y-1.5 pl-1">
                       <p className="text-[10px] text-muted-foreground">그룹별 목표 시간(초)을 지정하세요. 샷은 순서대로 그룹에 배정됩니다.</p>
@@ -1601,6 +1758,20 @@ function WhiskProductionForm() {
               )}
             </div>
           </div>
+          {/* 음성 제공자 선택 */}
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">음성 선택</label>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="voiceProvider" checked={voiceProvider === 'tts'} onChange={() => setVoiceProvider('tts')} className="accent-violet-600" />
+                내 음성 TTS
+              </label>
+              <label className="flex items-center gap-1.5 text-sm cursor-pointer">
+                <input type="radio" name="voiceProvider" checked={voiceProvider === 'kling'} onChange={() => setVoiceProvider('kling')} className="accent-violet-600" />
+                Kling 자체 음성
+              </label>
+            </div>
+          </div>
         </div>
 
         {/* 7-2. BGM / 효과음 모드 선택 + 업로드 */}
@@ -1779,6 +1950,13 @@ function WhiskProductionForm() {
         {formError && <p className="text-sm text-destructive">{formError}</p>}
         {formSuccess && <p className="text-sm text-emerald-600">{formSuccess}</p>}
 
+        {/* Payload preview */}
+        {sceneClips.length > 0 && (
+          <p className="text-[10px] text-muted-foreground font-mono truncate">
+            payload: duration_sec={videoDurationSec} | scenes=[{sceneClips.map(c => `${c.durationSec}s`).join(',')}] | group_targets=[{klingGroupTargets.join(',')}] | voice={voiceProvider}
+          </p>
+        )}
+
         {/* 8. Submit */}
         <div className="flex items-center gap-3">
           <Button onClick={handleSubmit} disabled={submitting || !selectedWorkflowId || !promptP1.trim() || !!jobId}>
@@ -1846,6 +2024,8 @@ function WhiskProductionForm() {
                   <span>{bgmMode === 'ai_auto' ? 'AI 자동 추천' : bgmMode === 'uploaded' ? bgmFileName || '업로드됨' : '사용 안함'}</span>
                   <span className="text-muted-foreground">효과음</span>
                   <span>{sfxMode === 'ai_auto' ? 'AI 자동 추천' : sfxMode === 'uploaded' ? sfxFileName || '업로드됨' : sfxMode === 'combined' ? '합쳐서' : '사용 안함'}</span>
+                  <span className="text-muted-foreground">음성</span>
+                  <span>{voiceProvider === 'tts' ? '내 음성 TTS' : 'Kling 자체 음성'}</span>
                   {sceneClips.length > 0 && (<>
                     <span className="text-muted-foreground">그룹핑</span>
                     <span>{klingGroupingMode === 'auto_pack' ? '자동' : `수동 [${klingGroupTargets.join(', ')}]`}</span>
