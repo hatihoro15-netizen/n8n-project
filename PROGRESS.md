@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-08
-- 현재 상태(1줄): 긴급 수정 4+2건 적용 완료 (VPS 배포 대기)
-- 진행중 작업: VPS 배포 → 프론트 웹앱 연동
-- 최근 완료: usedMultiShots 스코프 + multi_shots sound/image_urls 제약 준수
+- 현재 상태(1줄): Producer 검증 1~12 + Worker 긴급 수정 VPS 배포 완료
+- 진행중 작업: 프론트 웹앱 연동
+- 최근 완료: Producer duration_sec 1~12 + Worker sound/image_urls/scope 수정 배포
 - 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수
 
 ---
@@ -760,3 +760,20 @@
 - 프론트 웹앱 연동
 ### 📁 Files / Links
 - n8n/ao_worker.json (멀티씬 순차 처리 노드)
+
+## 2026-03-08 (Producer 검증 수정)
+### ✅ Done
+- [x] Producer scenes duration_sec 검증: 3~15 → 1~12 변경 (Kling API 제약 일치)
+- [x] Worker Kling 호출 규칙 재확인: sound=true ✅, slice(0,1) ✅, String() ✅
+- [x] Worker single shot clamp Math.max(3) 유지 확인 (1~2초 입력 → 3초 보정)
+- [x] VPS 배포 완료 (올바른 순서: import → SQL nodes → activeVersionId → restart)
+- [x] DB nodes 직접 검증: Producer 1~12, Worker sound:true/slice(0,1) 확인
+### 📌 Result
+- Case A [7,7,6]: 7,7,6 모두 1~12 → Producer 통과
+- Case B 2초 샷: 2 ≥ 1 → Producer 통과, Worker에서 3초 보정
+- Case C webhook 400: 조건 완화이므로 기존 통과 건 영향 없음
+### ➡️ Next (방향만)
+- 프론트 웹앱 연동
+### 📁 Files / Links
+- n8n/ao_producer.json (입력값 검증 노드)
+- n8n/ao_worker.json (이전 세션 수정 반영)

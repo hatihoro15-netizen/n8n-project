@@ -111,27 +111,28 @@
   - duration: String() 강제 확인 (이미 적용됨)
   - voice_provider 전달: Producer→metadata→assemble→process-clips 정상 확인
   - 오디오 정책: render-video hasKlingAudio = kling_sound(=voice_provider) 기반 — 정상
+- **Producer scenes 검증 범위 변경 (2026-03-08)**:
+  - duration_sec 허용 범위: 3~15 → 1~12 (Kling API 제약 일치)
+  - Worker single shot clamp: Math.max(3, Math.min(15, ...)) 유지 (1~2초 입력 → 3초 보정)
 
 ## Goal
 프론트 웹앱 연동
 
 ## Next Actions
-1. [ ] VPS 배포 (긴급 수정 반영)
-2. [ ] 프론트 웹앱 연동
+1. [ ] 프론트 웹앱 연동
 3. [ ] NCA 한글 자막 폰트 영구화 (컨테이너 재시작 시 사라짐)
 4. [ ] 이미지 생성 웹훅 MinIO 바이너리 저장 (별도 작업 예정)
 5. [ ] YouTube 업로드 활성화 (별도 작업 예정)
 
 ## Last Run
-커맨드: fix(worker): enforce multi_shots sound rule and voice_provider audio mix behavior
+커맨드: fix(producer): align scene duration validation to kling constraints 1~12s
 결과:
-- usedMultiShots 스코프 수정 (ai_video 블록 내부 → skipKlingFile 블록 밖)
-- multi_shots=true → sound: true 강제 (Kling API 제약)
-- multi_shots image_urls → slice(0,1) start frame 1개만
-- voice_provider 전달 보장 확인 (변경 불필요)
-- 오디오 정책 확인 (render-video hasKlingAudio 정상)
-- duration String() 이미 적용 확인
-위치: Local (VPS 배포 대기)
+- Producer scenes duration_sec 검증: 3~15 → 1~12 변경
+- Worker Kling 호출 규칙 재확인: sound=true, slice(0,1), String() 모두 정상
+- Worker single shot clamp 3~15 유지 (1~2초 입력 시 3초 보정)
+- VPS 배포 완료 (Producer + Worker 양쪽)
+- 배포 검증: DB nodes 직접 확인 OK
+위치: Local + VPS (76.13.182.180)
 
 ## Blockers
 - kie.ai 크레딧: 충전 완료 (2026-03-08)
