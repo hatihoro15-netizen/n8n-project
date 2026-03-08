@@ -90,17 +90,20 @@
   - voice_provider='tts'(기본): Kling 오디오 제외
   - 동적 amix: mixParts/mixWeights 배열로 조건부 조합
 - **fail-fast 402 + processing 고착 방지**:
-  - process-clips: kie.ai 402 크레딧 부족 시 KIE_CREDIT_INSUFFICIENT 에러 throw
+  - process-clips: kie.ai 402 → KIE_CREDIT_INSUFFICIENT throw + 즉시 failed 콜백 전송
   - process-clips: 전체 try-catch 래퍼 → 에러 시 error JSON 반환
   - render-lock-check: error JSON 감지 시 즉시 throw → 파이프라인 중단
   - render-video/upload-youtube: error passthrough 추가
-  - settings.errorWorkflow: 깨진 템플릿 문자열 제거 (빈 문자열로)
-- **Watchdog 콜백 전송**:
-  - watchdog-check (Postgres): 5분 이상 processing → failed UPDATE + RETURNING
-  - watchdog-callback (Code): 각 stuck job에 웹앱 콜백 POST (3회 재시도, exponential backoff)
-  - watchdog-log (Postgres): 콜백 실패 시 job_logs에 로그 저장
+- **Watchdog 타임아웃 20분 + 콜백 보장**:
+  - watchdog-check (Postgres): 20분 이상 processing → failed UPDATE + RETURNING (elapsed_sec 포함)
+  - watchdog-callback (Code): 콜백 body에 assets.fail_reason/elapsed_sec/timeout_min 추가
+  - watchdog-log (Postgres): job_logs detail에 fail_reason/elapsed_sec/timeout_min 기록
   - 흐름: 스케줄 트리거 → watchdog-check → watchdog-callback → watchdog-log → pop-queue
-  - pop-queue에서 Watchdog SQL 제거 (전용 노드로 분리)
+- **heartbeat 콜백**:
+  - process-clips 내 sendHeartbeat 함수: 30초 이상 간격으로 processing 콜백 전송
+  - payload: { productionId, jobId, status: 'processing', assets: { step, progress_percent, message } }
+  - 단계별 호출: kling_generating(5%) → polling(10~90%) → TTS(50%)
+  - pollTask: 매 3번째 폴링(~30초)마다 heartbeat 전송
 
 ## Goal
 프론트 웹앱 연동
@@ -113,13 +116,13 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: feat(worker): add two-stage auto grouping and per-group multi_shots planning + fix 402 fail-fast
+커맨드: fix(worker): increase watchdog timeout to 20min and add heartbeat callbacks
 결과:
-- 2단계 자동 그룹/샷 분해 (경로 A/B/C)
-- voice_provider (tts/kling) → Kling sound + 오디오 믹스 분기
-- kling_group_shots 수신 + 5가지 제약 검증 + 그룹별 fallback
-- callKling 헬퍼 공통화
-- 로컬 시뮬레이션 5케이스 통과
+- Watchdog 타임아웃 5분 → 20분 상향
+- heartbeat 콜백 (processing 중 30초 간격, assets.step/progress_percent/message)
+- 402 fail-fast: 즉시 failed 콜백 전송 (sendFailedCallback)
+- Watchdog failed 시 콜백에 판단 근거 포함 (elapsed_sec, timeout_min, fail_reason)
+- job_logs에 WATCHDOG_TIMEOUT 근거 기록
 - VPS 배포 완료
 위치: Local + VPS (76.13.182.180)
 

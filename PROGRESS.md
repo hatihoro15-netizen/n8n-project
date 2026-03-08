@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-08
-- 현재 상태(1줄): 2단계 자동 그룹/샷 분해 + voice_provider 배포 완료
+- 현재 상태(1줄): watchdog 20분 + heartbeat 콜백 + 402 fail-fast 콜백 배포 완료
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: 2단계 자동 분해 (경로 A/B/C) + voice_provider + 402 fail-fast
+- 최근 완료: watchdog 타임아웃 상향 + heartbeat + 402 즉시 failed 콜백
 - 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수
 
 ---
@@ -723,4 +723,22 @@
 ### Files
 - n8n/ao_producer.json (voice_provider, kling_group_shots 검증)
 - n8n/ao_worker.json (process-clips 2단계 분해, render-video voice_provider, assemble 추출)
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-08 (세션 9)
+### ✅ Done
+- [x] Watchdog 타임아웃 5분 → 20분 상향
+  - SQL: `INTERVAL '20 minutes'`, RETURNING에 elapsed_sec 추가
+  - 콜백 body: assets.fail_reason/elapsed_sec/timeout_min
+  - job_logs: detail에 판단 근거 기록
+- [x] heartbeat 콜백 (processing 중 30초 간격)
+  - sendHeartbeat 함수: step/progress_percent/message를 assets 객체에 포함
+  - 호출 시점: kling_generating(5%) → polling 매 30초(10~90%) → TTS(50%)
+  - pollTask에 groupLabel 파라미터 추가
+- [x] 402 fail-fast 콜백 보장
+  - sendFailedCallback 함수: 402 catch에서 즉시 failed 콜백 POST
+  - assets.fail_reason = 'KIE_CREDIT_INSUFFICIENT'
+- [x] VPS 배포 완료
+### Files
+- n8n/ao_worker.json (watchdog 3노드 + process-clips heartbeat/failcb)
 - HANDOFF.md, PROGRESS.md
