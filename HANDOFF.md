@@ -69,8 +69,13 @@
   - process-clips: 전체 try-catch 래퍼 → 에러 시 error JSON 반환
   - render-lock-check: error JSON 감지 시 즉시 throw → 파이프라인 중단
   - render-video/upload-youtube: error passthrough 추가
-  - pop-queue: Watchdog SQL (5분 이상 processing → 자동 failed 처리)
   - settings.errorWorkflow: 깨진 템플릿 문자열 제거 (빈 문자열로)
+- **Watchdog 콜백 전송**:
+  - watchdog-check (Postgres): 5분 이상 processing → failed UPDATE + RETURNING
+  - watchdog-callback (Code): 각 stuck job에 웹앱 콜백 POST (3회 재시도, exponential backoff)
+  - watchdog-log (Postgres): 콜백 실패 시 job_logs에 로그 저장
+  - 흐름: 스케줄 트리거 → watchdog-check → watchdog-callback → watchdog-log → pop-queue
+  - pop-queue에서 Watchdog SQL 제거 (전용 노드로 분리)
 
 ## Goal
 프론트 웹앱 연동
@@ -83,20 +88,18 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: fix(worker): fail fast on kie 402 and prevent processing-stuck jobs
+커맨드: fix(worker): send callback on watchdog failure and sync webapp status
 결과:
-- process-clips: kie.ai createTask 402 응답 시 KIE_CREDIT_INSUFFICIENT throw
-- process-clips: 전체 처리 로직 try-catch 래퍼 추가 → 에러 시 error JSON 반환
-- render-lock-check: error JSON 감지 시 즉시 throw → 파이프라인 중단
-- render-video: error passthrough (_input.error === true → 바로 반환)
-- upload-youtube: error passthrough (job.error === true → 바로 반환)
-- pop-queue: Watchdog SQL 추가 (5분 이상 processing 상태 → 자동 failed)
-- settings.errorWorkflow: 깨진 템플릿 문자열 `{{ AO Worker 에러 핸들러 워크플로우 ID }}` → "" 클리어
+- Watchdog을 pop-queue SQL에서 분리 → 전용 3노드 파이프라인
+- watchdog-check: processing > 5분 → failed UPDATE + RETURNING
+- watchdog-callback: 웹앱 콜백 POST (3회 재시도, exponential backoff 1s/2s/4s)
+- watchdog-log: 콜백 실패 시 job_logs INSERT
+- stuck production 3건 수동 콜백 전송 (200 OK)
 - VPS 배포 완료 + DB 검증 통과
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers
-- kie.ai 크레딧 부족: 402 에러 발생 중 (충전 필요)
+- kie.ai 크레딧: 충전 완료 (2026-03-08)
 - YouTube 업로드: Code v1(vm2) 시도 중이었으나 사용자 요청으로 중단
 - NCA toolkit: GUNICORN_TIMEOUT 미설정 시 기본 30초로 worker kill됨
 - NCA 한글 자막: fonts-nanum 컨테이너 재시작 시 사라짐
@@ -256,5 +259,6 @@
 - process-clips: kie.ai 402 → KIE_CREDIT_INSUFFICIENT throw (try-catch 래퍼)
 - render-lock-check: error JSON 감지 → throw → 파이프라인 중단
 - render-video/upload-youtube: error passthrough
-- pop-queue Watchdog: 5분 이상 processing → 자동 failed
+- Watchdog 3노드: watchdog-check → watchdog-callback → watchdog-log → pop-queue
+- Watchdog 콜백: 3회 재시도 (exponential backoff 1s/2s/4s), 실패 시 job_logs 저장
 - errorWorkflow: 빈 문자열 (깨진 템플릿 제거됨)

@@ -8,10 +8,10 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-08
-- 현재 상태(1줄): fail-fast 402 + processing 고착 방지 배포 완료
+- 현재 상태(1줄): Watchdog 콜백 전송 + stuck production 정리 완료
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: kie.ai 402 fail-fast + Watchdog 5분 + errorWorkflow 수정
-- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수, kie.ai 크레딧 충전 필요
+- 최근 완료: Watchdog 3노드 분리 + 실패 콜백 전송 + stuck 3건 수동 정리
+- 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수
 
 ---
 
@@ -631,4 +631,18 @@
 - kie.ai 402: 크레딧 부족 시 에러를 catch하지 못해 무한 대기
 ### Files
 - n8n/ao_worker.json (process-clips, render-lock-check, render-video, upload-youtube, pop-queue, settings)
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-08 (세션 3)
+### ✅ Done
+- [x] Watchdog을 pop-queue에서 분리 → 전용 3노드 파이프라인
+  - watchdog-check (Postgres): processing > 5분 → failed UPDATE + RETURNING
+  - watchdog-callback (Code): 웹앱 콜백 POST (3회 재시도, exponential backoff 1s/2s/4s)
+  - watchdog-log (Postgres): 콜백 실패 시 job_logs INSERT
+- [x] 흐름 변경: 스케줄 트리거 → watchdog-check → watchdog-callback → watchdog-log → pop-queue
+- [x] pop-queue에서 Watchdog SQL 제거 (SELECT만 유지)
+- [x] stuck production 3건 수동 콜백 전송 (8b7da108, 0c5673c4, eac34d3b → 200 OK)
+- [x] VPS 배포 + DB 동기화 + restart 완료
+### Files
+- n8n/ao_worker.json (watchdog-check, watchdog-callback, watchdog-log 추가, pop-queue 수정, connections 변경)
 - HANDOFF.md, PROGRESS.md

@@ -29,7 +29,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "-- Watchdog: 5분 이상 processing인 job 자동 실패 처리\nUPDATE jobs SET status = 'failed', last_error = 'WATCHDOG: processing timeout (5min)', updated_at = NOW()\nWHERE status = 'processing' AND updated_at < NOW() - INTERVAL '5 minutes';\n\nSELECT * FROM jobs\nWHERE status = 'queued'\nORDER BY created_at ASC\nLIMIT 1\nFOR UPDATE SKIP LOCKED;",
+        "query": "SELECT * FROM jobs\nWHERE status = 'queued'\nORDER BY created_at ASC\nLIMIT 1\nFOR UPDATE SKIP LOCKED;",
         "options": {}
       },
       "id": "pop-queue",
@@ -480,6 +480,64 @@
         2400,
         304
       ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE jobs\nSET status = 'failed',\n    last_error = 'WATCHDOG: processing timeout (5min)',\n    updated_at = NOW()\nWHERE status = 'processing'\n  AND updated_at < NOW() - INTERVAL '5 minutes'\nRETURNING id, production_id, last_error, retry_count;",
+        "options": {}
+      },
+      "id": "watchdog-check",
+      "name": "Watchdog 고착 정리",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        340,
+        140
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "4W3WKJLsJKa9hVAA",
+          "name": "AO Postgres"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Watchdog 실패 콜백 — stuck job에 대해 웹앱 콜백 전송\nconst items = $input.all();\nconst callbackUrl = $env.WEBAPP_CALLBACK_URL;\n\n// stuck job이 없으면 바로 통과\nif (!items || items.length === 0 || !items[0].json?.id) {\n  return [{ json: { watchdog_count: 0 } }];\n}\n\nconst results = [];\n\nfor (const item of items) {\n  const job = item.json;\n  if (!job.id || !job.production_id || !callbackUrl) {\n    results.push({ json: { ...job, callback_sent: false, reason: 'missing_data' } });\n    continue;\n  }\n\n  let sent = false;\n  let lastErr = '';\n\n  // 3회 재시도 (exponential backoff: 1s, 2s, 4s)\n  for (let attempt = 0; attempt < 3; attempt++) {\n    try {\n      await this.helpers.httpRequest({\n        method: 'POST',\n        url: `${callbackUrl}/api/productions/callback`,\n        headers: { 'Content-Type': 'application/json' },\n        body: {\n          productionId: job.production_id,\n          status: 'failed',\n          error: job.last_error || 'WATCHDOG: processing timeout',\n          retryCount: job.retry_count || 0,\n          jobId: job.id\n        },\n        json: true,\n        timeout: 10000\n      });\n      sent = true;\n      break;\n    } catch(e) {\n      lastErr = e.message || String(e);\n      if (attempt < 2) {\n        // exponential backoff: 1000, 2000, 4000ms\n        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt)));\n      }\n    }\n  }\n\n  // 최종 실패 시 job_logs에 콜백 실패 로그 저장\n  if (!sent) {\n    try {\n      const escapedErr = lastErr.replace(/'/g, \"''\");\n      const logDetail = JSON.stringify({ callback_url: callbackUrl, error: lastErr, attempts: 3 }).replace(/'/g, \"''\");\n      // job_logs INSERT는 다음 Postgres 노드에서 처리할 수 없으므로 httpRequest로 직접 SQL 실행 불가\n      // → 로그를 output에 포함시켜 필요시 추적 가능하도록\n    } catch(e) { /* ignore */ }\n  }\n\n  results.push({ json: { ...job, callback_sent: sent, callback_error: sent ? null : lastErr } });\n}\n\nreturn results;"
+      },
+      "id": "watchdog-callback",
+      "name": "Watchdog 콜백 전송",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        540,
+        140
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO job_logs (job_id, level, message, detail)\nSELECT\n  '{{ $json.id }}'::uuid,\n  'error',\n  'WATCHDOG 콜백 전송 실패',\n  json_build_object('callback_error', '{{ $json.callback_error }}', 'production_id', '{{ $json.production_id }}')::jsonb\nWHERE '{{ $json.callback_sent }}' = 'false' AND '{{ $json.id }}' != '';",
+        "options": {}
+      },
+      "id": "watchdog-log",
+      "name": "Watchdog 콜백 실패 로그",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        740,
+        140
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "4W3WKJLsJKa9hVAA",
+          "name": "AO Postgres"
+        }
+      },
+      "alwaysOutputData": true
     }
   ],
   "connections": {
@@ -487,7 +545,7 @@
       "main": [
         [
           {
-            "node": "큐에서 Job 꺼내기",
+            "node": "Watchdog 고착 정리",
             "type": "main",
             "index": 0
           }
@@ -773,6 +831,39 @@
         [
           {
             "node": "최종 영상 합성 (Creatomate)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Watchdog 고착 정리": {
+      "main": [
+        [
+          {
+            "node": "Watchdog 콜백 전송",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Watchdog 콜백 전송": {
+      "main": [
+        [
+          {
+            "node": "Watchdog 콜백 실패 로그",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Watchdog 콜백 실패 로그": {
+      "main": [
+        [
+          {
+            "node": "큐에서 Job 꺼내기",
             "type": "main",
             "index": 0
           }
