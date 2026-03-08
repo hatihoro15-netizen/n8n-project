@@ -114,6 +114,11 @@
 - **Producer scenes 검증 범위 변경 (2026-03-08)**:
   - duration_sec 허용 범위: 3~15 → 1~12 (Kling API 제약 일치)
   - Worker single shot clamp: Math.max(3, Math.min(15, ...)) 유지 (1~2초 입력 → 3초 보정)
+- **1~2초 샷 재분배 로직 (2026-03-08)**:
+  - ④-pre 단계: 그룹별 Kling 호출 전에 1~2초 샷 탐색
+  - 인접 샷(뒤→앞)에서 차이분 빌림 (donor ≥ 3초 보장)
+  - 재분배 불가 시 3초 강제 보정 + groupDur 증가
+  - 보정 발생 시 job_logs에 warn 레벨 로그 기록
 
 ## Goal
 프론트 웹앱 연동
@@ -125,13 +130,12 @@
 5. [ ] YouTube 업로드 활성화 (별도 작업 예정)
 
 ## Last Run
-커맨드: fix(producer): align scene duration validation to kling constraints 1~12s
+커맨드: fix(producer): align scene duration validation to kling constraints 1~12s + 재분배
 결과:
 - Producer scenes duration_sec 검증: 3~15 → 1~12 변경
-- Worker Kling 호출 규칙 재확인: sound=true, slice(0,1), String() 모두 정상
-- Worker single shot clamp 3~15 유지 (1~2초 입력 시 3초 보정)
-- VPS 배포 완료 (Producer + Worker 양쪽)
-- 배포 검증: DB nodes 직접 확인 OK
+- Worker 1~2초 샷 재분배 로직 추가 (인접 샷 빌림 / 불가 시 강제 보정 + job_logs)
+- Worker Kling 호출 규칙: sound=true, slice(0,1), String() 모두 정상
+- VPS 배포 완료 (Producer + Worker 양쪽, DB 검증 OK)
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers
