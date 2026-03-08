@@ -69,6 +69,13 @@
   - duration<=15s + scenes 없음 → 기존 단일 호출 (multi_shots=false)
   - duration>15s → 기존 멀티클립 개별 호출 유지
   - 제약: max 5 shots, 각 shot 1~12초, 총 3~15초
+- **Kling 원본 오디오 믹싱**:
+  - multi_shots=true (sound=true) → Kling 원본 오디오를 최종 영상에 포함
+  - 오디오 믹스: Kling(vol 0.5) + TTS(1.0) + BGM(vol 0.35) + SFX(0.8)
+  - 멀티클립: concat v=1:a=1로 오디오도 합침
+  - 단일클립: [0:a] 직접 추출
+  - sound=false(기존): Kling 오디오 제외 (기존 동작 유지)
+  - 동적 amix: mixParts/mixWeights 배열로 조건부 조합
 - **fail-fast 402 + processing 고착 방지**:
   - process-clips: kie.ai 402 크레딧 부족 시 KIE_CREDIT_INSUFFICIENT 에러 throw
   - process-clips: 전체 try-catch 래퍼 → 에러 시 error JSON 반환
@@ -93,12 +100,15 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: feat(worker): use kling 3.0 multi_shots for duration <= 15s
+커맨드: feat(worker): mix kling original audio into final video
 결과:
-- process-clips: multi_shots 분기 추가 (④-a: multi_shots=true, ④-b: 기존 개별 호출)
-- duration<=15s + scenes 있음(<=5) → Kling 1회 호출, multi_prompt 배열
-- multi_shots_used 플래그 결과 메타데이터에 추가
-- VPS 배포 완료 + DB 검증 통과
+- render-video: Kling 원본 오디오를 TTS/BGM/SFX와 함께 믹싱
+- multi_shots=true or kling_sound=true일 때 활성화
+- 볼륨: Kling 0.5, TTS 1.0, BGM 0.35, SFX 0.8
+- 멀티클립 concat에 a=1 추가 (오디오 보존)
+- 동적 mixParts/mixWeights 배열로 조건부 amix
+- process-clips: kling_sound 플래그 출력 추가
+- VPS 배포 완료
 위치: Local + VPS (76.13.182.180)
 
 ## Blockers

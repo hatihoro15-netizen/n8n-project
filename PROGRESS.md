@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-08
-- 현재 상태(1줄): Kling 3.0 multi_shots 지원 배포 완료
+- 현재 상태(1줄): Kling 원본 오디오 믹싱 + multi_shots 배포 완료
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: Kling multi_shots (duration<=15s + scenes) → 1회 호출로 멀티씬 생성
+- 최근 완료: Kling 원본 오디오를 최종 영상에 믹싱 (TTS+BGM+SFX와 함께)
 - 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수
 
 ---
@@ -658,4 +658,22 @@
 - [x] VPS 배포 + DB 검증 통과
 ### Files
 - n8n/ao_worker.json (process-clips: multi_shots 분기 추가)
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-08 (세션 5)
+### ✅ Done
+- [x] render-video: Kling 원본 오디오 믹싱 추가
+  - hasKlingAudio 플래그: multi_shots_used 또는 kling_sound=true일 때 활성화
+  - 단일클립: [0:a] → volume=0.5 → [kling_audio]
+  - 멀티클립: concat v=1:a=1 → [kling_cat] → volume=0.5 → [kling_audio]
+  - BGM volume=0.35 적용 (기존 amix weights 대신 volume 필터에서 적용)
+  - 동적 mixParts/mixWeights 배열로 조건부 amix 조합
+- [x] process-clips: kling_sound 플래그 출력 추가
+- [x] VPS 배포 완료
+### 변경 전/후 FFmpeg filter_complex 비교
+- 변경 전: [vscaled] + [tts_raw][bgm][sfx_mix]amix=3 → [amain]
+- 변경 후: [vscaled] + [kling_audio][tts_raw][bgm][sfx_mix]amix=4 → [amain]
+- BGM weights 변경: amix weights=1 → volume=0.35 필터에서 직접 적용
+### Files
+- n8n/ao_worker.json (render-video, process-clips 수정)
 - HANDOFF.md, PROGRESS.md
