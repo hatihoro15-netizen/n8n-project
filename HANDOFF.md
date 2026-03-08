@@ -72,7 +72,7 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: fix(worker): apply narration_start_sec and scene-based narration timing
+커맨드: fix(producer): revert bgm/sfx whitelist to uploaded/combined on VPS
 결과:
 - Producer: narration_start_sec 파싱 + metadata JSONB 저장
 - Worker assemble-prompt: metadata.narration_start_sec 추출
