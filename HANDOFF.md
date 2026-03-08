@@ -64,20 +64,30 @@
   - scenes 없고 clipCount>1일 때 Claude API로 prompt_p1을 클립별 프롬프트로 자동 분할
   - generateScenePrompts: 각 클립에 다른 시각적 장면 생성
   - API 실패 시 promptBase fallback (기존 동작)
-- **Kling 3.0 multi_shots (그룹핑)**:
-  - scenes 있음 → 15초/5샷 이하 그룹으로 자동 분할 → 그룹별 multi_shots=true 호출
-  - duration<=15s: 1그룹 = 1회 호출
-  - duration>15s: N그룹 = N회 호출 → FFmpeg concat
-  - scenes 없음 → 기존 개별 호출 (변경 없음)
-  - 제약 위반 fallback: multi_shots 실패 시 해당 그룹만 개별 호출로 fallback
-  - 1샷 그룹: 개별 호출 (multi_shots 최소 2샷)
+- **2단계 자동 그룹/샷 분해 (Kling multi_shots)**:
+  - 경로 A: kling_group_shots 수신 → 사전 분해 데이터 직접 사용
+    - 제약 검증: 샷>5, duration 1~12 위반, 그룹>15초, 합계 불일치 → 해당 그룹만 fallback
+  - 경로 B: scenes[] 있음 → 기존 auto_pack 그룹핑 (15초/5샷 이하)
+  - 경로 C: scenes 없음 → 2단계 자동 분해
+    - 1차: generateGroupPlan(duration) → [15,15,15,15] 등
+    - 2차: generateGroupShots(prompt, groupDur) → Claude API 샷 분해
+    - Claude 실패 시 fallbackShots 균등 분할
+  - 그룹별 Kling 호출: 2샷 이상 multi_shots=true, 1샷 개별 호출
+  - multi_shots 실패 → 해당 그룹만 개별 호출 fallback
   - 402 크레딧 에러: fallback 없이 즉시 throw
+  - callKling 헬퍼: 이미지 fallback + 402 감지 공통화
+  - 그룹 수 상한: 12개
+- **voice_provider (tts | kling)**:
+  - tts (기본): Kling sound=false, 최종 믹스에서 Kling 오디오 제외
+  - kling: Kling sound=true, 최종 믹스에 Kling 오디오 포함 (vol 0.5)
+  - Producer: voice_provider 검증 + metadata 저장
+  - Worker: process-clips useKlingSound 플래그 → render-video hasKlingAudio 판단
 - **Kling 원본 오디오 믹싱**:
-  - multi_shots=true (sound=true) → Kling 원본 오디오를 최종 영상에 포함
+  - voice_provider='kling' → Kling 오디오를 최종 영상에 포함
   - 오디오 믹스: Kling(vol 0.5) + TTS(1.0) + BGM(vol 0.35) + SFX(0.8)
   - 멀티클립: concat v=1:a=1로 오디오도 합침
   - 단일클립: [0:a] 직접 추출
-  - sound=false(기존): Kling 오디오 제외 (기존 동작 유지)
+  - voice_provider='tts'(기본): Kling 오디오 제외
   - 동적 amix: mixParts/mixWeights 배열로 조건부 조합
 - **fail-fast 402 + processing 고착 방지**:
   - process-clips: kie.ai 402 크레딧 부족 시 KIE_CREDIT_INSUFFICIENT 에러 throw
@@ -103,16 +113,13 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: feat(worker): group scenes multi_shots batches, fallback, audio mix
+커맨드: feat(worker): add two-stage auto grouping and per-group multi_shots planning + fix 402 fail-fast
 결과:
-- scenes를 15초/5샷 이하 그룹으로 자동 분할 → 그룹별 multi_shots 호출
-- duration>15s에서도 multi_shots 활용 (N그룹 × 1회 호출)
-- multi_shots 실패 시 해당 그룹만 개별 호출 fallback
-- 1샷 그룹은 자동으로 개별 호출
-- kling_sound=true (scenes 있으면 항상)
-- watchdog-callback: stuck job 없을 때 _watchdog_skip 마커 반환
-- watchdog-log: PL/pgSQL DO 블록으로 uuid 캐스팅 에러 방지
-- 테스트 검증: 7 scenes / 27초 → 2그룹 multi_shots → uploaded 성공
+- 2단계 자동 그룹/샷 분해 (경로 A/B/C)
+- voice_provider (tts/kling) → Kling sound + 오디오 믹스 분기
+- kling_group_shots 수신 + 5가지 제약 검증 + 그룹별 fallback
+- callKling 헬퍼 공통화
+- 로컬 시뮬레이션 5케이스 통과
 - VPS 배포 완료
 위치: Local + VPS (76.13.182.180)
 
@@ -190,6 +197,8 @@
   "bgm_url": "(optional) 커스텀 BGM URL (uploaded 모드용)",
   "sfx_file_url": "(optional) 사용자 SFX 파일 URL (uploaded/combined 모드용)",
   "image_order": "sequential | auto",
+  "voice_provider": "tts | kling",
+  "kling_group_shots": [{"group_duration": 15, "shots": [{"prompt":"...", "duration": 4}]}],
   "scenes": [
     { "prompt": "씬별 프롬프트", "duration_sec": 5 }
   ],

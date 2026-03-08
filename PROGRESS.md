@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-08
-- 현재 상태(1줄): multi_shots 그룹핑 + fallback + 오디오 믹싱 배포 완료
+- 현재 상태(1줄): 2단계 자동 그룹/샷 분해 + voice_provider 배포 완료
 - 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: scenes 그룹핑 multi_shots 호출 + 제약 위반 fallback + Kling 오디오 믹싱
+- 최근 완료: 2단계 자동 분해 (경로 A/B/C) + voice_provider + 402 fail-fast
 - 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수
 
 ---
@@ -693,4 +693,34 @@
 - [x] 테스트: 7 scenes / 27초 → 2그룹(4샷+3샷) multi_shots → uploaded 성공
 ### Files
 - n8n/ao_worker.json (process-clips, watchdog-callback, watchdog-log 수정)
+- HANDOFF.md, PROGRESS.md
+
+## 2026-03-08 (세션 8)
+### ✅ Done
+- [x] 2단계 자동 그룹/샷 분해 구현
+  - generateGroupPlan: duration → 15초 이하 그룹 배열 (상한 12개)
+  - generateGroupShots: Claude API로 그룹별 3~5샷 분해 (합계 정확 일치)
+  - fallbackShots: Claude 실패 시 균등 분할
+- [x] 3가지 경로 통합
+  - 경로 A: kling_group_shots 수신 → 사전 분해 직접 사용 (5가지 제약 검증 + fallback)
+  - 경로 B: scenes[] → auto_pack (기존 호환)
+  - 경로 C: scenes 없음 → 2단계 자동 분해
+- [x] voice_provider 파라미터 추가
+  - tts (기본): Kling sound=false, 오디오 믹스에서 Kling 제외
+  - kling: Kling sound=true, 오디오 믹스에 포함
+- [x] callKling 헬퍼 공통화 (이미지 fallback + 402 감지)
+- [x] kling_group_shots 제약 검증 5가지
+  - 샷>5, 샷 duration 1~12 위반, 그룹>15초, 합계 불일치 → 해당 그룹만 fallback
+- [x] Producer: voice_provider + kling_group_shots 검증 + metadata 저장
+- [x] Worker AO 프롬프트 조립: voice_provider + kling_group_shots 추출
+- [x] VPS 배포 완료
+### 🧪 Test (로컬 시뮬레이션)
+- Case A: 60초 → [15,15,15,15] → 각 4샷 [4,4,4,3] ✅
+- Case B: 22초 → [15,7] → 4샷+2샷 ✅
+- Case C: 15초 → 단일 그룹 ✅
+- Case D: 제약 위반 4종 → 모두 fallback ✅
+- Case E: 402 → throw (기존 fail-fast 유지) ✅
+### Files
+- n8n/ao_producer.json (voice_provider, kling_group_shots 검증)
+- n8n/ao_worker.json (process-clips 2단계 분해, render-video voice_provider, assemble 추출)
 - HANDOFF.md, PROGRESS.md
