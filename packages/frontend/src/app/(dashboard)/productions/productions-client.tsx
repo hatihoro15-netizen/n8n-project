@@ -1309,6 +1309,11 @@ function WhiskProductionForm() {
                       수동 그룹핑
                     </label>
                   </div>
+                  <div className="rounded-md border border-blue-200 bg-blue-50 px-2.5 py-1.5 text-[11px] text-blue-700">
+                    {klingGroupingMode === 'auto_pack'
+                      ? '예) 22초/6샷 → [15+7] 자동 분할 (Worker가 최적 그룹을 결정합니다)'
+                      : '예) [15, 7] 또는 [7, 7, 8] — 그룹별 목표 시간을 직접 지정'}
+                  </div>
                   {klingGroupingMode === 'manual' && (
                     <div className="space-y-1.5 pl-1">
                       <p className="text-[10px] text-muted-foreground">그룹별 목표 시간(초)을 지정하세요. 샷은 순서대로 그룹에 배정됩니다.</p>

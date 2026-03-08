@@ -343,29 +343,41 @@ export default function ProductionDetailClient() {
                              String(productionParams.sfx_mode || '-')}
                           </p>
                         </div>
+                        <div>
+                          <span className="text-muted-foreground">나레이션 시작</span>
+                          <p className="mt-0.5 font-medium">
+                            {productionParams.narration_start_sec != null
+                              ? `${productionParams.narration_start_sec}초부터`
+                              : 'AI 자동 배치'}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-muted-foreground">그룹핑</span>
+                          <p className="mt-0.5 font-medium">
+                            {productionParams.kling_grouping_mode === 'manual'
+                              ? `수동 [${Array.isArray(productionParams.kling_group_targets) ? (productionParams.kling_group_targets as number[]).join(', ') : '-'}]`
+                              : '자동'}
+                          </p>
+                        </div>
                       </div>
                     </div>
                   )}
 
                   {/* Narration Text */}
-                  {productionParams?.narration_text && (
-                    <div className="border-t pt-3">
-                      <span className="text-muted-foreground text-sm">나레이션 텍스트</span>
-                      <p className="mt-1 text-sm bg-muted p-2 rounded whitespace-pre-wrap">
-                        {String(productionParams.narration_text)}
-                      </p>
-                    </div>
-                  )}
+                  <div className="border-t pt-3">
+                    <span className="text-muted-foreground text-sm">나레이션 텍스트</span>
+                    <p className="mt-1 text-sm bg-muted p-2 rounded whitespace-pre-wrap">
+                      {productionParams?.narration_text ? String(productionParams.narration_text) : '-'}
+                    </p>
+                  </div>
 
                   {/* Prompt */}
-                  {productionParams?.prompt_p1 && (
-                    <div className="border-t pt-3">
-                      <span className="text-muted-foreground text-sm">프롬프트</span>
-                      <p className="mt-1 text-sm bg-muted p-2 rounded whitespace-pre-wrap">
-                        {String(productionParams.prompt_p1)}
-                      </p>
-                    </div>
-                  )}
+                  <div className="border-t pt-3">
+                    <span className="text-muted-foreground text-sm">프롬프트</span>
+                    <p className="mt-1 text-sm bg-muted p-2 rounded whitespace-pre-wrap">
+                      {productionParams?.prompt_p1 ? String(productionParams.prompt_p1) : '-'}
+                    </p>
+                  </div>
 
                   {/* Timestamps */}
                   <div className="border-t pt-3 space-y-2">

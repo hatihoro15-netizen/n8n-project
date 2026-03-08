@@ -7,7 +7,7 @@
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: Kling 그룹핑 모드 선택 UI 추가 완료
+- **Current Status**: 상세 페이지 제작 정보 확장 + 그룹핑 예시 help box 완료
 - **Goal**: E2E 영상 제작 테스트
 
 ## B) 환경/의존성
@@ -24,7 +24,7 @@
 - **Last Run Command**: npx next build (frontend)
 - **Result**: PASS — 빌드 성공
 - **실행 위치**: Local
-- **Last Commit**: feat(ui): add kling grouping mode selector with manual group targets
+- **Last Commit**: feat(ui): show full generation settings in result detail and grouping examples
 
 ## D) 완료/미완료
 
@@ -39,6 +39,8 @@
 - [x] Kling 샷 제약 안내 (multi_shots 모드 전환 안내)
 - [x] 샷 duration 경고 기준 13초 통일, non-blocking, 상한 clamp 제거
 - [x] Kling 그룹핑 모드 선택 (auto_pack/manual) + 수동 그룹 목표 시간 UI
+- [x] 상세 페이지 제작 정보 확장 (나레이션 시작/그룹핑 추가, 프롬프트/나레이션 항상 표시)
+- [x] 그룹핑 예시 help box (auto_pack/manual 각각 예시 문구)
 
 ### Next Actions
 1. [ ] CF Pages 배포
@@ -52,7 +54,8 @@
 - **CF Pages 배포**: `--branch=feature/web-app` 필수 + `.next`/`.vercel` 캐시 삭제 후 빌드
 
 ## F) 변경 파일
-- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (그룹핑 모드 선택 UI)
+- packages/frontend/src/app/(dashboard)/productions/[id]/production-detail-client.tsx (제작 정보 확장)
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (그룹핑 예시 help box)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> Kling 그룹핑 모드 선택 UI 완료. auto_pack/manual 라디오 + 수동 그룹 목표 시간 입력. CF Pages 배포 + E2E 테스트 필요.
+> 상세 페이지 제작 정보 확장 + 그룹핑 예시 help box 완료. CF Pages 배포 + E2E 테스트 필요.
