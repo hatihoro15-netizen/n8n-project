@@ -104,27 +104,34 @@
   - payload: { productionId, jobId, status: 'processing', assets: { step, progress_percent, message } }
   - 단계별 호출: kling_generating(5%) → polling(10~90%) → TTS(50%)
   - pollTask: 매 3번째 폴링(~30초)마다 heartbeat 전송
+- **긴급 수정 (2026-03-08)**:
+  - usedMultiShots 스코프: skipKlingFile 블록 밖으로 이동 (ReferenceError 방지)
+  - multi_shots sound=true 강제: Kling API 제약 준수 (voice_provider 무관)
+  - multi_shots image_urls: start frame 1개만 (slice(0,1))
+  - duration: String() 강제 확인 (이미 적용됨)
+  - voice_provider 전달: Producer→metadata→assemble→process-clips 정상 확인
+  - 오디오 정책: render-video hasKlingAudio = kling_sound(=voice_provider) 기반 — 정상
 
 ## Goal
 프론트 웹앱 연동
 
 ## Next Actions
-1. [ ] 프론트 웹앱 연동
-2. [ ] NCA 한글 자막 폰트 영구화 (컨테이너 재시작 시 사라짐)
-3. [ ] 이미지 생성 웹훅 MinIO 바이너리 저장 (별도 작업 예정)
-4. [ ] YouTube 업로드 활성화 (별도 작업 예정)
-5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
+1. [ ] VPS 배포 (긴급 수정 반영)
+2. [ ] 프론트 웹앱 연동
+3. [ ] NCA 한글 자막 폰트 영구화 (컨테이너 재시작 시 사라짐)
+4. [ ] 이미지 생성 웹훅 MinIO 바이너리 저장 (별도 작업 예정)
+5. [ ] YouTube 업로드 활성화 (별도 작업 예정)
 
 ## Last Run
-커맨드: fix(worker): increase watchdog timeout to 20min and add heartbeat callbacks
+커맨드: fix(worker): enforce multi_shots sound rule and voice_provider audio mix behavior
 결과:
-- Watchdog 타임아웃 5분 → 20분 상향
-- heartbeat 콜백 (processing 중 30초 간격, assets.step/progress_percent/message)
-- 402 fail-fast: 즉시 failed 콜백 전송 (sendFailedCallback)
-- Watchdog failed 시 콜백에 판단 근거 포함 (elapsed_sec, timeout_min, fail_reason)
-- job_logs에 WATCHDOG_TIMEOUT 근거 기록
-- VPS 배포 완료
-위치: Local + VPS (76.13.182.180)
+- usedMultiShots 스코프 수정 (ai_video 블록 내부 → skipKlingFile 블록 밖)
+- multi_shots=true → sound: true 강제 (Kling API 제약)
+- multi_shots image_urls → slice(0,1) start frame 1개만
+- voice_provider 전달 보장 확인 (변경 불필요)
+- 오디오 정책 확인 (render-video hasKlingAudio 정상)
+- duration String() 이미 적용 확인
+위치: Local (VPS 배포 대기)
 
 ## Blockers
 - kie.ai 크레딧: 충전 완료 (2026-03-08)

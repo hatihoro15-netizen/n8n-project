@@ -8,9 +8,9 @@
 
 ## 현재 요약 (이 섹션만 overwrite 가능)
 - 마지막 업데이트: 2026-03-08
-- 현재 상태(1줄): watchdog 20분 + heartbeat 콜백 + 402 fail-fast 콜백 배포 완료
-- 진행중 작업: 프론트 웹앱 연동
-- 최근 완료: watchdog 타임아웃 상향 + heartbeat + 402 즉시 failed 콜백
+- 현재 상태(1줄): 긴급 수정 4+2건 적용 완료 (VPS 배포 대기)
+- 진행중 작업: VPS 배포 → 프론트 웹앱 연동
+- 최근 완료: usedMultiShots 스코프 + multi_shots sound/image_urls 제약 준수
 - 주의사항: YouTube 비활성화, NCA GUNICORN_TIMEOUT=600 필수
 
 ---
@@ -742,3 +742,21 @@
 ### Files
 - n8n/ao_worker.json (watchdog 3노드 + process-clips heartbeat/failcb)
 - HANDOFF.md, PROGRESS.md
+
+## 2026-03-08 (긴급 수정)
+### ✅ Done
+- [x] Fix1: usedMultiShots 변수 선언을 ai_video 블록 밖(skipKlingFile 앞)으로 이동 — ReferenceError 방지
+- [x] Fix3: multi_shots=true Kling 호출 시 sound: true 강제 (Kling API 제약)
+- [x] 추가1: multi_shots=true 시 image_urls → slice(0,1) start frame 1개만 (2개 입력 방지)
+- [x] 추가2: duration String() 강제 확인 — 이미 적용됨
+- [x] Fix2 확인: voice_provider 전달 경로 정상 (Producer→metadata→assemble→process-clips)
+- [x] Fix4 확인: 오디오 정책 정상 (render-video hasKlingAudio = voice_provider 기반)
+### 📌 Result
+- process-clips: 5개소 수정/확인 (top-level nodes만, activeVersion 키 없음)
+- scenes [7,7,6] 시뮬레이션: G1=[7,7] multi_shots(14s) + G2=[6] single(6s) = 2회 호출 ✅
+- $json 참조 깨짐 없음
+### ➡️ Next (방향만)
+- VPS 배포
+- 프론트 웹앱 연동
+### 📁 Files / Links
+- n8n/ao_worker.json (멀티씬 순차 처리 노드)
