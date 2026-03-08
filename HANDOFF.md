@@ -72,7 +72,7 @@
 5. [ ] SFX 파일 AI 생성 (SFX 생성 API 확보 시)
 
 ## Last Run
-커맨드: fix(producer): sync activeVersion.nodes with top-level nodes
+커맨드: fix(worker): handle special characters in subtitle rendering
 결과:
 - Producer: narration_start_sec 파싱 + metadata JSONB 저장
 - Worker assemble-prompt: metadata.narration_start_sec 추출
