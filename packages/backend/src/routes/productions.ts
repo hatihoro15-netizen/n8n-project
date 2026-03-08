@@ -217,6 +217,10 @@ export async function productionRoutes(app: FastifyInstance) {
       bgm_url?: string;
       sfx_url?: string;
       scenes?: { prompt: string; duration_sec: number }[];
+      voice_provider?: 'tts' | 'kling';
+      kling_grouping_mode?: 'auto_pack' | 'manual';
+      kling_group_targets?: number[];
+      kling_group_shots?: { group_index: number; shots: { prompt: string; duration: number }[] }[];
     };
 
     if (!body.workflowId) {
@@ -316,6 +320,10 @@ export async function productionRoutes(app: FastifyInstance) {
         bgm_url: body.bgm_url,
         sfx_url: body.sfx_url,
         scenes: body.scenes,
+        voice_provider: body.voice_provider || 'tts',
+        kling_grouping_mode: body.kling_grouping_mode || 'auto_pack',
+        kling_group_targets: body.kling_group_targets,
+        kling_group_shots: body.kling_group_shots,
       });
 
       await prisma.production.update({
@@ -754,7 +762,7 @@ export async function productionRoutes(app: FastifyInstance) {
 
 1. **한글 연출 스크립트**: 장면 구성, 카메라 워크, 분위기, 전환 효과 등을 포함한 상세 연출 지시서 (제작팀용)
 2. **영문 Kling 프롬프트**: Kling AI 영상 생성 모델에 최적화된 영문 프롬프트 (cinematic, camera movement, lighting 등 키워드 포함)
-3. **씬별 타임라인 (scenes)**: 영상을 구성하는 개별 씬 배열. 각 씬은 start(시작초), end(끝초), prompt(영문 Kling 프롬프트)를 포함. 각 씬 길이는 3~15초 사이여야 합니다. 씬 총합이 요청된 영상 길이와 일치해야 합니다.
+3. **씬별 타임라인 (scenes)**: 영상을 구성하는 개별 씬 배열. 각 씬은 start(시작초), end(끝초), prompt(영문 Kling 프롬프트)를 포함. 각 씬 길이는 1~12초 사이여야 합니다. 씬 총합이 요청된 영상 길이와 일치해야 합니다.
 
 반드시 아래 JSON 형식으로만 응답하세요 (다른 텍스트 없이):
 {"korean": "한글 연출 스크립트", "english": "English Kling prompt", "scenes": [{"start": 0, "end": 5, "prompt": "scene prompt in English"}, ...]}`;

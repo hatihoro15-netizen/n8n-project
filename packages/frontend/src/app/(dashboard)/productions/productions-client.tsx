@@ -440,6 +440,7 @@ function WhiskProductionForm() {
   type SceneClip = { prompt: string; durationSec: number };
   const [sceneClips, setSceneClips] = useState<SceneClip[]>([]);
   const [showSceneClips, setShowSceneClips] = useState(false);
+  const [aiSuggestedScenes, setAiSuggestedScenes] = useState<SceneClip[]>([]);
   const [klingGroupingMode, setKlingGroupingMode] = useState<'auto_pack' | 'manual'>('auto_pack');
   const [klingGroupTargets, setKlingGroupTargets] = useState<number[]>([15, 7]);
   // Group/Shot planner
@@ -1210,11 +1211,8 @@ function WhiskProductionForm() {
                         durationSec: Math.max(1, raw),
                       };
                     });
-                    setSceneClips(parsed);
+                    setAiSuggestedScenes(parsed);
                     setShowSceneClips(true);
-                    // Auto-set duration to scene total
-                    const totalSec = parsed.reduce((sum, c) => sum + c.durationSec, 0);
-                    setVideoDurationSec(clampDuration(totalSec));
                   }
                 } else {
                   setAiPromptKo(`오류: ${data.message || 'API 호출 실패'}`);
@@ -1283,6 +1281,37 @@ function WhiskProductionForm() {
                       한글판으로 확정
                     </button>
                   </div>
+                  {/* AI 추천 씬 미리보기 + 적용 버튼 */}
+                  {aiSuggestedScenes.length > 0 && (
+                    <div className="mt-3 p-3 rounded-md border border-violet-200 bg-violet-50/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-violet-700">
+                          AI 추천 씬 ({aiSuggestedScenes.length}개, 총 {aiSuggestedScenes.reduce((s, c) => s + c.durationSec, 0)}초)
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSceneClips(aiSuggestedScenes);
+                            const totalSec = aiSuggestedScenes.reduce((s, c) => s + c.durationSec, 0);
+                            setVideoDurationSec(clampDuration(totalSec));
+                            setAiSuggestedScenes([]);
+                          }}
+                          className="px-2.5 py-1 rounded-md bg-violet-600 text-white text-xs hover:bg-violet-700 transition-colors"
+                        >
+                          씬 적용
+                        </button>
+                      </div>
+                      <div className="space-y-1 text-[11px] text-muted-foreground max-h-32 overflow-y-auto">
+                        {aiSuggestedScenes.map((s, i) => (
+                          <div key={i} className="flex gap-2">
+                            <span className="text-violet-600 font-mono w-8 shrink-0">#{i + 1}</span>
+                            <span className="font-mono w-8 shrink-0">{s.durationSec}s</span>
+                            <span className="truncate">{s.prompt}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </>
               )}
             </div>
