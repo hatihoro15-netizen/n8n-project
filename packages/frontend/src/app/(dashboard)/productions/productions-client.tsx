@@ -440,6 +440,8 @@ function WhiskProductionForm() {
   type SceneClip = { prompt: string; durationSec: number };
   const [sceneClips, setSceneClips] = useState<SceneClip[]>([]);
   const [showSceneClips, setShowSceneClips] = useState(false);
+  const [klingGroupingMode, setKlingGroupingMode] = useState<'auto_pack' | 'manual'>('auto_pack');
+  const [klingGroupTargets, setKlingGroupTargets] = useState<number[]>([15, 7]);
 
   // Form state
   const [submitting, setSubmitting] = useState(false);
@@ -513,6 +515,8 @@ function WhiskProductionForm() {
       if (draft.bgmUrl) { setBgmUrl(draft.bgmUrl); setBgmFileName(draft.bgmFileName || ''); }
       if (draft.sfxMode) setSfxMode(draft.sfxMode);
       if (draft.sfxUrl) { setSfxUrl(draft.sfxUrl); setSfxFileName(draft.sfxFileName || ''); }
+      if (draft.klingGroupingMode) setKlingGroupingMode(draft.klingGroupingMode);
+      if (draft.klingGroupTargets) setKlingGroupTargets(draft.klingGroupTargets);
     } catch { /* ignore */ }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -527,9 +531,10 @@ function WhiskProductionForm() {
       hasImages, selectedWorkflowId,
       bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName,
       narrationStartMode, narrationStartSec,
+      klingGroupingMode, klingGroupTargets,
     };
     sessionStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
-  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, imageOrder, hasImages, selectedWorkflowId, bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName, narrationStartMode, narrationStartSec]);
+  }, [promptP1, formTopic, keywords, category, aspectRatio, productionMode, engineType, strictMode, videoDurationSec, narrationText, narrationStyle, narrationTone, imageOrder, hasImages, selectedWorkflowId, bgmMode, bgmUrl, bgmFileName, sfxMode, sfxUrl, sfxFileName, narrationStartMode, narrationStartSec, klingGroupingMode, klingGroupTargets]);
 
   // 나레이션 텍스트 변경 시 → videoDurationSec 자동 계산 (수동 변경 전까지)
   useEffect(() => {
@@ -790,6 +795,16 @@ function WhiskProductionForm() {
         ...(bgmUrl ? { bgm_url: bgmUrl } : {}),
         ...(sfxUrl ? { sfx_url: sfxUrl } : {}),
         ...(sceneClips.length > 0 ? { scenes: sceneClips.map(c => ({ prompt: c.prompt, duration_sec: c.durationSec })) } : {}),
+        ...(sceneClips.length > 0 ? (() => {
+          if (klingGroupingMode === 'manual') {
+            const valid = klingGroupTargets.length > 0 && klingGroupTargets.every(v => typeof v === 'number' && v > 0);
+            if (valid) {
+              return { kling_grouping_mode: 'manual' as const, kling_group_targets: klingGroupTargets };
+            }
+            return { kling_grouping_mode: 'auto_pack' as const };
+          }
+          return { kling_grouping_mode: 'auto_pack' as const };
+        })() : {}),
       };
 
       if (hasImages === 'no' && generatedImages.length > 0) {
@@ -1281,6 +1296,65 @@ function WhiskProductionForm() {
                     <p className="text-amber-600">샷 {sceneClips.length}개: 5개 초과 시 multi_shots 제약을 벗어납니다</p>
                   )}
                 </div>
+                {/* Kling 그룹핑 모드 선택 */}
+                <div className="space-y-2 pt-1">
+                  <p className="text-xs font-medium text-muted-foreground">그룹핑 방식</p>
+                  <div className="flex items-center gap-4">
+                    <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                      <input type="radio" name="kling_grouping" value="auto_pack" checked={klingGroupingMode === 'auto_pack'} onChange={() => setKlingGroupingMode('auto_pack')} className="accent-primary" />
+                      자동 그룹핑
+                    </label>
+                    <label className="flex items-center gap-1.5 text-xs cursor-pointer">
+                      <input type="radio" name="kling_grouping" value="manual" checked={klingGroupingMode === 'manual'} onChange={() => setKlingGroupingMode('manual')} className="accent-primary" />
+                      수동 그룹핑
+                    </label>
+                  </div>
+                  {klingGroupingMode === 'manual' && (
+                    <div className="space-y-1.5 pl-1">
+                      <p className="text-[10px] text-muted-foreground">그룹별 목표 시간(초)을 지정하세요. 샷은 순서대로 그룹에 배정됩니다.</p>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {klingGroupTargets.map((target, gi) => (
+                          <div key={gi} className="flex items-center gap-0.5">
+                            <span className="text-[10px] text-muted-foreground">G{gi + 1}</span>
+                            <input
+                              type="number"
+                              min={1}
+                              value={target}
+                              onChange={e => {
+                                const v = Math.max(1, Number(e.target.value) || 1);
+                                const updated = [...klingGroupTargets];
+                                updated[gi] = v;
+                                setKlingGroupTargets(updated);
+                              }}
+                              className={`w-14 rounded-md border bg-transparent px-1.5 py-0.5 text-xs text-center shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${target > 15 ? 'border-amber-400' : 'border-input'}`}
+                            />
+                            {klingGroupTargets.length > 1 && (
+                              <button type="button" onClick={() => setKlingGroupTargets(prev => prev.filter((_, i) => i !== gi))} className="text-red-400 hover:text-red-600">
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        <button type="button" onClick={() => setKlingGroupTargets(prev => [...prev, 7])} className="text-xs text-blue-600 hover:text-blue-800 px-1">+ 그룹</button>
+                      </div>
+                      {/* 경고 영역 */}
+                      {(() => {
+                        const warnings: string[] = [];
+                        klingGroupTargets.forEach((t, i) => { if (t > 15) warnings.push(`G${i + 1}: ${t}초 > 15초 (multi_shots 제한 초과)`); });
+                        const targetsSum = klingGroupTargets.reduce((s, v) => s + v, 0);
+                        const scenesSum = sceneClips.reduce((s, c) => s + c.durationSec, 0);
+                        if (sceneClips.length > 0 && targetsSum !== scenesSum) warnings.push(`그룹 합계(${targetsSum}초) ≠ 씬 합계(${scenesSum}초)`);
+                        const hasInvalid = klingGroupTargets.some(v => !v || v <= 0);
+                        if (hasInvalid) warnings.push('유효하지 않은 그룹 값 → 제출 시 auto_pack으로 전환됩니다');
+                        return warnings.length > 0 ? (
+                          <div className="text-[10px] space-y-0.5">
+                            {warnings.map((w, i) => <p key={i} className="text-amber-600">{w}</p>)}
+                          </div>
+                        ) : null;
+                      })()}
+                    </div>
+                  )}
+                </div>
                 {sceneClips.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-3">씬이 없습니다. 씬을 추가해주세요.</p>
                 )}
@@ -1767,6 +1841,10 @@ function WhiskProductionForm() {
                   <span>{bgmMode === 'ai_auto' ? 'AI 자동 추천' : bgmMode === 'uploaded' ? bgmFileName || '업로드됨' : '사용 안함'}</span>
                   <span className="text-muted-foreground">효과음</span>
                   <span>{sfxMode === 'ai_auto' ? 'AI 자동 추천' : sfxMode === 'uploaded' ? sfxFileName || '업로드됨' : sfxMode === 'combined' ? '합쳐서' : '사용 안함'}</span>
+                  {sceneClips.length > 0 && (<>
+                    <span className="text-muted-foreground">그룹핑</span>
+                    <span>{klingGroupingMode === 'auto_pack' ? '자동' : `수동 [${klingGroupTargets.join(', ')}]`}</span>
+                  </>)}
                 </div>
               </details>
             )}

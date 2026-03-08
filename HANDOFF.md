@@ -7,7 +7,7 @@
 ## A) 상태 요약
 - **워크스페이스**: ~/n8n-worktrees/web (feature/web-app)
 - **브랜치**: feature/web-app
-- **Current Status**: 샷 duration 경고 기준 13초로 통일 + non-blocking 유지
+- **Current Status**: Kling 그룹핑 모드 선택 UI 추가 완료
 - **Goal**: E2E 영상 제작 테스트
 
 ## B) 환경/의존성
@@ -24,7 +24,7 @@
 - **Last Run Command**: npx next build (frontend)
 - **Result**: PASS — 빌드 성공
 - **실행 위치**: Local
-- **Last Commit**: fix(ui): set shot duration warning threshold to 13s, non-blocking
+- **Last Commit**: feat(ui): add kling grouping mode selector with manual group targets
 
 ## D) 완료/미완료
 
@@ -38,6 +38,7 @@
 - [x] 나레이션 타이밍 선택 UI (AI 자동 배치 / 직접 지정)
 - [x] Kling 샷 제약 안내 (multi_shots 모드 전환 안내)
 - [x] 샷 duration 경고 기준 13초 통일, non-blocking, 상한 clamp 제거
+- [x] Kling 그룹핑 모드 선택 (auto_pack/manual) + 수동 그룹 목표 시간 UI
 
 ### Next Actions
 1. [ ] CF Pages 배포
@@ -51,7 +52,7 @@
 - **CF Pages 배포**: `--branch=feature/web-app` 필수 + `.next`/`.vercel` 캐시 삭제 후 빌드
 
 ## F) 변경 파일
-- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (경고 기준 13초 통일, 상한 제거)
+- packages/frontend/src/app/(dashboard)/productions/productions-client.tsx (그룹핑 모드 선택 UI)
 
 ## G) 다음 세션 시작용 메시지 (복붙용)
-> 샷 duration 경고 기준 13초 통일 완료. non-blocking 유지. CF Pages 배포 + E2E 테스트 필요 (Producer duration 화이트리스트 수정 선행).
+> Kling 그룹핑 모드 선택 UI 완료. auto_pack/manual 라디오 + 수동 그룹 목표 시간 입력. CF Pages 배포 + E2E 테스트 필요.
