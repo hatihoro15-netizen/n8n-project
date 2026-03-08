@@ -176,7 +176,7 @@
 ## P0 입력 계약
 - prompt_p1: 필수 (단일 소스, 절대 변경 금지)
 - topic/keywords/category: 선택 (저장/표시 전용, 생성 영향 금지)
-- duration: 선택 (30/40/50/60/90/120/150/180만 허용)
+- duration: 선택 (0=자동 또는 3~180 정수)
 - strict_mode: 선택 (기본 false, true=Length Gate 하드 차단)
 - verify_mode: 선택 (기본 false, true=output_hash 기록)
 - engine_type: 선택 (기본 core_message, 5종 허용)
