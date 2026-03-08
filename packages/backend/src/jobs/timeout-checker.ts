@@ -92,7 +92,7 @@ async function syncActiveProductions() {
   }
 }
 
-// ── 타임아웃 안전망: 5분 초과 + executionId 없는 건 즉시 실패 처리 ──
+// ── 타임아웃 안전망: 20분 초과 + executionId 없는 건 즉시 실패 처리 ──
 async function checkTimeouts() {
   const timeoutMs = config.productionTimeoutMinutes * 60 * 1000;
   const cutoff = new Date(Date.now() - timeoutMs);
